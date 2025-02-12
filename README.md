@@ -1,34 +1,33 @@
-# Hedera™ Swift SDK
+# Hiero Swift SDK
 
-> The SDK for interacting with Hedera Hashgraph: the official distributed
-> consensus platform built using the hashgraph consensus algorithm for fast,
-> fair and secure transactions. Hedera enables and empowers developers to
-> build an entirely new class of decentralized applications.
+The SDK for interacting with a Hiero based netwrok.
 
-<sub>Maintained with ❤️ by <a href="https://launchbadge.com" target="_blank">LaunchBadge</a>, <a href="https://www.swirlds.com/" target="_blank">Swirlds Labs</a>, and the Hedera community</sub>
+<sub>Maintained with ❤️ by <a href="https://launchbadge.com" target="_blank">LaunchBadge</a>, <a href="https://www.hashgraph.com/" target="_blank">Hashgraph</a>, and the Hedera community</sub>
 
-## Requirements
+## Usage
+
+### Requirements
 
 - Swift v5.6+
 - MacOS v10.15+ (2019, Catalina)
 - iOS 13+ (2019)
 
-## Install
+### Install
 
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/hashgraph/hedera-sdk-swift.git", from: "0.1.0")
+    .package(url: "https://github.com/hiero-project/hiero-sdk-swift.git", from: "1.0.0")
 ]
 ```
 
 See ["Adding Package Dependencies to Your App"](https://developer.apple.com/documentation/swift_packages/adding_package_dependencies_to_your_app) for help on
 adding a swift package to an Xcode project.
 
-## Usage
+### Add to Code 
 
 ```swift
-import Hedera
+import Hiero
 
 // connect to the Hedera network
 let client = Client.forTestnet()
@@ -43,40 +42,20 @@ print("balance = \(ab.balance)")
 
 See [examples](./Examples) for more usage.
 
-## Community and Support
-
-If you have any questions on the Hedera SDK or Hedera more generally,
-you can join our team and hundreds of other developers using Hedera in our
-community Discord:
-
-<a href="https://hedera.com/discord" target="_blank">
-  <img alt="" src="https://user-images.githubusercontent.com/753919/167244200-b95cd3a6-6256-4eaf-b9b4-f1f192341485.png" height="60">
-</a>
-
-## License
-
-Licensed under Apache License,
-Version 2.0 – see [LICENSE](LICENSE)
-or [apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0).
-
-## Contribution
-
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
-licensed as above, without any additional terms or conditions.
-
 ## Development (HederaProtobufs)
 
-HederaProtobufs is entirely generated
+HederaProtobufs is entirely generated. The protobufs repo will be migrated to Hiero [in near future](https://github.com/LFDT-Hiero/hiero/blob/main/transition.md).
 
-### Required tooling
+### Required Tooling
+
 protoc
 protoc-gen-swift (from https://github.com/apple/swift-protobuf)
 protoc-gen-grpc-swift (from https://github.com/grpc/grpc-swift)
 task (from https://github.com/go-task/task)
 
 ### Fetch Submodule (Hedera-Protobufs)
-Update [\protobuf](https://github.com/hashgraph/hedera-services) submodule to latest changes.
+
+Update [\protobuf](https://github.com/hashgraph/hedera-protobufs) submodule to latest changes.
 ```bash
 ## Fetch the latest version of the services submodule
 ## Note: Append "proto=<version>" to fetch a specific version
@@ -97,7 +76,9 @@ protoc --grpc-swift_opt=Visibility=Public,Server=false --grpc-swift_out=./Source
 ```
 
 ###  Integration Tests
+
 Before running the integration tests, an operator key, operator account id, and a network name must be set in an `.env` file. 
+
 ```bash
 # Account that will pay query and transaction fees
 TEST_OPERATOR_ID=
@@ -111,16 +92,19 @@ TEST_NETWORK_NAME=
 $  swift test 
 ```
 
-#### Local Environment Testing
-Hedera offers a way to run tests through your localhost using the `hedera-local-node` service. 
+The networks testnet, previewnet, and mainnet are the related and publicly available [Hedera networks](https://docs.hedera.com/hedera/networks).
 
-For instructions on how to set up and run local node, follow the steps in the git repository:
-https://github.com/hashgraph/hedera-local-node
+### Local Environment Testing
 
+You can run tests through your localhost using the `hedera-local-node` service.
+For instructions on how to set up and run local node, follow the steps in the [git repository](https://github.com/hashgraph/hedera-local-node).
+The repo will be migrated to Hiero [in near future](https://github.com/LFDT-Hiero/hiero/blob/main/transition.md).
 Once the local node is running in Docker, the appropriate `.env` values must be set:
+
 ```bash
 TEST_OPERATOR_ID=0.0.2
 TEST_OPERATOR_KEY=3030020100300706052b8104000a042204205bc004059ffa2943965d306f2c44d266255318b3775bacfec42a77ca83e998f2
 TEST_NETWORK_NAME=localhost
 ```
+
 Lastly, run the tests using `swift test`
