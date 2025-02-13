@@ -1,6 +1,6 @@
 /*
   * ‌
-  * Hedera Swift SDK
+  * Hiero Swift SDK
   * ​
   * Copyright (C) 2023 - 2023 Hedera Hashgraph, LLC
   * ​

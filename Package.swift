@@ -2,7 +2,7 @@
 
 /*
  * ‌
- * Hedera Swift SDK
+ * Hiero Swift SDK
  * ​
  * Copyright (C) 2022 - 2025 Hiero LLC
  * ​
