@@ -56,7 +56,7 @@ internal class NodeCreate: XCTestCase {
         let endpoint2 = Endpoint(ipAddress: nil, port: 123, domainName: "testing.com")
 
         // Convert hex string to byte array
-        let validGossipCert = Data(validGossipCertDer.data(using: .utf8)!)
+        let validGossipCert = validGossipCertDer.data(using: .utf8)!
 
         // Generate new admin key
         let adminKey = PrivateKey.generateEd25519()
