@@ -28,7 +28,7 @@ internal class ScheduleInfo: XCTestCase {
 
     //     let key = PrivateKey.generateEd25519()
 
-    //     let transaction = AccountCreateTransaction().key(.single(key.publicKey))
+    //     let transaction = AccountCreateTransaction().keyWithoutAlias(.single(key.publicKey))
 
     //     let receipt = try await ScheduleCreateTransaction()
     //         .scheduledTransaction(transaction)

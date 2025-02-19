@@ -77,7 +77,7 @@ internal enum Program {
         let nftSerials = tokenMintReceipt.serials!
 
         let accountCreateTransaction = try await AccountCreateTransaction()
-            .key(.single(env.operatorKey.publicKey))
+            .keyWithoutAlias(.single(env.operatorKey.publicKey))
             .maxAutomaticTokenAssociations(10)
             .execute(client)
 

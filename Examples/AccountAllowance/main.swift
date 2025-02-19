@@ -52,7 +52,7 @@ private func createAccount(_ client: Client, _ name: StaticString) async throws 
     let key = PrivateKey.generateEd25519()
 
     let reciept = try await AccountCreateTransaction()
-        .key(.single(key.publicKey))
+        .keyWithoutAlias(.single(key.publicKey))
         .initialBalance(5)
         .accountMemo("[sdk::swift::accountAllowanceExample::\(name)]")
         .execute(client)

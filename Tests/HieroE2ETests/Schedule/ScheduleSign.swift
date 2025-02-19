@@ -33,7 +33,7 @@ internal final class ScheduleSign: XCTestCase {
 
         // Create a new account with keylist
         let accountReceipt = try await AccountCreateTransaction()
-            .key(.keyList(keyList))
+            .keyWithoutAlias(.keyList(keyList))
             .initialBalance(Hbar(1))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -87,7 +87,7 @@ internal final class ScheduleSign: XCTestCase {
 
         // Create new account with key list
         let accountReceipt = try await AccountCreateTransaction()
-            .key(.keyList(keyList))
+            .keyWithoutAlias(.keyList(keyList))
             .initialBalance(Hbar(1))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)

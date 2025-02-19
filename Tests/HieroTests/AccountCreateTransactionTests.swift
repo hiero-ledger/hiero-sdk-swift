@@ -41,7 +41,7 @@ internal class AccountCreateTransactionTests: XCTestCase {
         let tx = try AccountCreateTransaction()
             .nodeAccountIds(Resources.nodeAccountIds)
             .transactionId(Resources.txId)
-            .key(testKey)
+            .keyWithoutAlias(testKey)
             .initialBalance(testInitialBalance)
             .accountMemo(testAccountMemo)
             .receiverSignatureRequired(true)
@@ -62,7 +62,7 @@ internal class AccountCreateTransactionTests: XCTestCase {
         try AccountCreateTransaction()
             .nodeAccountIds(Resources.nodeAccountIds)
             .transactionId(Resources.txId)
-            .key(testKey)
+            .keyWithoutAlias(testKey)
             .initialBalance(testInitialBalance)
             .accountMemo(testAccountMemo)
             .receiverSignatureRequired(true)
@@ -146,7 +146,7 @@ internal class AccountCreateTransactionTests: XCTestCase {
 
     internal func testGetSetKey() throws {
         let tx = AccountCreateTransaction()
-        tx.key(Self.testKey)
+        tx.keyWithoutAlias(Self.testKey)
 
         XCTAssertEqual(tx.key, Self.testKey)
     }

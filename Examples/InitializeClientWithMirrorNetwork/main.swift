@@ -45,7 +45,7 @@ internal enum Program {
         * Step 2: Create an account
         */
         let aliceId = try await AccountCreateTransaction()
-            .key(.single(privateKey.publicKey))
+            .keyWithoutAlias(.single(privateKey.publicKey))
             .initialBalance(Hbar(5))
             .execute(client)
             .getReceipt(client)

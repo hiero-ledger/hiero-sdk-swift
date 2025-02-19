@@ -30,7 +30,7 @@ internal final class AccountCreate: XCTestCase {
         try await testEnv.ratelimits.accountCreate()
 
         let receipt = try await AccountCreateTransaction()
-            .key(.single(key.publicKey))
+            .keyWithoutAlias(.single(key.publicKey))
             .initialBalance(Hbar(1))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -59,7 +59,7 @@ internal final class AccountCreate: XCTestCase {
         try await testEnv.ratelimits.accountCreate()
 
         let receipt = try await AccountCreateTransaction()
-            .key(.single(key.publicKey))
+            .keyWithoutAlias(.single(key.publicKey))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
@@ -123,7 +123,7 @@ internal final class AccountCreate: XCTestCase {
     //     let key = PrivateKey.generateEd25519()
 
     //     let receipt = try await AccountCreateTransaction()
-    //         .key(.single(key.publicKey))
+    //         .keyWithoutAlias(.single(key.publicKey))
     //         .transactionId(
     //             .withValidStart(
     //                 testEnv.operator.accountId,
@@ -161,7 +161,7 @@ internal final class AccountCreate: XCTestCase {
 
         try await testEnv.ratelimits.accountCreate()
         let receipt = try await AccountCreateTransaction()
-            .key(.single(adminKey.publicKey))
+            .keyWithoutAlias(.single(adminKey.publicKey))
             .alias(evmAddress)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -188,7 +188,7 @@ internal final class AccountCreate: XCTestCase {
         try await testEnv.ratelimits.accountCreate()
         let receipt = try await AccountCreateTransaction()
             .receiverSignatureRequired(true)
-            .key(.single(adminKey.publicKey))
+            .keyWithoutAlias(.single(adminKey.publicKey))
             .alias(evmAddress)
             .freezeWith(testEnv.client)
             .sign(adminKey)
@@ -217,7 +217,7 @@ internal final class AccountCreate: XCTestCase {
         await assertThrowsHErrorAsync(
             try await AccountCreateTransaction()
                 .receiverSignatureRequired(true)
-                .key(.single(adminKey.publicKey))
+                .keyWithoutAlias(.single(adminKey.publicKey))
                 .alias(evmAddress)
                 .freezeWith(testEnv.client)
                 .execute(testEnv.client)
@@ -244,7 +244,7 @@ internal final class AccountCreate: XCTestCase {
         let evmAddress = try XCTUnwrap(key.publicKey.toEvmAddress())
 
         let receipt = try await AccountCreateTransaction()
-            .key(.single(adminKey.publicKey))
+            .keyWithoutAlias(.single(adminKey.publicKey))
             .alias(evmAddress)
             .freezeWith(testEnv.client)
             .sign(key)
@@ -272,7 +272,7 @@ internal final class AccountCreate: XCTestCase {
 
         await assertThrowsHErrorAsync(
             try await AccountCreateTransaction()
-                .key(.single(adminKey.publicKey))
+                .keyWithoutAlias(.single(adminKey.publicKey))
                 .alias(evmAddress)
                 .freezeWith(testEnv.client)
                 .execute(testEnv.client)
@@ -301,7 +301,7 @@ internal final class AccountCreate: XCTestCase {
         try await testEnv.ratelimits.accountCreate()
         let receipt = try await AccountCreateTransaction()
             .receiverSignatureRequired(true)
-            .key(.single(adminKey.publicKey))
+            .keyWithoutAlias(.single(adminKey.publicKey))
             .alias(evmAddress)
             .freezeWith(testEnv.client)
             .sign(key)
@@ -332,7 +332,7 @@ internal final class AccountCreate: XCTestCase {
         await assertThrowsHErrorAsync(
             try await AccountCreateTransaction()
                 .receiverSignatureRequired(true)
-                .key(.single(adminKey.publicKey))
+                .keyWithoutAlias(.single(adminKey.publicKey))
                 .alias(evmAddress)
                 .freezeWith(testEnv.client)
                 .execute(testEnv.client)

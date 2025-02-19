@@ -16,7 +16,7 @@ internal enum Program {
         let key2 = PrivateKey.generateEd25519()
 
         let createResponse = try await AccountCreateTransaction()
-            .key(.single(key1.publicKey))
+            .keyWithoutAlias(.single(key1.publicKey))
             .initialBalance(1)
             .execute(client)
 

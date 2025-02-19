@@ -29,7 +29,7 @@ internal final class AccountDelete: XCTestCase {
 
         try await testEnv.ratelimits.accountCreate()
         let receipt = try await AccountCreateTransaction()
-            .key(.single(key.publicKey))
+            .keyWithoutAlias(.single(key.publicKey))
             .initialBalance(1)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)

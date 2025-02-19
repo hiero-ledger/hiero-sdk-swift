@@ -51,7 +51,7 @@ internal enum Program {
         )
 
         let transactionResponse = try await AccountCreateTransaction()
-            .key(.keyList(transactionKey))
+            .keyWithoutAlias(.keyList(transactionKey))
             .initialBalance(Hbar(10))
             .execute(client)
 

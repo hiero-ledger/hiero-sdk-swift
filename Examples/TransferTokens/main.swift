@@ -145,7 +145,7 @@ internal enum Program {
         print("public key = \(privateKey.publicKey)")
 
         let receipt = try await AccountCreateTransaction()
-            .key(.single(privateKey.publicKey))
+            .keyWithoutAlias(.single(privateKey.publicKey))
             .initialBalance(.fromTinybars(1000))
             .execute(client)
             .getReceipt(client)

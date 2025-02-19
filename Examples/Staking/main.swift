@@ -44,7 +44,7 @@ internal enum Program {
         // If you really want to stake to node 0, you should use
         // `.setStakedNodeId()` instead
         let newAccountId = try await AccountCreateTransaction()
-            .key(.single(newKey.publicKey))
+            .keyWithoutAlias(.single(newKey.publicKey))
             .initialBalance(Hbar(10))
             .stakedAccountId("0.0.3")
             .execute(client)

@@ -39,7 +39,7 @@ internal enum Program {
         let exchangeAccountId = try await AccountCreateTransaction()
             // the exchange only accepts transfers that it validates through a side channel (e.g. REST API)
             .receiverSignatureRequired(true)
-            .key(.single(exchangeKey.publicKey))
+            .keyWithoutAlias(.single(exchangeKey.publicKey))
             // The owner key has to sign this transaction
             // when receiver_signature_required is true
             .freezeWith(client)
@@ -52,7 +52,7 @@ internal enum Program {
         // the user with a balance of 5 h
         let userAccountId = try await AccountCreateTransaction()
             .initialBalance(Hbar(5))
-            .key(.single(userKey.publicKey))
+            .keyWithoutAlias(.single(userKey.publicKey))
             .execute(client)
             .getReceipt(client)
             .accountId!

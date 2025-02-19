@@ -47,7 +47,7 @@ internal struct Account {
         try await testEnv.ratelimits.accountCreate()
 
         let receipt = try await AccountCreateTransaction()
-            .key(accountKey)
+            .keyWithoutAlias(accountKey)
             .initialBalance(Hbar(1))
             .maxAutomaticTokenAssociations(maxAutomaticTokenAssociations)
             .execute(testEnv.client)

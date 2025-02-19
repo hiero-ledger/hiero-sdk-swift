@@ -42,7 +42,7 @@ internal enum Program {
         print("public key 2 = \(key2.publicKey)")
 
         let newAccountId = try await AccountCreateTransaction()
-            .key(.keyList([.single(key1.publicKey), .single(key2.publicKey)]))
+            .keyWithoutAlias(.keyList([.single(key1.publicKey), .single(key2.publicKey)]))
             .initialBalance(.fromTinybars(1000))
             .execute(client)
             .getReceipt(client)

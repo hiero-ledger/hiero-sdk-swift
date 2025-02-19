@@ -86,8 +86,46 @@ public final class AccountCreateTransaction: Transaction {
     }
 
     /// Sets the key that must sign each transfer out of the account.
+    @available(*, deprecated, message: "Use keyWithoutAlias(_:_:) instead")
     @discardableResult
     public func key(_ key: Key) -> Self {
+        self.key = key
+
+        return self
+    }
+
+    /// Sets ECDSA private key, derives and sets it's EVM address in the background.
+    ///
+    /// Combines AccountCreateTransaction.key() + AccountCreateTransaction.alias()
+    @discardableResult
+    public func keyWithAlias(_ key: PrivateKey) throws -> Self {
+        guard key.isEcdsa() else {
+            throw HError.keyParse("Private key is not ECDSA")
+        }
+        self.key = .single(key.publicKey)
+        let evmAddress = key.publicKey.toEvmAddress()
+        self.alias = evmAddress
+
+        return self
+    }
+
+    /// Sets the account key and a separate ECDSA key that the EVM address is derived from.
+    /// A user must sign the transaction with both keys for this flow to be successful.
+    @discardableResult
+    public func keyWithAlias(_ key: Key, _ privateKeyECDSA: PrivateKey) throws -> Self {
+        self.key = key
+        guard privateKeyECDSA.isEcdsa() else {
+            throw HError.keyParse("Private key is not ECDSA")
+        }
+        let evmAddress = privateKeyECDSA.publicKey.toEvmAddress()
+        self.alias = evmAddress
+
+        return self
+    }
+
+    /// Sets key where it is explicitly called out that the alias is not set
+    @discardableResult
+    public func keyWithoutAlias(_ key: Key) -> Self {
         self.key = key
 
         return self

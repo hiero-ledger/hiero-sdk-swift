@@ -51,7 +51,7 @@ internal enum Program {
         */
         print("Creating new account... (w/ above key list as an account key).")
         let aliceId = try await AccountCreateTransaction()
-            .key(.keyList(thresholdKey))
+            .keyWithoutAlias(.keyList(thresholdKey))
             .initialBalance(Hbar(2))
             .execute(client)
             .getReceipt(client)

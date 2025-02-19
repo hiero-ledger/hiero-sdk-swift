@@ -378,7 +378,7 @@ internal class TokenReject: XCTestCase {
 
         let spenderAccountKey = PrivateKey.generateEd25519()
         let spenderCreateReceipt = try await AccountCreateTransaction()
-            .key(.single(spenderAccountKey.publicKey))
+            .keyWithoutAlias(.single(spenderAccountKey.publicKey))
             .initialBalance(Hbar(1))
             .maxAutomaticTokenAssociations(-1)
             .execute(testEnv.client)

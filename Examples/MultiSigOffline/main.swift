@@ -42,7 +42,7 @@ internal enum Program {
 
         let createAccountTransaction = try await AccountCreateTransaction()
             .initialBalance(2)
-            .key(.keyList(keylist))
+            .keyWithoutAlias(.keyList(keylist))
             .execute(client)
 
         let accountId = try await createAccountTransaction.getReceipt(client).accountId!
