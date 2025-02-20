@@ -1,4 +1,3 @@
-
 import HieroProtobufs
 import NumberKit
 import XCTest
