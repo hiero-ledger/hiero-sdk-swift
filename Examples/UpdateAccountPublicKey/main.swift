@@ -1,5 +1,5 @@
 import Foundation
-import Hedera
+import Hiero
 import SwiftDotenv
 
 @main

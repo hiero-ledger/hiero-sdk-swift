@@ -1,1 +1,0 @@
-fractional(Hedera.FractionalFee(feeCollectorAccountId: Optional(0.0.389042), allCollectorsAreExempt: false, denominator: 7, numerator: 3, minimumAmount: 3, maximumAmount: 100, assessmentMethod: Hedera.FractionalFee.FeeAssessmentMethod.inclusive))

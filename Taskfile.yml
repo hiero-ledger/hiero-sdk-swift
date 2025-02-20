@@ -35,20 +35,20 @@ tasks:
             - echo "Submodule Successfully Installed"
 
     submodule:move:
-        desc: "Copy all contents from protobufs/hapi/hedera-protobufs to Sources/HederaProtobufs/Protos"
+        desc: "Copy all contents from protobufs/hapi/hedera-protobufs to Sources/HieroProtobufs/Protos"
         deps: 
             - submodule:install
         cmds:
-            - mkdir -p Sources/HederaProtobufs/Protos/mirror
-            - mkdir -p Sources/HederaProtobufs/Protos/sdk
+            - mkdir -p Sources/HieroProtobufs/Protos/mirror
+            - mkdir -p Sources/HieroProtobufs/Protos/sdk
 
-            - find Sources/HederaProtobufs/Protos -mindepth 1 \
-               \! -path 'Sources/HederaProtobufs/Protos/mirror*' \
-               \! -path 'Sources/HederaProtobufs/Protos/sdk*' \
+            - find Sources/HieroProtobufs/Protos -mindepth 1 \
+               \! -path 'Sources/HieroProtobufs/Protos/mirror*' \
+               \! -path 'Sources/HieroProtobufs/Protos/sdk*' \
                -print0 | xargs -0 rm -rf
 
-            - mkdir -p Sources/HederaProtobufs/Protos
-            - cp -R protobufs/hapi/hedera-protobufs/* Sources/HederaProtobufs/Protos
+            - mkdir -p Sources/HieroProtobufs/Protos
+            - cp -R protobufs/hapi/hedera-protobufs/* Sources/HieroProtobufs/Protos
     
     submodule:clean:
         desc: "Clean content within the submodule"

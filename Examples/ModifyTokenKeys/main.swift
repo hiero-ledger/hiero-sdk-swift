@@ -19,7 +19,7 @@
  */
 
 import Foundation
-import Hedera
+import Hiero
 import SwiftDotenv
 
 @main
@@ -72,7 +72,7 @@ internal enum Program {
         print("Removing Wipe Key...")
 
         // Remove the wipe key with empty Keylist, signing with the admin key.
-        let _ = try await TokenUpdateTransaction()
+        _ = try await TokenUpdateTransaction()
             .tokenId(tokenId)
             .wipeKey(.keyList([]))
             .keyVerificationMode(TokenKeyValidation.fullValidation)
@@ -90,7 +90,7 @@ internal enum Program {
         print("Removing Admin Key...")
 
         // Remove the admin key with empty Keylist, signing with the admin key.
-        let _ = try await TokenUpdateTransaction()
+        _ = try await TokenUpdateTransaction()
             .tokenId(tokenId)
             .adminKey(.keyList([]))
             .keyVerificationMode(TokenKeyValidation.noValidation)
@@ -109,7 +109,7 @@ internal enum Program {
         print("Update Supply Key...")
 
         // Update the supply key with a new key, signing with the old supply key and the new supply key.
-        let _ = try await TokenUpdateTransaction()
+        _ = try await TokenUpdateTransaction()
             .tokenId(tokenId)
             .supplyKey(.single(newSupplyKey.publicKey))
             .keyVerificationMode(TokenKeyValidation.fullValidation)
@@ -129,7 +129,7 @@ internal enum Program {
         print("Removing Supply Key...")
 
         // Remove the supply key with unusable key, signing with the new supply key.
-        let _ = try await TokenUpdateTransaction()
+        _ = try await TokenUpdateTransaction()
             .tokenId(tokenId)
             .supplyKey(.single(unusableKey))
             .keyVerificationMode(TokenKeyValidation.noValidation)

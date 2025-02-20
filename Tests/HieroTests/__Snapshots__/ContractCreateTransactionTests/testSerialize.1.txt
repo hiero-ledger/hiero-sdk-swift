@@ -1,0 +1,36 @@
+HieroProtobufs.Proto_TransactionBody:
+transactionID {
+  transactionValidStart {
+    seconds: 1554158542
+  }
+  accountID {
+    accountNum: 5006
+  }
+}
+nodeAccountID {
+  accountNum: 5005
+}
+transactionFee: 100000
+transactionValidDuration {
+  seconds: 120
+}
+contractCreateInstance {
+  fileID {
+    fileNum: 3003
+  }
+  adminKey {
+    ed25519: "\340\310\354'X\245\207\237\372\302&\241<\fQky\236r\343QA\240\335\202\217\224\323y\210\244\267"
+  }
+  initialBalance: 1000
+  autoRenewPeriod {
+    seconds: 36000
+  }
+  constructorParameters: "\n\v\f\r\031"
+  max_automatic_token_associations: 101
+  auto_renew_account_id {
+    accountNum: 30
+  }
+  staked_account_id {
+    accountNum: 3
+  }
+}

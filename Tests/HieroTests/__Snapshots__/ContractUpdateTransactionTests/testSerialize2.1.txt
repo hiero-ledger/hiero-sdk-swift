@@ -1,0 +1,26 @@
+HieroProtobufs.Proto_ContractUpdateTransactionBody:
+contractID {
+  contractNum: 5007
+}
+expirationTime {
+  seconds: 1554158543
+}
+adminKey {
+  ed25519: "\340\310\354'X\245\207\237\372\302&\241<\fQky\236r\343QA\240\335\202\217\224\323y\210\244\267"
+}
+proxyAccountID {
+  accountNum: 4
+}
+autoRenewPeriod {
+  seconds: 86400
+}
+memoWrapper {
+  value: "3"
+}
+max_automatic_token_associations {
+  value: 101
+}
+auto_renew_account_id {
+  accountNum: 30
+}
+staked_node_id: 4

@@ -1,0 +1,8 @@
+HieroProtobufs.Proto_Query:
+fileGetInfo {
+  header {
+  }
+  fileID {
+    fileNum: 5005
+  }
+}

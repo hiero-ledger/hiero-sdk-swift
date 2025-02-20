@@ -1,0 +1,16 @@
+HieroProtobufs.Proto_FeeSchedule:
+transactionFeeSchedule {
+  fees {
+    nodedata {
+    }
+    networkdata {
+      min: 2
+      max: 5
+    }
+    servicedata {
+    }
+  }
+}
+expiryTime {
+  seconds: 1554158542
+}

@@ -1,0 +1,5 @@
+HieroProtobufs.Proto_SemanticVersion:
+major: 1
+minor: 2
+pre: "beta.10"
+build: "d13fe780"

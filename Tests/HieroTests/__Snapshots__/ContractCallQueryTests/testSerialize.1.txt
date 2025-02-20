@@ -1,0 +1,14 @@
+HieroProtobufs.Proto_Query:
+contractCallLocal {
+  header {
+  }
+  contractID {
+    contractNum: 5005
+  }
+  gas: 1541
+  sender_id {
+    shardNum: 1
+    realmNum: 2
+    accountNum: 3
+  }
+}

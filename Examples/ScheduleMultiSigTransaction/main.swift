@@ -19,7 +19,7 @@
  */
 
 import Foundation
-import Hedera
+import Hiero
 import SwiftDotenv
 
 @main
@@ -106,7 +106,7 @@ internal enum Program {
 
         print("sending schedule sign transaction")
 
-        // Finally send this last signature to Hedera. This last signature _should_ mean the transaction executes
+        // Finally send this last signature to Hiero. This last signature _should_ mean the transaction executes
         // since all 3 signatures have been provided.
         _ = try await ScheduleSignTransaction()
             .nodeAccountIds([response.nodeAccountId])
