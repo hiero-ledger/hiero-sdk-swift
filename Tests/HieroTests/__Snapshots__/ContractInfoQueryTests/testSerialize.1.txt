@@ -1,0 +1,8 @@
+HieroProtobufs.Proto_Query:
+contractGetInfo {
+  header {
+  }
+  contractID {
+    contractNum: 5005
+  }
+}

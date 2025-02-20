@@ -17,7 +17,7 @@
  */
 
 import Foundation
-import Hedera
+import Hiero
 import SwiftDotenv
 
 @main
@@ -167,7 +167,7 @@ extension Environment {
         PrivateKey(self["OPERATOR_KEY"]!.stringValue)!
     }
 
-    /// The name of the Hedera network this example should run against.
+    /// The name of the Hiero network this example should run against.
     internal var networkName: String {
         self["HEDERA_NETWORK"]?.stringValue ?? "testnet"
     }

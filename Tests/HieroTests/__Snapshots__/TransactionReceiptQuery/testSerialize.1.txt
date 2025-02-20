@@ -1,0 +1,14 @@
+HieroProtobufs.Proto_Query:
+transactionGetReceipt {
+  header {
+  }
+  transactionID {
+    transactionValidStart {
+      seconds: 1641088801
+      nanos: 2
+    }
+    accountID {
+      accountNum: 31415
+    }
+  }
+}

@@ -1,0 +1,33 @@
+HieroProtobufs.Proto_TransactionFeeSchedule:
+fees {
+  nodedata {
+    min: 4
+    max: 7
+    constant: 2
+    bpt: 5
+    vpt: 6
+    gas: 3
+    tv: 2
+    bpr: 7
+  }
+  networkdata {
+    min: 2
+    max: 5
+    constant: 2
+    bpt: 5
+    vpt: 6
+    gas: 3
+    tv: 2
+    bpr: 7
+  }
+  servicedata {
+    min: 4
+    max: 6
+    constant: 2
+    bpt: 5
+    vpt: 6
+    gas: 3
+    tv: 2
+    bpr: 7
+  }
+}

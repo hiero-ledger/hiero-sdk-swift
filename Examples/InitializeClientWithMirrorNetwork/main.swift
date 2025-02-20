@@ -18,8 +18,8 @@
  * ‍
  */
 
-import Hedera
-import HederaExampleUtilities
+import Hiero
+import HieroExampleUtilities
 import SwiftDotenv
 
 @main

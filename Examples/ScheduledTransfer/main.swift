@@ -19,7 +19,7 @@
  */
 
 import Foundation
-import Hedera
+import Hiero
 import SwiftDotenv
 
 @main
@@ -33,14 +33,14 @@ internal enum Program {
         client.setOperator(env.operatorAccountId, env.operatorKey)
 
         // A scheduled transaction is a transaction that has been proposed by an account,
-        // but which requires more signatures before it will actually execute on the Hedera network.
+        // but which requires more signatures before it will actually execute on the Hiero network.
         //
         // For example, if Alice wants to transfer an amount of Hbar to Bob, and Bob has
         // receiverSignatureRequired set to true, then that transaction must be signed by
         // both Alice and Bob before the transaction will be executed.
         //
         // To solve this problem, Alice can propose the transaction by creating a scheduled
-        // transaction on the Hedera network which, if executed, would transfer Hbar from
+        // transaction on the Hiero network which, if executed, would transfer Hbar from
         // Alice to Bob.  That scheduled transaction will have a ScheduleId by which we can
         // refer to that scheduled transaction.  Alice can communicate the ScheduleId to Bob, and
         // then Bob can use a ScheduleSignTransaction to sign that scheduled transaction.
@@ -51,8 +51,8 @@ internal enum Program {
         // that scheduled transaction will expire, and will not be executed.
         //
         // Once a scheduled transaction has all of the signatures necessary to execute, it will
-        // be executed on the Hedera network automatically.  If you create a scheduled transaction
-        // on the Hedera network, but that transaction only requires your signature in order to
+        // be executed on the Hiero network automatically.  If you create a scheduled transaction
+        // on the Hiero network, but that transaction only requires your signature in order to
         // execute and no one else's, that scheduled transaction will be automatically
         // executed immediately.
         let bobsKey = PrivateKey.generateEd25519()
@@ -93,7 +93,7 @@ internal enum Program {
         // ScheduleCreateTransaction itself.
         //
         // To clarify: Alice pays a fee to execute the ScheduleCreateTransaction,
-        // which creates the scheduled transaction on the Hedera network.
+        // which creates the scheduled transaction on the Hiero network.
         // She specifies when creating the scheduled transaction that Bob will pay
         // the fee for the scheduled transaction when it is executed.
         //

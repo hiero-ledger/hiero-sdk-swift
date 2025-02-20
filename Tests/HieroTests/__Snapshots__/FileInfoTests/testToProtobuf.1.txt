@@ -1,0 +1,16 @@
+HieroProtobufs.Proto_FileGetInfoResponse.FileInfo:
+fileID {
+  fileNum: 1
+}
+size: 2
+expirationTime {
+  seconds: 1554158728
+}
+deleted: true
+keys {
+  keys {
+    ed25519: "\340\310\354'X\245\207\237\372\302&\241<\fQky\236r\343QA\240\335\202\217\224\323y\210\244\267"
+  }
+}
+memo: "flook"
+ledger_id: "\001"

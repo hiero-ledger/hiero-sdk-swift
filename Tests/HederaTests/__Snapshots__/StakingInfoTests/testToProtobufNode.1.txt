@@ -1,8 +1,0 @@
-HederaProtobufs.Proto_StakingInfo:
-decline_reward: true
-stake_period_start {
-  seconds: 1554158542
-}
-pending_reward: 5
-staked_to_me: 10
-staked_node_id: 3

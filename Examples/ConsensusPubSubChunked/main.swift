@@ -19,8 +19,8 @@
  */
 
 import Foundation
-import Hedera
-import HederaExampleUtilities
+import Hiero
+import HieroExampleUtilities
 import SwiftDotenv
 
 @main
@@ -49,7 +49,7 @@ internal enum Program {
         try await Task.sleep(nanoseconds: 1_000_000_000 * 10)
 
         _ = Task {
-            let bigContents = try await HederaExampleUtilities.Resources.bigContents
+            let bigContents = try await HieroExampleUtilities.Resources.bigContents
 
             print(
                 "about to prepare a transaction to send a message of \(bigContents.count) bytes"

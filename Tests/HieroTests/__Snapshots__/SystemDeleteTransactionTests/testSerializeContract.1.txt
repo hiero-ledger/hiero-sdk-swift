@@ -1,0 +1,24 @@
+HieroProtobufs.Proto_TransactionBody:
+transactionID {
+  transactionValidStart {
+    seconds: 1554158542
+  }
+  accountID {
+    accountNum: 5006
+  }
+}
+nodeAccountID {
+  accountNum: 5005
+}
+transactionFee: 200000000
+transactionValidDuration {
+  seconds: 120
+}
+systemDelete {
+  contractID {
+    contractNum: 444
+  }
+  expirationTime {
+    seconds: 1554158542
+  }
+}

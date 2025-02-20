@@ -1,0 +1,46 @@
+HieroProtobufs.Proto_TransactionBody:
+transactionID {
+  transactionValidStart {
+    seconds: 1554158542
+  }
+  accountID {
+    accountNum: 5006
+  }
+}
+nodeAccountID {
+  accountNum: 5005
+}
+transactionFee: 200000000
+transactionValidDuration {
+  seconds: 120
+}
+token_fee_schedule_update {
+  token_id {
+    tokenNum: 4322
+  }
+  custom_fees {
+    fixed_fee {
+      amount: 10
+      denominating_token_id {
+        tokenNum: 483902
+      }
+    }
+    fee_collector_account_id {
+      accountNum: 4322
+    }
+  }
+  custom_fees {
+    fractional_fee {
+      fractional_amount {
+        numerator: 3
+        denominator: 7
+      }
+      minimum_amount: 3
+      maximum_amount: 100
+      net_of_transfers: true
+    }
+    fee_collector_account_id {
+      accountNum: 389042
+    }
+  }
+}
