@@ -1,9 +1,0 @@
-HederaProtobufs.Proto_Query:
-consensusGetTopicInfo {
-  header {
-  }
-  topicID {
-    shardNum: 4
-    realmNum: 2
-  }
-}

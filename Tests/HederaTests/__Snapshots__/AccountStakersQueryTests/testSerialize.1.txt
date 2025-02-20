@@ -1,8 +1,0 @@
-HederaProtobufs.Proto_Query:
-cryptoGetProxyStakers {
-  header {
-  }
-  accountID {
-    accountNum: 5005
-  }
-}

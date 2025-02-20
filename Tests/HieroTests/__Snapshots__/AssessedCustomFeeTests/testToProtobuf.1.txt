@@ -1,0 +1,27 @@
+HieroProtobufs.Proto_AssessedCustomFee:
+amount: 1
+token_id {
+  shardNum: 2
+  realmNum: 3
+  tokenNum: 4
+}
+fee_collector_account_id {
+  shardNum: 5
+  realmNum: 6
+  accountNum: 7
+}
+effective_payer_account_id {
+  shardNum: 8
+  realmNum: 9
+  accountNum: 10
+}
+effective_payer_account_id {
+  shardNum: 11
+  realmNum: 12
+  accountNum: 13
+}
+effective_payer_account_id {
+  shardNum: 14
+  realmNum: 15
+  accountNum: 16
+}

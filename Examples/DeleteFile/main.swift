@@ -18,7 +18,7 @@
  * ‍
  */
 
-import Hedera
+import Hiero
 import SwiftDotenv
 
 @main
@@ -33,7 +33,7 @@ internal enum Program {
 
         // The file is required to be a byte array,
         // you can easily use the bytes of a file instead.
-        let fileContents = "Hedera hashgraph is great!"
+        let fileContents = "Hiero hashgraph is great!"
 
         let receipt = try await FileCreateTransaction()
             .keys([.single(env.operatorKey.publicKey)])

@@ -18,7 +18,7 @@
  * ‍
  */
 
-import Hedera
+import Hiero
 import SwiftDotenv
 
 @main

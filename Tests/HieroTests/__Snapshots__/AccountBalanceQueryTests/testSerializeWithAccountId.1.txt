@@ -1,0 +1,8 @@
+HieroProtobufs.Proto_Query:
+cryptogetAccountBalance {
+  header {
+  }
+  accountID {
+    accountNum: 5005
+  }
+}

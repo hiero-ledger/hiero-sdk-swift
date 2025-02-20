@@ -1,12 +1,12 @@
 included:
   - Examples/
-  - Sources/Hedera/
-  - Sources/HederaTCK/
+  - Sources/Hiero/
+  - Sources/HieroTCK/
   - Tests/
 
 excluded:
   - .build/
-  - Sources/Hedera/Status.swift
+  - Sources/Hiero/Status.swift
 
 disabled_rules:
   # TODO: re-enable once the project is deemed complete

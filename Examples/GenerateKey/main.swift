@@ -19,13 +19,13 @@
  */
 
 import Foundation
-import Hedera
+import Hiero
 
 @main
 internal enum Program {
     internal static func main() async throws {
         // Generate a Ed25519 key
-        // This is the current recommended default for Hedera
+        // This is the current recommended default for Hiero
 
         var keyPrivate = PrivateKey.generateEd25519()
         var keyPublic = keyPrivate.publicKey

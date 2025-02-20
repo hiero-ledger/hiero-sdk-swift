@@ -1,0 +1,8 @@
+HieroProtobufs.Proto_Query:
+cryptogetAccountBalance {
+  header {
+  }
+  contractID {
+    contractNum: 5005
+  }
+}
