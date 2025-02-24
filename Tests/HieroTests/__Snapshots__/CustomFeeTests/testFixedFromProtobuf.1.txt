@@ -1,0 +1,1 @@
+fixed(Hiero.FixedFee(feeCollectorAccountId: Optional(0.0.4322), allCollectorsAreExempt: false, amount: 10, denominatingTokenId: Optional(0.0.483902)))

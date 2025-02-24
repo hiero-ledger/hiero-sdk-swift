@@ -1,1 +1,0 @@
-ExchangeRates(currentRate: Hedera.ExchangeRate(hbars: 30000, cents: 580150, expirationTime: 1645714800000000000), nextRate: Hedera.ExchangeRate(hbars: 30000, cents: 587660, expirationTime: 1645718400000000000))

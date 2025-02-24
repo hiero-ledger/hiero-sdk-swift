@@ -1,8 +1,8 @@
 /*
  * ‌
- * Hedera Swift SDK
+ * Hiero Swift SDK
  * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2022 - 2025 Hiero LLC
  * ​
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
  */
 
 import Foundation
-import Hedera
+import Hiero
 import SwiftDotenv
 
 @main
@@ -48,7 +48,7 @@ internal enum Program {
         )
 
         let receipt = try await AccountCreateTransaction()
-            .key(.keyList(transactionKey))
+            .keyWithoutAlias(.keyList(transactionKey))
             .initialBalance(.fromTinybars(1))
             .accountMemo("3-of-4 multi-sig account")
             .execute(client)

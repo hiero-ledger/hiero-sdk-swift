@@ -1,8 +1,8 @@
 /*
  * ‌
- * Hedera Swift SDK
+ * Hiero Swift SDK
  * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2022 - 2025 Hiero LLC
  * ​
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
  */
 
 import Foundation
-import Hedera
+import Hiero
 import SwiftDotenv
 
 @main
@@ -54,7 +54,7 @@ internal enum Program {
         // The only _required_ property here is `key`
         let response = try await AccountCreateTransaction()
             .nodeAccountIds([3])
-            .key(.keyList(keyList))
+            .keyWithoutAlias(.keyList(keyList))
             .initialBalance(Hbar(10))
             .execute(client)
 
@@ -106,7 +106,7 @@ internal enum Program {
 
         print("sending schedule sign transaction")
 
-        // Finally send this last signature to Hedera. This last signature _should_ mean the transaction executes
+        // Finally send this last signature to Hiero. This last signature _should_ mean the transaction executes
         // since all 3 signatures have been provided.
         _ = try await ScheduleSignTransaction()
             .nodeAccountIds([response.nodeAccountId])

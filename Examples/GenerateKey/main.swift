@@ -1,8 +1,8 @@
 /*
  * ‌
- * Hedera Swift SDK
+ * Hiero Swift SDK
  * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2022 - 2025 Hiero LLC
  * ​
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@
  */
 
 import Foundation
-import Hedera
+import Hiero
 
 @main
 internal enum Program {
     internal static func main() async throws {
         // Generate a Ed25519 key
-        // This is the current recommended default for Hedera
+        // This is the current recommended default for Hiero
 
         var keyPrivate = PrivateKey.generateEd25519()
         var keyPublic = keyPrivate.publicKey

@@ -2,9 +2,9 @@
 
 /*
  * ‌
- * Hedera Swift SDK
+ * Hiero Swift SDK
  * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2022 - 2025 Hiero LLC
  * ​
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,12 +66,13 @@ let exampleTargets = [
     "TokenAirdrop",
     "InitializeClientWithMirrorNetwork",
     "LongTermScheduledTransaction",
+    "CreateAccountWithAlias",
 ].map { name in
     Target.executableTarget(
         name: "\(name)Example",
         dependencies: [
-            "Hedera",
-            "HederaExampleUtilities",
+            "Hiero",
+            "HieroExampleUtilities",
             .product(name: "SwiftDotenv", package: "swift-dotenv"),
         ],
         path: "Examples/\(name)",
@@ -80,13 +81,13 @@ let exampleTargets = [
 }
 
 let package = Package(
-    name: "Hedera",
+    name: "Hiero",
     platforms: [
         .macOS(.v10_15),
         .iOS(.v13),
     ],
     products: [
-        .library(name: "Hedera", targets: ["Hedera"])
+        .library(name: "Hiero", targets: ["Hiero"])
     ],
     dependencies: [
         .package(url: "https://github.com/objecthub/swift-numberkit.git", from: "2.5.1"),
@@ -107,7 +108,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "HederaProtobufs",
+            name: "HieroProtobufs",
             dependencies: [
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                 .product(name: "GRPC", package: "grpc-swift"),
@@ -118,13 +119,13 @@ let package = Package(
         ),
         // weird name, but whatever, internal targets
         .target(
-            name: "HederaExampleUtilities",
+            name: "HieroExampleUtilities",
             resources: [.process("Resources")]
         ),
         .target(
-            name: "Hedera",
+            name: "Hiero",
             dependencies: [
-                "HederaProtobufs",
+                "HieroProtobufs",
                 "AnyAsyncSequence",
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
@@ -141,27 +142,27 @@ let package = Package(
             // ]
         ),
         .executableTarget(
-            name: "HederaTCK",
+            name: "HieroTCK",
             dependencies: [
-                "Hedera",
+                "Hiero",
                 .product(name: "Vapor", package: "vapor"),
             ]
         ),
         .testTarget(
-            name: "HederaTests",
+            name: "HieroTests",
             dependencies: [
-                "Hedera",
+                "Hiero",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ],
             exclude: ["__Snapshots__"]
         ),
         .testTarget(
-            name: "HederaE2ETests",
+            name: "HieroE2ETests",
             dependencies: [
-                "Hedera",
+                "Hiero",
                 .product(name: "SwiftDotenv", package: "swift-dotenv"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
-                "HederaExampleUtilities",
+                "HieroExampleUtilities",
             ],
             exclude: ["File/__Snapshots__"]
         ),

@@ -1,8 +1,8 @@
 /*
  * ‌
- * Hedera Swift SDK
+ * Hiero Swift SDK
  * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2022 - 2025 Hiero LLC
  * ​
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
  * ‍
  */
 
-import Hedera
+import Hiero
 import SwiftDotenv
 
 private struct Account {
@@ -52,7 +52,7 @@ private func createAccount(_ client: Client, _ name: StaticString) async throws 
     let key = PrivateKey.generateEd25519()
 
     let reciept = try await AccountCreateTransaction()
-        .key(.single(key.publicKey))
+        .keyWithoutAlias(.single(key.publicKey))
         .initialBalance(5)
         .accountMemo("[sdk::swift::accountAllowanceExample::\(name)]")
         .execute(client)

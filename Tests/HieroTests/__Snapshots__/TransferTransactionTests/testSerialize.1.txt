@@ -1,0 +1,139 @@
+HieroProtobufs.Proto_TransactionBody:
+transactionID {
+  transactionValidStart {
+    seconds: 1554158542
+  }
+  accountID {
+    accountNum: 5006
+  }
+}
+nodeAccountID {
+  accountNum: 5005
+}
+transactionFee: 200000000
+transactionValidDuration {
+  seconds: 120
+}
+cryptoTransfer {
+  transfers {
+    accountAmounts {
+      accountID {
+        accountNum: 5008
+      }
+      amount: 400
+    }
+    accountAmounts {
+      accountID {
+        accountNum: 5006
+      }
+      amount: -800
+    }
+    accountAmounts {
+      accountID {
+        accountNum: 5007
+      }
+      amount: 400
+      is_approval: true
+    }
+  }
+  tokenTransfers {
+    token {
+      tokenNum: 5
+    }
+    transfers {
+      accountID {
+        accountNum: 5008
+      }
+      amount: 400
+    }
+    transfers {
+      accountID {
+        accountNum: 5006
+      }
+      amount: -800
+    }
+    transfers {
+      accountID {
+        accountNum: 5007
+      }
+      amount: 400
+    }
+    expected_decimals {
+      value: 3
+    }
+  }
+  tokenTransfers {
+    token {
+      tokenNum: 4
+    }
+    transfers {
+      accountID {
+        accountNum: 5008
+      }
+      amount: 1
+    }
+    transfers {
+      accountID {
+        accountNum: 5006
+      }
+      amount: -1
+      is_approval: true
+    }
+  }
+  tokenTransfers {
+    token {
+      tokenNum: 3
+    }
+    nftTransfers {
+      senderAccountID {
+        accountNum: 5008
+      }
+      receiverAccountID {
+        accountNum: 5007
+      }
+      serialNumber: 2
+    }
+    nftTransfers {
+      senderAccountID {
+        accountNum: 5008
+      }
+      receiverAccountID {
+        accountNum: 5007
+      }
+      serialNumber: 1
+      is_approval: true
+    }
+    nftTransfers {
+      senderAccountID {
+        accountNum: 5008
+      }
+      receiverAccountID {
+        accountNum: 5006
+      }
+      serialNumber: 3
+    }
+    nftTransfers {
+      senderAccountID {
+        accountNum: 5007
+      }
+      receiverAccountID {
+        accountNum: 5006
+      }
+      serialNumber: 4
+    }
+  }
+  tokenTransfers {
+    token {
+      tokenNum: 2
+    }
+    nftTransfers {
+      senderAccountID {
+        accountNum: 5007
+      }
+      receiverAccountID {
+        accountNum: 5006
+      }
+      serialNumber: 4
+    }
+  }
+}

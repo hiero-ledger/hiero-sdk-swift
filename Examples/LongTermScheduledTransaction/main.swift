@@ -1,8 +1,8 @@
 /*
  * ‌
- * Hedera Swift SDK
+ * Hiero Swift SDK
  * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2022 - 2025 Hiero LLC
  * ​
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
  * ‍
  */
 
-import Hedera
+import Hiero
 import SwiftDotenv
 
 @main
@@ -51,7 +51,7 @@ internal enum Program {
         */
         print("Creating new account... (w/ above key list as an account key).")
         let aliceId = try await AccountCreateTransaction()
-            .key(.keyList(thresholdKey))
+            .keyWithoutAlias(.keyList(thresholdKey))
             .initialBalance(Hbar(2))
             .execute(client)
             .getReceipt(client)

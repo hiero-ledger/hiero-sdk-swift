@@ -1,8 +1,8 @@
 /*
  * ‌
- * Hedera Swift SDK
+ * Hiero Swift SDK
  * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2022 - 2025 Hiero LLC
  * ​
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
  */
 
 import Foundation
-import Hedera
+import Hiero
 import SwiftDotenv
 
 @main
@@ -49,7 +49,7 @@ internal enum Program {
             print("public key: \(publicKey)")
 
             let receipt = try await AccountCreateTransaction()
-                .key(.single(publicKey))
+                .keyWithoutAlias(.single(publicKey))
                 .initialBalance(Hbar(1))
                 .execute(client)
                 .getReceipt(client)
@@ -74,7 +74,7 @@ internal enum Program {
         // The key that must sign each transfer out of the account. If receiverSigRequired is true, then
         // it must also sign any transfer into the account.
         let thresholdAccount = try await AccountCreateTransaction()
-            .key(.keyList(keyList))
+            .keyWithoutAlias(.keyList(keyList))
             .initialBalance(Hbar(10))
             .execute(client)
             .getReceipt(client)
