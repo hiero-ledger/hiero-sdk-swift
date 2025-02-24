@@ -1,0 +1,11 @@
+HieroProtobufs.Proto_Query:
+tokenGetNftInfo {
+  header {
+  }
+  nftID {
+    token_ID {
+      tokenNum: 5005
+    }
+    serial_number: 101
+  }
+}

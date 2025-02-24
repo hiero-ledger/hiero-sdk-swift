@@ -1,0 +1,28 @@
+HieroProtobufs.Proto_TransactionBody:
+transactionID {
+  transactionValidStart {
+    seconds: 1554158542
+  }
+  accountID {
+    accountNum: 5006
+  }
+}
+nodeAccountID {
+  accountNum: 5005
+}
+transactionFee: 100000
+transactionValidDuration {
+  seconds: 120
+}
+fileCreate {
+  expirationTime {
+    seconds: 1554158728
+  }
+  keys {
+    keys {
+      ed25519: "\340\310\354'X\245\207\237\372\302&\241<\fQky\236r\343QA\240\335\202\217\224\323y\210\244\267"
+    }
+  }
+  contents: "[swift::unit::fileCreate::1]"
+  memo: "Hello memo"
+}

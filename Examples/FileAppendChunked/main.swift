@@ -1,11 +1,11 @@
-import Hedera
-import HederaExampleUtilities
+import Hiero
+import HieroExampleUtilities
 import SwiftDotenv
 
 @main
 internal enum Program {
     internal static func main() async throws {
-        async let bigContents = HederaExampleUtilities.Resources.bigContents
+        async let bigContents = HieroExampleUtilities.Resources.bigContents
         let env = try Dotenv.load()
         let client = try Client.forName(env.networkName)
 

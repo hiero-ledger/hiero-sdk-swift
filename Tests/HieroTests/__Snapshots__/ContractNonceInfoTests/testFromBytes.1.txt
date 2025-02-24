@@ -1,0 +1,5 @@
+HieroProtobufs.Proto_ContractNonceInfo:
+contract_id {
+  contractNum: 2
+}
+nonce: 2

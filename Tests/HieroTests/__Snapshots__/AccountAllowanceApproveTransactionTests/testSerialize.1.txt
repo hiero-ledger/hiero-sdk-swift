@@ -1,0 +1,123 @@
+HieroProtobufs.Proto_TransactionBody:
+transactionID {
+  transactionValidStart {
+    seconds: 1554158542
+  }
+  accountID {
+    accountNum: 5006
+  }
+}
+nodeAccountID {
+  accountNum: 5005
+}
+transactionFee: 100000
+transactionValidDuration {
+  seconds: 120
+}
+cryptoApproveAllowance {
+  cryptoAllowances {
+    owner {
+      shardNum: 5
+      realmNum: 6
+      accountNum: 7
+    }
+    spender {
+      shardNum: 1
+      realmNum: 1
+      accountNum: 1
+    }
+    amount: 300000000
+  }
+  nftAllowances {
+    tokenId {
+      shardNum: 4
+      realmNum: 4
+      tokenNum: 4
+    }
+    owner {
+      shardNum: 5
+      realmNum: 6
+      accountNum: 7
+    }
+    spender {
+      shardNum: 5
+      realmNum: 5
+      accountNum: 5
+    }
+    serial_numbers: [123]
+  }
+  nftAllowances {
+    tokenId {
+      shardNum: 8
+      realmNum: 8
+      tokenNum: 8
+    }
+    owner {
+      shardNum: 5
+      realmNum: 6
+      accountNum: 7
+    }
+    spender {
+      shardNum: 5
+      realmNum: 5
+      accountNum: 5
+    }
+    serial_numbers: [456]
+  }
+  nftAllowances {
+    tokenId {
+      shardNum: 4
+      realmNum: 4
+      tokenNum: 4
+    }
+    owner {
+      shardNum: 5
+      realmNum: 6
+      accountNum: 7
+    }
+    spender {
+      shardNum: 9
+      realmNum: 9
+      accountNum: 9
+    }
+    serial_numbers: [789]
+  }
+  nftAllowances {
+    tokenId {
+      shardNum: 6
+      realmNum: 6
+      tokenNum: 6
+    }
+    owner {
+      shardNum: 5
+      realmNum: 6
+      accountNum: 7
+    }
+    spender {
+      shardNum: 7
+      realmNum: 7
+      accountNum: 7
+    }
+    approved_for_all {
+      value: true
+    }
+  }
+  tokenAllowances {
+    tokenId {
+      shardNum: 2
+      realmNum: 2
+      tokenNum: 2
+    }
+    owner {
+      shardNum: 5
+      realmNum: 6
+      accountNum: 7
+    }
+    spender {
+      shardNum: 3
+      realmNum: 3
+      accountNum: 3
+    }
+    amount: 6
+  }
+}

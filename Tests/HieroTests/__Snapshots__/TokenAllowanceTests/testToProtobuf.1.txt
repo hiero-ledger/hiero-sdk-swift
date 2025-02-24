@@ -1,0 +1,13 @@
+HieroProtobufs.Proto_TokenAllowance:
+tokenId {
+  realmNum: 3
+  tokenNum: 5
+}
+owner {
+  accountNum: 5009
+}
+spender {
+  realmNum: 2
+  accountNum: 24
+}
+amount: 4

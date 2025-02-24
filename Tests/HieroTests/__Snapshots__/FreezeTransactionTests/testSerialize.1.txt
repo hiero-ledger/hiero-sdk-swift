@@ -1,0 +1,28 @@
+HieroProtobufs.Proto_TransactionBody:
+transactionID {
+  transactionValidStart {
+    seconds: 1554158542
+  }
+  accountID {
+    accountNum: 5006
+  }
+}
+nodeAccountID {
+  accountNum: 5005
+}
+transactionFee: 200000000
+transactionValidDuration {
+  seconds: 120
+}
+freeze {
+  update_file {
+    shardNum: 4
+    realmNum: 5
+    fileNum: 6
+  }
+  file_hash: "\027#\220E\207\022\t8\225G\0024\230W"
+  start_time {
+    seconds: 1554158542
+  }
+  freeze_type: FREEZE_ABORT
+}

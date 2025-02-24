@@ -1,0 +1,1 @@
+royalty(Hiero.RoyaltyFee(feeCollectorAccountId: Optional(0.0.23423), allCollectorsAreExempt: false, denominator: 8, numerator: 5, fallbackFee: Optional(Hiero.FixedFee(feeCollectorAccountId: nil, allCollectorsAreExempt: false, amount: 10, denominatingTokenId: Optional(0.0.483902)))))

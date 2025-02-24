@@ -1,0 +1,10 @@
+HieroProtobufs.Proto_CustomFee:
+fixed_fee {
+  amount: 10
+  denominating_token_id {
+    tokenNum: 483902
+  }
+}
+fee_collector_account_id {
+  accountNum: 4322
+}

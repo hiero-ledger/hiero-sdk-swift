@@ -1,0 +1,44 @@
+HieroProtobufs.Proto_TransactionBody:
+transactionID {
+  transactionValidStart {
+    seconds: 1554158542
+  }
+  accountID {
+    accountNum: 5006
+  }
+}
+nodeAccountID {
+  accountNum: 5005
+}
+transactionFee: 100000
+transactionValidDuration {
+  seconds: 120
+}
+cryptoDeleteAllowance {
+  nftAllowances {
+    token_id {
+      shardNum: 4
+      realmNum: 4
+      tokenNum: 4
+    }
+    owner {
+      shardNum: 5
+      realmNum: 6
+      accountNum: 7
+    }
+    serial_numbers: [123, 456, 789]
+  }
+  nftAllowances {
+    token_id {
+      shardNum: 8
+      realmNum: 8
+      tokenNum: 8
+    }
+    owner {
+      shardNum: 5
+      realmNum: 6
+      accountNum: 7
+    }
+    serial_numbers: [456]
+  }
+}

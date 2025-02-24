@@ -1,0 +1,25 @@
+HieroProtobufs.Proto_TransactionBody:
+transactionID {
+  transactionValidStart {
+    seconds: 1554158542
+  }
+  accountID {
+    accountNum: 5006
+  }
+}
+nodeAccountID {
+  accountNum: 5005
+}
+transactionFee: 100000000
+transactionValidDuration {
+  seconds: 120
+}
+ethereumTransaction {
+  ethereum_data: "livestock"
+  call_data {
+    shardNum: 4
+    realmNum: 5
+    fileNum: 6
+  }
+  max_gas_allowance: 300000000
+}

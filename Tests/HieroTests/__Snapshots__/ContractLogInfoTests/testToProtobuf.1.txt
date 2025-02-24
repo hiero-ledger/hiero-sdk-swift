@@ -1,0 +1,7 @@
+HieroProtobufs.Proto_ContractLoginfo:
+contractID {
+  contractNum: 10
+}
+bloom: "bloom"
+topic: "topic"
+data: "data"

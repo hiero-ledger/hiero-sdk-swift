@@ -19,7 +19,7 @@
  */
 
 import Foundation
-import Hedera
+import Hiero
 
 @main
 internal enum Program {

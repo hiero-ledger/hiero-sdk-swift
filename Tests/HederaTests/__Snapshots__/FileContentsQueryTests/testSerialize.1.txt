@@ -1,8 +1,0 @@
-HederaProtobufs.Proto_Query:
-fileGetContents {
-  header {
-  }
-  fileID {
-    fileNum: 5005
-  }
-}

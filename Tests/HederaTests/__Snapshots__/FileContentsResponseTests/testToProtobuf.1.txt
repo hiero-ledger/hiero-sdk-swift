@@ -1,5 +1,0 @@
-HederaProtobufs.Proto_FileGetContentsResponse.FileContents:
-fileID {
-  fileNum: 5005
-}
-contents: "swift::unit::fileContentResponse::1"

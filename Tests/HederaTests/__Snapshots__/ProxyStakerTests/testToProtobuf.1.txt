@@ -1,5 +1,0 @@
-HederaProtobufs.Proto_ProxyStaker:
-accountID {
-  accountNum: 5009
-}
-amount: 10
