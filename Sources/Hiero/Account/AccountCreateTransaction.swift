@@ -98,12 +98,12 @@ public final class AccountCreateTransaction: Transaction {
     ///
     /// Combines AccountCreateTransaction.key() + AccountCreateTransaction.alias()
     @discardableResult
-    public func keyWithAlias(_ key: PrivateKey) throws -> Self {
-        guard key.isEcdsa() else {
+    public func keyWithAlias(_ privateKeyECDSA: PrivateKey) throws -> Self {
+        guard privateKeyECDSA.isEcdsa() else {
             throw HError.keyParse("Private key is not ECDSA")
         }
-        self.key = .single(key.publicKey)
-        let evmAddress = key.publicKey.toEvmAddress()
+        self.key = .single(privateKeyECDSA.publicKey)
+        let evmAddress = privateKeyECDSA.publicKey.toEvmAddress()!
         self.alias = evmAddress
 
         return self
@@ -117,7 +117,7 @@ public final class AccountCreateTransaction: Transaction {
         guard privateKeyECDSA.isEcdsa() else {
             throw HError.keyParse("Private key is not ECDSA")
         }
-        let evmAddress = privateKeyECDSA.publicKey.toEvmAddress()
+        let evmAddress = privateKeyECDSA.publicKey.toEvmAddress()!
         self.alias = evmAddress
 
         return self
@@ -242,6 +242,18 @@ public final class AccountCreateTransaction: Transaction {
     @discardableResult
     public func alias(_ alias: EvmAddress) -> Self {
         self.alias = alias
+
+        return self
+    }
+
+    /// The ethereum account 20-byte EVM address to be used as the account's alias. This EVM address may be either
+    /// the encoded form of the shard.realm.num or the keccak-256 hash of a ECDSA_SECP256K1 primitive key.
+    @discardableResult
+    public func alias(_ aliasEvmAddress: String) throws -> Self {
+        guard (aliasEvmAddress.hasPrefix("0x") && aliasEvmAddress.count == 42) || aliasEvmAddress.count == 40 else {
+            throw HError.keyParse("EVM address must be valid EVM address with 0x prefix")
+        }
+        self.alias = EvmAddress(aliasEvmAddress)
 
         return self
     }

@@ -18,9 +18,9 @@
  * ‍
  */
 
+import Foundation
 import Hiero
 import SwiftDotenv
-import Foundation
 
 @main
 internal enum Program {
@@ -36,23 +36,23 @@ internal enum Program {
         try await createAccountWithBothKeys(client)
         // Creates a Hedera account without an alias.
         try await createAccountWithoutAlias(client)
-        
+
         print("Example finished")
     }
 
     internal static func createAccountWithAlias(_ client: Client) async throws {
         print("Creating account with alias")
 
-        // Step 1: 
+        // Step 1:
         // Create a new ECDSA key
         let privateKey = PrivateKey.generateEcdsa()
 
-        // Step 2: 
+        // Step 2:
         // Extract the ECDSA public key and generate EVM address
         let publicKey = privateKey.publicKey
         let evmAddress = publicKey.toEvmAddress()!
 
-        // Step 3: 
+        // Step 3:
         // Create the account with an alias
         let accountId = try await AccountCreateTransaction()
             .keyWithAlias(privateKey)
@@ -62,7 +62,7 @@ internal enum Program {
             .getReceipt(client)
             .accountId!
 
-        // Step 4: 
+        // Step 4:
         // Query account info
         let info = try await AccountInfoQuery()
             .accountId(accountId)
@@ -75,16 +75,16 @@ internal enum Program {
     internal static func createAccountWithBothKeys(_ client: Client) async throws {
         print("Creating account with an alias and a key")
 
-        // Step 1: 
+        // Step 1:
         // Create a new ECDSA key and Ed25519 key
         let ed25519Key = PrivateKey.generateEd25519()
         let ecdsaKey = PrivateKey.generateEcdsa()
 
-        // Step 2: 
+        // Step 2:
         // Extract the ECDSA public key and generate EVM address
         let evmAddress = ecdsaKey.publicKey.toEvmAddress()!
 
-        // Step 3: 
+        // Step 3:
         // Create the account with both keys. Transaction needs to be signed
         // by both keys.
         let accountId = try await AccountCreateTransaction()
@@ -96,7 +96,7 @@ internal enum Program {
             .getReceipt(client)
             .accountId!
 
-        // Step 4: 
+        // Step 4:
         // Query account info
         let info = try await AccountInfoQuery()
             .accountId(accountId)
@@ -110,11 +110,11 @@ internal enum Program {
     internal static func createAccountWithoutAlias(_ client: Client) async throws {
         print("Creating account without an alias")
 
-        // Step 1: 
+        // Step 1:
         // Create a new ECDSA key
         let privateKey = PrivateKey.generateEcdsa()
 
-        // Step 2: 
+        // Step 2:
         // Create an account without an alias.
         let accountId = try await AccountCreateTransaction()
             .keyWithoutAlias(.single(privateKey.publicKey))
@@ -124,7 +124,7 @@ internal enum Program {
             .getReceipt(client)
             .accountId!
 
-        // Step 3: 
+        // Step 3:
         // Query account info
         let info = try await AccountInfoQuery()
             .accountId(accountId)

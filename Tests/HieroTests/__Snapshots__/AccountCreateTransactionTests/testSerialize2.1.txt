@@ -26,4 +26,5 @@ cryptoCreateAccount {
   memo: "fresh water"
   max_automatic_token_associations: 101
   staked_node_id: 4
+  alias: "\342a\342j\354\316R\263x\217\254\226%\211o\373\306\273D$"
 }

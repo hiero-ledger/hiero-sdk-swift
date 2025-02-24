@@ -36,8 +36,6 @@ tasks:
 
     submodule:move:
         desc: "Copy all contents from protobufs/hapi/hedera-protobufs to Sources/HieroProtobufs/Protos"
-        deps: 
-            - submodule:install
         cmds:
             - mkdir -p Sources/HieroProtobufs/Protos/mirror
             - mkdir -p Sources/HieroProtobufs/Protos/sdk

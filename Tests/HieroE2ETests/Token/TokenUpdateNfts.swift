@@ -75,17 +75,18 @@ internal final class TokenUpdateNfts: XCTestCase {
         XCTAssertEqual(newMetadataList, updatedMetadataList)
     }
 
-    internal func testCantUpdateMetadataNoSignedMetadataKey() async throws {
+    internal func testUpdateNftMetadataOfPartialCollection() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let metadataKey = PrivateKey.generateEd25519()
         let nftCount = 4
         let initialMetadataList =
             Array(repeating: Data([9, 1, 6]), count: nftCount)
-
         let updatedMetadata = Data([3, 4])
+        let updatedMetadataList =
+            Array(repeating: updatedMetadata, count: nftCount / 2)
 
-        // Create Token with metadata key
+        // Create Token with metadata key included
         let tokenCreateTxReceipt = try await TokenCreateTransaction()
             .name("ffff")
             .symbol("F")
@@ -100,18 +101,81 @@ internal final class TokenUpdateNfts: XCTestCase {
 
         let tokenId = try XCTUnwrap(tokenCreateTxReceipt.tokenId)
 
+        // Mint token
+        let tokenMintTxReceipt = try await TokenMintTransaction()
+            .metadata(initialMetadataList)
+            .tokenId(tokenId)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // Check that the metadata is set correctly
+        let nftSerials = try XCTUnwrap(tokenMintTxReceipt.serials)
+        let metadataListAfterMint = try await getMetadataList(testEnv.client, tokenId, nftSerials)
+
+        XCTAssertEqual(metadataListAfterMint, initialMetadataList)
+
+        // Update the metadata of the first half of the NFTs
+        let nftSerialsToUpdate = nftSerials[..<(nftCount / 2)].map { UInt64($0) }
+
+        // Apply new serials & metadata Nft token
+        _ = try await TokenUpdateNftsTransaction()
+            .tokenId(tokenId)
+            .serials(nftSerialsToUpdate)
+            .metadata(updatedMetadata)
+            .freezeWith(testEnv.client)
+            .sign(metadataKey)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // Check that the metadata is updated correctly
+        let metadataListAfterUpdate = try await getMetadataList(testEnv.client, tokenId, nftSerialsToUpdate)
+
+        XCTAssertEqual(metadataListAfterUpdate, updatedMetadataList)
+
+        let nftSerialsSame = nftSerials[nftCount / 2..<nftCount].map { UInt64($0) }
+        let metadataList = try await getMetadataList(testEnv.client, tokenId, nftSerialsSame)
+
+        XCTAssertEqual(metadataList, Array(initialMetadataList[nftCount / 2..<nftCount]) as [Data])
+    }
+
+    internal func testCantUpdateMetadataNoSignedMetadataKey() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        let metadataKey = PrivateKey.generateEd25519()
+        let supplyKey = PrivateKey.generateEd25519()
+        let nftCount = 4
+        let initialMetadataList =
+            Array(repeating: Data([9, 1, 6]), count: nftCount)
+
+        let updatedMetadata = Data([3, 4])
+
+        // Create Token with metadata key
+        let tokenCreateTxReceipt = try await TokenCreateTransaction()
+            .name("ffff")
+            .symbol("F")
+            .tokenType(TokenType.nonFungibleUnique)
+            .treasuryAccountId(testEnv.operator.accountId)
+            .adminKey(.single(testEnv.operator.privateKey.publicKey))
+            .supplyKey(.single(supplyKey.publicKey))
+            .metadataKey(.single(metadataKey.publicKey))
+            .expirationTime(.now + .minutes(5))
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        let tokenId = try XCTUnwrap(tokenCreateTxReceipt.tokenId)
+
         let tokenInfo = try await TokenInfoQuery()
             .tokenId(tokenId)
             .execute(testEnv.client)
 
-        let setMetadataKey = try XCTUnwrap(tokenInfo.metadataKey)
-
-        XCTAssertEqual(setMetadataKey, .single(metadataKey.publicKey))
+        XCTAssertEqual(tokenInfo.metadataKey, .single(metadataKey.publicKey))
 
         // Mint token
         let tokenMintTxReceipt = try await TokenMintTransaction()
             .metadata(initialMetadataList)
             .tokenId(tokenId)
+            .freezeWith(testEnv.client)
+            .sign(supplyKey)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
@@ -138,6 +202,8 @@ internal final class TokenUpdateNfts: XCTestCase {
     internal func testCantUpdateMetadataNoSetMetadataKey() async throws {
         let testEnv = try TestEnvironment.nonFree
 
+        let metadataKey = PrivateKey.generateEd25519()
+        let supplyKey = PrivateKey.generateEd25519()
         let nftCount = 4
         let initialMetadataList = [
             Data(Array(repeating: [9, 1, 6], count: (nftCount / [9, 1, 6].count) + 1).flatMap { $0 }.prefix(nftCount))
@@ -151,7 +217,7 @@ internal final class TokenUpdateNfts: XCTestCase {
             .tokenType(TokenType.nonFungibleUnique)
             .treasuryAccountId(testEnv.operator.accountId)
             .adminKey(.single(testEnv.operator.privateKey.publicKey))
-            .supplyKey(.single(testEnv.operator.privateKey.publicKey))
+            .supplyKey(.single(supplyKey.publicKey))
             .expirationTime(.now + .minutes(5))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -168,6 +234,8 @@ internal final class TokenUpdateNfts: XCTestCase {
         let tokenMintTxReceipt = try await TokenMintTransaction()
             .metadata(initialMetadataList)
             .tokenId(tokenId)
+            .freezeWith(testEnv.client)
+            .sign(supplyKey)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
@@ -179,6 +247,8 @@ internal final class TokenUpdateNfts: XCTestCase {
                 .tokenId(tokenId)
                 .serials(nftSerials)
                 .metadata(updatedMetadata)
+                .freezeWith(testEnv.client)
+                .sign(metadataKey)
                 .execute(testEnv.client)
                 .getReceipt(testEnv.client)
 
@@ -188,12 +258,12 @@ internal final class TokenUpdateNfts: XCTestCase {
                 return
             }
 
-            XCTAssertEqual(status, .tokenHasNoMetadataKey)
+            XCTAssertEqual(status, .invalidSignature)
         }
     }
 }
 
-func getMetadataList(_ client: Client, _ tokenId: TokenId, _ serials: [UInt64]) async throws -> [Data] {
+internal func getMetadataList(_ client: Client, _ tokenId: TokenId, _ serials: [UInt64]) async throws -> [Data] {
     let metadataList: [Data] = try await withThrowingTaskGroup(
         of: Data.self,
         body: { group in
