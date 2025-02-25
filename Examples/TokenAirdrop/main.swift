@@ -32,7 +32,7 @@ internal enum Program {
 
         let privateKey1 = PrivateKey.generateEcdsa()
         let aliceId = try await AccountCreateTransaction()
-            .key(.single(privateKey1.publicKey))
+            .keyWithoutAlias(.single(privateKey1.publicKey))
             .initialBalance(Hbar(10))
             .maxAutomaticTokenAssociations(-1)
             .execute(client)
@@ -41,7 +41,7 @@ internal enum Program {
 
         let privateKey2 = PrivateKey.generateEcdsa()
         let bobId = try await AccountCreateTransaction()
-            .key(.single(privateKey2.publicKey))
+            .keyWithoutAlias(.single(privateKey2.publicKey))
             .maxAutomaticTokenAssociations(1)
             .execute(client)
             .getReceipt(client)
@@ -49,7 +49,7 @@ internal enum Program {
 
         let privateKey3 = PrivateKey.generateEcdsa()
         let carolId = try await AccountCreateTransaction()
-            .key(.single(privateKey3.publicKey))
+            .keyWithoutAlias(.single(privateKey3.publicKey))
             .maxAutomaticTokenAssociations(0)
             .execute(client)
             .getReceipt(client)
@@ -57,7 +57,7 @@ internal enum Program {
 
         let treasuryKey = PrivateKey.generateEcdsa()
         let treasuryAccountId = try await AccountCreateTransaction()
-            .key(.single(treasuryKey.publicKey))
+            .keyWithoutAlias(.single(treasuryKey.publicKey))
             .initialBalance(Hbar(10))
             .execute(client)
             .getReceipt(client)

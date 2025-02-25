@@ -77,14 +77,14 @@ internal enum Program {
         let receiverKey = PrivateKey.generateEd25519()
 
         let spenderAccountId = try await AccountCreateTransaction()
-            .key(Key.single(spenderKey.publicKey))
+            .keyWithoutAlias(Key.single(spenderKey.publicKey))
             .initialBalance(Hbar(2))
             .execute(client)
             .getReceipt(client)
             .accountId!
 
         let receiverAccountId = try await AccountCreateTransaction()
-            .key(Key.single(receiverKey.publicKey))
+            .keyWithoutAlias(Key.single(receiverKey.publicKey))
             .initialBalance(Hbar(2))
             .execute(client)
             .getReceipt(client)

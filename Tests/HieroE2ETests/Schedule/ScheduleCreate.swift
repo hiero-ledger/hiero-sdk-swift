@@ -38,7 +38,7 @@ internal class ScheduleCreate: XCTestCase {
         let transaction = AccountCreateTransaction()
         let accountReceipt =
             try await transaction
-            .key(.keyList(keyList))
+            .keyWithoutAlias(.keyList(keyList))
             .initialBalance(Hbar(1))
             .execute(testEnv.client)
 
@@ -183,7 +183,7 @@ internal class ScheduleCreate: XCTestCase {
         let privateKey = PrivateKey.generateEd25519()
 
         let accountId = try await AccountCreateTransaction()
-            .key(.single(privateKey.publicKey))
+            .keyWithoutAlias(.single(privateKey.publicKey))
             .initialBalance(Hbar(10))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -230,7 +230,7 @@ internal class ScheduleCreate: XCTestCase {
         let privateKey = PrivateKey.generateEd25519()
 
         let accountId = try await AccountCreateTransaction()
-            .key(.single(privateKey.publicKey))
+            .keyWithoutAlias(.single(privateKey.publicKey))
             .initialBalance(Hbar(10))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -264,7 +264,7 @@ internal class ScheduleCreate: XCTestCase {
         let privateKey = PrivateKey.generateEd25519()
 
         let accountId = try await AccountCreateTransaction()
-            .key(.single(privateKey.publicKey))
+            .keyWithoutAlias(.single(privateKey.publicKey))
             .initialBalance(Hbar(10))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -298,7 +298,7 @@ internal class ScheduleCreate: XCTestCase {
         let privateKey = PrivateKey.generateEd25519()
 
         let accountId = try await AccountCreateTransaction()
-            .key(.single(privateKey.publicKey))
+            .keyWithoutAlias(.single(privateKey.publicKey))
             .initialBalance(Hbar(10))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -353,7 +353,7 @@ internal class ScheduleCreate: XCTestCase {
             threshold: 2)
 
         let accountId = try await AccountCreateTransaction()
-            .key(.keyList(keyList))
+            .keyWithoutAlias(.keyList(keyList))
             .initialBalance(Hbar(10))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -430,7 +430,7 @@ internal class ScheduleCreate: XCTestCase {
             threshold: 2)
 
         let accountId = try await AccountCreateTransaction()
-            .key(.keyList(keyList))
+            .keyWithoutAlias(.keyList(keyList))
             .initialBalance(Hbar(10))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)

@@ -30,7 +30,7 @@ internal final class AccountCreate: XCTestCase {
         try await testEnv.ratelimits.accountCreate()
 
         let receipt = try await AccountCreateTransaction()
-            .key(.single(key.publicKey))
+            .keyWithoutAlias(.single(key.publicKey))
             .initialBalance(Hbar(1))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -59,7 +59,7 @@ internal final class AccountCreate: XCTestCase {
         try await testEnv.ratelimits.accountCreate()
 
         let receipt = try await AccountCreateTransaction()
-            .key(.single(key.publicKey))
+            .keyWithoutAlias(.single(key.publicKey))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
@@ -123,7 +123,7 @@ internal final class AccountCreate: XCTestCase {
     //     let key = PrivateKey.generateEd25519()
 
     //     let receipt = try await AccountCreateTransaction()
-    //         .key(.single(key.publicKey))
+    //         .keyWithoutAlias(.single(key.publicKey))
     //         .transactionId(
     //             .withValidStart(
     //                 testEnv.operator.accountId,
@@ -161,7 +161,7 @@ internal final class AccountCreate: XCTestCase {
 
         try await testEnv.ratelimits.accountCreate()
         let receipt = try await AccountCreateTransaction()
-            .key(.single(adminKey.publicKey))
+            .keyWithoutAlias(.single(adminKey.publicKey))
             .alias(evmAddress)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -188,7 +188,7 @@ internal final class AccountCreate: XCTestCase {
         try await testEnv.ratelimits.accountCreate()
         let receipt = try await AccountCreateTransaction()
             .receiverSignatureRequired(true)
-            .key(.single(adminKey.publicKey))
+            .keyWithoutAlias(.single(adminKey.publicKey))
             .alias(evmAddress)
             .freezeWith(testEnv.client)
             .sign(adminKey)
@@ -217,7 +217,7 @@ internal final class AccountCreate: XCTestCase {
         await assertThrowsHErrorAsync(
             try await AccountCreateTransaction()
                 .receiverSignatureRequired(true)
-                .key(.single(adminKey.publicKey))
+                .keyWithoutAlias(.single(adminKey.publicKey))
                 .alias(evmAddress)
                 .freezeWith(testEnv.client)
                 .execute(testEnv.client)
@@ -244,7 +244,7 @@ internal final class AccountCreate: XCTestCase {
         let evmAddress = try XCTUnwrap(key.publicKey.toEvmAddress())
 
         let receipt = try await AccountCreateTransaction()
-            .key(.single(adminKey.publicKey))
+            .keyWithoutAlias(.single(adminKey.publicKey))
             .alias(evmAddress)
             .freezeWith(testEnv.client)
             .sign(key)
@@ -272,7 +272,7 @@ internal final class AccountCreate: XCTestCase {
 
         await assertThrowsHErrorAsync(
             try await AccountCreateTransaction()
-                .key(.single(adminKey.publicKey))
+                .keyWithoutAlias(.single(adminKey.publicKey))
                 .alias(evmAddress)
                 .freezeWith(testEnv.client)
                 .execute(testEnv.client)
@@ -301,7 +301,7 @@ internal final class AccountCreate: XCTestCase {
         try await testEnv.ratelimits.accountCreate()
         let receipt = try await AccountCreateTransaction()
             .receiverSignatureRequired(true)
-            .key(.single(adminKey.publicKey))
+            .keyWithoutAlias(.single(adminKey.publicKey))
             .alias(evmAddress)
             .freezeWith(testEnv.client)
             .sign(key)
@@ -332,7 +332,7 @@ internal final class AccountCreate: XCTestCase {
         await assertThrowsHErrorAsync(
             try await AccountCreateTransaction()
                 .receiverSignatureRequired(true)
-                .key(.single(adminKey.publicKey))
+                .keyWithoutAlias(.single(adminKey.publicKey))
                 .alias(evmAddress)
                 .freezeWith(testEnv.client)
                 .execute(testEnv.client)
@@ -347,4 +347,148 @@ internal final class AccountCreate: XCTestCase {
             XCTAssertEqual(status, .invalidSignature)
         }
     }
+
+    internal func testAliasWithoutBothKeySignaturesFails() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        let adminKey = PrivateKey.generateEd25519()
+
+        _ = try await AccountCreateTransaction()
+            .keyWithoutAlias(.single(adminKey.publicKey))
+            .freezeWith(testEnv.client)
+            .execute(testEnv.client)
+
+        let key = PrivateKey.generateEcdsa()
+        await assertThrowsHErrorAsync(
+            try await AccountCreateTransaction()
+                .receiverSignatureRequired(true)
+                .keyWithAlias(.single(key.publicKey), adminKey)
+                .freezeWith(testEnv.client)
+                .sign(adminKey)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            "expected error creating account"
+        )
+    }
+
+    // Can create account with ECDSA key using setKeyWithAlias, account
+    // should have same ECDSA as key and same key's alias
+    internal func testVerifyKeyAndAliasAreFromAliasAccount() async throws {
+        let testEnv = try TestEnvironment.nonFree
+        let ecdsaKey = PrivateKey.generateEcdsa()
+        let evmAddress = try XCTUnwrap(ecdsaKey.publicKey.toEvmAddress())
+
+        let accountId = try await AccountCreateTransaction()
+            .receiverSignatureRequired(true)
+            .keyWithAlias(ecdsaKey)
+            .freezeWith(testEnv.client)
+            .sign(ecdsaKey)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+            .accountId!
+
+        let info = try await AccountInfoQuery()
+            .accountId(accountId)
+            .execute(testEnv.client)
+
+        XCTAssertNotNil(info.accountId)
+        XCTAssertEqual(info.key, .single(ecdsaKey.publicKey))
+        XCTAssertTrue(evmAddress.toString().contains(info.contractAccountId))
+
+        addTeardownBlock { try await Account(id: accountId, key: ecdsaKey).delete(testEnv) }
+    }
+
+    internal func testVerifySetKeyWithEcdsaKeyAndAlias() async throws {
+        let testEnv = try TestEnvironment.nonFree
+        let ecdsaKey = PrivateKey.generateEcdsa()
+
+        let key = PrivateKey.generateEd25519()
+        let evmAddress = try XCTUnwrap(ecdsaKey.publicKey.toEvmAddress())
+
+        let accountId = try await AccountCreateTransaction()
+            .receiverSignatureRequired(true)
+            .keyWithAlias(.single(key.publicKey), ecdsaKey)
+            .freezeWith(testEnv.client)
+            .sign(key)
+            .sign(ecdsaKey)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+            .accountId!
+
+        let info = try await AccountInfoQuery()
+            .accountId(accountId)
+            .execute(testEnv.client)
+
+        XCTAssertNotNil(info.accountId)
+        XCTAssertEqual(info.key, .single(key.publicKey))
+        XCTAssertTrue(evmAddress.toString().contains(info.contractAccountId))
+    }
+
+    // Can create account with ECDSA key using keyWithoutAlias, account
+    // should have same ECDSA as key and no alias
+    internal func testVerifySetKeyWithoutAlias() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        let key = PrivateKey.generateEcdsa()
+
+        let accountId = try await AccountCreateTransaction()
+            .receiverSignatureRequired(true)
+            .keyWithoutAlias(.single(key.publicKey))
+            .freezeWith(testEnv.client)
+            .sign(key)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+            .accountId!
+
+        let info = try await AccountInfoQuery()
+            .accountId(accountId)
+            .execute(testEnv.client)
+
+        let isZeroAddress = isZeroAddress(try info.contractAccountId.bytes)
+
+        XCTAssertNotNil(info.accountId)
+        XCTAssertEqual(info.key, .single(key.publicKey))
+        XCTAssertTrue(isZeroAddress)
+        addTeardownBlock { try await Account(id: accountId, key: key).delete(testEnv) }
+    }
+
+    // Can't set key with alias with Ed25519 key
+    // This is because Ed25519 keys are not supported for alias
+    internal func testSetKeyWithAliasWithEd25519KeyFails() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        let key = PrivateKey.generateEd25519()
+
+        let accountId = try await AccountCreateTransaction()
+            .receiverSignatureRequired(true)
+            .keyWithoutAlias(.single(key.publicKey))
+            .freezeWith(testEnv.client)
+            .sign(key)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+            .accountId!
+
+        addTeardownBlock { try await Account(id: accountId, key: key).delete(testEnv) }
+
+        await assertThrowsHErrorAsync(
+            try await AccountCreateTransaction()
+                .receiverSignatureRequired(true)
+                .keyWithAlias(key)
+                .freezeWith(testEnv.client)
+                .sign(key)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            "expected error creating account"
+        )
+    }
+
+    // Checks if an address is a zero address (all first 12 bytes are zero)
+    internal func isZeroAddress(_ address: [UInt8]) -> Bool {
+        // Check first 12 bytes are all zero
+        for byte in address[..<12] where byte != 0 {
+            return false
+        }
+        return true
+    }
+
 }

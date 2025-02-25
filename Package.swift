@@ -66,6 +66,7 @@ let exampleTargets = [
     "TokenAirdrop",
     "InitializeClientWithMirrorNetwork",
     "LongTermScheduledTransaction",
+    "CreateAccountWithAlias",
 ].map { name in
     Target.executableTarget(
         name: "\(name)Example",

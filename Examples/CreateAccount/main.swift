@@ -35,7 +35,7 @@ internal enum Program {
         print("public key = \(newKey.publicKey)")
 
         let response = try await AccountCreateTransaction()
-            .key(.single(newKey.publicKey))
+            .keyWithoutAlias(.single(newKey.publicKey))
             .initialBalance(5)
             .execute(client)
 

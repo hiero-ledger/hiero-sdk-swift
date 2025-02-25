@@ -29,7 +29,7 @@ internal final class AccountUpdate: XCTestCase {
         let key2 = PrivateKey.generateEd25519()
 
         let receipt = try await AccountCreateTransaction()
-            .key(.single(key1.publicKey))
+            .keyWithoutAlias(.single(key1.publicKey))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
@@ -96,7 +96,7 @@ internal final class AccountUpdate: XCTestCase {
 
         // Create account with max token associations of 1
         let accountCreateReceipt = try await AccountCreateTransaction()
-            .key(.single(accountKey.publicKey))
+            .keyWithoutAlias(.single(accountKey.publicKey))
             .maxAutomaticTokenAssociations(1)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
