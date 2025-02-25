@@ -268,7 +268,7 @@ internal class TokenAirdrop: XCTestCase {
         // Create a receiver account with unlimited auto associations and receiverSig = true
         let receiverKey = PrivateKey.generateEd25519()
         let receiverAccountId = try await AccountCreateTransaction()
-            .key(Key.single(receiverKey.publicKey))
+            .keyWithoutAlias(Key.single(receiverKey.publicKey))
             .initialBalance(Hbar(1))
             .receiverSignatureRequired(true)
             .maxAutomaticTokenAssociations(-1)
@@ -304,7 +304,7 @@ internal class TokenAirdrop: XCTestCase {
         // Create a receiver account with unlimited auto associations and receiverSig = true
         let receiverKey = PrivateKey.generateEd25519()
         let receiverAccountId = try await AccountCreateTransaction()
-            .key(Key.single(receiverKey.publicKey))
+            .keyWithoutAlias(Key.single(receiverKey.publicKey))
             .initialBalance(Hbar(1))
             .receiverSignatureRequired(true)
             .maxAutomaticTokenAssociations(-1)

@@ -59,7 +59,7 @@ internal enum Program {
 
         let bobsId = try await AccountCreateTransaction()
             .receiverSignatureRequired(true)
-            .key(.single(bobsKey.publicKey))
+            .keyWithoutAlias(.single(bobsKey.publicKey))
             .initialBalance(10)
             .freezeWith(client)
             .sign(bobsKey)

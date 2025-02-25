@@ -48,7 +48,7 @@ internal enum Program {
         )
 
         let receipt = try await AccountCreateTransaction()
-            .key(.keyList(transactionKey))
+            .keyWithoutAlias(.keyList(transactionKey))
             .initialBalance(.fromTinybars(1))
             .accountMemo("3-of-4 multi-sig account")
             .execute(client)

@@ -54,7 +54,7 @@ internal enum Program {
         // The only _required_ property here is `key`
         let response = try await AccountCreateTransaction()
             .nodeAccountIds([3])
-            .key(.keyList(keyList))
+            .keyWithoutAlias(.keyList(keyList))
             .initialBalance(Hbar(10))
             .execute(client)
 
