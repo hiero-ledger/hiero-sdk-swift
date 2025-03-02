@@ -8,6 +8,29 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get By Key
+/// An obsolete query to obtain a list of entities that refer to
+/// a given Key object.<br/>
+/// Returned entities may be accounts, files, smart contracts, and/or
+/// live hash entries.
+///
+/// > Important
+/// >> This query is obsolete and not supported.<br/>
+/// >> Any query of this type that is submitted SHALL fail with a `PRE_CHECK`
+/// >> result of `NOT_SUPPORTED`.
+///
+/// > Implementation Note
+/// >> This query is not defined for any service, and while it is implemented
+/// >> in the "Network Admin" service, it may be unnecessary to do so.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,17 +44,21 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get all accounts, claims, files, and smart contract instances whose associated keys include the
-/// given Key. The given Key must not be a contractID or a ThresholdKey. This is not yet implemented
-/// in the API, but will be in the future.
+/// Query all accounts, claims, files, and smart contract instances whose
+/// associated keys include the given Key.
+///
+/// > This query is no longer supported.
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_GetByKeyQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -42,7 +69,8 @@ public struct Proto_GetByKeyQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The key to search for. It must not contain a contractID nor a ThresholdSignature.
+  /// The key to search for. It MUST NOT contain a contractID nor
+  /// a ThresholdKey.
   public var key: Proto_Key {
     get {return _key ?? Proto_Key()}
     set {_key = newValue}
@@ -61,7 +89,11 @@ public struct Proto_GetByKeyQuery: Sendable {
 }
 
 ///*
-/// the ID for a single entity (account, livehash, file, or smart contract instance)
+/// The ID for a single entity (account, livehash, file, or smart contract)
+///
+/// > The query that defines this message is no longer supported.
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_EntityID: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -80,7 +112,7 @@ public struct Proto_EntityID: Sendable {
   }
 
   ///*
-  /// A uniquely identifying livehash of an acount
+  /// A uniquely identifying livehash of an account
   public var liveHash: Proto_LiveHash {
     get {
       if case .liveHash(let v)? = entity {return v}
@@ -116,7 +148,7 @@ public struct Proto_EntityID: Sendable {
     /// The Account ID for the cryptocurrency account
     case accountID(Proto_AccountID)
     ///*
-    /// A uniquely identifying livehash of an acount
+    /// A uniquely identifying livehash of an account
     case liveHash(Proto_LiveHash)
     ///*
     /// The file ID of the file
@@ -132,14 +164,19 @@ public struct Proto_EntityID: Sendable {
 
 ///*
 /// Response when the client sends the node GetByKeyQuery
+///
+/// > This query is no longer supported.
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_GetByKeyResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -150,7 +187,8 @@ public struct Proto_GetByKeyResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The list of entities that include this public key in their associated Key list
+  /// The list of entities that include this public key in their
+  /// associated Key list
   public var entities: [Proto_EntityID] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

@@ -8,6 +8,21 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Approve Allowance
+/// This transaction body provides a mechanism to add "allowance" entries
+/// for an account. These allowances enable one account to spend or transfer
+/// token balances (for fungible/common tokens), individual tokens (for
+/// non-fungible/unique tokens), or all non-fungible tokens owned by the
+/// account, now or in the future (if `approved_for_all` is set).
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,14 +36,33 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Creates one or more hbar/token approved allowances <b>relative to the owner account specified in the allowances of
-/// this transaction</b>. Each allowance grants a spender the right to transfer a pre-determined amount of the owner's
-/// hbar/token to any other account of the spender's choice. If the owner is not specified in any allowance, the payer
-/// of transaction is considered to be the owner for that particular allowance.
-/// Setting the amount to zero in CryptoAllowance or TokenAllowance will remove the respective allowance for the spender.
-/// 
-/// (So if account <tt>0.0.X</tt> pays for this transaction and owner is not specified in the allowance,
-/// then at consensus each spender account will have new allowances to spend hbar or tokens from <tt>0.0.X</tt>).
+/// Create ("Approve") allowances for one account to transfer tokens owned
+/// by a different account.<br/>
+/// An allowance permits a "spender" account to independently transfer tokens
+/// owned by a separate "owner" account. Each such allowance permits spending
+/// any amount, up to a specified limit, for fungible/common tokens; a single
+/// specified non-fungible/unique token, or all non-fungible/unique tokens
+/// of a particular token type held by the "owner" account.
+///
+/// If the "owner" account is not specified for any allowance in this
+/// transaction (the `owner` field is not set), the `payer` account for this
+/// transaction SHALL be owner for that allowance.<br/>
+/// Each `owner` account specified in any allowance approved in this
+/// transaction MUST sign this transaction.<br/>
+/// If the `amount` field for any fungible/common allowance in this
+/// transaction is `0`, then that allowance SHOULD match an existing,
+/// previously approved, allowance which SHALL be removed.<br/>
+/// There are three lists in this message. Each list MAY be empty, but
+/// _at least one_ list MUST contain _at least one_ entry.
+///
+/// Example for the `payer` rule.<br/>
+///  - Given an account `0.0.X` that pays for this transaction, and owner
+///    is not specified in an allowance of `200` HBAR to spender account
+///    `0.0.Y`. At consensus the spender account `0.0.Y` will have a new
+///    allowance to spend `200` HBAR from the balance of account `0.0.X`.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_CryptoApproveAllowanceTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -36,14 +70,23 @@ public struct Proto_CryptoApproveAllowanceTransactionBody: Sendable {
 
   ///*
   /// List of hbar allowances approved by the account owner.
+  /// <p>
+  /// This list MAY be empty, provided at least one other list is
+  /// not empty.
   public var cryptoAllowances: [Proto_CryptoAllowance] = []
 
   ///*
   /// List of non-fungible token allowances approved by the account owner.
+  /// <p>
+  /// This list MAY be empty, provided at least one other list is
+  /// not empty.
   public var nftAllowances: [Proto_NftAllowance] = []
 
   ///*
   /// List of fungible token allowances approved by the account owner.
+  /// <p>
+  /// This list MAY be empty, provided at least one other list is
+  /// not empty.
   public var tokenAllowances: [Proto_TokenAllowance] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -52,14 +95,24 @@ public struct Proto_CryptoApproveAllowanceTransactionBody: Sendable {
 }
 
 ///*
-/// An approved allowance of hbar transfers for a spender.
+/// An approved allowance of hbar transfers.
+/// This message specifies one allowance for a single, unique, combination
+/// of owner, spender, and amount.
+///
+/// If `owner` is not set, the effective `owner` SHALL be the `payer` for the
+/// enclosing transaction.<br/>
+/// The `spender` MUST be specified and MUST be a valid account.<br/>
+/// The `amount` MUST be a whole number, and SHOULD be greater than `0` unless
+/// this allowance is intended to _remove_ a previously approved allowance.
 public struct Proto_CryptoAllowance: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The account ID of the hbar owner (ie. the grantor of the allowance).
+  /// An owner account identifier.<br/>
+  /// This is the account identifier of the account granting an allowance
+  /// for the `spender` to transfer tokens held by this account.
   public var owner: Proto_AccountID {
     get {return _owner ?? Proto_AccountID()}
     set {_owner = newValue}
@@ -70,7 +123,9 @@ public struct Proto_CryptoAllowance: Sendable {
   public mutating func clearOwner() {self._owner = nil}
 
   ///*
-  /// The account ID of the spender of the hbar allowance.
+  /// A spender account identifier.<br/>
+  /// This is the account identifier of the account permitted to transfer
+  /// tokens held by the `owner`.
   public var spender: Proto_AccountID {
     get {return _spender ?? Proto_AccountID()}
     set {_spender = newValue}
@@ -81,7 +136,13 @@ public struct Proto_CryptoAllowance: Sendable {
   public mutating func clearSpender() {self._spender = nil}
 
   ///*
-  /// The amount of the spender's allowance in tinybars.
+  /// An amount of tinybar (10<sup>-8</sup> HBAR).<br/>
+  /// This is the amount of HBAR held by the `owner` that the
+  /// `spender` is permitted to transfer.
+  /// <p>
+  /// This value MUST be a whole number.<br/>
+  /// This value MUST be greater than 0 to create a new allowance.<br/>
+  /// This value MAY be exactly `0` to _remove_ an existing allowance.<br/>
   public var amount: Int64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -93,14 +154,28 @@ public struct Proto_CryptoAllowance: Sendable {
 }
 
 ///*
-/// An approved allowance of non-fungible token transfers for a spender.
+/// An approved allowance of non-fungible tokens.<br/>
+/// This type of allowance may permit transfers for one or more individual
+/// unique tokens, or may permit transfers for all unique tokens of the
+/// specified type.
+///
+/// If `owner` is not set, the effective `owner` SHALL be the `payer` for the
+/// enclosing transaction.<br/>
+/// The `spender` MUST be specified and MUST be a valid account.<br/>
+/// If `approve_for_all` is set, then `serial_numbers` SHOULD be empty
+/// and SHALL be ignored.
+/// If `approve_for_all` is unset, then `serial_numbers` MUST NOT be empty.
 public struct Proto_NftAllowance: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The NFT token type that the allowance pertains to.
+  /// A token identifier.<br/>
+  /// This identifies the type of token the `spender` is permitted to
+  /// transfer from the `owner`.
+  /// <p>
+  /// The identified token type MUST be a non-fungible/unique token.
   public var tokenID: Proto_TokenID {
     get {return _tokenID ?? Proto_TokenID()}
     set {_tokenID = newValue}
@@ -111,7 +186,9 @@ public struct Proto_NftAllowance: Sendable {
   public mutating func clearTokenID() {self._tokenID = nil}
 
   ///*
-  /// The account ID of the token owner (ie. the grantor of the allowance).
+  /// An owner account identifier.<br/>
+  /// This is the account identifier of the account granting an allowance
+  /// for the `spender` to transfer tokens held by this account.
   public var owner: Proto_AccountID {
     get {return _owner ?? Proto_AccountID()}
     set {_owner = newValue}
@@ -122,7 +199,9 @@ public struct Proto_NftAllowance: Sendable {
   public mutating func clearOwner() {self._owner = nil}
 
   ///*
-  /// The account ID of the token allowance spender.
+  /// A spender account identifier.<br/>
+  /// This is the account identifier of the account permitted to transfer
+  /// tokens held by the `owner`.
   public var spender: Proto_AccountID {
     get {return _spender ?? Proto_AccountID()}
     set {_spender = newValue}
@@ -133,12 +212,21 @@ public struct Proto_NftAllowance: Sendable {
   public mutating func clearSpender() {self._spender = nil}
 
   ///*
+  /// A list of token serial numbers.<br/>
   /// The list of serial numbers that the spender is permitted to transfer.
+  /// <p>
+  /// The `owner` MUST currently hold each token identified in this list.
   public var serialNumbers: [Int64] = []
 
   ///*
-  /// If true, the spender has access to all of the owner's NFT units of type tokenId (currently
-  /// owned and any in the future).
+  /// A flag indicating this allowance applies to all tokens of the
+  /// specified (non-fungible/unique) type.
+  /// <p>
+  /// If true, the `spender` SHALL be permitted to transfer any or all
+  /// of the `owner`'s tokens of the specified token type.
+  /// This SHALL apply not only to currently owned tokens, but to all
+  /// such tokens acquired in the future, unless the
+  /// allowance is `delete`d.
   public var approvedForAll: SwiftProtobuf.Google_Protobuf_BoolValue {
     get {return _approvedForAll ?? SwiftProtobuf.Google_Protobuf_BoolValue()}
     set {_approvedForAll = newValue}
@@ -149,8 +237,19 @@ public struct Proto_NftAllowance: Sendable {
   public mutating func clearApprovedForAll() {self._approvedForAll = nil}
 
   ///*
-  /// The account ID of the spender who is granted approvedForAll allowance and granting
-  /// approval on an NFT serial to another spender.
+  /// A spender-owner account identifier.<br/>
+  /// This account identifier identifies a `spender` for whom an existing
+  /// `approved_for_all` allowance was previously created. This enables
+  /// an account with such broad access to grant allowances to transfer
+  /// individual tokens from the original owner without involving that
+  /// original owner.
+  /// <p>
+  /// If this is set, the account identified MUST sign this transaction, but
+  /// the `owner` account MAY NOT sign this transaction.<br/>
+  /// If this is set, there MUST exist an active `approved_for_all`
+  /// allowance from the `owner` for the `delegating_spender` to transfer
+  /// all tokens of the type identified by the `tokenId` field.<br/>
+  /// If this value is set, the `approved_for_all` flag MUST be `false`.
   public var delegatingSpender: Proto_AccountID {
     get {return _delegatingSpender ?? Proto_AccountID()}
     set {_delegatingSpender = newValue}
@@ -172,14 +271,28 @@ public struct Proto_NftAllowance: Sendable {
 }
 
 ///*
-/// An approved allowance of fungible token transfers for a spender.
+/// An approved allowance of fungible/common token transfers.
+/// This message specifies one allowance for a single, unique, combination
+/// of token, owner, spender, and amount.
+///
+/// If `owner` is not set, the effective `owner` SHALL be the `payer` for the
+/// enclosing transaction.<br/>
+/// The `tokenId` MUST be specified and MUST be a valid
+/// fungible/common token type.<br/>
+/// The `spender` MUST be specified and MUST be a valid account.<br/>
+/// The `amount` MUST be a whole number, and SHOULD be greater than `0` unless
+/// this allowance is intended to _remove_ a previously approved allowance.
 public struct Proto_TokenAllowance: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The token that the allowance pertains to.
+  /// A token identifier.<br/>
+  /// This identifies the type of token the `spender` is permitted to
+  /// transfer from the `owner`.
+  /// <p>
+  /// The identified token type MUST be a fungible/common token.
   public var tokenID: Proto_TokenID {
     get {return _tokenID ?? Proto_TokenID()}
     set {_tokenID = newValue}
@@ -190,7 +303,9 @@ public struct Proto_TokenAllowance: Sendable {
   public mutating func clearTokenID() {self._tokenID = nil}
 
   ///*
-  /// The account ID of the token owner (ie. the grantor of the allowance).
+  /// An owner account identifier.<br/>
+  /// This is the account identifier of the account granting an allowance
+  /// for the `spender` to transfer tokens held by this account.
   public var owner: Proto_AccountID {
     get {return _owner ?? Proto_AccountID()}
     set {_owner = newValue}
@@ -201,7 +316,9 @@ public struct Proto_TokenAllowance: Sendable {
   public mutating func clearOwner() {self._owner = nil}
 
   ///*
-  /// The account ID of the token allowance spender.
+  /// A spender account identifier.<br/>
+  /// This is the account identifier of the account permitted to transfer
+  /// tokens held by the `owner`.
   public var spender: Proto_AccountID {
     get {return _spender ?? Proto_AccountID()}
     set {_spender = newValue}
@@ -212,7 +329,13 @@ public struct Proto_TokenAllowance: Sendable {
   public mutating func clearSpender() {self._spender = nil}
 
   ///*
-  /// The amount of the spender's token allowance.
+  /// An amount of fractional tokens (10<sup>-decimals</sup> tokens).<br/>
+  /// This is the amount of tokens held by the `owner` that the
+  /// `spender` is permitted to transfer.
+  /// <p>
+  /// This value MUST be a whole number.<br/>
+  /// This value MUST be greater than 0 to create a new allowance.<br/>
+  /// This value MAY be exactly `0` to _remove_ an existing allowance.<br/>
   public var amount: Int64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

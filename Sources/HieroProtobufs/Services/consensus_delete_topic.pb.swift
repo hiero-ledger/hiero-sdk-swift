@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Delete Topic
+/// Delete an existing topic from the Hedera Consensus Service (HCS).
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,14 +32,25 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// See [ConsensusService.deleteTopic()](#proto.ConsensusService)
+/// Delete a topic.
+///
+/// Once deleted, subsequent transactions or queries for that topic SHALL NOT
+/// succeed.<br/>
+/// If adminKey is set on the topic, this transaction MUST be signed by that
+/// key.<br/>
+/// If adminKey is not set on the topic, this transaction SHALL fail with a
+/// response code of `UNAUTHORIZED`. A topic without an adminKey cannot be
+/// deleted (but MAY expire).
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_ConsensusDeleteTopicTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Topic identifier
+  /// Topic to be deleted.
   public var topicID: Proto_TopicID {
     get {return _topicID ?? Proto_TopicID()}
     set {_topicID = newValue}

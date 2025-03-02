@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get Account NFT Infos
+/// Deprecated and permanently disabled
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,31 +32,19 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Applicable only to tokens of type NON_FUNGIBLE_UNIQUE. Gets info on NFTs N through M owned by the
-/// specified accountId.
-/// Example: If Account A owns 5 NFTs (might be of different Token Entity), having start=0 and end=5
-/// will return all of the NFTs
+/// Deleted and unsupported.
 ///
-/// INVALID_QUERY_RANGE response code will be returned if:
-/// 1) Start > End
-/// 2) Start and End indices are non-positive
-/// 3) Start and End indices are out of boundaries for the retrieved nft list
-/// 4) The range between Start and End is bigger than the global dynamic property for maximum query
-///    range
-///
-/// NOT_SUPPORTED response code will be returned if the queried token is of type FUNGIBLE_COMMON
-///
-/// INVALID_ACCOUNT_ID response code will be returned if the queried account does not exist
-///
-/// ACCOUNT_DELETED response code will be returned if the queried account has been deleted
+/// This query is not implemented and any query of this type submitted
+/// SHALL return a `NOT_SUPPORTED` response code.
 public struct Proto_TokenGetAccountNftInfosQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -67,13 +66,13 @@ public struct Proto_TokenGetAccountNftInfosQuery: Sendable {
   public mutating func clearAccountID() {self._accountID = nil}
 
   ///*
-  /// Specifies the start index (inclusive) of the range of NFTs to query for. Value must be in the
-  /// range [0; ownedNFTs-1]
+  /// Specifies the start index (inclusive) of the range of NFTs to query for.
+  /// Value must be in the range [0; ownedNFTs-1]
   public var start: Int64 = 0
 
   ///*
-  /// Specifies the end index (exclusive) of the range of NFTs to query for. Value must be in the
-  /// range (start; ownedNFTs]
+  /// Specifies the end index (exclusive) of the range of NFTs to query for.
+  /// Value must be in the range (start; ownedNFTs]
   public var end: Int64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -85,15 +84,16 @@ public struct Proto_TokenGetAccountNftInfosQuery: Sendable {
 }
 
 ///*
-/// UNDOCUMENTED
+/// Deleted and unsupported.
 public struct Proto_TokenGetAccountNftInfosResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}

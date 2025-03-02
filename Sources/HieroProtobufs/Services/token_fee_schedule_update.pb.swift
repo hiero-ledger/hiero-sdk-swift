@@ -8,6 +8,20 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Fee Schedule Update
+/// Transaction to update the fee schedule for a token. A token creator may
+/// wish to charge custom transaction fees for a token type, and if a
+/// `fee_schedule_key` is assigned, this transaction enables adding, removing,
+/// or updating those custom transaction fees.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,21 +35,29 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// At consensus, updates a token type's fee schedule to the given list of custom fees. 
-/// 
-/// If the target token type has no fee_schedule_key, resolves to TOKEN_HAS_NO_FEE_SCHEDULE_KEY.
-/// Otherwise this transaction must be signed to the fee_schedule_key, or the transaction will 
-/// resolve to INVALID_SIGNATURE.
-/// 
-/// If the custom_fees list is empty, clears the fee schedule or resolves to 
+/// Update the custom fee schedule for a token type.
+///
+/// The token MUST have a `fee_schedule_key` set and that key MUST NOT
+/// be an empty `KeyList`.<br/>
+/// The token `fee_schedule_key` MUST sign this transaction.<br/>
+/// The token MUST exist, MUST NOT be deleted, and MUST NOT be expired.<br/>
+///
+/// If the custom_fees list is empty, clears the fee schedule or resolves to
 /// CUSTOM_SCHEDULE_ALREADY_HAS_NO_FEES if the fee schedule was already empty.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_TokenFeeScheduleUpdateTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The token whose fee schedule is to be updated
+  /// A token identifier.
+  /// <p>
+  /// This SHALL identify the token type to modify with an updated
+  /// custom fee schedule.<br/>
+  /// The identified token MUST exist, and MUST NOT be deleted.
   public var tokenID: Proto_TokenID {
     get {return _tokenID ?? Proto_TokenID()}
     set {_tokenID = newValue}
@@ -46,7 +68,14 @@ public struct Proto_TokenFeeScheduleUpdateTransactionBody: Sendable {
   public mutating func clearTokenID() {self._tokenID = nil}
 
   ///*
-  /// The new custom fees to be assessed during a CryptoTransfer that transfers units of this token
+  /// A list of custom fees representing a fee schedule.
+  /// <p>
+  /// This list MAY be empty to remove custom fees from a token.<br/>
+  /// If the identified token is a non-fungible/unique type, the entries
+  /// in this list MUST NOT declare a `fractional_fee`.<br/>
+  /// If the identified token is a fungible/common type, the entries in this
+  /// list MUST NOT declare a `royalty_fee`.<br/>
+  /// Any token type MAY include entries that declare a `fixed_fee`.
   public var customFees: [Proto_CustomFee] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

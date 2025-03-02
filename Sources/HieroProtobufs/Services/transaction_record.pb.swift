@@ -8,6 +8,22 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Transaction Record
+/// The record of a single transaction, including receipt and transaction
+/// results such as transfer lists, entropy, contract call result, etc...<br/>
+/// The record also includes fees, consensus time, EVM information, and
+/// other result metadata.<br/>
+/// Only values appropriate to the requested transaction are populated, all
+/// other fields will not be set (i.e. null or default values).
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -29,8 +45,11 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   // methods supported on all messages.
 
   ///*
-  /// The status (reach consensus, or failed, or is unknown) and the ID of any new
-  /// account/file/instance created.
+  /// A transaction receipt.
+  /// <p>
+  /// This SHALL report consensus status (reach consensus, failed,
+  /// unknown) and the ID of any new entity (i.e. account, file,
+  /// contract, schedule, etc...) created.
   public var receipt: Proto_TransactionReceipt {
     get {return _storage._receipt ?? Proto_TransactionReceipt()}
     set {_uniqueStorage()._receipt = newValue}
@@ -41,15 +60,20 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   public mutating func clearReceipt() {_uniqueStorage()._receipt = nil}
 
   ///*
-  /// The hash of the Transaction that executed (not the hash of any Transaction that failed for
-  /// having a duplicate TransactionID)
+  /// A transaction hash value.
+  /// <p>
+  /// This SHALL be the hash of the Transaction that executed and
+  /// SHALL NOT be the hash of any Transaction that failed for
+  /// having a duplicate TransactionID.
   public var transactionHash: Data {
     get {return _storage._transactionHash}
     set {_uniqueStorage()._transactionHash = newValue}
   }
 
   ///*
-  /// The consensus timestamp (or null if didn't reach consensus yet)
+  /// A consensus timestamp.
+  /// <p>
+  /// This SHALL be null if the transaction did not reach consensus yet.
   public var consensusTimestamp: Proto_Timestamp {
     get {return _storage._consensusTimestamp ?? Proto_Timestamp()}
     set {_uniqueStorage()._consensusTimestamp = newValue}
@@ -60,7 +84,7 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   public mutating func clearConsensusTimestamp() {_uniqueStorage()._consensusTimestamp = nil}
 
   ///*
-  /// The ID of the transaction this record represents
+  /// A transaction identifier to the transaction associated to this record.
   public var transactionID: Proto_TransactionID {
     get {return _storage._transactionID ?? Proto_TransactionID()}
     set {_uniqueStorage()._transactionID = newValue}
@@ -71,15 +95,22 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   public mutating func clearTransactionID() {_uniqueStorage()._transactionID = nil}
 
   ///*
-  /// The memo that was submitted as part of the transaction (max 100 bytes)
+  /// A transaction memo.<br/>
+  /// This is the memo that was submitted as part of the transaction.
+  /// <p>
+  /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+  /// (default 100) bytes when encoded as UTF-8.
   public var memo: String {
     get {return _storage._memo}
     set {_uniqueStorage()._memo = newValue}
   }
 
   ///*
-  /// The actual transaction fee charged, not the original transactionFee value from
-  /// TransactionBody
+  /// A transaction fee charged.
+  /// <p>
+  /// This SHALL be the actual transaction fee charged.<br/>
+  /// This MAY NOT match the original `transactionFee` value
+  /// from the `TransactionBody`.
   public var transactionFee: UInt64 {
     get {return _storage._transactionFee}
     set {_uniqueStorage()._transactionFee = newValue}
@@ -91,8 +122,9 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   }
 
   ///*
-  /// Record of the value returned by the smart contract function (if it completed and didn't
-  /// fail) from ContractCallTransaction
+  /// A contract call result.<br/>
+  /// A record of the value returned by the smart contract function (if
+  /// it completed and didn't fail) from a `ContractCallTransaction`.
   public var contractCallResult: Proto_ContractFunctionResult {
     get {
       if case .contractCallResult(let v)? = _storage._body {return v}
@@ -102,8 +134,9 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   }
 
   ///*
-  /// Record of the value returned by the smart contract constructor (if it completed and
-  /// didn't fail) from ContractCreateTransaction
+  /// A contract creation result.<br/>
+  /// A record of the value returned by the smart contract constructor (if
+  /// it completed and didn't fail) from a `ContractCreateTransaction`.
   public var contractCreateResult: Proto_ContractFunctionResult {
     get {
       if case .contractCreateResult(let v)? = _storage._body {return v}
@@ -113,9 +146,12 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   }
 
   ///*
-  /// All hbar transfers as a result of this transaction, such as fees, or transfers performed by
-  /// the transaction, or by a smart contract it calls, or by the creation of threshold records
-  /// that it triggers.
+  /// A transfer list for this transaction.<br/>
+  /// This is a list of all HBAR transfers completed for this transaction.
+  /// <p>
+  /// This MAY include fees, transfers performed by the transaction,
+  /// transfers initiated by a smart contract it calls, or the creation
+  /// of threshold records that it triggers.
   public var transferList: Proto_TransferList {
     get {return _storage._transferList ?? Proto_TransferList()}
     set {_uniqueStorage()._transferList = newValue}
@@ -126,14 +162,19 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   public mutating func clearTransferList() {_uniqueStorage()._transferList = nil}
 
   ///*
-  /// All Token transfers as a result of this transaction
+  /// A token transfer list for this transaction.<br/>
+  /// This is a list of all non-HBAR token transfers
+  /// completed for this transaction.<br/>
   public var tokenTransferLists: [Proto_TokenTransferList] {
     get {return _storage._tokenTransferLists}
     set {_uniqueStorage()._tokenTransferLists = newValue}
   }
 
   ///*
-  /// Reference to the scheduled transaction ID that this transaction record represent
+  /// A schedule reference.<br/>
+  /// The reference to a schedule ID for the schedule that initiated this
+  /// transaction, if this this transaction record represents a scheduled
+  /// transaction.
   public var scheduleRef: Proto_ScheduleID {
     get {return _storage._scheduleRef ?? Proto_ScheduleID()}
     set {_uniqueStorage()._scheduleRef = newValue}
@@ -144,23 +185,27 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   public mutating func clearScheduleRef() {_uniqueStorage()._scheduleRef = nil}
 
   ///*
-  /// All custom fees that were assessed during a CryptoTransfer, and must be paid if the
-  /// transaction status resolved to SUCCESS
+  /// A list of all custom fees that were assessed during a CryptoTransfer.
+  /// <p>
+  /// These SHALL be paid if the transaction status resolved to SUCCESS.
   public var assessedCustomFees: [Proto_AssessedCustomFee] {
     get {return _storage._assessedCustomFees}
     set {_uniqueStorage()._assessedCustomFees = newValue}
   }
 
   ///*
-  /// All token associations implicitly created while handling this transaction
+  /// A list of all token associations implicitly or automatically
+  /// created while handling this transaction.
   public var automaticTokenAssociations: [Proto_TokenAssociation] {
     get {return _storage._automaticTokenAssociations}
     set {_uniqueStorage()._automaticTokenAssociations = newValue}
   }
 
   ///*
-  /// In the record of an internal transaction, the consensus timestamp of the user
-  /// transaction that spawned it.
+  /// A consensus timestamp for a child record.
+  /// <p>
+  /// This SHALL be the consensus timestamp of a user transaction that
+  /// spawned an internal child transaction.
   public var parentConsensusTimestamp: Proto_Timestamp {
     get {return _storage._parentConsensusTimestamp ?? Proto_Timestamp()}
     set {_uniqueStorage()._parentConsensusTimestamp = newValue}
@@ -171,23 +216,30 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   public mutating func clearParentConsensusTimestamp() {_uniqueStorage()._parentConsensusTimestamp = nil}
 
   ///*
-  /// In the record of a CryptoCreate transaction triggered by a user transaction with a
-  /// (previously unused) alias, the new account's alias. 
+  /// A new account alias.<br/>
+  /// <p>
+  /// This is the new alias assigned to an account created as part
+  /// of a CryptoCreate transaction triggered by a user transaction
+  /// with a (previously unused) alias.
   public var alias: Data {
     get {return _storage._alias}
     set {_uniqueStorage()._alias = newValue}
   }
 
   ///*
-  /// The keccak256 hash of the ethereumData. This field will only be populated for 
-  /// EthereumTransaction.
+  /// A keccak256 hash of the ethereumData.
+  /// <p>
+  /// This field SHALL only be populated for EthereumTransaction.
   public var ethereumHash: Data {
     get {return _storage._ethereumHash}
     set {_uniqueStorage()._ethereumHash = newValue}
   }
 
   ///*
-  /// List of accounts with the corresponding staking rewards paid as a result of a transaction.
+  /// A list of staking rewards paid.
+  /// <p>
+  /// This SHALL be a list accounts with the corresponding staking
+  /// rewards paid as a result of this transaction.
   public var paidStakingRewards: [Proto_AccountAmount] {
     get {return _storage._paidStakingRewards}
     set {_uniqueStorage()._paidStakingRewards = newValue}
@@ -199,7 +251,10 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   }
 
   ///*
-  /// In the record of a UtilPrng transaction with no output range, a pseudorandom 384-bit string.
+  /// A pseudorandom 384-bit sequence.
+  /// <p>
+  /// This SHALL be returned in the record of a UtilPrng transaction
+  /// with no output range,
   public var prngBytes: Data {
     get {
       if case .prngBytes(let v)? = _storage._entropy {return v}
@@ -209,7 +264,10 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   }
 
   ///*
-  /// In the record of a PRNG transaction with an output range, the output of a PRNG whose input was a 384-bit string.
+  /// A pseudorandom 32-bit integer.<br/>
+  /// <p>
+  /// This SHALL be returned in the record of a PRNG transaction with
+  /// an output range specified.
   public var prngNumber: Int32 {
     get {
       if case .prngNumber(let v)? = _storage._entropy {return v}
@@ -219,8 +277,11 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
   }
 
   ///*
-  /// The new default EVM address of the account created by this transaction.
-  /// This field is populated only when the EVM address is not specified in the related transaction body.
+  /// A new default EVM address for an account created by
+  /// this transaction.
+  /// <p>
+  /// This field SHALL be populated only when the EVM address is not
+  /// specified in the related transaction body.
   public var evmAddress: Data {
     get {return _storage._evmAddress}
     set {_uniqueStorage()._evmAddress = newValue}
@@ -228,14 +289,16 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
 
   ///*
   /// A list of pending token airdrops.
-  /// Each pending airdrop represents a single requested transfer from a
-  /// sending account to a recipient account. These pending transfers are
-  /// issued unilaterally by the sending account, and MUST be claimed by the
-  /// recipient account before the transfer MAY complete.
-  /// A sender MAY cancel a pending airdrop before it is claimed.
-  /// An airdrop transaction SHALL emit a pending airdrop when the recipient has no
-  /// available automatic association slots available or when the recipient
-  /// has set `receiver_sig_required`.
+  /// <p>
+  /// Each pending airdrop SHALL represent a single requested transfer
+  /// from a sending account to a recipient account.<br/>
+  /// These pending transfers are issued unilaterally by the sending
+  /// account, and MUST be claimed by the recipient account before
+  /// the transfer SHALL complete.<br/>
+  /// A sender MAY cancel a pending airdrop before it is claimed.<br/>
+  /// An airdrop transaction SHALL emit a pending airdrop when the
+  /// recipient has no available automatic association slots available
+  /// or when the recipient has set `receiver_sig_required`.
   public var newPendingAirdrops: [Proto_PendingAirdropRecord] {
     get {return _storage._newPendingAirdrops}
     set {_uniqueStorage()._newPendingAirdrops = newValue}
@@ -245,22 +308,30 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
 
   public enum OneOf_Body: Equatable, Sendable {
     ///*
-    /// Record of the value returned by the smart contract function (if it completed and didn't
-    /// fail) from ContractCallTransaction
+    /// A contract call result.<br/>
+    /// A record of the value returned by the smart contract function (if
+    /// it completed and didn't fail) from a `ContractCallTransaction`.
     case contractCallResult(Proto_ContractFunctionResult)
     ///*
-    /// Record of the value returned by the smart contract constructor (if it completed and
-    /// didn't fail) from ContractCreateTransaction
+    /// A contract creation result.<br/>
+    /// A record of the value returned by the smart contract constructor (if
+    /// it completed and didn't fail) from a `ContractCreateTransaction`.
     case contractCreateResult(Proto_ContractFunctionResult)
 
   }
 
   public enum OneOf_Entropy: Equatable, @unchecked Sendable {
     ///*
-    /// In the record of a UtilPrng transaction with no output range, a pseudorandom 384-bit string.
+    /// A pseudorandom 384-bit sequence.
+    /// <p>
+    /// This SHALL be returned in the record of a UtilPrng transaction
+    /// with no output range,
     case prngBytes(Data)
     ///*
-    /// In the record of a PRNG transaction with an output range, the output of a PRNG whose input was a 384-bit string.
+    /// A pseudorandom 32-bit integer.<br/>
+    /// <p>
+    /// This SHALL be returned in the record of a PRNG transaction with
+    /// an output range specified.
     case prngNumber(Int32)
 
   }
@@ -279,6 +350,7 @@ public struct Proto_PendingAirdropRecord: Sendable {
 
   ///*
   /// A unique, composite, identifier for a pending airdrop.
+  /// <p>
   /// This field is REQUIRED.
   public var pendingAirdropID: Proto_PendingAirdropId {
     get {return _pendingAirdropID ?? Proto_PendingAirdropId()}
@@ -291,10 +363,11 @@ public struct Proto_PendingAirdropRecord: Sendable {
 
   ///*
   /// A single pending airdrop amount.
-  /// If the pending airdrop is for a fungible/common token this field is REQUIRED
-  /// and SHALL be the current amount of tokens offered.
-  /// If the pending airdrop is for a non-fungible/unique token, this field SHALL NOT
-  /// be set.
+  /// <p>
+  /// If the pending airdrop is for a fungible/common token this field
+  /// is REQUIRED and SHALL be the current amount of tokens offered.<br/>
+  /// If the pending airdrop is for a non-fungible/unique token,
+  /// this field SHALL NOT be set.
   public var pendingAirdropValue: Proto_PendingAirdropValue {
     get {return _pendingAirdropValue ?? Proto_PendingAirdropValue()}
     set {_pendingAirdropValue = newValue}

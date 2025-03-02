@@ -37,17 +37,19 @@ tasks:
     submodule:move:
         desc: "Copy all contents from protobufs/hapi/hedera-protobufs to Sources/HieroProtobufs/Protos"
         cmds:
+            # Create required directories if they don't exist
             - mkdir -p Sources/HieroProtobufs/Protos/mirror
             - mkdir -p Sources/HieroProtobufs/Protos/sdk
 
-            - find Sources/HieroProtobufs/Protos -mindepth 1 \
-               \! -path 'Sources/HieroProtobufs/Protos/mirror*' \
-               \! -path 'Sources/HieroProtobufs/Protos/sdk*' \
-               -print0 | xargs -0 rm -rf
+            # Remove all contents except mirror and sdk directories
+            - find Sources/HieroProtobufs/Protos -mindepth 1 ! -path 'Sources/HieroProtobufs/Protos/mirror*' ! -path 'Sources/HieroProtobufs/Protos/sdk*' -delete
 
-            - mkdir -p Sources/HieroProtobufs/Protos
-            - cp -R protobufs/hapi/hedera-protobufs/* Sources/HieroProtobufs/Protos
-    
+            # Copy all .proto files from specified directories (flattened)
+            - |
+              for dir in block platform services streams; do
+                find "protobufs/hapi/hedera-protobufs/$dir" -name "*.proto" -exec cp {} Sources/HieroProtobufs/Protos/ \;
+              done
+
     submodule:clean:
         desc: "Clean content within the submodule"
         deps: 

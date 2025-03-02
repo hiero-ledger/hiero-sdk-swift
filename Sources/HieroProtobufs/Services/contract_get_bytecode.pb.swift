@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get Contract Bytecode
+/// A standard query to read the current bytecode for a smart contract.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,15 +33,16 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get the runtime bytecode for a smart contract instance
+/// A transaction body to request the current bytecode for a smart contract.
 public struct Proto_ContractGetBytecodeQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -41,7 +53,9 @@ public struct Proto_ContractGetBytecodeQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// the contract for which information is requested
+  /// A smart contract ID.
+  /// <p>
+  /// The network SHALL return bytecode for this smart contract, if successful.
   public var contractID: Proto_ContractID {
     get {return _contractID ?? Proto_ContractID()}
     set {_contractID = newValue}
@@ -60,15 +74,17 @@ public struct Proto_ContractGetBytecodeQuery: Sendable {
 }
 
 ///*
-/// Response when the client sends the node ContractGetBytecodeQuery
+/// Information returned in response to a "get bytecode" query for a
+/// smart contract.
 public struct Proto_ContractGetBytecodeResponse: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -79,7 +95,7 @@ public struct Proto_ContractGetBytecodeResponse: @unchecked Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// the runtime bytecode of the contract
+  /// The current bytecode of the requested smart contract.
   public var bytecode: Data = Data()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

@@ -12,48 +12,9 @@ import SwiftProtobuf
 
 
 ///*
-/// The Consensus Service provides the ability for Hedera Hashgraph to provide aBFT consensus as to
-/// the order and validity of messages submitted to a *topic*, as well as a *consensus timestamp* for
-/// those messages.
-///
-/// Automatic renewal can be configured via an autoRenewAccount.
-/// Any time an autoRenewAccount is added to a topic, that createTopic/updateTopic transaction must
-/// be signed by the autoRenewAccount.
-///
-/// The autoRenewPeriod on an account must currently be set a value in createTopic between
-/// MIN_AUTORENEW_PERIOD (6999999 seconds) and MAX_AUTORENEW_PERIOD (8000001 seconds). During
-/// creation this sets the initial expirationTime of the topic (see more below).
-///
-/// If no adminKey is on a topic, there may not be an autoRenewAccount on the topic, deleteTopic is
-/// not allowed, and the only change allowed via an updateTopic is to extend the expirationTime.
-///
-/// If an adminKey is on a topic, every updateTopic and deleteTopic transaction must be signed by the
-/// adminKey, except for updateTopics which only extend the topic's expirationTime (no adminKey
-/// authorization required).
-///
-/// If an updateTopic modifies the adminKey of a topic, the transaction signatures on the updateTopic
-/// must fulfill both the pre-update and post-update adminKey signature requirements.
-///
-/// Mirrornet ConsensusService may be used to subscribe to changes on the topic, including changes to
-/// the topic definition and the consensus ordering and timestamp of submitted messages.
-///
-/// Until autoRenew functionality is supported by HAPI, the topic will not expire, the
-/// autoRenewAccount will not be charged, and the topic will not automatically be deleted.
-///
-/// Once autoRenew functionality is supported by HAPI:
-///
-/// 1. Once the expirationTime is encountered, if an autoRenewAccount is configured on the topic, the
-/// account will be charged automatically at the expirationTime, to extend the expirationTime of the
-/// topic up to the topic's autoRenewPeriod (or as much extension as the account's balance will
-/// supply).
-///
-/// 2. If the topic expires and is not automatically renewed, the topic will enter the EXPIRED state.
-/// All transactions on the topic will fail with TOPIC_EXPIRED, except an updateTopic() call that
-/// modifies only the expirationTime.  getTopicInfo() will succeed. This state will be available for
-/// a AUTORENEW_GRACE_PERIOD grace period (7 days).
-///
-/// 3. After the grace period, if the topic's expirationTime is not extended, the topic will be
-/// automatically deleted and no transactions or queries on the topic will succeed after that point.
+/// The Hedera Consensus Service (HCS) provides the ability for a Hashgraph to
+/// provide aBFT consensus as to the order and validity of messages submitted to
+/// a *topic*, as well as a *consensus timestamp* for those messages.
 ///
 /// Usage: instantiate `Proto_ConsensusServiceClient`, then call methods of this protocol to make API calls.
 public protocol Proto_ConsensusServiceClientProtocol: GRPCClient {
@@ -75,15 +36,15 @@ public protocol Proto_ConsensusServiceClientProtocol: GRPCClient {
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse>
 
-  func getTopicInfo(
-    _ request: Proto_Query,
-    callOptions: CallOptions?
-  ) -> UnaryCall<Proto_Query, Proto_Response>
-
   func submitMessage(
     _ request: Proto_Transaction,
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse>
+
+  func getTopicInfo(
+    _ request: Proto_Query,
+    callOptions: CallOptions?
+  ) -> UnaryCall<Proto_Query, Proto_Response>
 }
 
 extension Proto_ConsensusServiceClientProtocol {
@@ -92,11 +53,20 @@ extension Proto_ConsensusServiceClientProtocol {
   }
 
   ///*
-  /// Create a topic to be used for consensus.
-  /// If an autoRenewAccount is specified, that account must also sign this transaction.
-  /// If an adminKey is specified, the adminKey must sign the transaction.
-  /// On success, the resulting TransactionReceipt contains the newly created TopicId.
-  /// Request is [ConsensusCreateTopicTransactionBody](#proto.ConsensusCreateTopicTransactionBody)
+  /// Create an HCS topic.
+  /// <p>
+  /// On success, the resulting TransactionReceipt SHALL contain the newly
+  /// created TopicId.<br/>
+  /// If the `adminKey` is set on the topic, this transaction MUST be signed
+  /// by that key.<br/>
+  /// If the `adminKey` is _not_ set on the topic, this transaction MUST NOT
+  /// set an `autoRenewAccount`. The new topic will be immutable and must be
+  /// renewed manually.<br/>
+  /// If the `autoRenewAccount` is set on the topic, this transaction MUST be
+  /// signed by that account.<br/>
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusCreateTopicTransactionBody](#proto.ConsensusCreateTopicTransactionBody)
   ///
   /// - Parameters:
   ///   - request: Request to send to createTopic.
@@ -115,12 +85,20 @@ extension Proto_ConsensusServiceClientProtocol {
   }
 
   ///*
-  /// Update a topic.
-  /// If there is no adminKey, the only authorized update (available to anyone) is to extend the expirationTime.
-  /// Otherwise transaction must be signed by the adminKey.
-  /// If an adminKey is updated, the transaction must be signed by the pre-update adminKey and post-update adminKey.
-  /// If a new autoRenewAccount is specified (not just being removed), that account must also sign the transaction.
-  /// Request is [ConsensusUpdateTopicTransactionBody](#proto.ConsensusUpdateTopicTransactionBody)
+  /// Update an HCS topic.
+  /// <p>
+  /// If the `adminKey` is not set on the topic, this transaction MUST extend
+  /// the `expirationTime` and MUST NOT modify any other field.<br/>
+  /// If the `adminKey` is set on the topic, this transaction MUST be signed
+  /// by that key.<br/>
+  /// If this transaction sets a new `adminKey`, this transaction MUST be
+  /// signed by <strong>_both_</strong> keys, the pre-update `adminKey` and
+  /// the post-update `adminKey`.<br/>
+  /// If this transaction sets a new, non-null, `autoRenewAccount`, the newly
+  /// set account MUST sign this transaction.<br/>
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusUpdateTopicTransactionBody](#proto.ConsensusUpdateTopicTransactionBody)
   ///
   /// - Parameters:
   ///   - request: Request to send to updateTopic.
@@ -139,10 +117,18 @@ extension Proto_ConsensusServiceClientProtocol {
   }
 
   ///*
-  /// Delete a topic. No more transactions or queries on the topic (via HAPI) will succeed.
-  /// If an adminKey is set, this transaction must be signed by that key.
-  /// If there is no adminKey, this transaction will fail UNAUTHORIZED.
-  /// Request is [ConsensusDeleteTopicTransactionBody](#proto.ConsensusDeleteTopicTransactionBody)
+  /// Delete an HCS topic.
+  /// <p>
+  /// If this transaction succeeds, all subsequent transactions referencing
+  /// the deleted topic SHALL fail.<br/>
+  /// The `adminKey` MUST be set on the topic and this transaction MUST be
+  /// signed by that key.<br/>
+  /// If the `adminKey` is not set on the topic, this transaction SHALL fail
+  /// with a response code of `UNAUTHORIZED`. A topic without an `adminKey`
+  /// cannot be deleted, but MAY expire.<br/>
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusDeleteTopicTransactionBody](#proto.ConsensusDeleteTopicTransactionBody)
   ///
   /// - Parameters:
   ///   - request: Request to send to deleteTopic.
@@ -161,35 +147,19 @@ extension Proto_ConsensusServiceClientProtocol {
   }
 
   ///*
-  /// Retrieve the latest state of a topic. This method is unrestricted and allowed on any topic by any payer account.
-  /// Deleted accounts will not be returned.
-  /// Request is [ConsensusGetTopicInfoQuery](#proto.ConsensusGetTopicInfoQuery)
-  /// Response is [ConsensusGetTopicInfoResponse](#proto.ConsensusGetTopicInfoResponse)
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to getTopicInfo.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func getTopicInfo(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<Proto_Query, Proto_Response> {
-    return self.makeUnaryCall(
-      path: Proto_ConsensusServiceClientMetadata.Methods.getTopicInfo.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetTopicInfoInterceptors() ?? []
-    )
-  }
-
-  ///*
-  /// Submit a message for consensus.
-  /// Valid and authorized messages on valid topics will be ordered by the consensus service, gossipped to the
-  /// mirror net, and published (in order) to all subscribers (from the mirror net) on this topic.
-  /// The submitKey (if any) must sign this transaction.
-  /// On success, the resulting TransactionReceipt contains the topic's updated topicSequenceNumber and
-  /// topicRunningHash.
-  /// Request is [ConsensusSubmitMessageTransactionBody](#proto.ConsensusSubmitMessageTransactionBody)
+  /// Submit a message to an HCS topic.
+  /// <p>
+  /// Valid and authorized messages on valid topics will be ordered by the
+  /// consensus service, published in the block stream, and available to all
+  /// subscribers on this topic via the mirror nodes.<br/>
+  /// If this transaction succeeds the resulting TransactionReceipt SHALL
+  /// contain the latest topicSequenceNumber and topicRunningHash for the
+  /// topic.<br/>
+  /// If the topic has a `submitKey` then that key MUST sign this
+  /// transaction.<br/>
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusSubmitMessageTransactionBody](#proto.ConsensusSubmitMessageTransactionBody)
   ///
   /// - Parameters:
   ///   - request: Request to send to submitMessage.
@@ -204,6 +174,31 @@ extension Proto_ConsensusServiceClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makesubmitMessageInterceptors() ?? []
+    )
+  }
+
+  ///*
+  /// Retrieve the latest state of a topic. This method is unrestricted and
+  /// allowed on any topic by any payer account.
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusGetTopicInfoQuery](#proto.ConsensusGetTopicInfoQuery)<br/>
+  /// The response body SHALL be a
+  /// [ConsensusGetTopicInfoResponse](#proto.ConsensusGetTopicInfoResponse)
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to getTopicInfo.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  public func getTopicInfo(
+    _ request: Proto_Query,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Proto_Query, Proto_Response> {
+    return self.makeUnaryCall(
+      path: Proto_ConsensusServiceClientMetadata.Methods.getTopicInfo.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makegetTopicInfoInterceptors() ?? []
     )
   }
 }
@@ -266,48 +261,9 @@ public struct Proto_ConsensusServiceNIOClient: Proto_ConsensusServiceClientProto
 }
 
 ///*
-/// The Consensus Service provides the ability for Hedera Hashgraph to provide aBFT consensus as to
-/// the order and validity of messages submitted to a *topic*, as well as a *consensus timestamp* for
-/// those messages.
-///
-/// Automatic renewal can be configured via an autoRenewAccount.
-/// Any time an autoRenewAccount is added to a topic, that createTopic/updateTopic transaction must
-/// be signed by the autoRenewAccount.
-///
-/// The autoRenewPeriod on an account must currently be set a value in createTopic between
-/// MIN_AUTORENEW_PERIOD (6999999 seconds) and MAX_AUTORENEW_PERIOD (8000001 seconds). During
-/// creation this sets the initial expirationTime of the topic (see more below).
-///
-/// If no adminKey is on a topic, there may not be an autoRenewAccount on the topic, deleteTopic is
-/// not allowed, and the only change allowed via an updateTopic is to extend the expirationTime.
-///
-/// If an adminKey is on a topic, every updateTopic and deleteTopic transaction must be signed by the
-/// adminKey, except for updateTopics which only extend the topic's expirationTime (no adminKey
-/// authorization required).
-///
-/// If an updateTopic modifies the adminKey of a topic, the transaction signatures on the updateTopic
-/// must fulfill both the pre-update and post-update adminKey signature requirements.
-///
-/// Mirrornet ConsensusService may be used to subscribe to changes on the topic, including changes to
-/// the topic definition and the consensus ordering and timestamp of submitted messages.
-///
-/// Until autoRenew functionality is supported by HAPI, the topic will not expire, the
-/// autoRenewAccount will not be charged, and the topic will not automatically be deleted.
-///
-/// Once autoRenew functionality is supported by HAPI:
-///
-/// 1. Once the expirationTime is encountered, if an autoRenewAccount is configured on the topic, the
-/// account will be charged automatically at the expirationTime, to extend the expirationTime of the
-/// topic up to the topic's autoRenewPeriod (or as much extension as the account's balance will
-/// supply).
-///
-/// 2. If the topic expires and is not automatically renewed, the topic will enter the EXPIRED state.
-/// All transactions on the topic will fail with TOPIC_EXPIRED, except an updateTopic() call that
-/// modifies only the expirationTime.  getTopicInfo() will succeed. This state will be available for
-/// a AUTORENEW_GRACE_PERIOD grace period (7 days).
-///
-/// 3. After the grace period, if the topic's expirationTime is not extended, the topic will be
-/// automatically deleted and no transactions or queries on the topic will succeed after that point.
+/// The Hedera Consensus Service (HCS) provides the ability for a Hashgraph to
+/// provide aBFT consensus as to the order and validity of messages submitted to
+/// a *topic*, as well as a *consensus timestamp* for those messages.
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol Proto_ConsensusServiceAsyncClientProtocol: GRPCClient {
   static var serviceDescriptor: GRPCServiceDescriptor { get }
@@ -328,15 +284,15 @@ public protocol Proto_ConsensusServiceAsyncClientProtocol: GRPCClient {
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse>
 
-  func makeGetTopicInfoCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
-
   func makeSubmitMessageCall(
     _ request: Proto_Transaction,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse>
+
+  func makeGetTopicInfoCall(
+    _ request: Proto_Query,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -385,18 +341,6 @@ extension Proto_ConsensusServiceAsyncClientProtocol {
     )
   }
 
-  public func makeGetTopicInfoCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response> {
-    return self.makeAsyncUnaryCall(
-      path: Proto_ConsensusServiceClientMetadata.Methods.getTopicInfo.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetTopicInfoInterceptors() ?? []
-    )
-  }
-
   public func makeSubmitMessageCall(
     _ request: Proto_Transaction,
     callOptions: CallOptions? = nil
@@ -406,6 +350,18 @@ extension Proto_ConsensusServiceAsyncClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makesubmitMessageInterceptors() ?? []
+    )
+  }
+
+  public func makeGetTopicInfoCall(
+    _ request: Proto_Query,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response> {
+    return self.makeAsyncUnaryCall(
+      path: Proto_ConsensusServiceClientMetadata.Methods.getTopicInfo.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makegetTopicInfoInterceptors() ?? []
     )
   }
 }
@@ -448,18 +404,6 @@ extension Proto_ConsensusServiceAsyncClientProtocol {
     )
   }
 
-  public func getTopicInfo(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) async throws -> Proto_Response {
-    return try await self.performAsyncUnaryCall(
-      path: Proto_ConsensusServiceClientMetadata.Methods.getTopicInfo.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetTopicInfoInterceptors() ?? []
-    )
-  }
-
   public func submitMessage(
     _ request: Proto_Transaction,
     callOptions: CallOptions? = nil
@@ -469,6 +413,18 @@ extension Proto_ConsensusServiceAsyncClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makesubmitMessageInterceptors() ?? []
+    )
+  }
+
+  public func getTopicInfo(
+    _ request: Proto_Query,
+    callOptions: CallOptions? = nil
+  ) async throws -> Proto_Response {
+    return try await self.performAsyncUnaryCall(
+      path: Proto_ConsensusServiceClientMetadata.Methods.getTopicInfo.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makegetTopicInfoInterceptors() ?? []
     )
   }
 }
@@ -501,11 +457,11 @@ public protocol Proto_ConsensusServiceClientInterceptorFactoryProtocol: Sendable
   /// - Returns: Interceptors to use when invoking 'deleteTopic'.
   func makedeleteTopicInterceptors() -> [ClientInterceptor<Proto_Transaction, Proto_TransactionResponse>]
 
-  /// - Returns: Interceptors to use when invoking 'getTopicInfo'.
-  func makegetTopicInfoInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
-
   /// - Returns: Interceptors to use when invoking 'submitMessage'.
   func makesubmitMessageInterceptors() -> [ClientInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when invoking 'getTopicInfo'.
+  func makegetTopicInfoInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
 }
 
 public enum Proto_ConsensusServiceClientMetadata {
@@ -516,8 +472,8 @@ public enum Proto_ConsensusServiceClientMetadata {
       Proto_ConsensusServiceClientMetadata.Methods.createTopic,
       Proto_ConsensusServiceClientMetadata.Methods.updateTopic,
       Proto_ConsensusServiceClientMetadata.Methods.deleteTopic,
-      Proto_ConsensusServiceClientMetadata.Methods.getTopicInfo,
       Proto_ConsensusServiceClientMetadata.Methods.submitMessage,
+      Proto_ConsensusServiceClientMetadata.Methods.getTopicInfo,
     ]
   )
 
@@ -540,9 +496,392 @@ public enum Proto_ConsensusServiceClientMetadata {
       type: GRPCCallType.unary
     )
 
+    public static let submitMessage = GRPCMethodDescriptor(
+      name: "submitMessage",
+      path: "/proto.ConsensusService/submitMessage",
+      type: GRPCCallType.unary
+    )
+
     public static let getTopicInfo = GRPCMethodDescriptor(
       name: "getTopicInfo",
       path: "/proto.ConsensusService/getTopicInfo",
+      type: GRPCCallType.unary
+    )
+  }
+}
+
+///*
+/// The Hedera Consensus Service (HCS) provides the ability for a Hashgraph to
+/// provide aBFT consensus as to the order and validity of messages submitted to
+/// a *topic*, as well as a *consensus timestamp* for those messages.
+///
+/// To build a server, implement a class that conforms to this protocol.
+public protocol Proto_ConsensusServiceProvider: CallHandlerProvider {
+  var interceptors: Proto_ConsensusServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Create an HCS topic.
+  /// <p>
+  /// On success, the resulting TransactionReceipt SHALL contain the newly
+  /// created TopicId.<br/>
+  /// If the `adminKey` is set on the topic, this transaction MUST be signed
+  /// by that key.<br/>
+  /// If the `adminKey` is _not_ set on the topic, this transaction MUST NOT
+  /// set an `autoRenewAccount`. The new topic will be immutable and must be
+  /// renewed manually.<br/>
+  /// If the `autoRenewAccount` is set on the topic, this transaction MUST be
+  /// signed by that account.<br/>
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusCreateTopicTransactionBody](#proto.ConsensusCreateTopicTransactionBody)
+  func createTopic(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Update an HCS topic.
+  /// <p>
+  /// If the `adminKey` is not set on the topic, this transaction MUST extend
+  /// the `expirationTime` and MUST NOT modify any other field.<br/>
+  /// If the `adminKey` is set on the topic, this transaction MUST be signed
+  /// by that key.<br/>
+  /// If this transaction sets a new `adminKey`, this transaction MUST be
+  /// signed by <strong>_both_</strong> keys, the pre-update `adminKey` and
+  /// the post-update `adminKey`.<br/>
+  /// If this transaction sets a new, non-null, `autoRenewAccount`, the newly
+  /// set account MUST sign this transaction.<br/>
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusUpdateTopicTransactionBody](#proto.ConsensusUpdateTopicTransactionBody)
+  func updateTopic(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Delete an HCS topic.
+  /// <p>
+  /// If this transaction succeeds, all subsequent transactions referencing
+  /// the deleted topic SHALL fail.<br/>
+  /// The `adminKey` MUST be set on the topic and this transaction MUST be
+  /// signed by that key.<br/>
+  /// If the `adminKey` is not set on the topic, this transaction SHALL fail
+  /// with a response code of `UNAUTHORIZED`. A topic without an `adminKey`
+  /// cannot be deleted, but MAY expire.<br/>
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusDeleteTopicTransactionBody](#proto.ConsensusDeleteTopicTransactionBody)
+  func deleteTopic(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Submit a message to an HCS topic.
+  /// <p>
+  /// Valid and authorized messages on valid topics will be ordered by the
+  /// consensus service, published in the block stream, and available to all
+  /// subscribers on this topic via the mirror nodes.<br/>
+  /// If this transaction succeeds the resulting TransactionReceipt SHALL
+  /// contain the latest topicSequenceNumber and topicRunningHash for the
+  /// topic.<br/>
+  /// If the topic has a `submitKey` then that key MUST sign this
+  /// transaction.<br/>
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusSubmitMessageTransactionBody](#proto.ConsensusSubmitMessageTransactionBody)
+  func submitMessage(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Retrieve the latest state of a topic. This method is unrestricted and
+  /// allowed on any topic by any payer account.
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusGetTopicInfoQuery](#proto.ConsensusGetTopicInfoQuery)<br/>
+  /// The response body SHALL be a
+  /// [ConsensusGetTopicInfoResponse](#proto.ConsensusGetTopicInfoResponse)
+  func getTopicInfo(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+}
+
+extension Proto_ConsensusServiceProvider {
+  public var serviceName: Substring {
+    return Proto_ConsensusServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+  /// Returns nil for methods not handled by this service.
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "createTopic":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateTopicInterceptors() ?? [],
+        userFunction: self.createTopic(request:context:)
+      )
+
+    case "updateTopic":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateTopicInterceptors() ?? [],
+        userFunction: self.updateTopic(request:context:)
+      )
+
+    case "deleteTopic":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteTopicInterceptors() ?? [],
+        userFunction: self.deleteTopic(request:context:)
+      )
+
+    case "submitMessage":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makesubmitMessageInterceptors() ?? [],
+        userFunction: self.submitMessage(request:context:)
+      )
+
+    case "getTopicInfo":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetTopicInfoInterceptors() ?? [],
+        userFunction: self.getTopicInfo(request:context:)
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+///*
+/// The Hedera Consensus Service (HCS) provides the ability for a Hashgraph to
+/// provide aBFT consensus as to the order and validity of messages submitted to
+/// a *topic*, as well as a *consensus timestamp* for those messages.
+///
+/// To implement a server, implement an object which conforms to this protocol.
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+public protocol Proto_ConsensusServiceAsyncProvider: CallHandlerProvider, Sendable {
+  static var serviceDescriptor: GRPCServiceDescriptor { get }
+  var interceptors: Proto_ConsensusServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Create an HCS topic.
+  /// <p>
+  /// On success, the resulting TransactionReceipt SHALL contain the newly
+  /// created TopicId.<br/>
+  /// If the `adminKey` is set on the topic, this transaction MUST be signed
+  /// by that key.<br/>
+  /// If the `adminKey` is _not_ set on the topic, this transaction MUST NOT
+  /// set an `autoRenewAccount`. The new topic will be immutable and must be
+  /// renewed manually.<br/>
+  /// If the `autoRenewAccount` is set on the topic, this transaction MUST be
+  /// signed by that account.<br/>
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusCreateTopicTransactionBody](#proto.ConsensusCreateTopicTransactionBody)
+  func createTopic(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Update an HCS topic.
+  /// <p>
+  /// If the `adminKey` is not set on the topic, this transaction MUST extend
+  /// the `expirationTime` and MUST NOT modify any other field.<br/>
+  /// If the `adminKey` is set on the topic, this transaction MUST be signed
+  /// by that key.<br/>
+  /// If this transaction sets a new `adminKey`, this transaction MUST be
+  /// signed by <strong>_both_</strong> keys, the pre-update `adminKey` and
+  /// the post-update `adminKey`.<br/>
+  /// If this transaction sets a new, non-null, `autoRenewAccount`, the newly
+  /// set account MUST sign this transaction.<br/>
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusUpdateTopicTransactionBody](#proto.ConsensusUpdateTopicTransactionBody)
+  func updateTopic(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Delete an HCS topic.
+  /// <p>
+  /// If this transaction succeeds, all subsequent transactions referencing
+  /// the deleted topic SHALL fail.<br/>
+  /// The `adminKey` MUST be set on the topic and this transaction MUST be
+  /// signed by that key.<br/>
+  /// If the `adminKey` is not set on the topic, this transaction SHALL fail
+  /// with a response code of `UNAUTHORIZED`. A topic without an `adminKey`
+  /// cannot be deleted, but MAY expire.<br/>
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusDeleteTopicTransactionBody](#proto.ConsensusDeleteTopicTransactionBody)
+  func deleteTopic(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Submit a message to an HCS topic.
+  /// <p>
+  /// Valid and authorized messages on valid topics will be ordered by the
+  /// consensus service, published in the block stream, and available to all
+  /// subscribers on this topic via the mirror nodes.<br/>
+  /// If this transaction succeeds the resulting TransactionReceipt SHALL
+  /// contain the latest topicSequenceNumber and topicRunningHash for the
+  /// topic.<br/>
+  /// If the topic has a `submitKey` then that key MUST sign this
+  /// transaction.<br/>
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusSubmitMessageTransactionBody](#proto.ConsensusSubmitMessageTransactionBody)
+  func submitMessage(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Retrieve the latest state of a topic. This method is unrestricted and
+  /// allowed on any topic by any payer account.
+  /// <p>
+  /// The request body MUST be a
+  /// [ConsensusGetTopicInfoQuery](#proto.ConsensusGetTopicInfoQuery)<br/>
+  /// The response body SHALL be a
+  /// [ConsensusGetTopicInfoResponse](#proto.ConsensusGetTopicInfoResponse)
+  func getTopicInfo(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension Proto_ConsensusServiceAsyncProvider {
+  public static var serviceDescriptor: GRPCServiceDescriptor {
+    return Proto_ConsensusServiceServerMetadata.serviceDescriptor
+  }
+
+  public var serviceName: Substring {
+    return Proto_ConsensusServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  public var interceptors: Proto_ConsensusServiceServerInterceptorFactoryProtocol? {
+    return nil
+  }
+
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "createTopic":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateTopicInterceptors() ?? [],
+        wrapping: { try await self.createTopic(request: $0, context: $1) }
+      )
+
+    case "updateTopic":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateTopicInterceptors() ?? [],
+        wrapping: { try await self.updateTopic(request: $0, context: $1) }
+      )
+
+    case "deleteTopic":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteTopicInterceptors() ?? [],
+        wrapping: { try await self.deleteTopic(request: $0, context: $1) }
+      )
+
+    case "submitMessage":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makesubmitMessageInterceptors() ?? [],
+        wrapping: { try await self.submitMessage(request: $0, context: $1) }
+      )
+
+    case "getTopicInfo":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetTopicInfoInterceptors() ?? [],
+        wrapping: { try await self.getTopicInfo(request: $0, context: $1) }
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+public protocol Proto_ConsensusServiceServerInterceptorFactoryProtocol: Sendable {
+
+  /// - Returns: Interceptors to use when handling 'createTopic'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecreateTopicInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'updateTopic'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeupdateTopicInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'deleteTopic'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makedeleteTopicInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'submitMessage'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makesubmitMessageInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'getTopicInfo'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetTopicInfoInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+}
+
+public enum Proto_ConsensusServiceServerMetadata {
+  public static let serviceDescriptor = GRPCServiceDescriptor(
+    name: "ConsensusService",
+    fullName: "proto.ConsensusService",
+    methods: [
+      Proto_ConsensusServiceServerMetadata.Methods.createTopic,
+      Proto_ConsensusServiceServerMetadata.Methods.updateTopic,
+      Proto_ConsensusServiceServerMetadata.Methods.deleteTopic,
+      Proto_ConsensusServiceServerMetadata.Methods.submitMessage,
+      Proto_ConsensusServiceServerMetadata.Methods.getTopicInfo,
+    ]
+  )
+
+  public enum Methods {
+    public static let createTopic = GRPCMethodDescriptor(
+      name: "createTopic",
+      path: "/proto.ConsensusService/createTopic",
+      type: GRPCCallType.unary
+    )
+
+    public static let updateTopic = GRPCMethodDescriptor(
+      name: "updateTopic",
+      path: "/proto.ConsensusService/updateTopic",
+      type: GRPCCallType.unary
+    )
+
+    public static let deleteTopic = GRPCMethodDescriptor(
+      name: "deleteTopic",
+      path: "/proto.ConsensusService/deleteTopic",
       type: GRPCCallType.unary
     )
 
@@ -551,6 +890,11 @@ public enum Proto_ConsensusServiceClientMetadata {
       path: "/proto.ConsensusService/submitMessage",
       type: GRPCCallType.unary
     )
+
+    public static let getTopicInfo = GRPCMethodDescriptor(
+      name: "getTopicInfo",
+      path: "/proto.ConsensusService/getTopicInfo",
+      type: GRPCCallType.unary
+    )
   }
 }
-

@@ -12,7 +12,14 @@ import SwiftProtobuf
 
 
 ///*
-/// The requests and responses for different utility services.
+/// The Utility Service provides a pseudo-random number generator.
+///
+/// The single gRPC call defined for this service simply reports a single
+/// pseudo-random number in the transaction record. That value may either
+/// be a 32-bit integer within a requested range, or a 384-bit byte array.
+///
+/// ### Block Stream Effects
+/// The requested value is reported exclusively in a `UtilPrngOutput` message.
 ///
 /// Usage: instantiate `Proto_UtilServiceClient`, then call methods of this protocol to make API calls.
 public protocol Proto_UtilServiceClientProtocol: GRPCClient {
@@ -31,7 +38,10 @@ extension Proto_UtilServiceClientProtocol {
   }
 
   ///*
-  /// Generates a pseudorandom number.
+  /// Generate a pseudo-random value.
+  /// <p>
+  /// The request body MUST be a
+  /// [UtilPrngTransactionBody](#proto.UtilPrngTransactionBody)
   ///
   /// - Parameters:
   ///   - request: Request to send to prng.
@@ -108,7 +118,14 @@ public struct Proto_UtilServiceNIOClient: Proto_UtilServiceClientProtocol {
 }
 
 ///*
-/// The requests and responses for different utility services.
+/// The Utility Service provides a pseudo-random number generator.
+///
+/// The single gRPC call defined for this service simply reports a single
+/// pseudo-random number in the transaction record. That value may either
+/// be a 32-bit integer within a requested range, or a 384-bit byte array.
+///
+/// ### Block Stream Effects
+/// The requested value is reported exclusively in a `UtilPrngOutput` message.
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol Proto_UtilServiceAsyncClientProtocol: GRPCClient {
   static var serviceDescriptor: GRPCServiceDescriptor { get }
@@ -199,3 +216,137 @@ public enum Proto_UtilServiceClientMetadata {
   }
 }
 
+///*
+/// The Utility Service provides a pseudo-random number generator.
+///
+/// The single gRPC call defined for this service simply reports a single
+/// pseudo-random number in the transaction record. That value may either
+/// be a 32-bit integer within a requested range, or a 384-bit byte array.
+///
+/// ### Block Stream Effects
+/// The requested value is reported exclusively in a `UtilPrngOutput` message.
+///
+/// To build a server, implement a class that conforms to this protocol.
+public protocol Proto_UtilServiceProvider: CallHandlerProvider {
+  var interceptors: Proto_UtilServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Generate a pseudo-random value.
+  /// <p>
+  /// The request body MUST be a
+  /// [UtilPrngTransactionBody](#proto.UtilPrngTransactionBody)
+  func prng(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+}
+
+extension Proto_UtilServiceProvider {
+  public var serviceName: Substring {
+    return Proto_UtilServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+  /// Returns nil for methods not handled by this service.
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "prng":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeprngInterceptors() ?? [],
+        userFunction: self.prng(request:context:)
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+///*
+/// The Utility Service provides a pseudo-random number generator.
+///
+/// The single gRPC call defined for this service simply reports a single
+/// pseudo-random number in the transaction record. That value may either
+/// be a 32-bit integer within a requested range, or a 384-bit byte array.
+///
+/// ### Block Stream Effects
+/// The requested value is reported exclusively in a `UtilPrngOutput` message.
+///
+/// To implement a server, implement an object which conforms to this protocol.
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+public protocol Proto_UtilServiceAsyncProvider: CallHandlerProvider, Sendable {
+  static var serviceDescriptor: GRPCServiceDescriptor { get }
+  var interceptors: Proto_UtilServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Generate a pseudo-random value.
+  /// <p>
+  /// The request body MUST be a
+  /// [UtilPrngTransactionBody](#proto.UtilPrngTransactionBody)
+  func prng(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension Proto_UtilServiceAsyncProvider {
+  public static var serviceDescriptor: GRPCServiceDescriptor {
+    return Proto_UtilServiceServerMetadata.serviceDescriptor
+  }
+
+  public var serviceName: Substring {
+    return Proto_UtilServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  public var interceptors: Proto_UtilServiceServerInterceptorFactoryProtocol? {
+    return nil
+  }
+
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "prng":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeprngInterceptors() ?? [],
+        wrapping: { try await self.prng(request: $0, context: $1) }
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+public protocol Proto_UtilServiceServerInterceptorFactoryProtocol: Sendable {
+
+  /// - Returns: Interceptors to use when handling 'prng'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeprngInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+}
+
+public enum Proto_UtilServiceServerMetadata {
+  public static let serviceDescriptor = GRPCServiceDescriptor(
+    name: "UtilService",
+    fullName: "proto.UtilService",
+    methods: [
+      Proto_UtilServiceServerMetadata.Methods.prng,
+    ]
+  )
+
+  public enum Methods {
+    public static let prng = GRPCMethodDescriptor(
+      name: "prng",
+      path: "/proto.UtilService/prng",
+      type: GRPCCallType.unary
+    )
+  }
+}

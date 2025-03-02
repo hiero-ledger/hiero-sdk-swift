@@ -8,6 +8,18 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Transaction Receipt
+/// The receipt returned when the results of a transaction are requested via
+/// `TransactionGetReceiptQuery`.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,23 +34,30 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// The summary of a transaction's result so far. If the transaction has not reached consensus, this
-/// result will be necessarily incomplete.
+/// The summary of a transaction's result so far.<br/>
+/// If the transaction has not reached consensus, this result will
+/// be necessarily incomplete.
+///
+/// Most items in this object are only set for specific transactions.
+/// Those values SHALL be unset for all other transactions.
 public struct Proto_TransactionReceipt: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The consensus status of the transaction; is UNKNOWN if consensus has not been reached, or if
-  /// the associated transaction did not have a valid payer signature
+  /// The consensus status of the transaction.
+  /// <p>
+  /// This SHALL be `UNKNOWN` if consensus has not been reached.<br/>
+  /// This SHALL be `UNKNOWN` if the associated transaction did not have
+  /// a valid payer signature.
   public var status: Proto_ResponseCodeEnum {
     get {return _storage._status}
     set {_uniqueStorage()._status = newValue}
   }
 
   ///*
-  /// In the receipt of a CryptoCreate, the id of the newly created account
+  /// In the receipt of a `CryptoCreate`, the id of the newly created account.
   public var accountID: Proto_AccountID {
     get {return _storage._accountID ?? Proto_AccountID()}
     set {_uniqueStorage()._accountID = newValue}
@@ -49,7 +68,7 @@ public struct Proto_TransactionReceipt: @unchecked Sendable {
   public mutating func clearAccountID() {_uniqueStorage()._accountID = nil}
 
   ///*
-  /// In the receipt of a FileCreate, the id of the newly created file
+  /// In the receipt of a `FileCreate`, the id of the newly created file.
   public var fileID: Proto_FileID {
     get {return _storage._fileID ?? Proto_FileID()}
     set {_uniqueStorage()._fileID = newValue}
@@ -60,7 +79,8 @@ public struct Proto_TransactionReceipt: @unchecked Sendable {
   public mutating func clearFileID() {_uniqueStorage()._fileID = nil}
 
   ///*
-  /// In the receipt of a ContractCreate, the id of the newly created contract
+  /// In the receipt of a `ContractCreate`, the id of the newly created
+  /// contract.
   public var contractID: Proto_ContractID {
     get {return _storage._contractID ?? Proto_ContractID()}
     set {_uniqueStorage()._contractID = newValue}
@@ -71,7 +91,7 @@ public struct Proto_TransactionReceipt: @unchecked Sendable {
   public mutating func clearContractID() {_uniqueStorage()._contractID = nil}
 
   ///*
-  /// The exchange rates in effect when the transaction reached consensus
+  /// The exchange rates in effect when the transaction reached consensus.
   public var exchangeRate: Proto_ExchangeRateSet {
     get {return _storage._exchangeRate ?? Proto_ExchangeRateSet()}
     set {_uniqueStorage()._exchangeRate = newValue}
@@ -82,7 +102,8 @@ public struct Proto_TransactionReceipt: @unchecked Sendable {
   public mutating func clearExchangeRate() {_uniqueStorage()._exchangeRate = nil}
 
   ///*
-  /// In the receipt of a ConsensusCreateTopic, the id of the newly created topic.
+  /// In the receipt of a `ConsensusCreateTopic`, the id of the newly
+  /// created topic.
   public var topicID: Proto_TopicID {
     get {return _storage._topicID ?? Proto_TopicID()}
     set {_uniqueStorage()._topicID = newValue}
@@ -93,72 +114,83 @@ public struct Proto_TransactionReceipt: @unchecked Sendable {
   public mutating func clearTopicID() {_uniqueStorage()._topicID = nil}
 
   ///*
-  /// In the receipt of a ConsensusSubmitMessage, the new sequence number of the topic that
-  /// received the message
+  /// In the receipt of a `ConsensusSubmitMessage`, the new sequence
+  /// number for the topic that received the message.
   public var topicSequenceNumber: UInt64 {
     get {return _storage._topicSequenceNumber}
     set {_uniqueStorage()._topicSequenceNumber = newValue}
   }
 
   ///*
-  /// In the receipt of a `ConsensusSubmitMessage`, the new running hash of the topic that
-  /// received the message.<br/>
-  /// This 48-byte field is the output of a SHA-384 digest with input data determined by the
-  /// value of the `topicRunningHashVersion` field.<br/>
-  /// All new transactions SHALL use `topicRunningHashVersion` `3`.<br/>
-  /// The bytes of each uint64 or uint32 encoded for the hash input MUST be in Big-Endian format.
+  /// In the receipt of a `ConsensusSubmitMessage`, the new running hash of
+  /// the topic that received the message.<br/>
   /// <p>
-  /// <hr/>
-  /// If the `topicRunningHashVersion` is '0' or '1', then the input data to the SHA-384 digest are,
-  /// in order:
+  /// The inputs to the topic running hash have changed over time.<br/>
+  /// This 48-byte field is the output of a SHA-384 digest with input data
+  /// determined by the value of the `topicRunningHashVersion` field.<br/>
+  /// All new transactions SHALL use `topicRunningHashVersion` `3`.<br/>
+  /// The bytes of each uint64 or uint32 encoded for the hash input MUST be
+  /// in Big-Endian format.
+  /// <p>
+  /// <hr style="margin: 0.2em 5em 0.2em 5em; height: 0.5em; border-style: solid none solid none; border-width: 2px;"/>
+  /// <p>
+  /// The most recent version is denoted by `topicRunningHashVersion = 3`.
+  /// <p>
+  /// This version SHALL include, in order
   /// <ol>
-  ///   <li>The previous running hash of the topic (48 bytes)</li>
-  ///   <li>The topic's shard (8 bytes)</li>
-  ///   <li>The topic's realm (8 bytes)</li>
-  ///   <li>The topic's number (8 bytes)</li>
-  ///   <li>The number of seconds since the epoch when the `ConsensusSubmitMessage` reached
-  ///    consensus (8 bytes)</li>
-  ///   <li>The number of nanoseconds within the second when the `ConsensusSubmitMessage` reached
-  ///    consensus (4 bytes)</li>
-  ///   <li>The `topicSequenceNumber` (8 bytes)</li>
-  ///   <li>The message bytes from the `ConsensusSubmitMessage` (variable).</li>
+  ///  <li>The previous running hash of the topic (48 bytes)</li>
+  ///  <li>The `topic_running_hash_version` field (8 bytes)</li>
+  ///  <li>The payer account's shard (8 bytes)</li>
+  ///  <li>The payer account's realm (8 bytes)</li>
+  ///  <li>The payer account's number (8 bytes)</li>
+  ///  <li>The topic's shard (8 bytes)</li>
+  ///  <li>The topic's realm (8 bytes)</li>
+  ///  <li>The topic's number (8 bytes)</li>
+  ///  <li>The number of seconds since the epoch when the
+  ///      `ConsensusSubmitMessage` reached consensus (8 bytes)</li>
+  ///  <li>The number of nanoseconds within the second when the
+  ///      `ConsensusSubmitMessage` reached consensus (4 bytes)</li>
+  ///  <li>The `topic_sequence_number` field (8 bytes)</li>
+  ///  <li>The output of a SHA-384 digest of the message bytes from the
+  ///      `ConsensusSubmitMessage` (48 bytes)</li>
   /// </ol>
-  /// <hr/>
-  /// If the `topicRunningHashVersion` is '2', then the input data to the SHA-384 digest are, in
-  /// order:
+  /// <hr style="margin: 0.2em 5em 0.2em 5em; height: 0.5em; border-style: solid none solid none; border-width: 2px;"/>
+  /// <p>
+  /// The next older version is denoted by `topicRunningHashVersion = 2`.
+  /// <p>
+  /// This version SHALL include, in order
   /// <ol>
-  ///   <li>The previous running hash of the topic (48 bytes)</li>
-  ///   <li>The `topicRunningHashVersion` (8 bytes)</li>
-  ///   <li>The topic's shard (8 bytes)</li>
-  ///   <li>The topic's realm (8 bytes)</li>
-  ///   <li>The topic's number (8 bytes)</li>
-  ///   <li>The number of seconds since the epoch when the `ConsensusSubmitMessage` reached
-  ///    consensus (8 bytes)</li>
-  ///   <li>The number of nanoseconds within the second when the `ConsensusSubmitMessage` reached
-  ///    consensus (4 bytes)</li>
-  ///   <li>The `topicSequenceNumber` (8 bytes)</li>
-  ///   <li>The output of a SHA-384 digest of the message bytes from the `ConsensusSubmitMessage`
-  ///    (48 bytes)</li>
+  ///  <li>The previous running hash of the topic (48 bytes)</li>
+  ///  <li>The `topic_running_hash_version` field (8 bytes)</li>
+  ///  <li>The topic's shard (8 bytes)</li>
+  ///  <li>The topic's realm (8 bytes)</li>
+  ///  <li>The topic's number (8 bytes)</li>
+  ///  <li>The number of seconds since the epoch when the
+  ///      `ConsensusSubmitMessage` reached consensus (8 bytes)</li>
+  ///  <li>The number of nanoseconds within the second when the
+  ///      `ConsensusSubmitMessage` reached consensus (4 bytes)</li>
+  ///  <li>The `topic_sequence_number` field (8 bytes)</li>
+  ///  <li>The output of a SHA-384 digest of the message bytes from the
+  ///      `ConsensusSubmitMessage` (48 bytes)</li>
   /// </ol>
-  /// <hr/>
-  /// If the `topicRunningHashVersion` is '3', then the input data to the SHA-384 digest
-  /// are, in order:
+  /// <hr style="margin: 0.2em 5em 0.2em 5em; height: 0.5em; border-style: solid none solid none; border-width: 2px;"/>
+  /// <p>
+  /// The original version, used at genesis, is denoted
+  /// by `topicRunningHashVersion = 1` or `topicRunningHashVersion = 0`.
+  /// <p>
+  /// This version SHALL include, in order
   /// <ol>
-  ///   <li>The previous running hash of the topic (48 bytes)</li>
-  ///   <li>The `topicRunningHashVersion` (8 bytes)</li>
-  ///   <li>The payer account's shard (8 bytes)</li>
-  ///   <li>The payer account's realm (8 bytes)</li>
-  ///   <li>The payer account's number (8 bytes)</li>
-  ///   <li>The topic's shard (8 bytes)</li>
-  ///   <li>The topic's realm (8 bytes)</li>
-  ///   <li>The topic's number (8 bytes)</li>
-  ///   <li>The number of seconds since the epoch when the `ConsensusSubmitMessage` reached
-  ///    consensus (8 bytes)</li>
-  ///   <li>The number of nanoseconds within the second when the `ConsensusSubmitMessage` reached
-  ///     consensus (4 bytes)</li>
-  ///   <li>The `topicSequenceNumber` (8 bytes)</li>
-  ///   <li>The output of a SHA-384 digest of the message bytes from the `ConsensusSubmitMessage`
-  ///     (48 bytes)</li>
+  ///  <li>The previous running hash of the topic (48 bytes)</li>
+  ///  <li>The topic's shard (8 bytes)</li>
+  ///  <li>The topic's realm (8 bytes)</li>
+  ///  <li>The topic's number (8 bytes)</li>
+  ///  <li>The number of seconds since the epoch when the
+  ///      `ConsensusSubmitMessage` reached consensus (8 bytes)</li>
+  ///  <li>The number of nanoseconds within the second when the
+  ///      `ConsensusSubmitMessage` reached consensus (4 bytes)</li>
+  ///  <li>The `topic_sequence_number` field (8 bytes)</li>
+  ///  <li>The message bytes from the `ConsensusSubmitMessage`
+  ///      (variable)</li>
   /// </ol>
   public var topicRunningHash: Data {
     get {return _storage._topicRunningHash}
@@ -166,15 +198,15 @@ public struct Proto_TransactionReceipt: @unchecked Sendable {
   }
 
   ///*
-  /// In the receipt of a ConsensusSubmitMessage, the version of the SHA-384 digest used to update
-  /// the running hash.
+  /// In the receipt of a `ConsensusSubmitMessage`, the version of the
+  /// SHA-384 digest inputs used to update the running hash.
   public var topicRunningHashVersion: UInt64 {
     get {return _storage._topicRunningHashVersion}
     set {_uniqueStorage()._topicRunningHashVersion = newValue}
   }
 
   ///*
-  /// In the receipt of a CreateToken, the id of the newly created token
+  /// In the receipt of a `CreateToken`, the id of the newly created token
   public var tokenID: Proto_TokenID {
     get {return _storage._tokenID ?? Proto_TokenID()}
     set {_uniqueStorage()._tokenID = newValue}
@@ -185,16 +217,17 @@ public struct Proto_TransactionReceipt: @unchecked Sendable {
   public mutating func clearTokenID() {_uniqueStorage()._tokenID = nil}
 
   ///*
-  /// In the receipt of TokenMint, TokenWipe, TokenBurn, For fungible tokens - the current total
-  /// supply of this token. For non fungible tokens - the total number of NFTs issued for a given
-  /// tokenID
+  /// In the receipt of `TokenMint`, `TokenWipe`, or `TokenBurn`.<br/>
+  /// For non-unique tokens, the current total supply of that token.<br/>
+  /// For unique tokens,the total number of NFTs issued for that token.
   public var newTotalSupply: UInt64 {
     get {return _storage._newTotalSupply}
     set {_uniqueStorage()._newTotalSupply = newValue}
   }
 
   ///*
-  /// In the receipt of a ScheduleCreate, the id of the newly created Scheduled Entity
+  /// In the receipt of a `ScheduleCreate`, the id of the newly created
+  /// Scheduled Entity
   public var scheduleID: Proto_ScheduleID {
     get {return _storage._scheduleID ?? Proto_ScheduleID()}
     set {_uniqueStorage()._scheduleID = newValue}
@@ -205,9 +238,10 @@ public struct Proto_TransactionReceipt: @unchecked Sendable {
   public mutating func clearScheduleID() {_uniqueStorage()._scheduleID = nil}
 
   ///*
-  /// In the receipt of a ScheduleCreate or ScheduleSign that resolves to SUCCESS, the
-  /// TransactionID that should be used to query for the receipt or record of the relevant
-  /// scheduled transaction
+  /// In the receipt of a `ScheduleCreate` or `ScheduleSign` that enables the
+  /// scheduled transaction to execute immediately, the `TransactionID` that
+  /// should be used to query for the receipt or record of the scheduled
+  /// transaction that was executed.
   public var scheduledTransactionID: Proto_TransactionID {
     get {return _storage._scheduledTransactionID ?? Proto_TransactionID()}
     set {_uniqueStorage()._scheduledTransactionID = newValue}
@@ -218,8 +252,8 @@ public struct Proto_TransactionReceipt: @unchecked Sendable {
   public mutating func clearScheduledTransactionID() {_uniqueStorage()._scheduledTransactionID = nil}
 
   ///*
-  /// In the receipt of a TokenMint for tokens of type NON_FUNGIBLE_UNIQUE, the serial numbers of
-  /// the newly created NFTs
+  /// In the receipt of a `TokenMint` for non-fungible/unique tokens,
+  /// the serial numbers of the newly created tokens.
   public var serialNumbers: [Int64] {
     get {return _storage._serialNumbers}
     set {_uniqueStorage()._serialNumbers = newValue}

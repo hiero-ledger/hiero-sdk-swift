@@ -8,6 +8,20 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Crypto Get Account Balance
+/// Query request to obtain balance information for a single account.
+///
+/// This query SHOULD NOT be used by client software, queries to a
+/// Mirror Node provide more information at much lower cost.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,16 +35,22 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get the balance of a cryptocurrency account. This returns only the balance, so it is a smaller
-/// reply than CryptoGetInfo, which returns the balance plus additional information.
+/// Query to read the HBAR balance of an account or contract.
+///
+/// This query SHALL return _only_ the HBAR balance for an account
+/// or smart contract. Early releases of the network would return all
+/// fungible/common token balances, but HIP-367 made it infeasible to
+/// return all such balances. This query SHALL NOT return any information
+/// beyond the current HBAR balance.
 public struct Proto_CryptoGetAccountBalanceQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -43,7 +63,10 @@ public struct Proto_CryptoGetAccountBalanceQuery: Sendable {
   public var balanceSource: Proto_CryptoGetAccountBalanceQuery.OneOf_BalanceSource? = nil
 
   ///*
-  /// The account ID for which information is requested
+  /// An account identifier.<br/>
+  /// This identifies an account for which the balance is requested.
+  /// <p>
+  /// Exactly one identifier MUST be provided.
   public var accountID: Proto_AccountID {
     get {
       if case .accountID(let v)? = balanceSource {return v}
@@ -53,7 +76,10 @@ public struct Proto_CryptoGetAccountBalanceQuery: Sendable {
   }
 
   ///*
-  /// The account ID for which information is requested
+  /// A smart contract identifier.<br/>
+  /// This identifies a smart contract for which the balance is requested.
+  /// <p>
+  /// Exactly one identifier MUST be provided.
   public var contractID: Proto_ContractID {
     get {
       if case .contractID(let v)? = balanceSource {return v}
@@ -66,10 +92,16 @@ public struct Proto_CryptoGetAccountBalanceQuery: Sendable {
 
   public enum OneOf_BalanceSource: Equatable, Sendable {
     ///*
-    /// The account ID for which information is requested
+    /// An account identifier.<br/>
+    /// This identifies an account for which the balance is requested.
+    /// <p>
+    /// Exactly one identifier MUST be provided.
     case accountID(Proto_AccountID)
     ///*
-    /// The account ID for which information is requested
+    /// A smart contract identifier.<br/>
+    /// This identifies a smart contract for which the balance is requested.
+    /// <p>
+    /// Exactly one identifier MUST be provided.
     case contractID(Proto_ContractID)
 
   }
@@ -80,15 +112,20 @@ public struct Proto_CryptoGetAccountBalanceQuery: Sendable {
 }
 
 ///*
-/// Response when the client sends the node CryptoGetAccountBalanceQuery
+/// Response to a CryptoGetAccountBalanceQuery.<br/>
+///
+/// This response SHALL contain only the information needed to
+/// identify the query request and the actual HBAR balance of the
+/// identified account or contract.
 public struct Proto_CryptoGetAccountBalanceResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither.
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -99,8 +136,10 @@ public struct Proto_CryptoGetAccountBalanceResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The account ID that is being described (this is useful with state proofs, for proving to a
-  /// third party)
+  /// An account identifier.<br/>
+  /// This is the account ID queried. <br/>
+  /// The inclusion of the account queried is useful with state proofs,
+  /// when needed to prove an account balance to a third party.
   public var accountID: Proto_AccountID {
     get {return _accountID ?? Proto_AccountID()}
     set {_accountID = newValue}
@@ -111,14 +150,21 @@ public struct Proto_CryptoGetAccountBalanceResponse: Sendable {
   public mutating func clearAccountID() {self._accountID = nil}
 
   ///*
-  /// The current balance, in tinybars.
+  /// A current account balance.<br/>
+  /// This is the current HBAR balance denominated in tinybar
+  /// (10<sup>-8</sup> HBAR).
   public var balance: UInt64 = 0
 
   ///*
-  /// [DEPRECATED] The balances of the tokens associated to the account. This field was 
-  /// deprecated by <a href="https://hips.hedera.com/hip/hip-367">HIP-367</a>, which allowed 
-  /// an account to be associated to an unlimited number of tokens. This scale makes it more 
-  /// efficient for users to consult mirror nodes to review their token balances.
+  /// This field became infeasible to support after HIP-367 removed limits on
+  /// the number of associated tokens.<br/>
+  /// A list of token balances for all tokens associated to the account.
+  /// <p>
+  /// This field was deprecated by
+  /// <a href="https://hips.hedera.com/hip/hip-367">HIP-367</a>, which
+  /// allowed an account to be associated to an unlimited number of tokens.
+  /// This scale makes it more efficient for users to consult mirror nodes
+  /// to review their token balances.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var tokenBalances: [Proto_TokenBalance] = []

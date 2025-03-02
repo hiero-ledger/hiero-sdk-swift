@@ -89,17 +89,7 @@ public protocol Proto_TokenServiceClientProtocol: GRPCClient {
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Query, Proto_Response>
 
-  func getAccountNftInfos(
-    _ request: Proto_Query,
-    callOptions: CallOptions?
-  ) -> UnaryCall<Proto_Query, Proto_Response>
-
   func getTokenNftInfo(
-    _ request: Proto_Query,
-    callOptions: CallOptions?
-  ) -> UnaryCall<Proto_Query, Proto_Response>
-
-  func getTokenNftInfos(
     _ request: Proto_Query,
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Query, Proto_Response>
@@ -146,7 +136,7 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Creates a new Token by submitting the transaction
+  /// Create a new token.
   ///
   /// - Parameters:
   ///   - request: Request to send to createToken.
@@ -165,7 +155,7 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Updates the account by submitting the transaction
+  /// Update a token.
   ///
   /// - Parameters:
   ///   - request: Request to send to updateToken.
@@ -184,7 +174,11 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Mints an amount of the token to the defined treasury account
+  /// Mint one or more tokens to the treasury account.
+  /// <p>
+  /// This MAY specify a quantity of fungible/common tokens or
+  /// a list of specific non-fungible/unique tokes, but
+  /// MUST NOT specify both.
   ///
   /// - Parameters:
   ///   - request: Request to send to mintToken.
@@ -203,7 +197,11 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Burns an amount of the token from the defined treasury account
+  /// Burn one or more tokens from the treasury account.
+  /// <p>
+  /// This MAY specify a quantity of fungible/common tokens or
+  /// a list of specific non-fungible/unique tokes, but
+  /// MUST NOT specify both.
   ///
   /// - Parameters:
   ///   - request: Request to send to burnToken.
@@ -222,7 +220,7 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Deletes a Token
+  /// Delete a token.
   ///
   /// - Parameters:
   ///   - request: Request to send to deleteToken.
@@ -241,7 +239,11 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Wipes the provided amount of tokens from the specified Account ID
+  /// Wipe one or more tokens from an identified Account.
+  /// <p>
+  /// This MAY specify a quantity of fungible/common tokens or
+  /// a list of specific non-fungible/unique tokes, but
+  /// MUST NOT specify both.
   ///
   /// - Parameters:
   ///   - request: Request to send to wipeTokenAccount.
@@ -260,7 +262,7 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Freezes the transfer of tokens to or from the specified Account ID
+  /// Freeze the transfer of tokens to or from an identified Account.
   ///
   /// - Parameters:
   ///   - request: Request to send to freezeTokenAccount.
@@ -279,7 +281,7 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Unfreezes the transfer of tokens to or from the specified Account ID
+  /// Unfreeze the transfer of tokens to or from an identified Account.
   ///
   /// - Parameters:
   ///   - request: Request to send to unfreezeTokenAccount.
@@ -298,7 +300,8 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Flags the provided Account ID as having gone through KYC
+  /// Assert that KYC requirements are met for a specific account with
+  /// respect to a specific token.
   ///
   /// - Parameters:
   ///   - request: Request to send to grantKycToTokenAccount.
@@ -317,7 +320,8 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Removes the KYC flag of the provided Account ID
+  /// Assert that KYC requirements are _not_ met for a specific account with
+  /// respect to a specific token.
   ///
   /// - Parameters:
   ///   - request: Request to send to revokeKycFromTokenAccount.
@@ -336,7 +340,7 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Associates tokens to an account
+  /// Associate one or more tokens to an account.
   ///
   /// - Parameters:
   ///   - request: Request to send to associateTokens.
@@ -355,7 +359,7 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Dissociates tokens from an account
+  /// Dissociate one or more tokens from an account.
   ///
   /// - Parameters:
   ///   - request: Request to send to dissociateTokens.
@@ -374,7 +378,7 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Updates the custom fee schedule on a token
+  /// Update the custom fee schedule for a token.
   ///
   /// - Parameters:
   ///   - request: Request to send to updateTokenFeeSchedule.
@@ -393,7 +397,10 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Retrieves the metadata of a token
+  /// Retrieve the detail characteristics for a token.
+  /// <p>
+  /// This query SHALL return information for the token type as a whole.<br/>
+  /// This query SHALL NOT return information for individual tokens.
   ///
   /// - Parameters:
   ///   - request: Request to send to getTokenInfo.
@@ -412,26 +419,11 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// (DEPRECATED) Gets info on NFTs N through M on the list of NFTs associated with a given account
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to getAccountNftInfos.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func getAccountNftInfos(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<Proto_Query, Proto_Response> {
-    return self.makeUnaryCall(
-      path: Proto_TokenServiceClientMetadata.Methods.getAccountNftInfos.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetAccountNftInfosInterceptors() ?? []
-    )
-  }
-
-  ///*
-  /// Retrieves the metadata of an NFT by TokenID and serial number
+  /// Retrieve the metadata for a specific non-fungible/unique token.<br/>
+  /// The NFT to query is identified by token identifier and serial number.
+  /// <p>
+  /// This query SHALL return token metadata and, if an allowance is defined,
+  /// the designated "spender" account for the queried NFT.
   ///
   /// - Parameters:
   ///   - request: Request to send to getTokenNftInfo.
@@ -450,25 +442,7 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// (DEPRECATED) Gets info on NFTs N through M on the list of NFTs associated with a given Token of type NON_FUNGIBLE
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to getTokenNftInfos.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func getTokenNftInfos(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<Proto_Query, Proto_Response> {
-    return self.makeUnaryCall(
-      path: Proto_TokenServiceClientMetadata.Methods.getTokenNftInfos.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetTokenNftInfosInterceptors() ?? []
-    )
-  }
-
-  /// Pause the token
+  /// Pause a token.
   ///
   /// - Parameters:
   ///   - request: Request to send to pauseToken.
@@ -486,7 +460,8 @@ extension Proto_TokenServiceClientProtocol {
     )
   }
 
-  ///  Unpause the token
+  ///*
+  /// Unpause (resume) a token.
   ///
   /// - Parameters:
   ///   - request: Request to send to unpauseToken.
@@ -505,7 +480,12 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Updates the NFTs in a collection by TokenID and serial number
+  /// Update multiple non-fungible/unique tokens (NFTs) in a collection.<br/>
+  /// The NFTs are identified by token identifier and one or more
+  /// serial numbers.
+  /// <p>
+  /// This transaction SHALL update NFT metadata only.<br/>
+  /// This transaction MUST be signed by the token `metadata_key`.
   ///
   /// - Parameters:
   ///   - request: Request to send to updateNfts.
@@ -524,18 +504,23 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Reject one or more tokens.<br/>
-  /// This transaction SHALL transfer the full balance of one or more tokens from the requesting
-  /// account to the treasury for each token. This transfer SHALL NOT charge any custom fee or
-  /// royalty defined for the token(s) to be rejected.<br/>
-  /// <h3>Effects on success</h3>
+  /// Reject one or more tokens.
+  /// <p>
+  /// This transaction SHALL transfer the full balance of one or more tokens
+  /// from the requesting account to the treasury for each token.<br/>
+  /// This transfer SHALL NOT charge any custom fee or royalty defined for
+  /// the token(s) to be rejected.<br/>
+  /// ### Effects on success
   /// <ul>
-  ///   <li>If the rejected token is fungible/common, the requesting account SHALL have a balance
-  ///       of 0 for the rejected token. The treasury balance SHALL increase by the amount that
-  ///       the requesting account decreased.</li>
-  ///   <li>If the rejected token is non-fungible/unique the requesting account SHALL NOT hold
-  ///       the specific serialized token that is rejected. The treasury account SHALL hold each
-  ///       specific serialized token that was rejected.</li>
+  ///   <li>If the rejected token is fungible/common, the requesting account
+  ///       SHALL have a balance of 0 for the rejected token.<br/>
+  ///       The treasury balance SHALL increase by the amount that the
+  ///       requesting account decreased.</li>
+  ///   <li>If the rejected token is non-fungible/unique the requesting
+  ///       account SHALL NOT hold the specific serialized token that
+  ///       is rejected.<br/>
+  ///       The treasury account SHALL hold each specific serialized token
+  ///       that was rejected.</li>
   /// </li>
   ///
   /// - Parameters:
@@ -555,26 +540,34 @@ extension Proto_TokenServiceClientProtocol {
   }
 
   ///*
-  /// Airdrop one or more tokens to one or more accounts.<br/>
-  /// This distributes tokens from the balance of one or more sending account(s) to the balance
-  /// of one or more recipient accounts. Accounts will receive the tokens in one of four ways.
+  /// Airdrop one or more tokens to one or more accounts.
+  /// <p>
+  /// This transaction SHALL distribute tokens from the balance of one or
+  /// more sending account(s) to the balance of one or more
+  /// recipient accounts.<br/>
+  /// Accounts SHALL receive the tokens in one of four ways.
   /// <ul>
-  ///   <li>An account already associated to the token to be distributed SHALL receive the
-  ///       airdropped tokens immediately to the recipient account balance.</li>
-  ///   <li>An account with available automatic association slots SHALL be automatically
-  ///       associated to the token, and SHALL immediately receive the airdropped tokens to the
+  ///   <li>An account already associated to the token to be distributed
+  ///       SHALL receive the airdropped tokens immediately to the
   ///       recipient account balance.</li>
-  ///   <li>An account with "receiver signature required" set SHALL have a "Pending Airdrop"
-  ///       created and MUST claim that airdrop with a `claimAirdrop` transaction.</li>
-  ///   <li>An account with no available automatic association slots SHALL have a
-  ///       "Pending Airdrop" created and MUST claim that airdrop with a `claimAirdrop`
-  ///       transaction. </li>
+  ///   <li>An account with available automatic association slots SHALL
+  ///       be automatically associated to the token, and SHALL
+  ///       immediately receive the airdropped tokens to the recipient
+  ///       account balance.</li>
+  ///   <li>An account with "receiver signature required" set SHALL have
+  ///       a "Pending Airdrop" created and MUST claim that airdrop with
+  ///       a `claimAirdrop` transaction.</li>
+  ///   <li>An account with no available automatic association slots SHALL
+  ///       have a "Pending Airdrop" created and MUST claim that airdrop
+  ///       with a `claimAirdrop` transaction. </li>
   /// </ul>
-  /// Any airdrop that completes immediately SHALL be irreversible. Any airdrop that results in a
-  /// "Pending Airdrop" MAY be canceled via a `cancelAirdrop` transaction.<br/>
-  /// All transfer fees (including custom fees and royalties), as well as the rent cost for the
-  /// first auto-renewal period for any automatic-association slot occupied by the airdropped
-  /// tokens, SHALL be charged to the account submitting this transaction.
+  /// Any airdrop that completes immediately SHALL be irreversible.<br/>
+  /// Any airdrop that results in a "Pending Airdrop" MAY be canceled via
+  /// a `cancelAirdrop` transaction.<br/>
+  /// All transfer fees (including custom fees and royalties), as well as
+  /// the rent cost for the first auto-renewal period for any
+  /// automatic-association slot occupied by the airdropped tokens,
+  /// SHALL be charged to the account submitting this transaction.
   ///
   /// - Parameters:
   ///   - request: Request to send to airdropTokens.
@@ -595,7 +588,8 @@ extension Proto_TokenServiceClientProtocol {
   ///*
   /// Cancel one or more pending airdrops.
   /// <p>
-  /// This transaction MUST be signed by _each_ account *sending* an airdrop to be canceled.
+  /// This transaction MUST be signed by _each_ account *sending* an
+  /// airdrop to be canceled.
   ///
   /// - Parameters:
   ///   - request: Request to send to cancelAirdrop.
@@ -616,10 +610,10 @@ extension Proto_TokenServiceClientProtocol {
   ///*
   /// Claim one or more pending airdrops.
   /// <p>
-  /// This transaction MUST be signed by _each_ account **receiving** an
-  /// airdrop to be claimed.<br>
-  /// If a "Sender" lacks sufficient balance to fulfill the airdrop at the
-  /// time the claim is made, that claim SHALL fail.
+  /// This transaction MUST be signed by _each_ account **receiving**
+  /// an airdrop to be claimed.<br>
+  /// If a "Sender" lacks sufficient balance to fulfill the airdrop at
+  /// the time the claim is made, that claim SHALL fail.
   ///
   /// - Parameters:
   ///   - request: Request to send to claimAirdrop.
@@ -772,17 +766,7 @@ public protocol Proto_TokenServiceAsyncClientProtocol: GRPCClient {
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
 
-  func makeGetAccountNftInfosCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
-
   func makeGetTokenNftInfoCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
-
-  func makeGetTokenNftInfosCall(
     _ request: Proto_Query,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
@@ -1001,18 +985,6 @@ extension Proto_TokenServiceAsyncClientProtocol {
     )
   }
 
-  public func makeGetAccountNftInfosCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response> {
-    return self.makeAsyncUnaryCall(
-      path: Proto_TokenServiceClientMetadata.Methods.getAccountNftInfos.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetAccountNftInfosInterceptors() ?? []
-    )
-  }
-
   public func makeGetTokenNftInfoCall(
     _ request: Proto_Query,
     callOptions: CallOptions? = nil
@@ -1022,18 +994,6 @@ extension Proto_TokenServiceAsyncClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makegetTokenNftInfoInterceptors() ?? []
-    )
-  }
-
-  public func makeGetTokenNftInfosCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response> {
-    return self.makeAsyncUnaryCall(
-      path: Proto_TokenServiceClientMetadata.Methods.getTokenNftInfos.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetTokenNftInfosInterceptors() ?? []
     )
   }
 
@@ -1292,18 +1252,6 @@ extension Proto_TokenServiceAsyncClientProtocol {
     )
   }
 
-  public func getAccountNftInfos(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) async throws -> Proto_Response {
-    return try await self.performAsyncUnaryCall(
-      path: Proto_TokenServiceClientMetadata.Methods.getAccountNftInfos.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetAccountNftInfosInterceptors() ?? []
-    )
-  }
-
   public func getTokenNftInfo(
     _ request: Proto_Query,
     callOptions: CallOptions? = nil
@@ -1313,18 +1261,6 @@ extension Proto_TokenServiceAsyncClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makegetTokenNftInfoInterceptors() ?? []
-    )
-  }
-
-  public func getTokenNftInfos(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) async throws -> Proto_Response {
-    return try await self.performAsyncUnaryCall(
-      path: Proto_TokenServiceClientMetadata.Methods.getTokenNftInfos.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetTokenNftInfosInterceptors() ?? []
     )
   }
 
@@ -1474,14 +1410,8 @@ public protocol Proto_TokenServiceClientInterceptorFactoryProtocol: Sendable {
   /// - Returns: Interceptors to use when invoking 'getTokenInfo'.
   func makegetTokenInfoInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
 
-  /// - Returns: Interceptors to use when invoking 'getAccountNftInfos'.
-  func makegetAccountNftInfosInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
-
   /// - Returns: Interceptors to use when invoking 'getTokenNftInfo'.
   func makegetTokenNftInfoInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
-
-  /// - Returns: Interceptors to use when invoking 'getTokenNftInfos'.
-  func makegetTokenNftInfosInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
 
   /// - Returns: Interceptors to use when invoking 'pauseToken'.
   func makepauseTokenInterceptors() -> [ClientInterceptor<Proto_Transaction, Proto_TransactionResponse>]
@@ -1524,9 +1454,7 @@ public enum Proto_TokenServiceClientMetadata {
       Proto_TokenServiceClientMetadata.Methods.dissociateTokens,
       Proto_TokenServiceClientMetadata.Methods.updateTokenFeeSchedule,
       Proto_TokenServiceClientMetadata.Methods.getTokenInfo,
-      Proto_TokenServiceClientMetadata.Methods.getAccountNftInfos,
       Proto_TokenServiceClientMetadata.Methods.getTokenNftInfo,
-      Proto_TokenServiceClientMetadata.Methods.getTokenNftInfos,
       Proto_TokenServiceClientMetadata.Methods.pauseToken,
       Proto_TokenServiceClientMetadata.Methods.unpauseToken,
       Proto_TokenServiceClientMetadata.Methods.updateNfts,
@@ -1622,21 +1550,9 @@ public enum Proto_TokenServiceClientMetadata {
       type: GRPCCallType.unary
     )
 
-    public static let getAccountNftInfos = GRPCMethodDescriptor(
-      name: "getAccountNftInfos",
-      path: "/proto.TokenService/getAccountNftInfos",
-      type: GRPCCallType.unary
-    )
-
     public static let getTokenNftInfo = GRPCMethodDescriptor(
       name: "getTokenNftInfo",
       path: "/proto.TokenService/getTokenNftInfo",
-      type: GRPCCallType.unary
-    )
-
-    public static let getTokenNftInfos = GRPCMethodDescriptor(
-      name: "getTokenNftInfos",
-      path: "/proto.TokenService/getTokenNftInfos",
       type: GRPCCallType.unary
     )
 
@@ -1684,3 +1600,1113 @@ public enum Proto_TokenServiceClientMetadata {
   }
 }
 
+///*
+/// Transactions and queries for the Token Service
+///
+/// To build a server, implement a class that conforms to this protocol.
+public protocol Proto_TokenServiceProvider: CallHandlerProvider {
+  var interceptors: Proto_TokenServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Create a new token.
+  func createToken(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Update a token.
+  func updateToken(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Mint one or more tokens to the treasury account.
+  /// <p>
+  /// This MAY specify a quantity of fungible/common tokens or
+  /// a list of specific non-fungible/unique tokes, but
+  /// MUST NOT specify both.
+  func mintToken(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Burn one or more tokens from the treasury account.
+  /// <p>
+  /// This MAY specify a quantity of fungible/common tokens or
+  /// a list of specific non-fungible/unique tokes, but
+  /// MUST NOT specify both.
+  func burnToken(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Delete a token.
+  func deleteToken(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Wipe one or more tokens from an identified Account.
+  /// <p>
+  /// This MAY specify a quantity of fungible/common tokens or
+  /// a list of specific non-fungible/unique tokes, but
+  /// MUST NOT specify both.
+  func wipeTokenAccount(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Freeze the transfer of tokens to or from an identified Account.
+  func freezeTokenAccount(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Unfreeze the transfer of tokens to or from an identified Account.
+  func unfreezeTokenAccount(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Assert that KYC requirements are met for a specific account with
+  /// respect to a specific token.
+  func grantKycToTokenAccount(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Assert that KYC requirements are _not_ met for a specific account with
+  /// respect to a specific token.
+  func revokeKycFromTokenAccount(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Associate one or more tokens to an account.
+  func associateTokens(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Dissociate one or more tokens from an account.
+  func dissociateTokens(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Update the custom fee schedule for a token.
+  func updateTokenFeeSchedule(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Retrieve the detail characteristics for a token.
+  /// <p>
+  /// This query SHALL return information for the token type as a whole.<br/>
+  /// This query SHALL NOT return information for individual tokens.
+  func getTokenInfo(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Retrieve the metadata for a specific non-fungible/unique token.<br/>
+  /// The NFT to query is identified by token identifier and serial number.
+  /// <p>
+  /// This query SHALL return token metadata and, if an allowance is defined,
+  /// the designated "spender" account for the queried NFT.
+  func getTokenNftInfo(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Pause a token.
+  func pauseToken(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Unpause (resume) a token.
+  func unpauseToken(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Update multiple non-fungible/unique tokens (NFTs) in a collection.<br/>
+  /// The NFTs are identified by token identifier and one or more
+  /// serial numbers.
+  /// <p>
+  /// This transaction SHALL update NFT metadata only.<br/>
+  /// This transaction MUST be signed by the token `metadata_key`.
+  func updateNfts(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Reject one or more tokens.
+  /// <p>
+  /// This transaction SHALL transfer the full balance of one or more tokens
+  /// from the requesting account to the treasury for each token.<br/>
+  /// This transfer SHALL NOT charge any custom fee or royalty defined for
+  /// the token(s) to be rejected.<br/>
+  /// ### Effects on success
+  /// <ul>
+  ///   <li>If the rejected token is fungible/common, the requesting account
+  ///       SHALL have a balance of 0 for the rejected token.<br/>
+  ///       The treasury balance SHALL increase by the amount that the
+  ///       requesting account decreased.</li>
+  ///   <li>If the rejected token is non-fungible/unique the requesting
+  ///       account SHALL NOT hold the specific serialized token that
+  ///       is rejected.<br/>
+  ///       The treasury account SHALL hold each specific serialized token
+  ///       that was rejected.</li>
+  /// </li>
+  func rejectToken(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Airdrop one or more tokens to one or more accounts.
+  /// <p>
+  /// This transaction SHALL distribute tokens from the balance of one or
+  /// more sending account(s) to the balance of one or more
+  /// recipient accounts.<br/>
+  /// Accounts SHALL receive the tokens in one of four ways.
+  /// <ul>
+  ///   <li>An account already associated to the token to be distributed
+  ///       SHALL receive the airdropped tokens immediately to the
+  ///       recipient account balance.</li>
+  ///   <li>An account with available automatic association slots SHALL
+  ///       be automatically associated to the token, and SHALL
+  ///       immediately receive the airdropped tokens to the recipient
+  ///       account balance.</li>
+  ///   <li>An account with "receiver signature required" set SHALL have
+  ///       a "Pending Airdrop" created and MUST claim that airdrop with
+  ///       a `claimAirdrop` transaction.</li>
+  ///   <li>An account with no available automatic association slots SHALL
+  ///       have a "Pending Airdrop" created and MUST claim that airdrop
+  ///       with a `claimAirdrop` transaction. </li>
+  /// </ul>
+  /// Any airdrop that completes immediately SHALL be irreversible.<br/>
+  /// Any airdrop that results in a "Pending Airdrop" MAY be canceled via
+  /// a `cancelAirdrop` transaction.<br/>
+  /// All transfer fees (including custom fees and royalties), as well as
+  /// the rent cost for the first auto-renewal period for any
+  /// automatic-association slot occupied by the airdropped tokens,
+  /// SHALL be charged to the account submitting this transaction.
+  func airdropTokens(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Cancel one or more pending airdrops.
+  /// <p>
+  /// This transaction MUST be signed by _each_ account *sending* an
+  /// airdrop to be canceled.
+  func cancelAirdrop(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Claim one or more pending airdrops.
+  /// <p>
+  /// This transaction MUST be signed by _each_ account **receiving**
+  /// an airdrop to be claimed.<br>
+  /// If a "Sender" lacks sufficient balance to fulfill the airdrop at
+  /// the time the claim is made, that claim SHALL fail.
+  func claimAirdrop(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+}
+
+extension Proto_TokenServiceProvider {
+  public var serviceName: Substring {
+    return Proto_TokenServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+  /// Returns nil for methods not handled by this service.
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "createToken":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateTokenInterceptors() ?? [],
+        userFunction: self.createToken(request:context:)
+      )
+
+    case "updateToken":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateTokenInterceptors() ?? [],
+        userFunction: self.updateToken(request:context:)
+      )
+
+    case "mintToken":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makemintTokenInterceptors() ?? [],
+        userFunction: self.mintToken(request:context:)
+      )
+
+    case "burnToken":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeburnTokenInterceptors() ?? [],
+        userFunction: self.burnToken(request:context:)
+      )
+
+    case "deleteToken":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteTokenInterceptors() ?? [],
+        userFunction: self.deleteToken(request:context:)
+      )
+
+    case "wipeTokenAccount":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makewipeTokenAccountInterceptors() ?? [],
+        userFunction: self.wipeTokenAccount(request:context:)
+      )
+
+    case "freezeTokenAccount":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makefreezeTokenAccountInterceptors() ?? [],
+        userFunction: self.freezeTokenAccount(request:context:)
+      )
+
+    case "unfreezeTokenAccount":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeunfreezeTokenAccountInterceptors() ?? [],
+        userFunction: self.unfreezeTokenAccount(request:context:)
+      )
+
+    case "grantKycToTokenAccount":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makegrantKycToTokenAccountInterceptors() ?? [],
+        userFunction: self.grantKycToTokenAccount(request:context:)
+      )
+
+    case "revokeKycFromTokenAccount":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makerevokeKycFromTokenAccountInterceptors() ?? [],
+        userFunction: self.revokeKycFromTokenAccount(request:context:)
+      )
+
+    case "associateTokens":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeassociateTokensInterceptors() ?? [],
+        userFunction: self.associateTokens(request:context:)
+      )
+
+    case "dissociateTokens":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedissociateTokensInterceptors() ?? [],
+        userFunction: self.dissociateTokens(request:context:)
+      )
+
+    case "updateTokenFeeSchedule":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateTokenFeeScheduleInterceptors() ?? [],
+        userFunction: self.updateTokenFeeSchedule(request:context:)
+      )
+
+    case "getTokenInfo":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetTokenInfoInterceptors() ?? [],
+        userFunction: self.getTokenInfo(request:context:)
+      )
+
+    case "getTokenNftInfo":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetTokenNftInfoInterceptors() ?? [],
+        userFunction: self.getTokenNftInfo(request:context:)
+      )
+
+    case "pauseToken":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makepauseTokenInterceptors() ?? [],
+        userFunction: self.pauseToken(request:context:)
+      )
+
+    case "unpauseToken":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeunpauseTokenInterceptors() ?? [],
+        userFunction: self.unpauseToken(request:context:)
+      )
+
+    case "updateNfts":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateNftsInterceptors() ?? [],
+        userFunction: self.updateNfts(request:context:)
+      )
+
+    case "rejectToken":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makerejectTokenInterceptors() ?? [],
+        userFunction: self.rejectToken(request:context:)
+      )
+
+    case "airdropTokens":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeairdropTokensInterceptors() ?? [],
+        userFunction: self.airdropTokens(request:context:)
+      )
+
+    case "cancelAirdrop":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecancelAirdropInterceptors() ?? [],
+        userFunction: self.cancelAirdrop(request:context:)
+      )
+
+    case "claimAirdrop":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeclaimAirdropInterceptors() ?? [],
+        userFunction: self.claimAirdrop(request:context:)
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+///*
+/// Transactions and queries for the Token Service
+///
+/// To implement a server, implement an object which conforms to this protocol.
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+public protocol Proto_TokenServiceAsyncProvider: CallHandlerProvider, Sendable {
+  static var serviceDescriptor: GRPCServiceDescriptor { get }
+  var interceptors: Proto_TokenServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Create a new token.
+  func createToken(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Update a token.
+  func updateToken(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Mint one or more tokens to the treasury account.
+  /// <p>
+  /// This MAY specify a quantity of fungible/common tokens or
+  /// a list of specific non-fungible/unique tokes, but
+  /// MUST NOT specify both.
+  func mintToken(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Burn one or more tokens from the treasury account.
+  /// <p>
+  /// This MAY specify a quantity of fungible/common tokens or
+  /// a list of specific non-fungible/unique tokes, but
+  /// MUST NOT specify both.
+  func burnToken(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Delete a token.
+  func deleteToken(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Wipe one or more tokens from an identified Account.
+  /// <p>
+  /// This MAY specify a quantity of fungible/common tokens or
+  /// a list of specific non-fungible/unique tokes, but
+  /// MUST NOT specify both.
+  func wipeTokenAccount(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Freeze the transfer of tokens to or from an identified Account.
+  func freezeTokenAccount(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Unfreeze the transfer of tokens to or from an identified Account.
+  func unfreezeTokenAccount(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Assert that KYC requirements are met for a specific account with
+  /// respect to a specific token.
+  func grantKycToTokenAccount(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Assert that KYC requirements are _not_ met for a specific account with
+  /// respect to a specific token.
+  func revokeKycFromTokenAccount(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Associate one or more tokens to an account.
+  func associateTokens(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Dissociate one or more tokens from an account.
+  func dissociateTokens(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Update the custom fee schedule for a token.
+  func updateTokenFeeSchedule(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Retrieve the detail characteristics for a token.
+  /// <p>
+  /// This query SHALL return information for the token type as a whole.<br/>
+  /// This query SHALL NOT return information for individual tokens.
+  func getTokenInfo(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Retrieve the metadata for a specific non-fungible/unique token.<br/>
+  /// The NFT to query is identified by token identifier and serial number.
+  /// <p>
+  /// This query SHALL return token metadata and, if an allowance is defined,
+  /// the designated "spender" account for the queried NFT.
+  func getTokenNftInfo(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Pause a token.
+  func pauseToken(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Unpause (resume) a token.
+  func unpauseToken(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Update multiple non-fungible/unique tokens (NFTs) in a collection.<br/>
+  /// The NFTs are identified by token identifier and one or more
+  /// serial numbers.
+  /// <p>
+  /// This transaction SHALL update NFT metadata only.<br/>
+  /// This transaction MUST be signed by the token `metadata_key`.
+  func updateNfts(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Reject one or more tokens.
+  /// <p>
+  /// This transaction SHALL transfer the full balance of one or more tokens
+  /// from the requesting account to the treasury for each token.<br/>
+  /// This transfer SHALL NOT charge any custom fee or royalty defined for
+  /// the token(s) to be rejected.<br/>
+  /// ### Effects on success
+  /// <ul>
+  ///   <li>If the rejected token is fungible/common, the requesting account
+  ///       SHALL have a balance of 0 for the rejected token.<br/>
+  ///       The treasury balance SHALL increase by the amount that the
+  ///       requesting account decreased.</li>
+  ///   <li>If the rejected token is non-fungible/unique the requesting
+  ///       account SHALL NOT hold the specific serialized token that
+  ///       is rejected.<br/>
+  ///       The treasury account SHALL hold each specific serialized token
+  ///       that was rejected.</li>
+  /// </li>
+  func rejectToken(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Airdrop one or more tokens to one or more accounts.
+  /// <p>
+  /// This transaction SHALL distribute tokens from the balance of one or
+  /// more sending account(s) to the balance of one or more
+  /// recipient accounts.<br/>
+  /// Accounts SHALL receive the tokens in one of four ways.
+  /// <ul>
+  ///   <li>An account already associated to the token to be distributed
+  ///       SHALL receive the airdropped tokens immediately to the
+  ///       recipient account balance.</li>
+  ///   <li>An account with available automatic association slots SHALL
+  ///       be automatically associated to the token, and SHALL
+  ///       immediately receive the airdropped tokens to the recipient
+  ///       account balance.</li>
+  ///   <li>An account with "receiver signature required" set SHALL have
+  ///       a "Pending Airdrop" created and MUST claim that airdrop with
+  ///       a `claimAirdrop` transaction.</li>
+  ///   <li>An account with no available automatic association slots SHALL
+  ///       have a "Pending Airdrop" created and MUST claim that airdrop
+  ///       with a `claimAirdrop` transaction. </li>
+  /// </ul>
+  /// Any airdrop that completes immediately SHALL be irreversible.<br/>
+  /// Any airdrop that results in a "Pending Airdrop" MAY be canceled via
+  /// a `cancelAirdrop` transaction.<br/>
+  /// All transfer fees (including custom fees and royalties), as well as
+  /// the rent cost for the first auto-renewal period for any
+  /// automatic-association slot occupied by the airdropped tokens,
+  /// SHALL be charged to the account submitting this transaction.
+  func airdropTokens(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Cancel one or more pending airdrops.
+  /// <p>
+  /// This transaction MUST be signed by _each_ account *sending* an
+  /// airdrop to be canceled.
+  func cancelAirdrop(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Claim one or more pending airdrops.
+  /// <p>
+  /// This transaction MUST be signed by _each_ account **receiving**
+  /// an airdrop to be claimed.<br>
+  /// If a "Sender" lacks sufficient balance to fulfill the airdrop at
+  /// the time the claim is made, that claim SHALL fail.
+  func claimAirdrop(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension Proto_TokenServiceAsyncProvider {
+  public static var serviceDescriptor: GRPCServiceDescriptor {
+    return Proto_TokenServiceServerMetadata.serviceDescriptor
+  }
+
+  public var serviceName: Substring {
+    return Proto_TokenServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  public var interceptors: Proto_TokenServiceServerInterceptorFactoryProtocol? {
+    return nil
+  }
+
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "createToken":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateTokenInterceptors() ?? [],
+        wrapping: { try await self.createToken(request: $0, context: $1) }
+      )
+
+    case "updateToken":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateTokenInterceptors() ?? [],
+        wrapping: { try await self.updateToken(request: $0, context: $1) }
+      )
+
+    case "mintToken":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makemintTokenInterceptors() ?? [],
+        wrapping: { try await self.mintToken(request: $0, context: $1) }
+      )
+
+    case "burnToken":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeburnTokenInterceptors() ?? [],
+        wrapping: { try await self.burnToken(request: $0, context: $1) }
+      )
+
+    case "deleteToken":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteTokenInterceptors() ?? [],
+        wrapping: { try await self.deleteToken(request: $0, context: $1) }
+      )
+
+    case "wipeTokenAccount":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makewipeTokenAccountInterceptors() ?? [],
+        wrapping: { try await self.wipeTokenAccount(request: $0, context: $1) }
+      )
+
+    case "freezeTokenAccount":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makefreezeTokenAccountInterceptors() ?? [],
+        wrapping: { try await self.freezeTokenAccount(request: $0, context: $1) }
+      )
+
+    case "unfreezeTokenAccount":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeunfreezeTokenAccountInterceptors() ?? [],
+        wrapping: { try await self.unfreezeTokenAccount(request: $0, context: $1) }
+      )
+
+    case "grantKycToTokenAccount":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makegrantKycToTokenAccountInterceptors() ?? [],
+        wrapping: { try await self.grantKycToTokenAccount(request: $0, context: $1) }
+      )
+
+    case "revokeKycFromTokenAccount":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makerevokeKycFromTokenAccountInterceptors() ?? [],
+        wrapping: { try await self.revokeKycFromTokenAccount(request: $0, context: $1) }
+      )
+
+    case "associateTokens":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeassociateTokensInterceptors() ?? [],
+        wrapping: { try await self.associateTokens(request: $0, context: $1) }
+      )
+
+    case "dissociateTokens":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedissociateTokensInterceptors() ?? [],
+        wrapping: { try await self.dissociateTokens(request: $0, context: $1) }
+      )
+
+    case "updateTokenFeeSchedule":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateTokenFeeScheduleInterceptors() ?? [],
+        wrapping: { try await self.updateTokenFeeSchedule(request: $0, context: $1) }
+      )
+
+    case "getTokenInfo":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetTokenInfoInterceptors() ?? [],
+        wrapping: { try await self.getTokenInfo(request: $0, context: $1) }
+      )
+
+    case "getTokenNftInfo":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetTokenNftInfoInterceptors() ?? [],
+        wrapping: { try await self.getTokenNftInfo(request: $0, context: $1) }
+      )
+
+    case "pauseToken":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makepauseTokenInterceptors() ?? [],
+        wrapping: { try await self.pauseToken(request: $0, context: $1) }
+      )
+
+    case "unpauseToken":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeunpauseTokenInterceptors() ?? [],
+        wrapping: { try await self.unpauseToken(request: $0, context: $1) }
+      )
+
+    case "updateNfts":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateNftsInterceptors() ?? [],
+        wrapping: { try await self.updateNfts(request: $0, context: $1) }
+      )
+
+    case "rejectToken":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makerejectTokenInterceptors() ?? [],
+        wrapping: { try await self.rejectToken(request: $0, context: $1) }
+      )
+
+    case "airdropTokens":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeairdropTokensInterceptors() ?? [],
+        wrapping: { try await self.airdropTokens(request: $0, context: $1) }
+      )
+
+    case "cancelAirdrop":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecancelAirdropInterceptors() ?? [],
+        wrapping: { try await self.cancelAirdrop(request: $0, context: $1) }
+      )
+
+    case "claimAirdrop":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeclaimAirdropInterceptors() ?? [],
+        wrapping: { try await self.claimAirdrop(request: $0, context: $1) }
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+public protocol Proto_TokenServiceServerInterceptorFactoryProtocol: Sendable {
+
+  /// - Returns: Interceptors to use when handling 'createToken'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecreateTokenInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'updateToken'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeupdateTokenInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'mintToken'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makemintTokenInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'burnToken'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeburnTokenInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'deleteToken'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makedeleteTokenInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'wipeTokenAccount'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makewipeTokenAccountInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'freezeTokenAccount'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makefreezeTokenAccountInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'unfreezeTokenAccount'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeunfreezeTokenAccountInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'grantKycToTokenAccount'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegrantKycToTokenAccountInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'revokeKycFromTokenAccount'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makerevokeKycFromTokenAccountInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'associateTokens'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeassociateTokensInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'dissociateTokens'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makedissociateTokensInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'updateTokenFeeSchedule'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeupdateTokenFeeScheduleInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'getTokenInfo'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetTokenInfoInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'getTokenNftInfo'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetTokenNftInfoInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'pauseToken'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makepauseTokenInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'unpauseToken'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeunpauseTokenInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'updateNfts'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeupdateNftsInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'rejectToken'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makerejectTokenInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'airdropTokens'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeairdropTokensInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'cancelAirdrop'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecancelAirdropInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'claimAirdrop'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeclaimAirdropInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+}
+
+public enum Proto_TokenServiceServerMetadata {
+  public static let serviceDescriptor = GRPCServiceDescriptor(
+    name: "TokenService",
+    fullName: "proto.TokenService",
+    methods: [
+      Proto_TokenServiceServerMetadata.Methods.createToken,
+      Proto_TokenServiceServerMetadata.Methods.updateToken,
+      Proto_TokenServiceServerMetadata.Methods.mintToken,
+      Proto_TokenServiceServerMetadata.Methods.burnToken,
+      Proto_TokenServiceServerMetadata.Methods.deleteToken,
+      Proto_TokenServiceServerMetadata.Methods.wipeTokenAccount,
+      Proto_TokenServiceServerMetadata.Methods.freezeTokenAccount,
+      Proto_TokenServiceServerMetadata.Methods.unfreezeTokenAccount,
+      Proto_TokenServiceServerMetadata.Methods.grantKycToTokenAccount,
+      Proto_TokenServiceServerMetadata.Methods.revokeKycFromTokenAccount,
+      Proto_TokenServiceServerMetadata.Methods.associateTokens,
+      Proto_TokenServiceServerMetadata.Methods.dissociateTokens,
+      Proto_TokenServiceServerMetadata.Methods.updateTokenFeeSchedule,
+      Proto_TokenServiceServerMetadata.Methods.getTokenInfo,
+      Proto_TokenServiceServerMetadata.Methods.getTokenNftInfo,
+      Proto_TokenServiceServerMetadata.Methods.pauseToken,
+      Proto_TokenServiceServerMetadata.Methods.unpauseToken,
+      Proto_TokenServiceServerMetadata.Methods.updateNfts,
+      Proto_TokenServiceServerMetadata.Methods.rejectToken,
+      Proto_TokenServiceServerMetadata.Methods.airdropTokens,
+      Proto_TokenServiceServerMetadata.Methods.cancelAirdrop,
+      Proto_TokenServiceServerMetadata.Methods.claimAirdrop,
+    ]
+  )
+
+  public enum Methods {
+    public static let createToken = GRPCMethodDescriptor(
+      name: "createToken",
+      path: "/proto.TokenService/createToken",
+      type: GRPCCallType.unary
+    )
+
+    public static let updateToken = GRPCMethodDescriptor(
+      name: "updateToken",
+      path: "/proto.TokenService/updateToken",
+      type: GRPCCallType.unary
+    )
+
+    public static let mintToken = GRPCMethodDescriptor(
+      name: "mintToken",
+      path: "/proto.TokenService/mintToken",
+      type: GRPCCallType.unary
+    )
+
+    public static let burnToken = GRPCMethodDescriptor(
+      name: "burnToken",
+      path: "/proto.TokenService/burnToken",
+      type: GRPCCallType.unary
+    )
+
+    public static let deleteToken = GRPCMethodDescriptor(
+      name: "deleteToken",
+      path: "/proto.TokenService/deleteToken",
+      type: GRPCCallType.unary
+    )
+
+    public static let wipeTokenAccount = GRPCMethodDescriptor(
+      name: "wipeTokenAccount",
+      path: "/proto.TokenService/wipeTokenAccount",
+      type: GRPCCallType.unary
+    )
+
+    public static let freezeTokenAccount = GRPCMethodDescriptor(
+      name: "freezeTokenAccount",
+      path: "/proto.TokenService/freezeTokenAccount",
+      type: GRPCCallType.unary
+    )
+
+    public static let unfreezeTokenAccount = GRPCMethodDescriptor(
+      name: "unfreezeTokenAccount",
+      path: "/proto.TokenService/unfreezeTokenAccount",
+      type: GRPCCallType.unary
+    )
+
+    public static let grantKycToTokenAccount = GRPCMethodDescriptor(
+      name: "grantKycToTokenAccount",
+      path: "/proto.TokenService/grantKycToTokenAccount",
+      type: GRPCCallType.unary
+    )
+
+    public static let revokeKycFromTokenAccount = GRPCMethodDescriptor(
+      name: "revokeKycFromTokenAccount",
+      path: "/proto.TokenService/revokeKycFromTokenAccount",
+      type: GRPCCallType.unary
+    )
+
+    public static let associateTokens = GRPCMethodDescriptor(
+      name: "associateTokens",
+      path: "/proto.TokenService/associateTokens",
+      type: GRPCCallType.unary
+    )
+
+    public static let dissociateTokens = GRPCMethodDescriptor(
+      name: "dissociateTokens",
+      path: "/proto.TokenService/dissociateTokens",
+      type: GRPCCallType.unary
+    )
+
+    public static let updateTokenFeeSchedule = GRPCMethodDescriptor(
+      name: "updateTokenFeeSchedule",
+      path: "/proto.TokenService/updateTokenFeeSchedule",
+      type: GRPCCallType.unary
+    )
+
+    public static let getTokenInfo = GRPCMethodDescriptor(
+      name: "getTokenInfo",
+      path: "/proto.TokenService/getTokenInfo",
+      type: GRPCCallType.unary
+    )
+
+    public static let getTokenNftInfo = GRPCMethodDescriptor(
+      name: "getTokenNftInfo",
+      path: "/proto.TokenService/getTokenNftInfo",
+      type: GRPCCallType.unary
+    )
+
+    public static let pauseToken = GRPCMethodDescriptor(
+      name: "pauseToken",
+      path: "/proto.TokenService/pauseToken",
+      type: GRPCCallType.unary
+    )
+
+    public static let unpauseToken = GRPCMethodDescriptor(
+      name: "unpauseToken",
+      path: "/proto.TokenService/unpauseToken",
+      type: GRPCCallType.unary
+    )
+
+    public static let updateNfts = GRPCMethodDescriptor(
+      name: "updateNfts",
+      path: "/proto.TokenService/updateNfts",
+      type: GRPCCallType.unary
+    )
+
+    public static let rejectToken = GRPCMethodDescriptor(
+      name: "rejectToken",
+      path: "/proto.TokenService/rejectToken",
+      type: GRPCCallType.unary
+    )
+
+    public static let airdropTokens = GRPCMethodDescriptor(
+      name: "airdropTokens",
+      path: "/proto.TokenService/airdropTokens",
+      type: GRPCCallType.unary
+    )
+
+    public static let cancelAirdrop = GRPCMethodDescriptor(
+      name: "cancelAirdrop",
+      path: "/proto.TokenService/cancelAirdrop",
+      type: GRPCCallType.unary
+    )
+
+    public static let claimAirdrop = GRPCMethodDescriptor(
+      name: "claimAirdrop",
+      path: "/proto.TokenService/claimAirdrop",
+      type: GRPCCallType.unary
+    )
+  }
+}

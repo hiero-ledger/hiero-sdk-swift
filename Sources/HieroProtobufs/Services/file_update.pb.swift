@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # File Update
+/// A message to modify the metadata for a file and/or _replace_ the contents.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,20 +33,35 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Modify the metadata and/or contents of a file. If a field is not set in the transaction body, the
-/// corresponding file attribute will be unchanged. This transaction must be signed by all the keys
-/// in the top level of a key list (M-of-M) of the file being updated. If the keys themselves are
-/// being updated, then the transaction must also be signed by all the new keys. If the keys contain
-/// additional KeyList or ThresholdKey then M-of-M secondary KeyList or ThresholdKey signing
-/// requirements must be meet If the update transaction sets the <tt>auto_renew_account_id</tt> field 
-/// to anything other than the sentinel <tt>0.0.0</tt>, the key of the referenced account must sign.
+/// Update the metadata, and/or replace the content, of a file in the
+/// Hedera File Service (HFS).
+///
+/// Any field which is not set (i.e. is null) in this message, other than
+/// `fileID`, SHALL be ignored.<br/>
+/// If the `keys` list for the identified file is an empty `KeyList`, then
+/// this message MUST NOT set any field except `expirationTime`.
+///
+/// #### Signature Requirements
+/// Every `Key` in the `keys` list for the identified file MUST sign this
+/// transaction, if any field other than `expirationTime` is to be updated.<br/>
+/// If the `keys` list for the identified file is an empty `KeyList` (because
+/// this file was previously created or updated to have an empty `KeyList`),
+/// then the file is considered immutable and this message MUST NOT set any
+/// field except `expirationTime`.<br/>
+/// See the [File Service](#FileService) specification for a detailed
+/// explanation of the signature requirements for all file transactions.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_FileUpdateTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The ID of the file to update
+  /// A file identifier for the file to update.
+  /// <p>
+  /// This field is REQUIRED.
   public var fileID: Proto_FileID {
     get {return _fileID ?? Proto_FileID()}
     set {_fileID = newValue}
@@ -46,7 +72,15 @@ public struct Proto_FileUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearFileID() {self._fileID = nil}
 
   ///*
-  /// The new expiry time (ignored if not later than the current expiry)
+  /// An expiration timestamp.
+  /// <p>
+  /// If set, this value MUST be strictly later than the existing
+  /// `expirationTime` value, or else it will be ignored.<br/>
+  /// If set, this value SHALL replace the existing `expirationTime`.<br/>
+  /// If this field is the only field set, then this transaction SHALL NOT
+  /// require any signature other than the `payer` for the transaction.<br/>
+  /// When the network consensus time exceeds the then-current
+  /// `expirationTime`, the network SHALL expire the file.
   public var expirationTime: Proto_Timestamp {
     get {return _expirationTime ?? Proto_Timestamp()}
     set {_expirationTime = newValue}
@@ -57,7 +91,13 @@ public struct Proto_FileUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearExpirationTime() {self._expirationTime = nil}
 
   ///*
-  /// The new list of keys that can modify or delete the file
+  /// The new list of keys that "own" this file.
+  /// <p>
+  /// If set, every key in this `KeyList` MUST sign this transaction.<br/>
+  /// If set, every key in the _previous_ `KeyList` MUST _also_
+  /// sign this transaction.<br/>
+  /// If this value is an empty `KeyList`, then the file SHALL be immutable
+  /// after completion of this transaction.
   public var keys: Proto_KeyList {
     get {return _keys ?? Proto_KeyList()}
     set {_keys = newValue}
@@ -68,11 +108,18 @@ public struct Proto_FileUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearKeys() {self._keys = nil}
 
   ///*
-  /// The new contents that should overwrite the file's current contents
+  /// An array of bytes.
+  /// <p>
+  /// This value, if set, SHALL _replace_ the existing file content.
+  /// If this value is set to an empty byte array, the content of the file
+  /// SHALL be unchanged.
   public var contents: Data = Data()
 
   ///*
-  /// If set, the new memo to be associated with the file (UTF-8 encoding max 100 bytes)
+  /// A short description of this file.
+  /// <p>
+  /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+  /// (default 100) bytes when encoded as UTF-8.
   public var memo: SwiftProtobuf.Google_Protobuf_StringValue {
     get {return _memo ?? SwiftProtobuf.Google_Protobuf_StringValue()}
     set {_memo = newValue}

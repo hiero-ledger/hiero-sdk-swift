@@ -230,7 +230,17 @@ extension Transaction {
             let value = try intoOnlyValue(value)
             return try TokenCancelAirdropTransaction(protobuf: firstBody, value)
 
-        }
+        case .stateSignatureTransaction(let code):
+            throw HError.fromProtobuf("unrecognized: stateSignatureTransaction `\(code)`")
 
+        case .historyProofSignature(let code):
+            throw HError.fromProtobuf("unrecognized: historyProofSignature `\(code)`")
+
+        case .historyProofKeyPublication(let code):
+            throw HError.fromProtobuf("unrecognized  `\(code)`")
+
+        case .historyProofVote(let code):
+            throw HError.fromProtobuf("unrecognized  `\(code)`")
+        }
     }
 }

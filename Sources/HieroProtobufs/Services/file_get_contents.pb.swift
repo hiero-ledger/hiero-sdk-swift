@@ -8,6 +8,18 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # File Get Contents
+/// Messages for a query to retrieve the content of a file in the
+/// Hedera File Service (HFS).
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,15 +34,21 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get the contents of a file. The content field is empty (no bytes) if the file is empty.
+/// A query request to the Hedera File Service (HFS) for file content.<br/>
+/// This query requests the content of a file, but none of the information
+/// _about_ a file. A client should submit a `fileGetInfo` query to view
+/// information about a file.<br/>
+/// File content may also be available from a block node or mirror node,
+/// generally at lower cost.
 public struct Proto_FileGetContentsQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -41,7 +59,10 @@ public struct Proto_FileGetContentsQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The file ID of the file whose contents are requested
+  /// A file identifier.
+  /// <p>
+  /// This MUST be the identifier of a file that exists in HFS.<br/>
+  /// This value SHALL identify the file to be queried.
   public var fileID: Proto_FileID {
     get {return _fileID ?? Proto_FileID()}
     set {_fileID = newValue}
@@ -60,15 +81,20 @@ public struct Proto_FileGetContentsQuery: Sendable {
 }
 
 ///*
-/// Response when the client sends the node FileGetContentsQuery
+/// A response to a query for the content of a file in the
+/// Hedera File Service (HFS).
+///
+/// This message SHALL contain the full content of the requested file, but
+/// SHALL NOT contain any metadata.
 public struct Proto_FileGetContentsResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -79,7 +105,10 @@ public struct Proto_FileGetContentsResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// the file ID and contents (a state proof can be generated for this)
+  /// A combination of File identifier and content bytes.
+  /// <p>
+  /// This SHALL NOT be set if the file does not exist.<br/>
+  /// The network MAY generate a state proof for this field.
   public var fileContents: Proto_FileGetContentsResponse.FileContents {
     get {return _fileContents ?? Proto_FileGetContentsResponse.FileContents()}
     set {_fileContents = newValue}
@@ -97,7 +126,10 @@ public struct Proto_FileGetContentsResponse: Sendable {
     // methods supported on all messages.
 
     ///*
-    /// The file ID of the file whose contents are being returned
+    /// A file identifier.
+    /// <p>
+    /// This SHALL be the identifier of a file that exists in HFS.<br/>
+    /// This value SHALL identify the file that was queried.
     public var fileID: Proto_FileID {
       get {return _fileID ?? Proto_FileID()}
       set {_fileID = newValue}
@@ -108,7 +140,10 @@ public struct Proto_FileGetContentsResponse: Sendable {
     public mutating func clearFileID() {self._fileID = nil}
 
     ///*
-    /// The bytes contained in the file
+    /// A byte array of file content.
+    /// <p>
+    /// This SHALL contain the full content of the requested file.<br/>
+    /// This SHALL be empty if, and only if, the file content is empty.
     public var contents: Data = Data()
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()

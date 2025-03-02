@@ -12,59 +12,53 @@ import SwiftProtobuf
 
 
 ///*
-/// Transactions and queries for the Schedule Service
+/// Transactions and queries for the Schedule Service.<br/>
+/// The Schedule Service enables transactions to be submitted without all
+/// required signatures and offers a `scheduleSign` transaction to provide
+/// additional signatures independently after the schedule is created. The
+/// scheduled transaction may be executed immediately when all required
+/// signatures are present, or at expiration if "long term" schedules
+/// are enabled in network configuration.
 ///
-/// The Schedule Service allows transactions to be submitted without all the required signatures and
-/// allows anyone to provide the required signatures independently after a transaction has already
-/// been created. The transactions can be executed immediately when all required signatures are received
-/// or at a future date if Long Term Scheduled Transactions are enabled.
+/// ### Execution
+/// Scheduled transactions SHALL be executed under the following conditions.
+/// 1. If "long term" schedules are enabled and `wait_for_expiry` is set for
+///    that schedule then the transaction SHALL NOT be executed before the
+///    network consensus time matches or exceeds the `expiration_time` field
+///    for that schedule.
+/// 1. If "long term" schedules are enabled and `wait_for_expiry` is _not_ set
+///    for that schedule, then the transaction SHALL be executed when all
+///    signatures required by the scheduled transaction are active for that
+///    schedule. This MAY be immediately after the `scheduleCreate` or a
+///    subsequent `scheduleSign` transaction, or MAY be at expiration if
+///    the signature requirements are met at that time.
+/// 1. If "long term" schedules are _disabled_, then the scheduled transaction
+///    SHALL be executed immediately after all signature requirements for the
+///    scheduled transaction are met during the `scheduleCreate` or a subsequent
+///    `scheduleSign` transaction. The scheduled transaction SHALL NOT be
+///    on expiration when "long term" schedules are disabled.
 ///
-/// Execution:
+/// A schedule SHALL remain in state and MAY be queried with a `getScheduleInfo`
+/// transaction after execution, until the schedule expires.<br/>
+/// When network consensus time matches or exceeds the `expiration_time` for
+/// a schedule, that schedule SHALL be removed from state, whether it has
+/// executed or not.<br/>
+/// If "long term" schedules are _disabled_, the maximum expiration time SHALL
+/// be the consensus time of the `scheduleCreate` transaction extended by
+/// the network configuration value `ledger.scheduleTxExpiryTimeSecs`.
 ///
-/// Scheduled Transactions are executed in two different modes.
-///
-/// 1. If Long Term Scheduled Transactions are enabled and <tt>wait_for_expiry</tt> was set to <tt>true</tt> on the
-///    <tt>ScheduleCreate</tt>, then the transaction will be executed at the <tt>expiration_time</tt> specified on the
-///    <tt>ScheduleCreate</tt>.
-///
-/// 2. Otherwise Scheduled Transactions are executed once all required signatures are collected and witnessed.
-///    Every time new signature is provided, a check is performed on the "readiness" of the execution.
-///    The Scheduled Transaction will be executed immediately after the transaction that triggered it.
-///
-/// NOTICE:
-/// A Scheduled Transaction being ready to execute, or even not ready to execute, at the time a <tt>ScheduleCreate</tt> or
-/// <tt>ScheduleSign</tt> comes in does not guarantee it will stay that way. Any number of things can happen over time that
-/// impact the transaction.
-///
-/// For example, account keys can change, accounts can be deleted, and account balances can change.
-///
-/// A particularly noteworthy case is if Long Term Scheduled Transactions are enabled and signature requirements for a Scheduled
-/// Transaction change such that existing signatures become sufficient to allow the transaction to go through. In this case the transaction
-/// will execute at expiration_time unless a ScheduleSign comes in to push it through.
-///
-/// Transaction Record:
-///
-/// If a Scheduled Transaction is executed immediately following the transaction that provided all required signatures,
-/// the timestamp of the Scheduled Transaction will be equal to consensusTimestamp + 1 nano, where
-/// consensusTimestamp is the timestamp of the transaction that triggered the execution.
-///
-/// The Transaction ID of the Scheduled Transaction will have the scheduled property set to true and
-/// inherit the <tt>transactionValidStart</tt> and <tt>accountID</tt> from the <tt>ScheduleCreate</tt> transaction.
-///
-/// The <tt>scheduleRef</tt> property of the transaction record will be populated with the <tt>ScheduleID</tt> of the
-/// Scheduled Transaction.
-///
-/// Post execution:
-///
-/// After execution, a Scheduled Transaction will remain in state and can be queried using <tt>GetScheduleInfo</tt> until expiration.
-///
-/// Expiry:
-///
-/// The expiration time of a schedule is controlled by it's <tt>expiration_time</tt>. If Long Term Scheduled Transactions are disabled,
-/// the <tt>expiration_time</tt> is always 30 minutes in the future.
-///
-/// Once a given Scheduled Transaction expires, it will be removed from the ledger and any upcoming
-/// operation referring the ScheduleID will resolve to INVALID_SCHEDULE_ID.
+/// ### Block Stream Effects
+/// When a scheduled transaction is executed, the timestamp in the transaction
+/// identifier for that transaction SHALL be 1 nanosecond after the consensus
+/// timestamp for the transaction that resulted in its execution. If execution
+/// occurred at expiration, that transaction may be almost any transaction,
+/// including another scheduled transaction that executed at expiration.<br/>
+/// The transaction identifier for a scheduled transaction that is executed
+/// SHALL have the `scheduled` flag set and SHALL inherit the `accountID` and
+/// `transactionValidStart` values from the `scheduleCreate` that created the
+/// schedule.<br/>
+/// The `scheduleRef` property of the record for a scheduled transaction SHALL
+/// be populated with the schedule identifier of the schedule that executed.
 ///
 /// Usage: instantiate `Proto_ScheduleServiceClient`, then call methods of this protocol to make API calls.
 public protocol Proto_ScheduleServiceClientProtocol: GRPCClient {
@@ -98,7 +92,10 @@ extension Proto_ScheduleServiceClientProtocol {
   }
 
   ///*
-  /// Creates a new Schedule by submitting the transaction
+  /// Create a new Schedule.
+  /// <p>
+  /// If all signature requirements are met with this transaction, the
+  /// scheduled transaction MAY execute immediately.
   ///
   /// - Parameters:
   ///   - request: Request to send to createSchedule.
@@ -117,7 +114,11 @@ extension Proto_ScheduleServiceClientProtocol {
   }
 
   ///*
-  /// Signs a new Schedule by submitting the transaction
+  /// Add signatures to an existing schedule.
+  /// <p>
+  /// Signatures on this transaction SHALL be added to the set of active
+  /// signatures on the schedule, and MAY result in execution of the
+  /// scheduled transaction if all signature requirements are met.
   ///
   /// - Parameters:
   ///   - request: Request to send to signSchedule.
@@ -136,7 +137,10 @@ extension Proto_ScheduleServiceClientProtocol {
   }
 
   ///*
-  /// Deletes a new Schedule by submitting the transaction
+  /// Mark an existing schedule deleted.
+  /// <p>
+  /// Once deleted a schedule SHALL NOT be executed and any subsequent
+  /// `scheduleSign` transaction SHALL fail.
   ///
   /// - Parameters:
   ///   - request: Request to send to deleteSchedule.
@@ -155,7 +159,7 @@ extension Proto_ScheduleServiceClientProtocol {
   }
 
   ///*
-  /// Retrieves the metadata of a schedule entity
+  /// Retrieve the metadata for a schedule.
   ///
   /// - Parameters:
   ///   - request: Request to send to getScheduleInfo.
@@ -232,59 +236,53 @@ public struct Proto_ScheduleServiceNIOClient: Proto_ScheduleServiceClientProtoco
 }
 
 ///*
-/// Transactions and queries for the Schedule Service
+/// Transactions and queries for the Schedule Service.<br/>
+/// The Schedule Service enables transactions to be submitted without all
+/// required signatures and offers a `scheduleSign` transaction to provide
+/// additional signatures independently after the schedule is created. The
+/// scheduled transaction may be executed immediately when all required
+/// signatures are present, or at expiration if "long term" schedules
+/// are enabled in network configuration.
 ///
-/// The Schedule Service allows transactions to be submitted without all the required signatures and
-/// allows anyone to provide the required signatures independently after a transaction has already
-/// been created. The transactions can be executed immediately when all required signatures are received
-/// or at a future date if Long Term Scheduled Transactions are enabled.
+/// ### Execution
+/// Scheduled transactions SHALL be executed under the following conditions.
+/// 1. If "long term" schedules are enabled and `wait_for_expiry` is set for
+///    that schedule then the transaction SHALL NOT be executed before the
+///    network consensus time matches or exceeds the `expiration_time` field
+///    for that schedule.
+/// 1. If "long term" schedules are enabled and `wait_for_expiry` is _not_ set
+///    for that schedule, then the transaction SHALL be executed when all
+///    signatures required by the scheduled transaction are active for that
+///    schedule. This MAY be immediately after the `scheduleCreate` or a
+///    subsequent `scheduleSign` transaction, or MAY be at expiration if
+///    the signature requirements are met at that time.
+/// 1. If "long term" schedules are _disabled_, then the scheduled transaction
+///    SHALL be executed immediately after all signature requirements for the
+///    scheduled transaction are met during the `scheduleCreate` or a subsequent
+///    `scheduleSign` transaction. The scheduled transaction SHALL NOT be
+///    on expiration when "long term" schedules are disabled.
 ///
-/// Execution:
+/// A schedule SHALL remain in state and MAY be queried with a `getScheduleInfo`
+/// transaction after execution, until the schedule expires.<br/>
+/// When network consensus time matches or exceeds the `expiration_time` for
+/// a schedule, that schedule SHALL be removed from state, whether it has
+/// executed or not.<br/>
+/// If "long term" schedules are _disabled_, the maximum expiration time SHALL
+/// be the consensus time of the `scheduleCreate` transaction extended by
+/// the network configuration value `ledger.scheduleTxExpiryTimeSecs`.
 ///
-/// Scheduled Transactions are executed in two different modes.
-///
-/// 1. If Long Term Scheduled Transactions are enabled and <tt>wait_for_expiry</tt> was set to <tt>true</tt> on the
-///    <tt>ScheduleCreate</tt>, then the transaction will be executed at the <tt>expiration_time</tt> specified on the
-///    <tt>ScheduleCreate</tt>.
-///
-/// 2. Otherwise Scheduled Transactions are executed once all required signatures are collected and witnessed.
-///    Every time new signature is provided, a check is performed on the "readiness" of the execution.
-///    The Scheduled Transaction will be executed immediately after the transaction that triggered it.
-///
-/// NOTICE:
-/// A Scheduled Transaction being ready to execute, or even not ready to execute, at the time a <tt>ScheduleCreate</tt> or
-/// <tt>ScheduleSign</tt> comes in does not guarantee it will stay that way. Any number of things can happen over time that
-/// impact the transaction.
-///
-/// For example, account keys can change, accounts can be deleted, and account balances can change.
-///
-/// A particularly noteworthy case is if Long Term Scheduled Transactions are enabled and signature requirements for a Scheduled
-/// Transaction change such that existing signatures become sufficient to allow the transaction to go through. In this case the transaction
-/// will execute at expiration_time unless a ScheduleSign comes in to push it through.
-///
-/// Transaction Record:
-///
-/// If a Scheduled Transaction is executed immediately following the transaction that provided all required signatures,
-/// the timestamp of the Scheduled Transaction will be equal to consensusTimestamp + 1 nano, where
-/// consensusTimestamp is the timestamp of the transaction that triggered the execution.
-///
-/// The Transaction ID of the Scheduled Transaction will have the scheduled property set to true and
-/// inherit the <tt>transactionValidStart</tt> and <tt>accountID</tt> from the <tt>ScheduleCreate</tt> transaction.
-///
-/// The <tt>scheduleRef</tt> property of the transaction record will be populated with the <tt>ScheduleID</tt> of the
-/// Scheduled Transaction.
-///
-/// Post execution:
-///
-/// After execution, a Scheduled Transaction will remain in state and can be queried using <tt>GetScheduleInfo</tt> until expiration.
-///
-/// Expiry:
-///
-/// The expiration time of a schedule is controlled by it's <tt>expiration_time</tt>. If Long Term Scheduled Transactions are disabled,
-/// the <tt>expiration_time</tt> is always 30 minutes in the future.
-///
-/// Once a given Scheduled Transaction expires, it will be removed from the ledger and any upcoming
-/// operation referring the ScheduleID will resolve to INVALID_SCHEDULE_ID.
+/// ### Block Stream Effects
+/// When a scheduled transaction is executed, the timestamp in the transaction
+/// identifier for that transaction SHALL be 1 nanosecond after the consensus
+/// timestamp for the transaction that resulted in its execution. If execution
+/// occurred at expiration, that transaction may be almost any transaction,
+/// including another scheduled transaction that executed at expiration.<br/>
+/// The transaction identifier for a scheduled transaction that is executed
+/// SHALL have the `scheduled` flag set and SHALL inherit the `accountID` and
+/// `transactionValidStart` values from the `scheduleCreate` that created the
+/// schedule.<br/>
+/// The `scheduleRef` property of the record for a scheduled transaction SHALL
+/// be populated with the schedule identifier of the schedule that executed.
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol Proto_ScheduleServiceAsyncClientProtocol: GRPCClient {
   static var serviceDescriptor: GRPCServiceDescriptor { get }
@@ -492,3 +490,349 @@ public enum Proto_ScheduleServiceClientMetadata {
   }
 }
 
+///*
+/// Transactions and queries for the Schedule Service.<br/>
+/// The Schedule Service enables transactions to be submitted without all
+/// required signatures and offers a `scheduleSign` transaction to provide
+/// additional signatures independently after the schedule is created. The
+/// scheduled transaction may be executed immediately when all required
+/// signatures are present, or at expiration if "long term" schedules
+/// are enabled in network configuration.
+///
+/// ### Execution
+/// Scheduled transactions SHALL be executed under the following conditions.
+/// 1. If "long term" schedules are enabled and `wait_for_expiry` is set for
+///    that schedule then the transaction SHALL NOT be executed before the
+///    network consensus time matches or exceeds the `expiration_time` field
+///    for that schedule.
+/// 1. If "long term" schedules are enabled and `wait_for_expiry` is _not_ set
+///    for that schedule, then the transaction SHALL be executed when all
+///    signatures required by the scheduled transaction are active for that
+///    schedule. This MAY be immediately after the `scheduleCreate` or a
+///    subsequent `scheduleSign` transaction, or MAY be at expiration if
+///    the signature requirements are met at that time.
+/// 1. If "long term" schedules are _disabled_, then the scheduled transaction
+///    SHALL be executed immediately after all signature requirements for the
+///    scheduled transaction are met during the `scheduleCreate` or a subsequent
+///    `scheduleSign` transaction. The scheduled transaction SHALL NOT be
+///    on expiration when "long term" schedules are disabled.
+///
+/// A schedule SHALL remain in state and MAY be queried with a `getScheduleInfo`
+/// transaction after execution, until the schedule expires.<br/>
+/// When network consensus time matches or exceeds the `expiration_time` for
+/// a schedule, that schedule SHALL be removed from state, whether it has
+/// executed or not.<br/>
+/// If "long term" schedules are _disabled_, the maximum expiration time SHALL
+/// be the consensus time of the `scheduleCreate` transaction extended by
+/// the network configuration value `ledger.scheduleTxExpiryTimeSecs`.
+///
+/// ### Block Stream Effects
+/// When a scheduled transaction is executed, the timestamp in the transaction
+/// identifier for that transaction SHALL be 1 nanosecond after the consensus
+/// timestamp for the transaction that resulted in its execution. If execution
+/// occurred at expiration, that transaction may be almost any transaction,
+/// including another scheduled transaction that executed at expiration.<br/>
+/// The transaction identifier for a scheduled transaction that is executed
+/// SHALL have the `scheduled` flag set and SHALL inherit the `accountID` and
+/// `transactionValidStart` values from the `scheduleCreate` that created the
+/// schedule.<br/>
+/// The `scheduleRef` property of the record for a scheduled transaction SHALL
+/// be populated with the schedule identifier of the schedule that executed.
+///
+/// To build a server, implement a class that conforms to this protocol.
+public protocol Proto_ScheduleServiceProvider: CallHandlerProvider {
+  var interceptors: Proto_ScheduleServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Create a new Schedule.
+  /// <p>
+  /// If all signature requirements are met with this transaction, the
+  /// scheduled transaction MAY execute immediately.
+  func createSchedule(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Add signatures to an existing schedule.
+  /// <p>
+  /// Signatures on this transaction SHALL be added to the set of active
+  /// signatures on the schedule, and MAY result in execution of the
+  /// scheduled transaction if all signature requirements are met.
+  func signSchedule(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Mark an existing schedule deleted.
+  /// <p>
+  /// Once deleted a schedule SHALL NOT be executed and any subsequent
+  /// `scheduleSign` transaction SHALL fail.
+  func deleteSchedule(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Retrieve the metadata for a schedule.
+  func getScheduleInfo(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+}
+
+extension Proto_ScheduleServiceProvider {
+  public var serviceName: Substring {
+    return Proto_ScheduleServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+  /// Returns nil for methods not handled by this service.
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "createSchedule":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateScheduleInterceptors() ?? [],
+        userFunction: self.createSchedule(request:context:)
+      )
+
+    case "signSchedule":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makesignScheduleInterceptors() ?? [],
+        userFunction: self.signSchedule(request:context:)
+      )
+
+    case "deleteSchedule":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteScheduleInterceptors() ?? [],
+        userFunction: self.deleteSchedule(request:context:)
+      )
+
+    case "getScheduleInfo":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetScheduleInfoInterceptors() ?? [],
+        userFunction: self.getScheduleInfo(request:context:)
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+///*
+/// Transactions and queries for the Schedule Service.<br/>
+/// The Schedule Service enables transactions to be submitted without all
+/// required signatures and offers a `scheduleSign` transaction to provide
+/// additional signatures independently after the schedule is created. The
+/// scheduled transaction may be executed immediately when all required
+/// signatures are present, or at expiration if "long term" schedules
+/// are enabled in network configuration.
+///
+/// ### Execution
+/// Scheduled transactions SHALL be executed under the following conditions.
+/// 1. If "long term" schedules are enabled and `wait_for_expiry` is set for
+///    that schedule then the transaction SHALL NOT be executed before the
+///    network consensus time matches or exceeds the `expiration_time` field
+///    for that schedule.
+/// 1. If "long term" schedules are enabled and `wait_for_expiry` is _not_ set
+///    for that schedule, then the transaction SHALL be executed when all
+///    signatures required by the scheduled transaction are active for that
+///    schedule. This MAY be immediately after the `scheduleCreate` or a
+///    subsequent `scheduleSign` transaction, or MAY be at expiration if
+///    the signature requirements are met at that time.
+/// 1. If "long term" schedules are _disabled_, then the scheduled transaction
+///    SHALL be executed immediately after all signature requirements for the
+///    scheduled transaction are met during the `scheduleCreate` or a subsequent
+///    `scheduleSign` transaction. The scheduled transaction SHALL NOT be
+///    on expiration when "long term" schedules are disabled.
+///
+/// A schedule SHALL remain in state and MAY be queried with a `getScheduleInfo`
+/// transaction after execution, until the schedule expires.<br/>
+/// When network consensus time matches or exceeds the `expiration_time` for
+/// a schedule, that schedule SHALL be removed from state, whether it has
+/// executed or not.<br/>
+/// If "long term" schedules are _disabled_, the maximum expiration time SHALL
+/// be the consensus time of the `scheduleCreate` transaction extended by
+/// the network configuration value `ledger.scheduleTxExpiryTimeSecs`.
+///
+/// ### Block Stream Effects
+/// When a scheduled transaction is executed, the timestamp in the transaction
+/// identifier for that transaction SHALL be 1 nanosecond after the consensus
+/// timestamp for the transaction that resulted in its execution. If execution
+/// occurred at expiration, that transaction may be almost any transaction,
+/// including another scheduled transaction that executed at expiration.<br/>
+/// The transaction identifier for a scheduled transaction that is executed
+/// SHALL have the `scheduled` flag set and SHALL inherit the `accountID` and
+/// `transactionValidStart` values from the `scheduleCreate` that created the
+/// schedule.<br/>
+/// The `scheduleRef` property of the record for a scheduled transaction SHALL
+/// be populated with the schedule identifier of the schedule that executed.
+///
+/// To implement a server, implement an object which conforms to this protocol.
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+public protocol Proto_ScheduleServiceAsyncProvider: CallHandlerProvider, Sendable {
+  static var serviceDescriptor: GRPCServiceDescriptor { get }
+  var interceptors: Proto_ScheduleServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Create a new Schedule.
+  /// <p>
+  /// If all signature requirements are met with this transaction, the
+  /// scheduled transaction MAY execute immediately.
+  func createSchedule(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Add signatures to an existing schedule.
+  /// <p>
+  /// Signatures on this transaction SHALL be added to the set of active
+  /// signatures on the schedule, and MAY result in execution of the
+  /// scheduled transaction if all signature requirements are met.
+  func signSchedule(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Mark an existing schedule deleted.
+  /// <p>
+  /// Once deleted a schedule SHALL NOT be executed and any subsequent
+  /// `scheduleSign` transaction SHALL fail.
+  func deleteSchedule(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Retrieve the metadata for a schedule.
+  func getScheduleInfo(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension Proto_ScheduleServiceAsyncProvider {
+  public static var serviceDescriptor: GRPCServiceDescriptor {
+    return Proto_ScheduleServiceServerMetadata.serviceDescriptor
+  }
+
+  public var serviceName: Substring {
+    return Proto_ScheduleServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  public var interceptors: Proto_ScheduleServiceServerInterceptorFactoryProtocol? {
+    return nil
+  }
+
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "createSchedule":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateScheduleInterceptors() ?? [],
+        wrapping: { try await self.createSchedule(request: $0, context: $1) }
+      )
+
+    case "signSchedule":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makesignScheduleInterceptors() ?? [],
+        wrapping: { try await self.signSchedule(request: $0, context: $1) }
+      )
+
+    case "deleteSchedule":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteScheduleInterceptors() ?? [],
+        wrapping: { try await self.deleteSchedule(request: $0, context: $1) }
+      )
+
+    case "getScheduleInfo":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetScheduleInfoInterceptors() ?? [],
+        wrapping: { try await self.getScheduleInfo(request: $0, context: $1) }
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+public protocol Proto_ScheduleServiceServerInterceptorFactoryProtocol: Sendable {
+
+  /// - Returns: Interceptors to use when handling 'createSchedule'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecreateScheduleInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'signSchedule'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makesignScheduleInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'deleteSchedule'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makedeleteScheduleInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'getScheduleInfo'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetScheduleInfoInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+}
+
+public enum Proto_ScheduleServiceServerMetadata {
+  public static let serviceDescriptor = GRPCServiceDescriptor(
+    name: "ScheduleService",
+    fullName: "proto.ScheduleService",
+    methods: [
+      Proto_ScheduleServiceServerMetadata.Methods.createSchedule,
+      Proto_ScheduleServiceServerMetadata.Methods.signSchedule,
+      Proto_ScheduleServiceServerMetadata.Methods.deleteSchedule,
+      Proto_ScheduleServiceServerMetadata.Methods.getScheduleInfo,
+    ]
+  )
+
+  public enum Methods {
+    public static let createSchedule = GRPCMethodDescriptor(
+      name: "createSchedule",
+      path: "/proto.ScheduleService/createSchedule",
+      type: GRPCCallType.unary
+    )
+
+    public static let signSchedule = GRPCMethodDescriptor(
+      name: "signSchedule",
+      path: "/proto.ScheduleService/signSchedule",
+      type: GRPCCallType.unary
+    )
+
+    public static let deleteSchedule = GRPCMethodDescriptor(
+      name: "deleteSchedule",
+      path: "/proto.ScheduleService/deleteSchedule",
+      type: GRPCCallType.unary
+    )
+
+    public static let getScheduleInfo = GRPCMethodDescriptor(
+      name: "getScheduleInfo",
+      path: "/proto.ScheduleService/getScheduleInfo",
+      type: GRPCCallType.unary
+    )
+  }
+}

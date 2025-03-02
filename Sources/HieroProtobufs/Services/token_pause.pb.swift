@@ -8,6 +8,19 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Token Pause
+/// A transaction to "pause" all activity for a token. While a token is paused
+/// it cannot be transferred between accounts by any transaction other than
+/// `rejectToken`.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,20 +34,29 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Pauses the Token from being involved in any kind of Transaction until it is unpaused.
-/// Must be signed with the Token's pause key.
-/// If the provided token is not found, the transaction will resolve to INVALID_TOKEN_ID.
-/// If the provided token has been deleted, the transaction will resolve to TOKEN_WAS_DELETED.
-/// If no Pause Key is defined, the transaction will resolve to TOKEN_HAS_NO_PAUSE_KEY.
-/// Once executed the Token is marked as paused and will be not able to be a part of any transaction.
-/// The operation is idempotent - becomes a no-op if the Token is already Paused.
+/// Pause transaction activity for a token.
+///
+/// This transaction MUST be signed by the Token `pause_key`.<br/>
+/// The `token` identified MUST exist, and MUST NOT be deleted.<br/>
+/// The `token` identified MAY be paused; if the token is already paused,
+/// this transaction SHALL have no effect.
+/// The `token` identified MUST have a `pause_key` set, the `pause_key` MUST be
+/// a valid `Key`, and the `pause_key` MUST NOT be an empty `KeyList`.<br/>
+/// A `paused` token SHALL NOT be transferred or otherwise modified except to
+/// "up-pause" the token with `unpauseToken` or in a `rejectToken` transaction.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_TokenPauseTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The token to be paused.
+  /// A token identifier.
+  /// <p>
+  /// The identified token SHALL be paused. Subsequent transactions
+  /// involving that token SHALL fail until the token is "unpaused".
   public var token: Proto_TokenID {
     get {return _token ?? Proto_TokenID()}
     set {_token = newValue}

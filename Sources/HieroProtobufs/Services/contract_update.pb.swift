@@ -8,6 +8,19 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Contract Update
+/// Modify a smart contract. Any change other than updating the expiration time
+/// requires that the contract be modifiable (has a valid `adminKey`) and that
+/// the transaction be signed by the `adminKey`
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,30 +34,28 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// At consensus, updates the fields of a smart contract to the given values.
-/// 
-/// If no value is given for a field, that field is left unchanged on the contract. For an immutable
-/// smart contract (that is, a contract created without an adminKey), only the expirationTime may be
-/// updated; setting any other field in this case will cause the transaction status to resolve to
-/// MODIFYING_IMMUTABLE_CONTRACT.
-/// 
-/// --- Signing Requirements ---
-/// 1. Whether or not a contract has an admin key, its expiry can be extended with only the
-///    transaction payer's signature.
-/// 2. Updating any other field of a mutable contract requires the admin key's signature.
-/// 3. If the update transaction includes a new admin key, this new key must also sign <b>unless</b>
-///    it is exactly an empty <tt>KeyList</tt>. This special sentinel key removes the existing admin
-///    key and causes the contract to become immutable. (Other <tt>Key</tt> structures without a
-///    constituent <tt>Ed25519</tt> key will be rejected with <tt>INVALID_ADMIN_KEY</tt>.)
-/// 4. If the update transaction sets the AccountID auto_renew_account_id wrapper field to anything
-///    other than the sentinel <tt>0.0.0</tt> value, then the key of the referenced account must sign.
+/// Modify the current state of a smart contract.
+///
+/// ### Requirements
+/// - The `adminKey` MUST sign all contract update transactions except one
+///   that only updates the `expirationTime`.
+/// - A transaction that modifies any field other than `expirationTime` for
+///   a contract without a valid `adminKey` set SHALL fail with response
+///   code `MODIFYING_IMMUTABLE_CONTRACT`.
+/// - Fields set to non-default values in this transaction SHALL be updated on
+///   success. Fields not set to non-default values SHALL NOT be
+///   updated on success.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The id of the contract to be updated
+  /// The contact ID that identifies the smart contract to be updated.<br/>
+  /// This field MUST be set, and MUST NOT be a default ID (`0.0.0`).
   public var contractID: Proto_ContractID {
     get {return _storage._contractID ?? Proto_ContractID()}
     set {_uniqueStorage()._contractID = newValue}
@@ -55,8 +66,14 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearContractID() {_uniqueStorage()._contractID = nil}
 
   ///*
-  /// The new expiry of the contract, no earlier than the current expiry (resolves to
-  /// EXPIRATION_REDUCTION_NOT_ALLOWED otherwise)
+  /// If set, modify the time at which this contract will expire.<br/>
+  /// An expired contract requires a rent payment to "renew" the contract.
+  /// A transaction to update this field is how that rent payment is made.
+  /// <p>
+  /// This value MUST NOT be less than the current `expirationTime`
+  /// of the contract. If this value is earlier than the current
+  /// value, the transaction SHALL fail with response
+  /// code `EXPIRATION_REDUCTION_NOT_ALLOWED`.
   public var expirationTime: Proto_Timestamp {
     get {return _storage._expirationTime ?? Proto_Timestamp()}
     set {_uniqueStorage()._expirationTime = newValue}
@@ -67,7 +84,16 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearExpirationTime() {_uniqueStorage()._expirationTime = nil}
 
   ///*
-  /// The new key to control updates to the contract
+  /// If set, modify the key that authorizes updates to the contract.
+  /// <p>
+  /// If this field is set to a valid Key, this key and the previously set key
+  /// MUST both sign this transaction.<br/>
+  /// If this value is an empty `KeyList`, the prior key MUST sign this
+  /// transaction, and the smart contract SHALL be immutable after this
+  /// transaction completes, except for expiration and renewal.<br/>
+  /// If this value is not an empty `KeyList`, but does not contain any
+  /// cryptographic keys, or is otherwise malformed, this transaction SHALL
+  /// fail with response code `INVALID_ADMIN_KEY`.
   public var adminKey: Proto_Key {
     get {return _storage._adminKey ?? Proto_Key()}
     set {_uniqueStorage()._adminKey = newValue}
@@ -78,7 +104,9 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearAdminKey() {_uniqueStorage()._adminKey = nil}
 
   ///*
-  /// [Deprecated] The new id of the account to which the contract is proxy staked
+  /// Replaced with `staked_id` alternatives.
+  /// This field is unused and SHALL NOT modify the contract state.<br/>
+  /// The id of an account to which the contract is proxy staked
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var proxyAccountID: Proto_AccountID {
@@ -91,7 +119,8 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearProxyAccountID() {_uniqueStorage()._proxyAccountID = nil}
 
   ///*
-  /// If an auto-renew account is in use, the lifetime to be added by each auto-renewal.
+  /// If set, modify the duration added to expiration time by each
+  /// auto-renewal to this value.
   public var autoRenewPeriod: Proto_Duration {
     get {return _storage._autoRenewPeriod ?? Proto_Duration()}
     set {_uniqueStorage()._autoRenewPeriod = newValue}
@@ -102,7 +131,9 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearAutoRenewPeriod() {_uniqueStorage()._autoRenewPeriod = nil}
 
   ///*
-  /// This field is unused and will have no impact on the specified smart contract.
+  /// This field is unused and SHALL NOT modify the contract state.<br/>
+  /// Previously, an ID of a file containing the bytecode of the Solidity
+  /// transaction that created this contract.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var fileID: Proto_FileID {
@@ -114,16 +145,15 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   /// Clears the value of `fileID`. Subsequent reads from it will return its default value.
   public mutating func clearFileID() {_uniqueStorage()._fileID = nil}
 
-  ///*
-  /// The new contract memo, assumed to be Unicode encoded with UTF-8 (at most 100 bytes)
+  /// This should be condensed to just a field instead of a oneof and field 9 reserved.
   public var memoField: OneOf_MemoField? {
     get {return _storage._memoField}
     set {_uniqueStorage()._memoField = newValue}
   }
 
   ///*
-  /// [Deprecated] If set with a non-zero length, the new memo to be associated with the account
-  /// (UTF-8 encoding max 100 bytes)
+  /// This value could not accurately distinguish unset or deliberately
+  /// empty. memoWrapper should be used instead.<br/>
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var memo: String {
@@ -135,7 +165,10 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// If set, the new memo to be associated with the account (UTF-8 encoding max 100 bytes)
+  /// If set, modify the short memo for this smart contract.
+  /// <p>
+  /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+  /// (default 100) bytes when encoded as UTF-8.
   public var memoWrapper: SwiftProtobuf.Google_Protobuf_StringValue {
     get {
       if case .memoWrapper(let v)? = _storage._memoField {return v}
@@ -146,7 +179,8 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
 
   ///*
   /// If set, modify the maximum number of tokens that can be auto-associated with the
-  /// contract.<br/>
+  /// contract.
+  /// <p>
   /// If this is set and less than or equal to `used_auto_associations`, or 0, then this contract
   /// MUST manually associate with a token before transacting in that token.<br/>
   /// This value MAY also be `-1` to indicate no limit.<br/>
@@ -161,8 +195,14 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearMaxAutomaticTokenAssociations() {_uniqueStorage()._maxAutomaticTokenAssociations = nil}
 
   ///*
-  /// If set to the sentinel <tt>0.0.0</tt> AccountID, this field removes the contract's auto-renew 
-  /// account. Otherwise it updates the contract's auto-renew account to the referenced account.
+  /// If set, modify the account, in the same shard and realm as this smart
+  /// contract, that has agreed to allow the network to use its balance, when
+  /// needed, to automatically extend this contract's expiration time.
+  /// <p>
+  /// If this field is set to a non-default value, that Account MUST sign this
+  /// transaction.<br/>
+  /// If this field is set to a default AccountID value (`0.0.0`), any
+  /// pre-existing `auto_renew_account_id` value SHALL be removed on success.
   public var autoRenewAccountID: Proto_AccountID {
     get {return _storage._autoRenewAccountID ?? Proto_AccountID()}
     set {_uniqueStorage()._autoRenewAccountID = newValue}
@@ -172,16 +212,20 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   /// Clears the value of `autoRenewAccountID`. Subsequent reads from it will return its default value.
   public mutating func clearAutoRenewAccountID() {_uniqueStorage()._autoRenewAccountID = nil}
 
-  ///*
-  /// ID of the new account or node to which this contract is staking.
   public var stakedID: OneOf_StakedID? {
     get {return _storage._stakedID}
     set {_uniqueStorage()._stakedID = newValue}
   }
 
   ///*
-  /// ID of the new account to which this contract is staking. If set to the sentinel <tt>0.0.0</tt> AccountID,
-  /// this field removes the contract's staked account ID.
+  /// An account identifier.<br/>
+  /// A staked account acts as a proxy, and this contract effectively
+  /// nominates the same node as the identified account.
+  /// <p>
+  /// If set, modify this smart contract such that it SHALL stake its HBAR
+  /// to the same node as the identified account.<br/>
+  /// If this field is set to a default AccountID value (`0.0.0`), any
+  /// pre-existing `staked_account_id` value SHALL be removed on success.
   public var stakedAccountID: Proto_AccountID {
     get {
       if case .stakedAccountID(let v)? = _storage._stakedID {return v}
@@ -191,8 +235,21 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// ID of the new node this contract is staked to. If set to the sentinel <tt>-1</tt>, this field
-  /// removes the contract's staked node ID.
+  /// A node identifier.<br/>
+  /// A staked node identifier indicates the consensus node that this
+  /// account nominates for staking.
+  /// <p>
+  /// If set, modify this smart contract such that it SHALL stake its HBAR
+  /// to this node.
+  /// If set to a the value `-1` any pre-existing `staked_node_id` value
+  /// SHALL be removed on success.
+  /// <p>
+  /// <blockquote>Note: node IDs do fluctuate as node operators change.
+  /// Most contracts are immutable, and a contract staking to an invalid
+  /// node ID SHALL NOT participate in staking. Immutable contracts may
+  /// find it more reliable to use a proxy account for staking (via
+  /// `staked_account_id`) to enable updating the _effective_ staking node
+  /// ID when necessary through updating the proxy account.</blockquote>
   public var stakedNodeID: Int64 {
     get {
       if case .stakedNodeID(let v)? = _storage._stakedID {return v}
@@ -202,7 +259,14 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// If true, the contract declines receiving a staking reward.
+  /// A flag indicating if staking rewards are declined.<br/>
+  /// If set, modify the flag indicating if this contract declines to accept
+  /// rewards for staking its HBAR to secure the network.
+  /// <p>
+  /// If set to true, this smart contract SHALL NOT receive any reward for
+  /// staking its HBAR balance to help secure the network, regardless of
+  /// staking configuration, but MAY stake HBAR to support the network
+  /// without reward.
   public var declineReward: SwiftProtobuf.Google_Protobuf_BoolValue {
     get {return _storage._declineReward ?? SwiftProtobuf.Google_Protobuf_BoolValue()}
     set {_uniqueStorage()._declineReward = newValue}
@@ -214,31 +278,50 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  ///*
-  /// The new contract memo, assumed to be Unicode encoded with UTF-8 (at most 100 bytes)
+  /// This should be condensed to just a field instead of a oneof and field 9 reserved.
   public enum OneOf_MemoField: Equatable, Sendable {
     ///*
-    /// [Deprecated] If set with a non-zero length, the new memo to be associated with the account
-    /// (UTF-8 encoding max 100 bytes)
+    /// This value could not accurately distinguish unset or deliberately
+    /// empty. memoWrapper should be used instead.<br/>
     ///
     /// NOTE: This field was marked as deprecated in the .proto file.
     case memo(String)
     ///*
-    /// If set, the new memo to be associated with the account (UTF-8 encoding max 100 bytes)
+    /// If set, modify the short memo for this smart contract.
+    /// <p>
+    /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+    /// (default 100) bytes when encoded as UTF-8.
     case memoWrapper(SwiftProtobuf.Google_Protobuf_StringValue)
 
   }
 
-  ///*
-  /// ID of the new account or node to which this contract is staking.
   public enum OneOf_StakedID: Equatable, Sendable {
     ///*
-    /// ID of the new account to which this contract is staking. If set to the sentinel <tt>0.0.0</tt> AccountID,
-    /// this field removes the contract's staked account ID.
+    /// An account identifier.<br/>
+    /// A staked account acts as a proxy, and this contract effectively
+    /// nominates the same node as the identified account.
+    /// <p>
+    /// If set, modify this smart contract such that it SHALL stake its HBAR
+    /// to the same node as the identified account.<br/>
+    /// If this field is set to a default AccountID value (`0.0.0`), any
+    /// pre-existing `staked_account_id` value SHALL be removed on success.
     case stakedAccountID(Proto_AccountID)
     ///*
-    /// ID of the new node this contract is staked to. If set to the sentinel <tt>-1</tt>, this field
-    /// removes the contract's staked node ID.
+    /// A node identifier.<br/>
+    /// A staked node identifier indicates the consensus node that this
+    /// account nominates for staking.
+    /// <p>
+    /// If set, modify this smart contract such that it SHALL stake its HBAR
+    /// to this node.
+    /// If set to a the value `-1` any pre-existing `staked_node_id` value
+    /// SHALL be removed on success.
+    /// <p>
+    /// <blockquote>Note: node IDs do fluctuate as node operators change.
+    /// Most contracts are immutable, and a contract staking to an invalid
+    /// node ID SHALL NOT participate in staking. Immutable contracts may
+    /// find it more reliable to use a proxy account for staking (via
+    /// `staked_account_id`) to enable updating the _effective_ staking node
+    /// ID when necessary through updating the proxy account.</blockquote>
     case stakedNodeID(Int64)
 
   }
