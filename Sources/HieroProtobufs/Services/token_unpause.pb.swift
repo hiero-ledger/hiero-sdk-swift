@@ -8,6 +8,20 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Token Un-Pause
+/// A transaction to "unpause" (i.e. resume) all activity for a token. While
+/// a token is "paused" it cannot be transferred between accounts by any
+/// transaction other than `rejectToken`. Once "unpaused", transactions involving
+/// that token may resume.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,19 +35,28 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Unpauses the Token. Must be signed with the Token's pause key.
-/// If the provided token is not found, the transaction will resolve to INVALID_TOKEN_ID.
-/// If the provided token has been deleted, the transaction will resolve to TOKEN_WAS_DELETED.
-/// If no Pause Key is defined, the transaction will resolve to TOKEN_HAS_NO_PAUSE_KEY.
-/// Once executed the Token is marked as Unpaused and can be used in Transactions.
-/// The operation is idempotent - becomes a no-op if the Token is already unpaused.
+/// Resume transaction activity for a token.
+///
+/// This transaction MUST be signed by the Token `pause_key`.<br/>
+/// The `token` identified MUST exist, and MUST NOT be deleted.<br/>
+/// The `token` identified MAY not be paused; if the token is not paused,
+/// this transaction SHALL have no effect.
+/// The `token` identified MUST have a `pause_key` set, the `pause_key` MUST be
+/// a valid `Key`, and the `pause_key` MUST NOT be an empty `KeyList`.<br/>
+/// An `unpaused` token MAY be transferred or otherwise modified.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_TokenUnpauseTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The token to be unpaused.
+  /// A token identifier.
+  /// <p>
+  /// The identified token SHALL be "unpaused". Subsequent transactions
+  /// involving that token MAY succeed.
   public var token: Proto_TokenID {
     get {return _token ?? Proto_TokenID()}
     set {_token = newValue}

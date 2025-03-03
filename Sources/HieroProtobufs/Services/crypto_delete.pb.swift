@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Crypto Delete
+/// Message to delete an account.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,16 +32,34 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Mark an account as deleted, moving all its current hbars to another account. It will remain in
-/// the ledger, marked as deleted, until it expires. Transfers into it a deleted account fail. But a
-/// deleted account can still have its expiration extended in the normal way.
+/// Delete an account.<br/>
+/// This will mark an account deleted, and transfer all tokens to a "sweep"
+/// account.
+///
+/// A deleted account SHALL NOT hold a balance in any token type.<br/>
+/// A deleted account SHALL remain in state until it expires.<br/>
+/// Transfers that would increase the balance of a deleted account
+/// SHALL fail.<br/>
+/// A deleted account MAY be subject of a `cryptoUpdate` transaction to extend
+/// its expiration.<br/>
+/// When a deleted account expires it SHALL be removed entirely, and SHALL NOT
+/// be archived.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_CryptoDeleteTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The account ID which will receive all remaining hbars
+  /// An account identifier.
+  /// <p>
+  /// The identified account SHALL receive all tokens, token balances,
+  /// and non-fungible/unique from the deleted account.<br/>
+  /// The identified account MUST sign this transaction.<br/>
+  /// If not set, the account to be deleted MUST NOT have a balance in any
+  /// token, a balance in HBAR, or hold any NFT.
   public var transferAccountID: Proto_AccountID {
     get {return _transferAccountID ?? Proto_AccountID()}
     set {_transferAccountID = newValue}
@@ -41,7 +70,14 @@ public struct Proto_CryptoDeleteTransactionBody: Sendable {
   public mutating func clearTransferAccountID() {self._transferAccountID = nil}
 
   ///*
-  /// The account ID which should be deleted
+  /// An account identifier.
+  /// <p>
+  /// This account SHALL be deleted if this transaction succeeds.<br/>
+  /// This account SHOULD NOT hold any balance other than HBAR.<br/>
+  /// If this account _does_ hold balances, the `transferAccountID` value
+  /// MUST be set to a valid transfer account.<br/>
+  /// This account MUST sign this transaction.<br/>
+  /// This field MUST be set to a valid account identifier.
   public var deleteAccountID: Proto_AccountID {
     get {return _deleteAccountID ?? Proto_AccountID()}
     set {_deleteAccountID = newValue}

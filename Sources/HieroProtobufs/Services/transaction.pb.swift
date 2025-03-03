@@ -8,6 +8,18 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Transaction
+/// A (mostly legacy) wrapper around the bytes of a
+/// serialized `SignedTransaction` message.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,20 +34,25 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// A single signed transaction, including all its signatures. The SignatureList will have a
-/// Signature for each Key in the transaction, either explicit or implicit, in the order that they
-/// appear in the transaction. For example, a CryptoTransfer will first have a Signature
-/// corresponding to the Key for the paying account, followed by a Signature corresponding to the Key
-/// for each account that is sending or receiving cryptocurrency in the transfer. Each Transaction
-/// should not have more than 50 levels. 
-/// The SignatureList field is deprecated and succeeded by SignatureMap.
+/// A wrapper around signed transaction bytes.<br/>
+/// This was originally a transaction with body, signatures, and/or bytes,
+/// but is not only a wrapper around a byte array containing signed transction
+/// bytes.
+///
+/// The `signedTransactionBytes` field is REQUIRED and MUST contain a valid,
+/// serialized, `SignedTransaction` message.<br/>
+/// All other fields are deprecated and MUST NOT be set.
+///
+/// #### Additional Notes
+/// The four deprecated fields will be removed and reserved in a future release.
 public struct Proto_Transaction: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The body of the transaction, which needs to be signed
+  /// Replaced with `signedTransactionBytes`.<br/>
+  /// The body of the transaction.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var body: Proto_TransactionBody {
@@ -48,8 +65,8 @@ public struct Proto_Transaction: @unchecked Sendable {
   public mutating func clearBody() {self._body = nil}
 
   ///*
-  /// The signatures on the body, to authorize the transaction; deprecated and to be succeeded by
-  /// SignatureMap field
+  /// Replaced with `signedTransactionBytes`.<br/>
+  /// The signatures on the body.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var sigs: Proto_SignatureList {
@@ -62,7 +79,8 @@ public struct Proto_Transaction: @unchecked Sendable {
   public mutating func clearSigs() {self._sigs = nil}
 
   ///*
-  /// The signatures on the body with the new format, to authorize the transaction
+  /// Replaced with `signedTransactionBytes`.<br/>
+  /// The signatures on the body with a newer format.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var sigMap: Proto_SignatureMap {
@@ -75,13 +93,18 @@ public struct Proto_Transaction: @unchecked Sendable {
   public mutating func clearSigMap() {self._sigMap = nil}
 
   ///*
-  /// TransactionBody serialized into bytes, which needs to be signed
+  /// Replaced with `signedTransactionBytes`.<br/>
+  /// TransactionBody serialized into bytes.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var bodyBytes: Data = Data()
 
   ///*
-  /// SignedTransaction serialized into bytes
+  /// A valid, serialized, `SignedTransaction` message.
+  /// <p>
+  /// This field MUST be present.
+  /// This field MUST NOT exceed the current network transaction size limit
+  /// (currently 6144 bytes).
   public var signedTransactionBytes: Data = Data()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -91,6 +114,1088 @@ public struct Proto_Transaction: @unchecked Sendable {
   fileprivate var _body: Proto_TransactionBody? = nil
   fileprivate var _sigs: Proto_SignatureList? = nil
   fileprivate var _sigMap: Proto_SignatureMap? = nil
+}
+
+///*
+/// A transaction body.
+///
+/// Every transaction is structured as a signed byte array. That byte array
+/// is a serialized `TransactionBody`.  The transaction body contains the full
+/// content of the transaction, while the `SignedTransaction` includes a
+/// signature map for signatures authenticating that byte array, and that is
+/// serialized and transmitted wrapped in a `Transaction` message.<br/>
+/// The bulk of this message is a `oneof` block which offers the option for
+/// any one of the transaction messages for the network.
+/// This message also includes several additional fields to specify
+/// various parameters required to process a transaction.
+public struct Proto_TransactionBody: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  ///*
+  /// A transaction identifier.<br/>
+  /// Each transaction is uniquely identified by its transaction
+  /// identifier.
+  /// <p>
+  /// Each transaction identifier MUST be unique.<br/>
+  /// Multiple transactions MAY be submitted with the same transaction
+  /// identifier, but all except the first SHALL be rejected as duplicate
+  /// transactions.<br/>
+  /// This identifier MUST specify a `payer` account to be charged
+  /// all fees associated with the transaction.<br/>
+  /// This identifier MUST specify a "valid start time".<br/>
+  /// The "valid start time" MUST be strictly _earlier_ than the current
+  /// network consensus time.<br/>
+  /// The "valid start time" MUST NOT be more than the current network
+  /// configuration value for `transaction.maxValidDuration` seconds
+  /// before the current network consensus time.<br/>
+  /// This identifier MUST NOT set the `scheduled` flag.<br/>
+  /// This identifier MUST NOT set a nonce value.
+  public var transactionID: Proto_TransactionID {
+    get {return _storage._transactionID ?? Proto_TransactionID()}
+    set {_uniqueStorage()._transactionID = newValue}
+  }
+  /// Returns true if `transactionID` has been explicitly set.
+  public var hasTransactionID: Bool {return _storage._transactionID != nil}
+  /// Clears the value of `transactionID`. Subsequent reads from it will return its default value.
+  public mutating func clearTransactionID() {_uniqueStorage()._transactionID = nil}
+
+  ///*
+  /// A node account identifier.
+  /// <p>
+  /// This MUST identify the account of the consensus node to which
+  /// this transaction is submitted.
+  public var nodeAccountID: Proto_AccountID {
+    get {return _storage._nodeAccountID ?? Proto_AccountID()}
+    set {_uniqueStorage()._nodeAccountID = newValue}
+  }
+  /// Returns true if `nodeAccountID` has been explicitly set.
+  public var hasNodeAccountID: Bool {return _storage._nodeAccountID != nil}
+  /// Clears the value of `nodeAccountID`. Subsequent reads from it will return its default value.
+  public mutating func clearNodeAccountID() {_uniqueStorage()._nodeAccountID = nil}
+
+  ///*
+  /// A maximum transaction fee, in tinybar.
+  /// <p>
+  /// The network SHALL NOT charge a transaction fee that exceeds this
+  /// amount.<br/>
+  /// The network MAY charge up to this amount, and reject the transaction,
+  /// if the amount offered is insufficient to cover the required fees.<br/>
+  /// The network MAY charge a minimum fee equal to 80% of the amount offered
+  /// if the amount offered is much larger than the required fees.
+  public var transactionFee: UInt64 {
+    get {return _storage._transactionFee}
+    set {_uniqueStorage()._transactionFee = newValue}
+  }
+
+  ///*
+  /// A maximum duration in which to execute this transaction.
+  /// <p>
+  /// This transaction SHALL be rejected as expired if the valid start time,
+  /// extended by this duration, is less than the current network consensus
+  /// time when the transaction is submitted.<br/>
+  /// This transaction SHALL be rejected with an invalid duration if this
+  /// value is greater than the current network configuration value for
+  /// `transaction.maxValidDuration`.
+  public var transactionValidDuration: Proto_Duration {
+    get {return _storage._transactionValidDuration ?? Proto_Duration()}
+    set {_uniqueStorage()._transactionValidDuration = newValue}
+  }
+  /// Returns true if `transactionValidDuration` has been explicitly set.
+  public var hasTransactionValidDuration: Bool {return _storage._transactionValidDuration != nil}
+  /// Clears the value of `transactionValidDuration`. Subsequent reads from it will return its default value.
+  public mutating func clearTransactionValidDuration() {_uniqueStorage()._transactionValidDuration = nil}
+
+  ///*
+  /// Records are always generated.<br/>
+  /// Obsolete option to not generate a record.
+  /// <p>
+  /// This flag SHALL be ignored. Every transaction SHALL generate a record,
+  /// or block stream equivalent.
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
+  public var generateRecord: Bool {
+    get {return _storage._generateRecord}
+    set {_uniqueStorage()._generateRecord = newValue}
+  }
+
+  ///*
+  /// A short description for this transaction.
+  /// <p>
+  /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+  /// (default 100) bytes when encoded as UTF-8.
+  public var memo: String {
+    get {return _storage._memo}
+    set {_uniqueStorage()._memo = newValue}
+  }
+
+  /// The fields here are ordered in strictly ascending field ordinal
+  /// order due to limitations in PBJ.
+  public var data: OneOf_Data? {
+    get {return _storage._data}
+    set {_uniqueStorage()._data = newValue}
+  }
+
+  ///*
+  /// Call a function defined on a smart contract.
+  public var contractCall: Proto_ContractCallTransactionBody {
+    get {
+      if case .contractCall(let v)? = _storage._data {return v}
+      return Proto_ContractCallTransactionBody()
+    }
+    set {_uniqueStorage()._data = .contractCall(newValue)}
+  }
+
+  ///*
+  /// Create a smart contract.
+  public var contractCreateInstance: Proto_ContractCreateTransactionBody {
+    get {
+      if case .contractCreateInstance(let v)? = _storage._data {return v}
+      return Proto_ContractCreateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .contractCreateInstance(newValue)}
+  }
+
+  ///*
+  /// Update a smart contract.
+  public var contractUpdateInstance: Proto_ContractUpdateTransactionBody {
+    get {
+      if case .contractUpdateInstance(let v)? = _storage._data {return v}
+      return Proto_ContractUpdateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .contractUpdateInstance(newValue)}
+  }
+
+  ///*
+  /// An obsolete, and unsupported, operation to add a "live hash" to
+  /// an account.
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
+  public var cryptoAddLiveHash: Proto_CryptoAddLiveHashTransactionBody {
+    get {
+      if case .cryptoAddLiveHash(let v)? = _storage._data {return v}
+      return Proto_CryptoAddLiveHashTransactionBody()
+    }
+    set {_uniqueStorage()._data = .cryptoAddLiveHash(newValue)}
+  }
+
+  ///*
+  /// Create a new Hedera account.
+  public var cryptoCreateAccount: Proto_CryptoCreateTransactionBody {
+    get {
+      if case .cryptoCreateAccount(let v)? = _storage._data {return v}
+      return Proto_CryptoCreateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .cryptoCreateAccount(newValue)}
+  }
+
+  ///*
+  /// Delete an Hedera account.<br/>
+  /// This will mark the account as deleted, and transfer all remaining
+  /// HBAR to a receiver account.
+  public var cryptoDelete: Proto_CryptoDeleteTransactionBody {
+    get {
+      if case .cryptoDelete(let v)? = _storage._data {return v}
+      return Proto_CryptoDeleteTransactionBody()
+    }
+    set {_uniqueStorage()._data = .cryptoDelete(newValue)}
+  }
+
+  ///*
+  /// An obsolete, and unsupported, operation to remove a "live hash" from
+  /// an account.
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
+  public var cryptoDeleteLiveHash: Proto_CryptoDeleteLiveHashTransactionBody {
+    get {
+      if case .cryptoDeleteLiveHash(let v)? = _storage._data {return v}
+      return Proto_CryptoDeleteLiveHashTransactionBody()
+    }
+    set {_uniqueStorage()._data = .cryptoDeleteLiveHash(newValue)}
+  }
+
+  ///*
+  /// Transfer HBAR between accounts.
+  public var cryptoTransfer: Proto_CryptoTransferTransactionBody {
+    get {
+      if case .cryptoTransfer(let v)? = _storage._data {return v}
+      return Proto_CryptoTransferTransactionBody()
+    }
+    set {_uniqueStorage()._data = .cryptoTransfer(newValue)}
+  }
+
+  ///*
+  /// Modify an Hedera account.
+  public var cryptoUpdateAccount: Proto_CryptoUpdateTransactionBody {
+    get {
+      if case .cryptoUpdateAccount(let v)? = _storage._data {return v}
+      return Proto_CryptoUpdateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .cryptoUpdateAccount(newValue)}
+  }
+
+  ///*
+  /// Append data to the end of a file.
+  public var fileAppend: Proto_FileAppendTransactionBody {
+    get {
+      if case .fileAppend(let v)? = _storage._data {return v}
+      return Proto_FileAppendTransactionBody()
+    }
+    set {_uniqueStorage()._data = .fileAppend(newValue)}
+  }
+
+  ///*
+  /// Create a new file.
+  public var fileCreate: Proto_FileCreateTransactionBody {
+    get {
+      if case .fileCreate(let v)? = _storage._data {return v}
+      return Proto_FileCreateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .fileCreate(newValue)}
+  }
+
+  ///*
+  /// Delete a file.<br/>
+  /// This will remove the content of the file, and mark the file as
+  /// deleted.
+  public var fileDelete: Proto_FileDeleteTransactionBody {
+    get {
+      if case .fileDelete(let v)? = _storage._data {return v}
+      return Proto_FileDeleteTransactionBody()
+    }
+    set {_uniqueStorage()._data = .fileDelete(newValue)}
+  }
+
+  ///*
+  /// Modify a file.<br/>
+  /// This may modify any metadata, and/or _replace_ the content.
+  public var fileUpdate: Proto_FileUpdateTransactionBody {
+    get {
+      if case .fileUpdate(let v)? = _storage._data {return v}
+      return Proto_FileUpdateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .fileUpdate(newValue)}
+  }
+
+  ///*
+  /// Delete a file as an Hedera administrative function.<br/>
+  /// This is a privileged operation.
+  public var systemDelete: Proto_SystemDeleteTransactionBody {
+    get {
+      if case .systemDelete(let v)? = _storage._data {return v}
+      return Proto_SystemDeleteTransactionBody()
+    }
+    set {_uniqueStorage()._data = .systemDelete(newValue)}
+  }
+
+  ///*
+  /// Restore a file deleted via `systemDelete`.<br/>
+  /// This is a privileged operation.
+  public var systemUndelete: Proto_SystemUndeleteTransactionBody {
+    get {
+      if case .systemUndelete(let v)? = _storage._data {return v}
+      return Proto_SystemUndeleteTransactionBody()
+    }
+    set {_uniqueStorage()._data = .systemUndelete(newValue)}
+  }
+
+  ///*
+  /// Delete a smart contract and transfer remaining balance
+  /// to a specified account.
+  public var contractDeleteInstance: Proto_ContractDeleteTransactionBody {
+    get {
+      if case .contractDeleteInstance(let v)? = _storage._data {return v}
+      return Proto_ContractDeleteTransactionBody()
+    }
+    set {_uniqueStorage()._data = .contractDeleteInstance(newValue)}
+  }
+
+  ///*
+  /// Freeze the network.<br/>
+  /// This is actually several possible operations, and the caller
+  /// should examine the "freeze service" for more detail.<br/>
+  /// This is a privileged operation.
+  public var freeze: Proto_FreezeTransactionBody {
+    get {
+      if case .freeze(let v)? = _storage._data {return v}
+      return Proto_FreezeTransactionBody()
+    }
+    set {_uniqueStorage()._data = .freeze(newValue)}
+  }
+
+  ///*
+  /// Create a topic.
+  public var consensusCreateTopic: Proto_ConsensusCreateTopicTransactionBody {
+    get {
+      if case .consensusCreateTopic(let v)? = _storage._data {return v}
+      return Proto_ConsensusCreateTopicTransactionBody()
+    }
+    set {_uniqueStorage()._data = .consensusCreateTopic(newValue)}
+  }
+
+  ///*
+  /// Update a topic.
+  public var consensusUpdateTopic: Proto_ConsensusUpdateTopicTransactionBody {
+    get {
+      if case .consensusUpdateTopic(let v)? = _storage._data {return v}
+      return Proto_ConsensusUpdateTopicTransactionBody()
+    }
+    set {_uniqueStorage()._data = .consensusUpdateTopic(newValue)}
+  }
+
+  ///*
+  /// Delete a topic.
+  public var consensusDeleteTopic: Proto_ConsensusDeleteTopicTransactionBody {
+    get {
+      if case .consensusDeleteTopic(let v)? = _storage._data {return v}
+      return Proto_ConsensusDeleteTopicTransactionBody()
+    }
+    set {_uniqueStorage()._data = .consensusDeleteTopic(newValue)}
+  }
+
+  ///*
+  /// Submit a message to a topic.<br/>
+  /// A message may be "chunked", and submitted in parts, if the total
+  /// message size exceeds the limit for a single transaction.
+  public var consensusSubmitMessage: Proto_ConsensusSubmitMessageTransactionBody {
+    get {
+      if case .consensusSubmitMessage(let v)? = _storage._data {return v}
+      return Proto_ConsensusSubmitMessageTransactionBody()
+    }
+    set {_uniqueStorage()._data = .consensusSubmitMessage(newValue)}
+  }
+
+  ///*
+  /// Unsupported system transaction.
+  /// <p>
+  /// This transaction MAY be implemented in testing networks, but
+  /// SHALL NOT be enabled or supported in production environments.<br/>
+  /// Clients MUST NOT call this method, and any such transaction SHALL
+  /// be rejected.<br/>
+  /// A network MAY choose to charge punitive fees for attempting to
+  /// execute an `uncheckedSubmit`.
+  public var uncheckedSubmit: Proto_UncheckedSubmitBody {
+    get {
+      if case .uncheckedSubmit(let v)? = _storage._data {return v}
+      return Proto_UncheckedSubmitBody()
+    }
+    set {_uniqueStorage()._data = .uncheckedSubmit(newValue)}
+  }
+
+  ///*
+  /// Create a new Hedera token.
+  public var tokenCreation: Proto_TokenCreateTransactionBody {
+    get {
+      if case .tokenCreation(let v)? = _storage._data {return v}
+      return Proto_TokenCreateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenCreation(newValue)}
+  }
+
+  ///*
+  /// Freeze an account with respect to a token.<br/>
+  /// A frozen account cannot transact in that token until unfrozen.
+  public var tokenFreeze: Proto_TokenFreezeAccountTransactionBody {
+    get {
+      if case .tokenFreeze(let v)? = _storage._data {return v}
+      return Proto_TokenFreezeAccountTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenFreeze(newValue)}
+  }
+
+  ///*
+  /// Unfreeze an account with respect to a token.
+  public var tokenUnfreeze: Proto_TokenUnfreezeAccountTransactionBody {
+    get {
+      if case .tokenUnfreeze(let v)? = _storage._data {return v}
+      return Proto_TokenUnfreezeAccountTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenUnfreeze(newValue)}
+  }
+
+  ///*
+  /// Grant KYC to an account with respect to a token.<br/>
+  /// KYC is generally a "know your customer" assertion that a
+  /// responsible entity has sufficient information to positively
+  /// identify the account holder to relevant authorities.
+  public var tokenGrantKyc: Proto_TokenGrantKycTransactionBody {
+    get {
+      if case .tokenGrantKyc(let v)? = _storage._data {return v}
+      return Proto_TokenGrantKycTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenGrantKyc(newValue)}
+  }
+
+  ///*
+  /// Revoke KYC from an account with respect to a token.
+  public var tokenRevokeKyc: Proto_TokenRevokeKycTransactionBody {
+    get {
+      if case .tokenRevokeKyc(let v)? = _storage._data {return v}
+      return Proto_TokenRevokeKycTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenRevokeKyc(newValue)}
+  }
+
+  ///*
+  /// Delete an Hedera token.<br/>
+  /// The token will be marked deleted.
+  public var tokenDeletion: Proto_TokenDeleteTransactionBody {
+    get {
+      if case .tokenDeletion(let v)? = _storage._data {return v}
+      return Proto_TokenDeleteTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenDeletion(newValue)}
+  }
+
+  ///*
+  /// Update an Hedera token.<br/>
+  /// Depending on what fields are to be modified, the signature
+  /// requirements will vary. See `TokenUpdateTransactionBody` for
+  /// further detail.
+  public var tokenUpdate: Proto_TokenUpdateTransactionBody {
+    get {
+      if case .tokenUpdate(let v)? = _storage._data {return v}
+      return Proto_TokenUpdateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenUpdate(newValue)}
+  }
+
+  ///*
+  /// Mint new tokens.<br/>
+  /// All minted tokens will be delivered to the treasury account for
+  /// the token type. The "mint key" for the token must sign this
+  /// transaction.
+  public var tokenMint: Proto_TokenMintTransactionBody {
+    get {
+      if case .tokenMint(let v)? = _storage._data {return v}
+      return Proto_TokenMintTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenMint(newValue)}
+  }
+
+  ///*
+  /// Burn tokens from the treasury account.<br/>
+  /// The "burn key" for the token must sign this transaction.
+  public var tokenBurn: Proto_TokenBurnTransactionBody {
+    get {
+      if case .tokenBurn(let v)? = _storage._data {return v}
+      return Proto_TokenBurnTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenBurn(newValue)}
+  }
+
+  ///*
+  /// Wipe tokens from an account.<br/>
+  /// This will remove a specified amount of fungible/common tokens or
+  /// a specified list of non-fungible/unique serial numbered tokens
+  /// of a given token type from an Hedera account. The removed tokens
+  /// are _burned_ as if by a `tokenBurn` transaction.<br/>
+  /// The "wipe key" for the token must sign this transaction.
+  public var tokenWipe: Proto_TokenWipeAccountTransactionBody {
+    get {
+      if case .tokenWipe(let v)? = _storage._data {return v}
+      return Proto_TokenWipeAccountTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenWipe(newValue)}
+  }
+
+  ///*
+  /// Associate tokens to an account.
+  public var tokenAssociate: Proto_TokenAssociateTransactionBody {
+    get {
+      if case .tokenAssociate(let v)? = _storage._data {return v}
+      return Proto_TokenAssociateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenAssociate(newValue)}
+  }
+
+  ///*
+  /// Dissociate tokens from an account.
+  public var tokenDissociate: Proto_TokenDissociateTransactionBody {
+    get {
+      if case .tokenDissociate(let v)? = _storage._data {return v}
+      return Proto_TokenDissociateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenDissociate(newValue)}
+  }
+
+  ///*
+  /// Create a schedule.<br/>
+  /// A schedule is a request to execute a specific transaction, included
+  /// in the create body, in the future. The scheduled transaction may
+  /// execute as soon as all signature requirements are met with the
+  /// schedule create or a subsequent schedule sign transaction.
+  /// A schedule may, alternatively, execute on expiration if
+  /// long-term schedules are enabled and the schedule meets signature
+  /// requirements at that time.
+  public var scheduleCreate: Proto_ScheduleCreateTransactionBody {
+    get {
+      if case .scheduleCreate(let v)? = _storage._data {return v}
+      return Proto_ScheduleCreateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .scheduleCreate(newValue)}
+  }
+
+  ///*
+  /// Delete a schedule.<br/>
+  /// The schedule will be marked as deleted.
+  public var scheduleDelete: Proto_ScheduleDeleteTransactionBody {
+    get {
+      if case .scheduleDelete(let v)? = _storage._data {return v}
+      return Proto_ScheduleDeleteTransactionBody()
+    }
+    set {_uniqueStorage()._data = .scheduleDelete(newValue)}
+  }
+
+  ///*
+  /// Sign a schedule.<br/>
+  /// Add one or more cryptographic keys to the list of keys that have
+  /// signed a schedule, and which may serve to meet the signature
+  /// requirements for the scheduled transaction.
+  public var scheduleSign: Proto_ScheduleSignTransactionBody {
+    get {
+      if case .scheduleSign(let v)? = _storage._data {return v}
+      return Proto_ScheduleSignTransactionBody()
+    }
+    set {_uniqueStorage()._data = .scheduleSign(newValue)}
+  }
+
+  ///*
+  /// Update the custom fee schedule for a token.<br/>
+  /// This transaction must be signed by the "fee schedule key"
+  /// for the token.
+  public var tokenFeeScheduleUpdate: Proto_TokenFeeScheduleUpdateTransactionBody {
+    get {
+      if case .tokenFeeScheduleUpdate(let v)? = _storage._data {return v}
+      return Proto_TokenFeeScheduleUpdateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenFeeScheduleUpdate(newValue)}
+  }
+
+  ///*
+  /// Pause a Token.
+  /// <p>
+  /// This transaction MUST be signed by the "pause key" for the token.
+  public var tokenPause: Proto_TokenPauseTransactionBody {
+    get {
+      if case .tokenPause(let v)? = _storage._data {return v}
+      return Proto_TokenPauseTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenPause(newValue)}
+  }
+
+  ///*
+  /// Unpause a Token.
+  /// <p>
+  /// This transaction MUST be signed by the "pause key" for the token.
+  public var tokenUnpause: Proto_TokenUnpauseTransactionBody {
+    get {
+      if case .tokenUnpause(let v)? = _storage._data {return v}
+      return Proto_TokenUnpauseTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenUnpause(newValue)}
+  }
+
+  ///*
+  /// Add one or more approved allowances for spenders to transfer the
+  /// paying account's hbar or tokens.
+  public var cryptoApproveAllowance: Proto_CryptoApproveAllowanceTransactionBody {
+    get {
+      if case .cryptoApproveAllowance(let v)? = _storage._data {return v}
+      return Proto_CryptoApproveAllowanceTransactionBody()
+    }
+    set {_uniqueStorage()._data = .cryptoApproveAllowance(newValue)}
+  }
+
+  ///*
+  /// Delete one or more approvals for spenders to transfer the
+  /// paying account's hbar or tokens.
+  public var cryptoDeleteAllowance: Proto_CryptoDeleteAllowanceTransactionBody {
+    get {
+      if case .cryptoDeleteAllowance(let v)? = _storage._data {return v}
+      return Proto_CryptoDeleteAllowanceTransactionBody()
+    }
+    set {_uniqueStorage()._data = .cryptoDeleteAllowance(newValue)}
+  }
+
+  ///*
+  /// Perform an Ethereum encoded transaction.
+  public var ethereumTransaction: Proto_EthereumTransactionBody {
+    get {
+      if case .ethereumTransaction(let v)? = _storage._data {return v}
+      return Proto_EthereumTransactionBody()
+    }
+    set {_uniqueStorage()._data = .ethereumTransaction(newValue)}
+  }
+
+  ///*
+  /// Update the staking information.<br/>
+  /// This internal transaction is performed at the end of a staking
+  /// period to complete staking calculations and indicate that new
+  /// staking period has started.
+  public var nodeStakeUpdate: Proto_NodeStakeUpdateTransactionBody {
+    get {
+      if case .nodeStakeUpdate(let v)? = _storage._data {return v}
+      return Proto_NodeStakeUpdateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .nodeStakeUpdate(newValue)}
+  }
+
+  ///*
+  /// Provide a deterministic pseudorandom number based on network state.
+  public var utilPrng: Proto_UtilPrngTransactionBody {
+    get {
+      if case .utilPrng(let v)? = _storage._data {return v}
+      return Proto_UtilPrngTransactionBody()
+    }
+    set {_uniqueStorage()._data = .utilPrng(newValue)}
+  }
+
+  ///*
+  /// Update one or more non-fungible/unique tokens.<br/>
+  /// This will update metadata for one or more serial numbers within
+  /// a collection (token type).
+  public var tokenUpdateNfts: Proto_TokenUpdateNftsTransactionBody {
+    get {
+      if case .tokenUpdateNfts(let v)? = _storage._data {return v}
+      return Proto_TokenUpdateNftsTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenUpdateNfts(newValue)}
+  }
+
+  ///*
+  /// Create a new node in the network address book.<br/>
+  /// This is a privileged operation.
+  /// <p>
+  /// This transaction SHALL create a new consensus node record and add
+  /// that record to the network address book.
+  public var nodeCreate: Com_Hedera_Hapi_Node_Addressbook_NodeCreateTransactionBody {
+    get {
+      if case .nodeCreate(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Addressbook_NodeCreateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .nodeCreate(newValue)}
+  }
+
+  ///*
+  /// Update a node in the network address book.<br/>
+  /// This is a privileged operation.
+  /// <p>
+  /// This transaction SHALL update an existing consensus node record in
+  /// the network address book.
+  public var nodeUpdate: Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody {
+    get {
+      if case .nodeUpdate(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .nodeUpdate(newValue)}
+  }
+
+  ///*
+  /// Delete a node from the network address book.<br/>
+  /// This is a privileged operation.
+  /// <p>
+  /// This transaction SHALL mark an existing consensus node record as
+  /// deleted and remove that node from the network address book.
+  public var nodeDelete: Com_Hedera_Hapi_Node_Addressbook_NodeDeleteTransactionBody {
+    get {
+      if case .nodeDelete(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Addressbook_NodeDeleteTransactionBody()
+    }
+    set {_uniqueStorage()._data = .nodeDelete(newValue)}
+  }
+
+  ///*
+  /// Reject and return a token to treasury.<br/>
+  /// This transaction will transfer one or more tokens or token
+  /// balances held by the requesting account to the treasury
+  /// for each token type.
+  /// <p>
+  /// Each transfer MUST be one of the following:
+  /// <ul>
+  ///   <li>A single non-fungible/unique token.</li>
+  ///   <li>The full balance held for a fungible/common
+  ///       token type.</li>
+  /// </ul>
+  /// When complete, the requesting account SHALL NOT hold the
+  /// rejected tokens.<br/>
+  /// Custom fees and royalties defined for the tokens rejected
+  /// SHALL NOT be charged for this transaction.
+  public var tokenReject: Proto_TokenRejectTransactionBody {
+    get {
+      if case .tokenReject(let v)? = _storage._data {return v}
+      return Proto_TokenRejectTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenReject(newValue)}
+  }
+
+  ///*
+  /// "Airdrop" tokens.<br/>
+  /// This transaction sends tokens from one or more "sender" accounts
+  /// to one or more "recipient" accounts.
+  /// <p>
+  /// If a recipient account cannot immediately receive the token(s) sent,
+  /// a "pending" airdrop SHALL be created and MUST be claimed.
+  public var tokenAirdrop: Proto_TokenAirdropTransactionBody {
+    get {
+      if case .tokenAirdrop(let v)? = _storage._data {return v}
+      return Proto_TokenAirdropTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenAirdrop(newValue)}
+  }
+
+  ///*
+  /// Cancel one or more "pending" airdrops that are not yet claimed.
+  public var tokenCancelAirdrop: Proto_TokenCancelAirdropTransactionBody {
+    get {
+      if case .tokenCancelAirdrop(let v)? = _storage._data {return v}
+      return Proto_TokenCancelAirdropTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenCancelAirdrop(newValue)}
+  }
+
+  ///*
+  /// Claim one or more "pending" airdrops.
+  public var tokenClaimAirdrop: Proto_TokenClaimAirdropTransactionBody {
+    get {
+      if case .tokenClaimAirdrop(let v)? = _storage._data {return v}
+      return Proto_TokenClaimAirdropTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenClaimAirdrop(newValue)}
+  }
+
+  ///*
+  /// A transaction body for signature of a state root hash gossiped to other nodes
+  public var stateSignatureTransaction: Com_Hedera_Hapi_Platform_Event_StateSignatureTransaction {
+    get {
+      if case .stateSignatureTransaction(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Platform_Event_StateSignatureTransaction()
+    }
+    set {_uniqueStorage()._data = .stateSignatureTransaction(newValue)}
+  }
+
+  ///*
+  /// A transaction body for contributed a signature with a node's proof key to a history proof.
+  public var historyProofSignature: Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofSignatureTransactionBody {
+    get {
+      if case .historyProofSignature(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofSignatureTransactionBody()
+    }
+    set {_uniqueStorage()._data = .historyProofSignature(newValue)}
+  }
+
+  ///*
+  /// A transaction body for publishing a node's metadata proof key.
+  public var historyProofKeyPublication: Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofKeyPublicationTransactionBody {
+    get {
+      if case .historyProofKeyPublication(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofKeyPublicationTransactionBody()
+    }
+    set {_uniqueStorage()._data = .historyProofKeyPublication(newValue)}
+  }
+
+  ///*
+  /// A transaction body for voting on a metadata proof descending from the ledger id.
+  public var historyProofVote: Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofVoteTransactionBody {
+    get {
+      if case .historyProofVote(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofVoteTransactionBody()
+    }
+    set {_uniqueStorage()._data = .historyProofVote(newValue)}
+  }
+
+  ///*
+  /// A list of maximum custom fees that the users are willing to pay.
+  /// <p>
+  /// This field is OPTIONAL.<br/>
+  /// If left empty, the users are accepting to pay any custom fee.<br/>
+  /// If used with a transaction type that does not support custom fee limits, the transaction will fail.
+  public var maxCustomFees: [Proto_CustomFeeLimit] {
+    get {return _storage._maxCustomFees}
+    set {_uniqueStorage()._maxCustomFees = newValue}
+  }
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  /// The fields here are ordered in strictly ascending field ordinal
+  /// order due to limitations in PBJ.
+  public enum OneOf_Data: Equatable, Sendable {
+    ///*
+    /// Call a function defined on a smart contract.
+    case contractCall(Proto_ContractCallTransactionBody)
+    ///*
+    /// Create a smart contract.
+    case contractCreateInstance(Proto_ContractCreateTransactionBody)
+    ///*
+    /// Update a smart contract.
+    case contractUpdateInstance(Proto_ContractUpdateTransactionBody)
+    ///*
+    /// An obsolete, and unsupported, operation to add a "live hash" to
+    /// an account.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
+    case cryptoAddLiveHash(Proto_CryptoAddLiveHashTransactionBody)
+    ///*
+    /// Create a new Hedera account.
+    case cryptoCreateAccount(Proto_CryptoCreateTransactionBody)
+    ///*
+    /// Delete an Hedera account.<br/>
+    /// This will mark the account as deleted, and transfer all remaining
+    /// HBAR to a receiver account.
+    case cryptoDelete(Proto_CryptoDeleteTransactionBody)
+    ///*
+    /// An obsolete, and unsupported, operation to remove a "live hash" from
+    /// an account.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
+    case cryptoDeleteLiveHash(Proto_CryptoDeleteLiveHashTransactionBody)
+    ///*
+    /// Transfer HBAR between accounts.
+    case cryptoTransfer(Proto_CryptoTransferTransactionBody)
+    ///*
+    /// Modify an Hedera account.
+    case cryptoUpdateAccount(Proto_CryptoUpdateTransactionBody)
+    ///*
+    /// Append data to the end of a file.
+    case fileAppend(Proto_FileAppendTransactionBody)
+    ///*
+    /// Create a new file.
+    case fileCreate(Proto_FileCreateTransactionBody)
+    ///*
+    /// Delete a file.<br/>
+    /// This will remove the content of the file, and mark the file as
+    /// deleted.
+    case fileDelete(Proto_FileDeleteTransactionBody)
+    ///*
+    /// Modify a file.<br/>
+    /// This may modify any metadata, and/or _replace_ the content.
+    case fileUpdate(Proto_FileUpdateTransactionBody)
+    ///*
+    /// Delete a file as an Hedera administrative function.<br/>
+    /// This is a privileged operation.
+    case systemDelete(Proto_SystemDeleteTransactionBody)
+    ///*
+    /// Restore a file deleted via `systemDelete`.<br/>
+    /// This is a privileged operation.
+    case systemUndelete(Proto_SystemUndeleteTransactionBody)
+    ///*
+    /// Delete a smart contract and transfer remaining balance
+    /// to a specified account.
+    case contractDeleteInstance(Proto_ContractDeleteTransactionBody)
+    ///*
+    /// Freeze the network.<br/>
+    /// This is actually several possible operations, and the caller
+    /// should examine the "freeze service" for more detail.<br/>
+    /// This is a privileged operation.
+    case freeze(Proto_FreezeTransactionBody)
+    ///*
+    /// Create a topic.
+    case consensusCreateTopic(Proto_ConsensusCreateTopicTransactionBody)
+    ///*
+    /// Update a topic.
+    case consensusUpdateTopic(Proto_ConsensusUpdateTopicTransactionBody)
+    ///*
+    /// Delete a topic.
+    case consensusDeleteTopic(Proto_ConsensusDeleteTopicTransactionBody)
+    ///*
+    /// Submit a message to a topic.<br/>
+    /// A message may be "chunked", and submitted in parts, if the total
+    /// message size exceeds the limit for a single transaction.
+    case consensusSubmitMessage(Proto_ConsensusSubmitMessageTransactionBody)
+    ///*
+    /// Unsupported system transaction.
+    /// <p>
+    /// This transaction MAY be implemented in testing networks, but
+    /// SHALL NOT be enabled or supported in production environments.<br/>
+    /// Clients MUST NOT call this method, and any such transaction SHALL
+    /// be rejected.<br/>
+    /// A network MAY choose to charge punitive fees for attempting to
+    /// execute an `uncheckedSubmit`.
+    case uncheckedSubmit(Proto_UncheckedSubmitBody)
+    ///*
+    /// Create a new Hedera token.
+    case tokenCreation(Proto_TokenCreateTransactionBody)
+    ///*
+    /// Freeze an account with respect to a token.<br/>
+    /// A frozen account cannot transact in that token until unfrozen.
+    case tokenFreeze(Proto_TokenFreezeAccountTransactionBody)
+    ///*
+    /// Unfreeze an account with respect to a token.
+    case tokenUnfreeze(Proto_TokenUnfreezeAccountTransactionBody)
+    ///*
+    /// Grant KYC to an account with respect to a token.<br/>
+    /// KYC is generally a "know your customer" assertion that a
+    /// responsible entity has sufficient information to positively
+    /// identify the account holder to relevant authorities.
+    case tokenGrantKyc(Proto_TokenGrantKycTransactionBody)
+    ///*
+    /// Revoke KYC from an account with respect to a token.
+    case tokenRevokeKyc(Proto_TokenRevokeKycTransactionBody)
+    ///*
+    /// Delete an Hedera token.<br/>
+    /// The token will be marked deleted.
+    case tokenDeletion(Proto_TokenDeleteTransactionBody)
+    ///*
+    /// Update an Hedera token.<br/>
+    /// Depending on what fields are to be modified, the signature
+    /// requirements will vary. See `TokenUpdateTransactionBody` for
+    /// further detail.
+    case tokenUpdate(Proto_TokenUpdateTransactionBody)
+    ///*
+    /// Mint new tokens.<br/>
+    /// All minted tokens will be delivered to the treasury account for
+    /// the token type. The "mint key" for the token must sign this
+    /// transaction.
+    case tokenMint(Proto_TokenMintTransactionBody)
+    ///*
+    /// Burn tokens from the treasury account.<br/>
+    /// The "burn key" for the token must sign this transaction.
+    case tokenBurn(Proto_TokenBurnTransactionBody)
+    ///*
+    /// Wipe tokens from an account.<br/>
+    /// This will remove a specified amount of fungible/common tokens or
+    /// a specified list of non-fungible/unique serial numbered tokens
+    /// of a given token type from an Hedera account. The removed tokens
+    /// are _burned_ as if by a `tokenBurn` transaction.<br/>
+    /// The "wipe key" for the token must sign this transaction.
+    case tokenWipe(Proto_TokenWipeAccountTransactionBody)
+    ///*
+    /// Associate tokens to an account.
+    case tokenAssociate(Proto_TokenAssociateTransactionBody)
+    ///*
+    /// Dissociate tokens from an account.
+    case tokenDissociate(Proto_TokenDissociateTransactionBody)
+    ///*
+    /// Create a schedule.<br/>
+    /// A schedule is a request to execute a specific transaction, included
+    /// in the create body, in the future. The scheduled transaction may
+    /// execute as soon as all signature requirements are met with the
+    /// schedule create or a subsequent schedule sign transaction.
+    /// A schedule may, alternatively, execute on expiration if
+    /// long-term schedules are enabled and the schedule meets signature
+    /// requirements at that time.
+    case scheduleCreate(Proto_ScheduleCreateTransactionBody)
+    ///*
+    /// Delete a schedule.<br/>
+    /// The schedule will be marked as deleted.
+    case scheduleDelete(Proto_ScheduleDeleteTransactionBody)
+    ///*
+    /// Sign a schedule.<br/>
+    /// Add one or more cryptographic keys to the list of keys that have
+    /// signed a schedule, and which may serve to meet the signature
+    /// requirements for the scheduled transaction.
+    case scheduleSign(Proto_ScheduleSignTransactionBody)
+    ///*
+    /// Update the custom fee schedule for a token.<br/>
+    /// This transaction must be signed by the "fee schedule key"
+    /// for the token.
+    case tokenFeeScheduleUpdate(Proto_TokenFeeScheduleUpdateTransactionBody)
+    ///*
+    /// Pause a Token.
+    /// <p>
+    /// This transaction MUST be signed by the "pause key" for the token.
+    case tokenPause(Proto_TokenPauseTransactionBody)
+    ///*
+    /// Unpause a Token.
+    /// <p>
+    /// This transaction MUST be signed by the "pause key" for the token.
+    case tokenUnpause(Proto_TokenUnpauseTransactionBody)
+    ///*
+    /// Add one or more approved allowances for spenders to transfer the
+    /// paying account's hbar or tokens.
+    case cryptoApproveAllowance(Proto_CryptoApproveAllowanceTransactionBody)
+    ///*
+    /// Delete one or more approvals for spenders to transfer the
+    /// paying account's hbar or tokens.
+    case cryptoDeleteAllowance(Proto_CryptoDeleteAllowanceTransactionBody)
+    ///*
+    /// Perform an Ethereum encoded transaction.
+    case ethereumTransaction(Proto_EthereumTransactionBody)
+    ///*
+    /// Update the staking information.<br/>
+    /// This internal transaction is performed at the end of a staking
+    /// period to complete staking calculations and indicate that new
+    /// staking period has started.
+    case nodeStakeUpdate(Proto_NodeStakeUpdateTransactionBody)
+    ///*
+    /// Provide a deterministic pseudorandom number based on network state.
+    case utilPrng(Proto_UtilPrngTransactionBody)
+    ///*
+    /// Update one or more non-fungible/unique tokens.<br/>
+    /// This will update metadata for one or more serial numbers within
+    /// a collection (token type).
+    case tokenUpdateNfts(Proto_TokenUpdateNftsTransactionBody)
+    ///*
+    /// Create a new node in the network address book.<br/>
+    /// This is a privileged operation.
+    /// <p>
+    /// This transaction SHALL create a new consensus node record and add
+    /// that record to the network address book.
+    case nodeCreate(Com_Hedera_Hapi_Node_Addressbook_NodeCreateTransactionBody)
+    ///*
+    /// Update a node in the network address book.<br/>
+    /// This is a privileged operation.
+    /// <p>
+    /// This transaction SHALL update an existing consensus node record in
+    /// the network address book.
+    case nodeUpdate(Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody)
+    ///*
+    /// Delete a node from the network address book.<br/>
+    /// This is a privileged operation.
+    /// <p>
+    /// This transaction SHALL mark an existing consensus node record as
+    /// deleted and remove that node from the network address book.
+    case nodeDelete(Com_Hedera_Hapi_Node_Addressbook_NodeDeleteTransactionBody)
+    ///*
+    /// Reject and return a token to treasury.<br/>
+    /// This transaction will transfer one or more tokens or token
+    /// balances held by the requesting account to the treasury
+    /// for each token type.
+    /// <p>
+    /// Each transfer MUST be one of the following:
+    /// <ul>
+    ///   <li>A single non-fungible/unique token.</li>
+    ///   <li>The full balance held for a fungible/common
+    ///       token type.</li>
+    /// </ul>
+    /// When complete, the requesting account SHALL NOT hold the
+    /// rejected tokens.<br/>
+    /// Custom fees and royalties defined for the tokens rejected
+    /// SHALL NOT be charged for this transaction.
+    case tokenReject(Proto_TokenRejectTransactionBody)
+    ///*
+    /// "Airdrop" tokens.<br/>
+    /// This transaction sends tokens from one or more "sender" accounts
+    /// to one or more "recipient" accounts.
+    /// <p>
+    /// If a recipient account cannot immediately receive the token(s) sent,
+    /// a "pending" airdrop SHALL be created and MUST be claimed.
+    case tokenAirdrop(Proto_TokenAirdropTransactionBody)
+    ///*
+    /// Cancel one or more "pending" airdrops that are not yet claimed.
+    case tokenCancelAirdrop(Proto_TokenCancelAirdropTransactionBody)
+    ///*
+    /// Claim one or more "pending" airdrops.
+    case tokenClaimAirdrop(Proto_TokenClaimAirdropTransactionBody)
+    ///*
+    /// A transaction body for signature of a state root hash gossiped to other nodes
+    case stateSignatureTransaction(Com_Hedera_Hapi_Platform_Event_StateSignatureTransaction)
+    ///*
+    /// A transaction body for contributed a signature with a node's proof key to a history proof.
+    case historyProofSignature(Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofSignatureTransactionBody)
+    ///*
+    /// A transaction body for publishing a node's metadata proof key.
+    case historyProofKeyPublication(Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofKeyPublicationTransactionBody)
+    ///*
+    /// A transaction body for voting on a metadata proof descending from the ledger id.
+    case historyProofVote(Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofVoteTransactionBody)
+
+  }
+
+  public init() {}
+
+  fileprivate var _storage = _StorageClass.defaultInstance
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -152,6 +1257,1162 @@ extension Proto_Transaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
     if lhs._sigMap != rhs._sigMap {return false}
     if lhs.bodyBytes != rhs.bodyBytes {return false}
     if lhs.signedTransactionBytes != rhs.signedTransactionBytes {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".TransactionBody"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "transactionID"),
+    2: .same(proto: "nodeAccountID"),
+    3: .same(proto: "transactionFee"),
+    4: .same(proto: "transactionValidDuration"),
+    5: .same(proto: "generateRecord"),
+    6: .same(proto: "memo"),
+    7: .same(proto: "contractCall"),
+    8: .same(proto: "contractCreateInstance"),
+    9: .same(proto: "contractUpdateInstance"),
+    10: .same(proto: "cryptoAddLiveHash"),
+    11: .same(proto: "cryptoCreateAccount"),
+    12: .same(proto: "cryptoDelete"),
+    13: .same(proto: "cryptoDeleteLiveHash"),
+    14: .same(proto: "cryptoTransfer"),
+    15: .same(proto: "cryptoUpdateAccount"),
+    16: .same(proto: "fileAppend"),
+    17: .same(proto: "fileCreate"),
+    18: .same(proto: "fileDelete"),
+    19: .same(proto: "fileUpdate"),
+    20: .same(proto: "systemDelete"),
+    21: .same(proto: "systemUndelete"),
+    22: .same(proto: "contractDeleteInstance"),
+    23: .same(proto: "freeze"),
+    24: .same(proto: "consensusCreateTopic"),
+    25: .same(proto: "consensusUpdateTopic"),
+    26: .same(proto: "consensusDeleteTopic"),
+    27: .same(proto: "consensusSubmitMessage"),
+    28: .same(proto: "uncheckedSubmit"),
+    29: .same(proto: "tokenCreation"),
+    31: .same(proto: "tokenFreeze"),
+    32: .same(proto: "tokenUnfreeze"),
+    33: .same(proto: "tokenGrantKyc"),
+    34: .same(proto: "tokenRevokeKyc"),
+    35: .same(proto: "tokenDeletion"),
+    36: .same(proto: "tokenUpdate"),
+    37: .same(proto: "tokenMint"),
+    38: .same(proto: "tokenBurn"),
+    39: .same(proto: "tokenWipe"),
+    40: .same(proto: "tokenAssociate"),
+    41: .same(proto: "tokenDissociate"),
+    42: .same(proto: "scheduleCreate"),
+    43: .same(proto: "scheduleDelete"),
+    44: .same(proto: "scheduleSign"),
+    45: .standard(proto: "token_fee_schedule_update"),
+    46: .standard(proto: "token_pause"),
+    47: .standard(proto: "token_unpause"),
+    48: .same(proto: "cryptoApproveAllowance"),
+    49: .same(proto: "cryptoDeleteAllowance"),
+    50: .same(proto: "ethereumTransaction"),
+    51: .standard(proto: "node_stake_update"),
+    52: .standard(proto: "util_prng"),
+    53: .standard(proto: "token_update_nfts"),
+    54: .same(proto: "nodeCreate"),
+    55: .same(proto: "nodeUpdate"),
+    56: .same(proto: "nodeDelete"),
+    57: .same(proto: "tokenReject"),
+    58: .same(proto: "tokenAirdrop"),
+    59: .same(proto: "tokenCancelAirdrop"),
+    60: .same(proto: "tokenClaimAirdrop"),
+    65: .standard(proto: "state_signature_transaction"),
+    69: .standard(proto: "history_proof_signature"),
+    70: .standard(proto: "history_proof_key_publication"),
+    71: .standard(proto: "history_proof_vote"),
+    1001: .standard(proto: "max_custom_fees"),
+  ]
+
+  fileprivate class _StorageClass {
+    var _transactionID: Proto_TransactionID? = nil
+    var _nodeAccountID: Proto_AccountID? = nil
+    var _transactionFee: UInt64 = 0
+    var _transactionValidDuration: Proto_Duration? = nil
+    var _generateRecord: Bool = false
+    var _memo: String = String()
+    var _data: Proto_TransactionBody.OneOf_Data?
+    var _maxCustomFees: [Proto_CustomFeeLimit] = []
+
+    #if swift(>=5.10)
+      // This property is used as the initial default value for new instances of the type.
+      // The type itself is protecting the reference to its storage via CoW semantics.
+      // This will force a copy to be made of this reference when the first mutation occurs;
+      // hence, it is safe to mark this as `nonisolated(unsafe)`.
+      static nonisolated(unsafe) let defaultInstance = _StorageClass()
+    #else
+      static let defaultInstance = _StorageClass()
+    #endif
+
+    private init() {}
+
+    init(copying source: _StorageClass) {
+      _transactionID = source._transactionID
+      _nodeAccountID = source._nodeAccountID
+      _transactionFee = source._transactionFee
+      _transactionValidDuration = source._transactionValidDuration
+      _generateRecord = source._generateRecord
+      _memo = source._memo
+      _data = source._data
+      _maxCustomFees = source._maxCustomFees
+    }
+  }
+
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
+    }
+    return _storage
+  }
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._transactionID) }()
+        case 2: try { try decoder.decodeSingularMessageField(value: &_storage._nodeAccountID) }()
+        case 3: try { try decoder.decodeSingularUInt64Field(value: &_storage._transactionFee) }()
+        case 4: try { try decoder.decodeSingularMessageField(value: &_storage._transactionValidDuration) }()
+        case 5: try { try decoder.decodeSingularBoolField(value: &_storage._generateRecord) }()
+        case 6: try { try decoder.decodeSingularStringField(value: &_storage._memo) }()
+        case 7: try {
+          var v: Proto_ContractCallTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .contractCall(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .contractCall(v)
+          }
+        }()
+        case 8: try {
+          var v: Proto_ContractCreateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .contractCreateInstance(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .contractCreateInstance(v)
+          }
+        }()
+        case 9: try {
+          var v: Proto_ContractUpdateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .contractUpdateInstance(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .contractUpdateInstance(v)
+          }
+        }()
+        case 10: try {
+          var v: Proto_CryptoAddLiveHashTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .cryptoAddLiveHash(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .cryptoAddLiveHash(v)
+          }
+        }()
+        case 11: try {
+          var v: Proto_CryptoCreateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .cryptoCreateAccount(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .cryptoCreateAccount(v)
+          }
+        }()
+        case 12: try {
+          var v: Proto_CryptoDeleteTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .cryptoDelete(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .cryptoDelete(v)
+          }
+        }()
+        case 13: try {
+          var v: Proto_CryptoDeleteLiveHashTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .cryptoDeleteLiveHash(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .cryptoDeleteLiveHash(v)
+          }
+        }()
+        case 14: try {
+          var v: Proto_CryptoTransferTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .cryptoTransfer(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .cryptoTransfer(v)
+          }
+        }()
+        case 15: try {
+          var v: Proto_CryptoUpdateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .cryptoUpdateAccount(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .cryptoUpdateAccount(v)
+          }
+        }()
+        case 16: try {
+          var v: Proto_FileAppendTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .fileAppend(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .fileAppend(v)
+          }
+        }()
+        case 17: try {
+          var v: Proto_FileCreateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .fileCreate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .fileCreate(v)
+          }
+        }()
+        case 18: try {
+          var v: Proto_FileDeleteTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .fileDelete(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .fileDelete(v)
+          }
+        }()
+        case 19: try {
+          var v: Proto_FileUpdateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .fileUpdate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .fileUpdate(v)
+          }
+        }()
+        case 20: try {
+          var v: Proto_SystemDeleteTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .systemDelete(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .systemDelete(v)
+          }
+        }()
+        case 21: try {
+          var v: Proto_SystemUndeleteTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .systemUndelete(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .systemUndelete(v)
+          }
+        }()
+        case 22: try {
+          var v: Proto_ContractDeleteTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .contractDeleteInstance(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .contractDeleteInstance(v)
+          }
+        }()
+        case 23: try {
+          var v: Proto_FreezeTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .freeze(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .freeze(v)
+          }
+        }()
+        case 24: try {
+          var v: Proto_ConsensusCreateTopicTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .consensusCreateTopic(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .consensusCreateTopic(v)
+          }
+        }()
+        case 25: try {
+          var v: Proto_ConsensusUpdateTopicTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .consensusUpdateTopic(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .consensusUpdateTopic(v)
+          }
+        }()
+        case 26: try {
+          var v: Proto_ConsensusDeleteTopicTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .consensusDeleteTopic(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .consensusDeleteTopic(v)
+          }
+        }()
+        case 27: try {
+          var v: Proto_ConsensusSubmitMessageTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .consensusSubmitMessage(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .consensusSubmitMessage(v)
+          }
+        }()
+        case 28: try {
+          var v: Proto_UncheckedSubmitBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .uncheckedSubmit(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .uncheckedSubmit(v)
+          }
+        }()
+        case 29: try {
+          var v: Proto_TokenCreateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenCreation(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenCreation(v)
+          }
+        }()
+        case 31: try {
+          var v: Proto_TokenFreezeAccountTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenFreeze(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenFreeze(v)
+          }
+        }()
+        case 32: try {
+          var v: Proto_TokenUnfreezeAccountTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenUnfreeze(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenUnfreeze(v)
+          }
+        }()
+        case 33: try {
+          var v: Proto_TokenGrantKycTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenGrantKyc(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenGrantKyc(v)
+          }
+        }()
+        case 34: try {
+          var v: Proto_TokenRevokeKycTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenRevokeKyc(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenRevokeKyc(v)
+          }
+        }()
+        case 35: try {
+          var v: Proto_TokenDeleteTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenDeletion(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenDeletion(v)
+          }
+        }()
+        case 36: try {
+          var v: Proto_TokenUpdateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenUpdate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenUpdate(v)
+          }
+        }()
+        case 37: try {
+          var v: Proto_TokenMintTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenMint(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenMint(v)
+          }
+        }()
+        case 38: try {
+          var v: Proto_TokenBurnTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenBurn(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenBurn(v)
+          }
+        }()
+        case 39: try {
+          var v: Proto_TokenWipeAccountTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenWipe(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenWipe(v)
+          }
+        }()
+        case 40: try {
+          var v: Proto_TokenAssociateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenAssociate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenAssociate(v)
+          }
+        }()
+        case 41: try {
+          var v: Proto_TokenDissociateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenDissociate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenDissociate(v)
+          }
+        }()
+        case 42: try {
+          var v: Proto_ScheduleCreateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .scheduleCreate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .scheduleCreate(v)
+          }
+        }()
+        case 43: try {
+          var v: Proto_ScheduleDeleteTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .scheduleDelete(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .scheduleDelete(v)
+          }
+        }()
+        case 44: try {
+          var v: Proto_ScheduleSignTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .scheduleSign(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .scheduleSign(v)
+          }
+        }()
+        case 45: try {
+          var v: Proto_TokenFeeScheduleUpdateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenFeeScheduleUpdate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenFeeScheduleUpdate(v)
+          }
+        }()
+        case 46: try {
+          var v: Proto_TokenPauseTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenPause(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenPause(v)
+          }
+        }()
+        case 47: try {
+          var v: Proto_TokenUnpauseTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenUnpause(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenUnpause(v)
+          }
+        }()
+        case 48: try {
+          var v: Proto_CryptoApproveAllowanceTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .cryptoApproveAllowance(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .cryptoApproveAllowance(v)
+          }
+        }()
+        case 49: try {
+          var v: Proto_CryptoDeleteAllowanceTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .cryptoDeleteAllowance(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .cryptoDeleteAllowance(v)
+          }
+        }()
+        case 50: try {
+          var v: Proto_EthereumTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .ethereumTransaction(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .ethereumTransaction(v)
+          }
+        }()
+        case 51: try {
+          var v: Proto_NodeStakeUpdateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .nodeStakeUpdate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .nodeStakeUpdate(v)
+          }
+        }()
+        case 52: try {
+          var v: Proto_UtilPrngTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .utilPrng(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .utilPrng(v)
+          }
+        }()
+        case 53: try {
+          var v: Proto_TokenUpdateNftsTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenUpdateNfts(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenUpdateNfts(v)
+          }
+        }()
+        case 54: try {
+          var v: Com_Hedera_Hapi_Node_Addressbook_NodeCreateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .nodeCreate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .nodeCreate(v)
+          }
+        }()
+        case 55: try {
+          var v: Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .nodeUpdate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .nodeUpdate(v)
+          }
+        }()
+        case 56: try {
+          var v: Com_Hedera_Hapi_Node_Addressbook_NodeDeleteTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .nodeDelete(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .nodeDelete(v)
+          }
+        }()
+        case 57: try {
+          var v: Proto_TokenRejectTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenReject(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenReject(v)
+          }
+        }()
+        case 58: try {
+          var v: Proto_TokenAirdropTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenAirdrop(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenAirdrop(v)
+          }
+        }()
+        case 59: try {
+          var v: Proto_TokenCancelAirdropTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenCancelAirdrop(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenCancelAirdrop(v)
+          }
+        }()
+        case 60: try {
+          var v: Proto_TokenClaimAirdropTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .tokenClaimAirdrop(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .tokenClaimAirdrop(v)
+          }
+        }()
+        case 65: try {
+          var v: Com_Hedera_Hapi_Platform_Event_StateSignatureTransaction?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .stateSignatureTransaction(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .stateSignatureTransaction(v)
+          }
+        }()
+        case 69: try {
+          var v: Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofSignatureTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .historyProofSignature(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .historyProofSignature(v)
+          }
+        }()
+        case 70: try {
+          var v: Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofKeyPublicationTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .historyProofKeyPublication(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .historyProofKeyPublication(v)
+          }
+        }()
+        case 71: try {
+          var v: Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofVoteTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .historyProofVote(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .historyProofVote(v)
+          }
+        }()
+        case 1001: try { try decoder.decodeRepeatedMessageField(value: &_storage._maxCustomFees) }()
+        default: break
+        }
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      try { if let v = _storage._transactionID {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+      } }()
+      try { if let v = _storage._nodeAccountID {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+      } }()
+      if _storage._transactionFee != 0 {
+        try visitor.visitSingularUInt64Field(value: _storage._transactionFee, fieldNumber: 3)
+      }
+      try { if let v = _storage._transactionValidDuration {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+      } }()
+      if _storage._generateRecord != false {
+        try visitor.visitSingularBoolField(value: _storage._generateRecord, fieldNumber: 5)
+      }
+      if !_storage._memo.isEmpty {
+        try visitor.visitSingularStringField(value: _storage._memo, fieldNumber: 6)
+      }
+      switch _storage._data {
+      case .contractCall?: try {
+        guard case .contractCall(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+      }()
+      case .contractCreateInstance?: try {
+        guard case .contractCreateInstance(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
+      }()
+      case .contractUpdateInstance?: try {
+        guard case .contractUpdateInstance(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
+      }()
+      case .cryptoAddLiveHash?: try {
+        guard case .cryptoAddLiveHash(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
+      }()
+      case .cryptoCreateAccount?: try {
+        guard case .cryptoCreateAccount(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 11)
+      }()
+      case .cryptoDelete?: try {
+        guard case .cryptoDelete(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 12)
+      }()
+      case .cryptoDeleteLiveHash?: try {
+        guard case .cryptoDeleteLiveHash(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 13)
+      }()
+      case .cryptoTransfer?: try {
+        guard case .cryptoTransfer(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 14)
+      }()
+      case .cryptoUpdateAccount?: try {
+        guard case .cryptoUpdateAccount(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 15)
+      }()
+      case .fileAppend?: try {
+        guard case .fileAppend(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 16)
+      }()
+      case .fileCreate?: try {
+        guard case .fileCreate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 17)
+      }()
+      case .fileDelete?: try {
+        guard case .fileDelete(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 18)
+      }()
+      case .fileUpdate?: try {
+        guard case .fileUpdate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 19)
+      }()
+      case .systemDelete?: try {
+        guard case .systemDelete(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 20)
+      }()
+      case .systemUndelete?: try {
+        guard case .systemUndelete(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 21)
+      }()
+      case .contractDeleteInstance?: try {
+        guard case .contractDeleteInstance(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 22)
+      }()
+      case .freeze?: try {
+        guard case .freeze(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 23)
+      }()
+      case .consensusCreateTopic?: try {
+        guard case .consensusCreateTopic(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 24)
+      }()
+      case .consensusUpdateTopic?: try {
+        guard case .consensusUpdateTopic(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 25)
+      }()
+      case .consensusDeleteTopic?: try {
+        guard case .consensusDeleteTopic(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 26)
+      }()
+      case .consensusSubmitMessage?: try {
+        guard case .consensusSubmitMessage(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 27)
+      }()
+      case .uncheckedSubmit?: try {
+        guard case .uncheckedSubmit(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 28)
+      }()
+      case .tokenCreation?: try {
+        guard case .tokenCreation(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 29)
+      }()
+      case .tokenFreeze?: try {
+        guard case .tokenFreeze(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 31)
+      }()
+      case .tokenUnfreeze?: try {
+        guard case .tokenUnfreeze(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 32)
+      }()
+      case .tokenGrantKyc?: try {
+        guard case .tokenGrantKyc(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 33)
+      }()
+      case .tokenRevokeKyc?: try {
+        guard case .tokenRevokeKyc(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 34)
+      }()
+      case .tokenDeletion?: try {
+        guard case .tokenDeletion(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 35)
+      }()
+      case .tokenUpdate?: try {
+        guard case .tokenUpdate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 36)
+      }()
+      case .tokenMint?: try {
+        guard case .tokenMint(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 37)
+      }()
+      case .tokenBurn?: try {
+        guard case .tokenBurn(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 38)
+      }()
+      case .tokenWipe?: try {
+        guard case .tokenWipe(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 39)
+      }()
+      case .tokenAssociate?: try {
+        guard case .tokenAssociate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 40)
+      }()
+      case .tokenDissociate?: try {
+        guard case .tokenDissociate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 41)
+      }()
+      case .scheduleCreate?: try {
+        guard case .scheduleCreate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 42)
+      }()
+      case .scheduleDelete?: try {
+        guard case .scheduleDelete(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 43)
+      }()
+      case .scheduleSign?: try {
+        guard case .scheduleSign(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 44)
+      }()
+      case .tokenFeeScheduleUpdate?: try {
+        guard case .tokenFeeScheduleUpdate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 45)
+      }()
+      case .tokenPause?: try {
+        guard case .tokenPause(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 46)
+      }()
+      case .tokenUnpause?: try {
+        guard case .tokenUnpause(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 47)
+      }()
+      case .cryptoApproveAllowance?: try {
+        guard case .cryptoApproveAllowance(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 48)
+      }()
+      case .cryptoDeleteAllowance?: try {
+        guard case .cryptoDeleteAllowance(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 49)
+      }()
+      case .ethereumTransaction?: try {
+        guard case .ethereumTransaction(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 50)
+      }()
+      case .nodeStakeUpdate?: try {
+        guard case .nodeStakeUpdate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 51)
+      }()
+      case .utilPrng?: try {
+        guard case .utilPrng(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 52)
+      }()
+      case .tokenUpdateNfts?: try {
+        guard case .tokenUpdateNfts(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 53)
+      }()
+      case .nodeCreate?: try {
+        guard case .nodeCreate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 54)
+      }()
+      case .nodeUpdate?: try {
+        guard case .nodeUpdate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 55)
+      }()
+      case .nodeDelete?: try {
+        guard case .nodeDelete(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 56)
+      }()
+      case .tokenReject?: try {
+        guard case .tokenReject(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 57)
+      }()
+      case .tokenAirdrop?: try {
+        guard case .tokenAirdrop(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 58)
+      }()
+      case .tokenCancelAirdrop?: try {
+        guard case .tokenCancelAirdrop(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 59)
+      }()
+      case .tokenClaimAirdrop?: try {
+        guard case .tokenClaimAirdrop(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 60)
+      }()
+      case .stateSignatureTransaction?: try {
+        guard case .stateSignatureTransaction(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 65)
+      }()
+      case .historyProofSignature?: try {
+        guard case .historyProofSignature(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 69)
+      }()
+      case .historyProofKeyPublication?: try {
+        guard case .historyProofKeyPublication(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 70)
+      }()
+      case .historyProofVote?: try {
+        guard case .historyProofVote(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 71)
+      }()
+      case nil: break
+      }
+      if !_storage._maxCustomFees.isEmpty {
+        try visitor.visitRepeatedMessageField(value: _storage._maxCustomFees, fieldNumber: 1001)
+      }
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Proto_TransactionBody, rhs: Proto_TransactionBody) -> Bool {
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._transactionID != rhs_storage._transactionID {return false}
+        if _storage._nodeAccountID != rhs_storage._nodeAccountID {return false}
+        if _storage._transactionFee != rhs_storage._transactionFee {return false}
+        if _storage._transactionValidDuration != rhs_storage._transactionValidDuration {return false}
+        if _storage._generateRecord != rhs_storage._generateRecord {return false}
+        if _storage._memo != rhs_storage._memo {return false}
+        if _storage._data != rhs_storage._data {return false}
+        if _storage._maxCustomFees != rhs_storage._maxCustomFees {return false}
+        return true
+      }
+      if !storagesAreEqual {return false}
+    }
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

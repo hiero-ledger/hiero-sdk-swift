@@ -15,7 +15,9 @@
 /// ### Keywords
 /// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 /// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
-/// document are to be interpreted as described in [RFC2119](https://www.ietf.org/rfc/rfc2119).
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
 
 import SwiftProtobuf
 
@@ -31,13 +33,17 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 
 ///*
 /// Token cancel airdrop<br/>
-/// Remove one or more pending airdrops from state on behalf of the sender(s)
-/// for each airdrop.
+/// Remove one or more pending airdrops from state on behalf of the
+/// sender(s) for each airdrop.
 ///
-/// Each pending airdrop canceled SHALL be removed from state and SHALL NOT be available to claim.<br/>
-/// Each cancellation SHALL be represented in the transaction body and SHALL NOT be restated
-/// in the record file.<br/>
+/// Each pending airdrop canceled SHALL be removed from state and
+/// SHALL NOT be available to claim.<br/>
+/// Each cancellation SHALL be represented in the transaction body and
+/// SHALL NOT be restated in the record file.<br/>
 /// All cancellations MUST succeed for this transaction to succeed.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_TokenCancelAirdropTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -49,8 +55,8 @@ public struct Proto_TokenCancelAirdropTransactionBody: Sendable {
   /// wishes to cancel; on success all listed pending airdrop entries
   /// will be removed.
   /// <p>
-  /// This transaction MUST be signed by the account referenced by a `sender_id` for
-  /// each entry in this list.<br/>
+  /// This transaction MUST be signed by the account identified by a
+  /// `sender_id` for each entry in this list.<br/>
   /// This list MUST NOT have any duplicate entries.<br/>
   /// This list MUST contain between 1 and 10 entries, inclusive.
   public var pendingAirdrops: [Proto_PendingAirdropId] = []

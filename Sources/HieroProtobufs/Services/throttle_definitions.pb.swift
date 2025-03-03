@@ -8,6 +8,25 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Throttle Definitions
+/// A set of messages that support maintaining throttling limits on network
+/// transactions to ensure no one transaction type consumes the entirety of
+/// network resources. Also used to charge congestion fees when network load
+/// is exceptionally high, as an incentive to delay transactions that are
+/// not time-sensitive.
+///
+/// For details behind this throttling design, please see the
+/// `docs/throttle-design.md` document in the
+/// [Hedera Services](https://github.com/hashgraph/hedera-services) repository.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,21 +40,33 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// A set of operations which should be collectively throttled at a given milli-ops-per-second limit.
+/// A single throttle limit applied to one or more operations.
+///
+/// The list of operations MUST contain at least one entry.<br/>
+/// The throttle limit SHALL be specified in thousandths of an operation
+/// per second; one operation per second for the network would be `1000`.<br/>
+/// The throttle limit MUST be greater than zero (`0`).
 public struct Proto_ThrottleGroup: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The operations to be throttled
+  /// A list of operations to be throttled.
+  /// <p>
+  /// This list MUST contain at least one item.<br/>
+  /// This list SHOULD NOT contain any item included in any other
+  /// active `ThrottleGroup`.
   public var operations: [Proto_HederaFunctionality] = []
 
   ///*
-  /// The number of total operations per second across the entire network, multiplied by 1000. So, to
-  /// choose 3 operations per second (which on a network of 30 nodes is a tenth of an operation per
-  /// second for each node), set milliOpsPerSec = 3000. And to choose 3.6 ops per second, use
-  /// milliOpsPerSec = 3600. Minimum allowed value is 1, and maximum allowed value is 9223372.
+  /// A throttle limit for this group.<br/>
+  /// This is a total number of operations, in thousandths, the network may
+  /// perform each second for this group. Every node executes every transaction,
+  /// so this limit effectively applies individually to each node as well.<br/>
+  /// <p>
+  /// This value MUST be greater than zero (`0`).<br/>
+  /// This value SHOULD be less than `9,223,372`.<br/>
   public var milliOpsPerSec: UInt64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -44,24 +75,55 @@ public struct Proto_ThrottleGroup: Sendable {
 }
 
 ///*
-/// A list of throttle groups that should all compete for the same internal bucket.
+/// A "bucket" of performance allocated across one or more throttle groups.<br/>
+/// This entry combines one or more throttle groups into a single unit to
+/// calculate limitations and congestion. Each "bucket" "fills" as operations
+/// are completed, then "drains" over a period of time defined for each bucket.
+/// This fill-and-drain characteristic enables the network to process sudden
+/// bursts of heavy traffic while still observing throttle limits over longer
+/// timeframes.
+///
+/// The value of `burstPeriodMs` is combined with the `milliOpsPerSec`
+/// values for the individual throttle groups to determine the total
+/// bucket "capacity". This combination MUST be less than the maximum
+/// value of a signed long integer (`9223372036854775807`), when scaled to
+/// a nanosecond measurement resolution.
+///
+/// > Note
+/// >> There is some question regarding the mechanism of calculating the
+/// >> combination of `burstPeriodMs` and `milliOpsPerSec`. The calculation
+/// >> Is implemented in difficult-to-find code, and very likely does not
+/// >> match the approach described here.
 public struct Proto_ThrottleBucket: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// A name for this bucket (primarily for use in logs)
+  /// A name for this bucket.<br/>
+  /// This is used for log entries.
+  /// <p>
+  /// This value SHOULD NOT exceed 20 characters.
   public var name: String = String()
 
   ///*
-  /// The number of milliseconds required for this bucket to drain completely when full. The product
-  /// of this number and the least common multiple of the milliOpsPerSec values in this bucket must
-  /// not exceed 9223372036.
+  /// A burst duration limit, in milliseconds.<br/>
+  /// This value determines the total "capacity" of the bucket. The rate
+  /// at which the bucket "drains" is set by the throttles, and this duration
+  /// sets how long that rate must be sustained to empty a "full" bucket.
+  /// That combination (calculated as the product of this value and the least
+  /// common multiple of the `milliOpsPerSec` values for all throttle groups)
+  /// determines the maximum amount of operations this bucket can "hold".
+  /// <p>
+  /// The calculated capacity of this bucket MUST NOT exceed `9,223,372,036,854`.
   public var burstPeriodMs: UInt64 = 0
 
   ///*
-  /// The throttle groups competing for this bucket
+  /// A list of throttle groups.<br/>
+  /// These throttle groups combined define the effective throttle
+  /// rate for the bucket.
+  /// <p>
+  /// This list MUST contain at least one entry.
   public var throttleGroups: [Proto_ThrottleGroup] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -70,17 +132,26 @@ public struct Proto_ThrottleBucket: Sendable {
 }
 
 ///*
-/// A list of throttle buckets which, simultaneously enforced, define the system's throttling policy.
-/// <ol>
-/// <li> When an operation appears in more than one throttling bucket, all its buckets must have room
-/// or it will be throttled.</li> 
-/// <li>An operation assigned to no buckets is always throttled.</li>
-/// </ol> 
+/// A list of throttle buckets.<br/>
+/// This list, simultaneously enforced, defines a complete throttling policy.
+///
+///  1. When an operation appears in more than one throttling bucket,
+///     that operation SHALL be throttled unless all of the buckets where
+///     the operation appears have "capacity" available.
+///  1. An operation assigned to no buckets is SHALL be throttled in every
+///     instance.  The _effective_ throttle for this case is `0`.
 public struct Proto_ThrottleDefinitions: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  ///*
+  /// A list of throttle buckets.
+  /// <p>
+  /// This list MUST be set, and SHOULD NOT be empty.<br/>
+  /// An empty list SHALL have the effect of setting all operations to
+  /// a single group with throttle limit of `0` operations per second for the
+  /// entire network.
   public var throttleBuckets: [Proto_ThrottleBucket] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

@@ -8,6 +8,29 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Node Stake Updates
+/// A system-initiated (i.e. internal) transaction to update stake information
+/// for nodes at the end of a staking period.
+///
+/// Note that staking rewards are not paid immediately. The rewards are
+/// calculated, and the amount to be paid is reserved in the reward account,
+/// at the end of each staking period. The actual recipient accounts are then
+/// paid rewards when that account participates in any transaction that
+/// changes staking information or the account balance. This reduces the
+/// resources for calculating the staking rewards, quite dramatically,
+/// and provides an incentive for account owners to engage with the network,
+/// in at least a minor fashion, occasionally (typically annually).<br/>
+/// The unexpected change in balances, however, can be surprising to the
+/// account holder.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,14 +44,28 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Updates the staking info at the end of staking period to indicate new staking period has started.
+/// A system initiated transaction to update staking information.
+///
+/// This transaction SHALL be issued at the end of each staking period to update
+/// node stakes and reward limits.<br/>
+/// This transaction SHALL be a child of the first transaction to reach
+/// consensus following the end of the previous staking period.<br/>
+/// This transaction MUST NOT be sent by a client and SHALL be rejected if
+/// received by any node.<br/>
+/// This transaction SHALL be present in the record stream or block stream.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_NodeStakeUpdateTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Time and date of the end of the staking period that is ending
+  /// A timestamp indicating the end of the staking period.
+  /// <p>
+  /// This value SHALL be one nanosecond prior to midnight prior to the
+  /// consensus time of the parent transaction.
   public var endOfStakingPeriod: Proto_Timestamp {
     get {return _storage._endOfStakingPeriod ?? Proto_Timestamp()}
     set {_uniqueStorage()._endOfStakingPeriod = newValue}
@@ -39,22 +76,34 @@ public struct Proto_NodeStakeUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearEndOfStakingPeriod() {_uniqueStorage()._endOfStakingPeriod = nil}
 
   ///*
-  /// Staking info of each node at the beginning of the new staking period
+  /// A list of `NodeStake` entries for each node at the beginning of the new
+  /// staking period.
+  /// <p>
+  /// This list SHALL have one entry for each node participating in network
+  /// consensus.
   public var nodeStake: [Proto_NodeStake] {
     get {return _storage._nodeStake}
     set {_uniqueStorage()._nodeStake = newValue}
   }
 
   ///*
-  /// The maximum reward rate, in tinybars per whole hbar, that any account could receive in this
-  /// staking period.
+  /// A maximum reward rate for this staking period.
+  /// <p>
+  /// This SHALL be a ratio of tinybar to HBAR.<br/>
+  /// An account SHALL NOT receive a reward greater than the product of this
+  /// ratio and the total number of HBAR staked by that account.
   public var maxStakingRewardRatePerHbar: Int64 {
     get {return _storage._maxStakingRewardRatePerHbar}
     set {_uniqueStorage()._maxStakingRewardRatePerHbar = newValue}
   }
 
   ///*
-  /// The fraction of the network and service fees paid to the node reward account 0.0.801.
+  /// A fraction of network and service fees paid to
+  /// the "node" reward account.<br/>
+  /// The node staking rewards are paid from the designated reward account
+  /// `0.0.801`, which receives a fraction of network and service fees for
+  /// each transaction. This field is the value of that fraction for the
+  /// last staking period.
   public var nodeRewardFeeFraction: Proto_Fraction {
     get {return _storage._nodeRewardFeeFraction ?? Proto_Fraction()}
     set {_uniqueStorage()._nodeRewardFeeFraction = newValue}
@@ -65,24 +114,42 @@ public struct Proto_NodeStakeUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearNodeRewardFeeFraction() {_uniqueStorage()._nodeRewardFeeFraction = nil}
 
   ///*
-  /// The maximum number of trailing periods for which a user can collect rewards. For example, if this
-  /// is 365 with a UTC calendar day period, then users must collect rewards at least once per calendar
-  /// year to avoid missing any value.
+  /// A limit to the number of staking periods held for inactive accounts.<br/>
+  /// This is the maximum number of trailing staking periods for which an
+  /// account can collect staking rewards.<br/>
+  /// #### Example
+  /// If this value is 365 with a calendar day period, then each account must
+  /// collect rewards at least once per calendar year to receive the full
+  /// amount of staking rewards earned.
+  /// <p>
+  /// Staking rewards SHALL be stored in network state for no more than
+  /// `staking_periods_stored` staking periods.<br/>
+  /// Each account MUST participate in at least one transaction that affects
+  /// its balance, staking, or staking metadata within this time limit
+  /// to receive all available staking rewards.
   public var stakingPeriodsStored: Int64 {
     get {return _storage._stakingPeriodsStored}
     set {_uniqueStorage()._stakingPeriodsStored = newValue}
   }
 
   ///*
-  /// The number of minutes in a staking period. Note for the special case of 1440 minutes, periods are 
-  /// treated as UTC calendar days, rather than repeating 1440 minute periods left-aligned at the epoch.
+  /// A number of minutes representing a staking period.<br/>
+  /// <blockquote>Note<blockquote>
+  /// For the special case of `1440` minutes, periods are treated as
+  /// calendar days aligned to midnight UTC, rather than repeating `1440`
+  /// minute periods left-aligned at the epoch.</blockquote></blockquote>
   public var stakingPeriod: Int64 {
     get {return _storage._stakingPeriod}
     set {_uniqueStorage()._stakingPeriod = newValue}
   }
 
   ///*
-  /// The fraction of the network and service fees paid to the staking reward account 0.0.800.
+  /// A fraction of network and service fees paid to
+  /// the "general" reward account.<br/>
+  /// The general staking rewards are paid from the designated reward account
+  /// `0.0.800`, which receives a fraction of network and service fees for
+  /// each transaction. This field is the value of that fraction for the
+  /// last staking period.
   public var stakingRewardFeeFraction: Proto_Fraction {
     get {return _storage._stakingRewardFeeFraction ?? Proto_Fraction()}
     set {_uniqueStorage()._stakingRewardFeeFraction = newValue}
@@ -93,15 +160,19 @@ public struct Proto_NodeStakeUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearStakingRewardFeeFraction() {_uniqueStorage()._stakingRewardFeeFraction = nil}
 
   ///*
-  /// The minimum balance of staking reward account 0.0.800 required to active rewards.
+  /// A minimum balance required to pay general staking rewards.
+  /// <p>
+  /// If the balance of the staking reward account `0.0.800` is below this
+  /// threshold, staking rewards SHALL NOT be paid in full.
   public var stakingStartThreshold: Int64 {
     get {return _storage._stakingStartThreshold}
     set {_uniqueStorage()._stakingStartThreshold = newValue}
   }
 
   ///*
-  /// (DEPRECATED) The maximum total number of tinybars to be distributed as staking rewards in the 
-  /// ending period. Please consult the max_total_reward field instead.
+  /// HIP-786 replaced this field with `max_total_reward`.<br/>
+  /// This was a maximum total number of tinybars to be distributed as staking
+  /// rewards in the staking period that just ended.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var stakingRewardRate: Int64 {
@@ -110,43 +181,68 @@ public struct Proto_NodeStakeUpdateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// The amount of the staking reward funds (account 0.0.800) reserved to pay pending rewards that 
-  /// have been earned but not collected.
+  /// An amount reserved in the staking reward account.<br/>
+  /// This is an amount "reserved" in the balance of account `0.0.800` that
+  /// is already owed for pending rewards that were previously earned but
+  /// have not yet been collected.<br/>
+  /// This value is further detailed in HIP-786.
   public var reservedStakingRewards: Int64 {
     get {return _storage._reservedStakingRewards}
     set {_uniqueStorage()._reservedStakingRewards = newValue}
   }
 
   ///*
-  /// The unreserved balance of account 0.0.800 at the close of the just-ending period; this value is 
-  /// used to compute the HIP-782 balance ratio.
+  /// An available, unreserved, amount in the staking reward account.<br/>
+  /// This is the balance of the staking reward account `0.0.800` at the close
+  /// of the staking period that just ended, after reduction for all "reserved"
+  /// funds necessary to pay previously earned rewards.<br/>
+  /// This value is further detailed in HIP-786.
+  /// <p>
+  /// This value SHALL be used to calculate the reward ratio according to
+  /// the formula detailed in HIP-782.
   public var unreservedStakingRewardBalance: Int64 {
     get {return _storage._unreservedStakingRewardBalance}
     set {_uniqueStorage()._unreservedStakingRewardBalance = newValue}
   }
 
   ///*
-  /// The unreserved tinybar balance of account 0.0.800 required to achieve the maximum per-hbar reward 
-  /// rate in any period; please see HIP-782 for details.
+  /// A minimum balance required for maximum staking rewards.<br/>
+  /// This value is further detailed in HIP-786.
+  /// The formula to calculate staking rewards is detailed in HIP-782.
+  /// <p>
+  /// The value of `unreserved_staking_reward_balance` MUST match or exceed the
+  /// value of this field to support the maximum staking reward ratio.<br/>
   public var rewardBalanceThreshold: Int64 {
     get {return _storage._rewardBalanceThreshold}
     set {_uniqueStorage()._rewardBalanceThreshold = newValue}
   }
 
   ///*
-  /// The maximum amount of tinybar that can be staked for reward while still achieving the maximum 
-  /// per-hbar reward rate in any period; please see HIP-782 for details.
+  /// A maximum network-wide stake that can earn full rewards.<br/>
+  /// If the network-wide stake, in tinybar, exceeds this value, then staking
+  /// rewards must be reduced to maintain "smooth" reward adjustments as
+  /// defined in HIP-782.<br/>
+  /// This value is further detailed in HIP-786.
+  /// <p>
+  /// If the total network-wide stake exceeds this value, the effective
+  /// staking reward ratio MUST be reduced to maintain solvency of the
+  /// staking reward account.
   public var maxStakeRewarded: Int64 {
     get {return _storage._maxStakeRewarded}
     set {_uniqueStorage()._maxStakeRewarded = newValue}
   }
 
   ///*
-  /// The maximum total tinybars that could be paid as staking rewards in the ending period, after 
-  /// applying the settings for the 0.0.800 balance threshold and the maximum stake rewarded. This
-  /// field replaces the deprecated field staking_reward_rate. It is only for convenience, since a 
-  /// mirror node could also calculate its value by iterating the node_stake list and summing 
-  /// stake_rewarded fields; then multiplying this sum by the max_staking_reward_rate_per_hbar.
+  /// A limit amount that could be paid as staking rewards.<br/>
+  /// In the limit case, the network could pay at most this amount, in tinybar
+  /// as staking rewards for the staking period that just ended, if all other
+  /// conditions were met to perfection.<br/>
+  /// <p>
+  /// This value SHALL reflect the result of a maximum reward calculation that
+  /// takes into account the balance thresholds and maximum stake thresholds
+  /// as defined in HIP-782 and HIP-786.<br/>
+  /// This value is a convenience. The actual defined calculation SHALL be
+  /// authoritative in the unlikely event this value differs.
   public var maxTotalReward: Int64 {
     get {return _storage._maxTotalReward}
     set {_uniqueStorage()._maxTotalReward = newValue}
@@ -160,45 +256,64 @@ public struct Proto_NodeStakeUpdateTransactionBody: @unchecked Sendable {
 }
 
 ///*
-/// Staking info for each node at the end of a staking period.
+/// Staking information for one node at the end of a staking period.
+///
+/// This SHALL be one entry in a list reported at the end of each
+/// full staking period.
 public struct Proto_NodeStake: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The maximum stake (rewarded or not rewarded) this node can have as consensus weight. If its stake to
-  /// reward is above this maximum at the start of a period, then accounts staking to the node in that 
-  /// period will be rewarded at a lower rate scaled by (maxStake / stakeRewardStart).
+  /// A limit to the amount of stake considered for consensus weight.
+  /// <p>
+  /// The amount of stake (whether accepting rewards or not) assigned to a
+  /// node that exceeds this limit SHALL NOT be considered for
+  /// consensus weight calculation.<br/>
+  /// If stake to _reward_ for a node exceeds this threshold, then all
+  /// accounts staking to that node SHALL receive a lower reward rate in
+  /// proportion to the excess stake.
   public var maxStake: Int64 = 0
 
   ///*
-  /// The minimum stake (rewarded or not rewarded) this node must reach before having non-zero consensus weight.
-  /// If its total stake is below this minimum at the start of a period, then accounts staking to the node in 
-  /// that period will receive no rewards.
+  /// A minimum amount of HBAR staked to a node to receive rewards.
+  /// <p>
+  /// If the amount of stake (whether accepting rewards or not) assigned to
+  /// a node at the start of a staking period is less than this threshold,
+  /// then no rewards SHALL be paid to that node or to any accounts
+  /// staking to that node.
   public var minStake: Int64 = 0
 
   ///*
-  /// The id of this node.
+  /// A node identifier.<br/>
+  /// This value uniquely identifies this node within the
+  /// network address book.
   public var nodeID: Int64 = 0
 
   ///*
-  /// The reward rate _per whole hbar_ that was staked to this node with declineReward=false from the start of 
-  /// the staking period that is ending. 
+  /// The rate of rewards, in tinybar per HBAR, for the staking reward
+  /// period that just ended.
   public var rewardRate: Int64 = 0
 
   ///*
-  /// Consensus weight of this node for the new staking period.
+  /// A consensus weight assigned to this node for the next staking period.
   public var stake: Int64 = 0
 
   ///*
-  /// Total of (balance + stakedToMe) for all accounts staked to this node with declineReward=true, at the 
-  /// beginning of the new staking period.
+  /// The total amount staked to this node, while declining rewards.
+  /// <p>
+  /// This SHALL be the total staked amount, in tinybar, that is staked to
+  /// this node with the value of the `decline_reward` set.<br/>
+  /// This value MUST be calculated at the beginning of the staking period.
   public var stakeNotRewarded: Int64 = 0
 
   ///*
-  /// Total of (balance + stakedToMe) for all accounts staked to this node with declineReward=false, at the 
-  /// beginning of the new staking period.
+  /// The total amount staked to this node, while accepting rewards.
+  /// <p>
+  /// This SHALL be the total staked amount, in tinybar, that is staked to
+  /// this node with the value of the `decline_reward` not set.<br/>
+  /// This value MUST be calculated at the beginning of the staking period.
   public var stakeRewarded: Int64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

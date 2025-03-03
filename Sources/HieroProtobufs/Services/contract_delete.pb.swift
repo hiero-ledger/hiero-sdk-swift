@@ -8,6 +8,18 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Contract Delete
+/// Delete a smart contract, transferring any remaining balance to a
+/// designated account.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,22 +33,40 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// At consensus, marks a contract as deleted and transfers its remaining hBars, if any, to a
-/// designated receiver. After a contract is deleted, it can no longer be called.
-/// 
-/// If the target contract is immutable (that is, was created without an admin key), then this
-/// transaction resolves to MODIFYING_IMMUTABLE_CONTRACT.
-/// 
-/// --- Signing Requirements ---
-/// 1. The admin key of the target contract must sign.
-/// 2. If the transfer account or contract has receiverSigRequired, its associated key must also sign
+/// Delete a smart contract, and transfer any remaining HBAR balance to a
+/// designated account.
+///
+/// If this call succeeds then all subsequent calls to that smart contract
+/// SHALL execute the `0x0` opcode, as required for EVM equivalence.
+///
+/// ### Requirements
+///  - An account or smart contract MUST be designated to receive all remaining
+///    account balances.
+///  - The smart contract MUST have an admin key set. If the contract does not
+///    have `admin_key` set, then this transaction SHALL fail and response code
+///    `MODIFYING_IMMUTABLE_CONTRACT` SHALL be set.
+///  - If `admin_key` is, or contains, an empty `KeyList` key, it SHALL be
+///    treated the same as an admin key that is not set.
+///  - The `Key` set for `admin_key` on the smart contract MUST have a valid
+///    signature set on this transaction.
+///  - The designated receiving account MAY have `receiver_sig_required` set. If
+///    that field is set, the receiver account MUST also sign this transaction.
+///  - The field `permanent_removal` MUST NOT be set. That field is reserved for
+///    internal system use when purging the smart contract from state. Any user
+///    transaction with that field set SHALL be rejected and a response code
+///    `PERMANENT_REMOVAL_REQUIRES_SYSTEM_INITIATION` SHALL be set.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_ContractDeleteTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The id of the contract to be deleted
+  /// The id of the contract to be deleted.
+  /// <p>
+  /// This field is REQUIRED.
   public var contractID: Proto_ContractID {
     get {return _contractID ?? Proto_ContractID()}
     set {_contractID = newValue}
@@ -49,7 +79,10 @@ public struct Proto_ContractDeleteTransactionBody: Sendable {
   public var obtainers: Proto_ContractDeleteTransactionBody.OneOf_Obtainers? = nil
 
   ///*
-  /// The id of an account to receive any remaining hBars from the deleted contract
+  /// An Account ID recipient.
+  /// <p>
+  /// This account SHALL receive all HBAR and other tokens still owned by
+  /// the contract that is removed.
   public var transferAccountID: Proto_AccountID {
     get {
       if case .transferAccountID(let v)? = obtainers {return v}
@@ -59,7 +92,10 @@ public struct Proto_ContractDeleteTransactionBody: Sendable {
   }
 
   ///*
-  /// The id of a contract to receive any remaining hBars from the deleted contract
+  /// A contract ID recipient.
+  /// <p>
+  /// This contract SHALL receive all HBAR and other tokens still owned by
+  /// the contract that is removed.
   public var transferContractID: Proto_ContractID {
     get {
       if case .transferContractID(let v)? = obtainers {return v}
@@ -69,22 +105,29 @@ public struct Proto_ContractDeleteTransactionBody: Sendable {
   }
 
   ///*
-  /// If set to true, means this is a "synthetic" system transaction being used to 
-  /// alert mirror nodes that the contract is being permanently removed from the ledger.
-  /// <b>IMPORTANT:</b> User transactions cannot set this field to true, as permanent
-  /// removal is always managed by the ledger itself. Any ContractDeleteTransactionBody
-  /// submitted to HAPI with permanent_removal=true will be rejected with precheck status
-  /// PERMANENT_REMOVAL_REQUIRES_SYSTEM_INITIATION.
+  /// A flag indicating that this transaction is "synthetic"; initiated by the
+  /// node software.
+  /// <p>
+  /// The consensus nodes create such "synthetic" transactions to both to
+  /// properly manage state changes and to communicate those changes to other
+  /// systems via the Block Stream.<br/>
+  /// A user-initiated transaction MUST NOT set this flag.
   public var permanentRemoval: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_Obtainers: Equatable, Sendable {
     ///*
-    /// The id of an account to receive any remaining hBars from the deleted contract
+    /// An Account ID recipient.
+    /// <p>
+    /// This account SHALL receive all HBAR and other tokens still owned by
+    /// the contract that is removed.
     case transferAccountID(Proto_AccountID)
     ///*
-    /// The id of a contract to receive any remaining hBars from the deleted contract
+    /// A contract ID recipient.
+    /// <p>
+    /// This contract SHALL receive all HBAR and other tokens still owned by
+    /// the contract that is removed.
     case transferContractID(Proto_ContractID)
 
   }

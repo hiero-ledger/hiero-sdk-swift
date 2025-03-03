@@ -12,7 +12,28 @@ import SwiftProtobuf
 
 
 ///*
-/// Transactions and queries for the file service. 
+/// Service gRPC definitions for the Hedera File Service (HFS).
+///
+/// #### Signature Requirements
+/// The HFS manages file authorization differently, depending on type of file
+/// transaction, and this can be surprising.<br/>
+/// The core element of file authorization is the `keys` field,
+/// which is a `KeyList`; a list of individual `Key` messages, each of which
+/// may represent a simple or complex key.<br/>
+/// The file service transactions treat this list differently.<br/>
+/// A `fileCreate`, `fileAppend`, or `fileUpdate` MUST have a valid signature
+/// from _each_ key in the list.<br/>
+/// A `fileDelete` MUST have a valid signature from _at least one_ key in
+/// the list. This is different, and allows a file "owned" by many entities
+/// to be deleted by any one of those entities. A deleted file cannot be
+/// restored, so it is important to consider this when assigning keys for
+/// a file.<br/>
+/// If any of the keys in a `KeyList` are complex, the full requirements of
+/// each complex key must be met to count as a "valid signature" for that key.
+/// A complex key structure (i.e. a `ThresholdKey`, or `KeyList`, possibly
+/// including additional `ThresholdKey` or `KeyList` descendants) may be
+/// assigned as the sole entry in a file `keys` field to ensure all transactions
+/// have the same signature requirements.
 ///
 /// Usage: instantiate `Proto_FileServiceClient`, then call methods of this protocol to make API calls.
 public protocol Proto_FileServiceClientProtocol: GRPCClient {
@@ -66,7 +87,7 @@ extension Proto_FileServiceClientProtocol {
   }
 
   ///*
-  /// Creates a file
+  /// Create a file in HFS.
   ///
   /// - Parameters:
   ///   - request: Request to send to createFile.
@@ -85,7 +106,7 @@ extension Proto_FileServiceClientProtocol {
   }
 
   ///*
-  /// Updates a file
+  /// Update a file in HFS.
   ///
   /// - Parameters:
   ///   - request: Request to send to updateFile.
@@ -104,7 +125,9 @@ extension Proto_FileServiceClientProtocol {
   }
 
   ///*
-  /// Deletes a file
+  /// Delete a file in HFS.<br/>
+  /// The content of a file deleted in this manner is completely removed
+  /// from network state, but the file metadata remains.
   ///
   /// - Parameters:
   ///   - request: Request to send to deleteFile.
@@ -123,7 +146,7 @@ extension Proto_FileServiceClientProtocol {
   }
 
   ///*
-  /// Appends to a file
+  /// Append content to a file in HFS.
   ///
   /// - Parameters:
   ///   - request: Request to send to appendContent.
@@ -142,7 +165,9 @@ extension Proto_FileServiceClientProtocol {
   }
 
   ///*
-  /// Retrieves the file contents
+  /// Retrieve the content of a file in HFS.<br/>
+  /// Note that this query retrieves _only_ the file content, not any of
+  /// the metadata for the file.
   ///
   /// - Parameters:
   ///   - request: Request to send to getFileContent.
@@ -161,7 +186,8 @@ extension Proto_FileServiceClientProtocol {
   }
 
   ///*
-  /// Retrieves the file information
+  /// Retrieve the metadata for a file in HFS.<br/>
+  /// Note that this query does not retrieve the file _content_.
   ///
   /// - Parameters:
   ///   - request: Request to send to getFileInfo.
@@ -180,7 +206,19 @@ extension Proto_FileServiceClientProtocol {
   }
 
   ///*
-  /// Deletes a file if the submitting account has network admin privileges
+  /// Delete a "regular" file without "owner" authorization.<br/>
+  /// This transaction _does not_ require signatures for the keys in
+  /// the file `keys` list, but must be signed by a "privileged" account.
+  /// <p>
+  /// This transaction SHALL NOT accept a file identifier for
+  /// a "system" file.<br/>
+  /// This transaction SHALL NOT remove the _content_ of the file from state.
+  /// This permits use of the `systemUndelete` to reverse this action if
+  /// performed in error.
+  /// <p>
+  /// This is a privileged transaction, and only accounts 2-59 are permitted
+  /// to call this function, by default. The actual restriction is in the
+  /// `api-permission.properties` file in the consensus node configuration.
   ///
   /// - Parameters:
   ///   - request: Request to send to systemDelete.
@@ -199,7 +237,19 @@ extension Proto_FileServiceClientProtocol {
   }
 
   ///*
-  /// Undeletes a file if the submitting account has network admin privileges
+  /// Undelete a "regular" file.
+  /// This transaction must be signed by a "privileged" account.<br/>
+  /// <p>
+  /// This transaction SHALL NOT accept a file identifier for
+  /// a "system" file.<br/>
+  /// The file identified SHOULD have been previously deleted.<br/>
+  /// This transaction SHALL NOT recover the _content_ of a file unless that
+  /// file was deleted with a `systemDelete` transaction. The _content_ of a
+  /// file deleted with a `fileDelete` transaction is not retained in state.
+  /// <p>
+  /// This is a privileged transaction, and only accounts 2-60 are permitted
+  /// to call this function, by default. The actual restriction is in the
+  /// `api-permission.properties` file in the consensus node configuration.
   ///
   /// - Parameters:
   ///   - request: Request to send to systemUndelete.
@@ -276,7 +326,28 @@ public struct Proto_FileServiceNIOClient: Proto_FileServiceClientProtocol {
 }
 
 ///*
-/// Transactions and queries for the file service. 
+/// Service gRPC definitions for the Hedera File Service (HFS).
+///
+/// #### Signature Requirements
+/// The HFS manages file authorization differently, depending on type of file
+/// transaction, and this can be surprising.<br/>
+/// The core element of file authorization is the `keys` field,
+/// which is a `KeyList`; a list of individual `Key` messages, each of which
+/// may represent a simple or complex key.<br/>
+/// The file service transactions treat this list differently.<br/>
+/// A `fileCreate`, `fileAppend`, or `fileUpdate` MUST have a valid signature
+/// from _each_ key in the list.<br/>
+/// A `fileDelete` MUST have a valid signature from _at least one_ key in
+/// the list. This is different, and allows a file "owned" by many entities
+/// to be deleted by any one of those entities. A deleted file cannot be
+/// restored, so it is important to consider this when assigning keys for
+/// a file.<br/>
+/// If any of the keys in a `KeyList` are complex, the full requirements of
+/// each complex key must be met to count as a "valid signature" for that key.
+/// A complex key structure (i.e. a `ThresholdKey`, or `KeyList`, possibly
+/// including additional `ThresholdKey` or `KeyList` descendants) may be
+/// assigned as the sole entry in a file `keys` field to ensure all transactions
+/// have the same signature requirements.
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol Proto_FileServiceAsyncClientProtocol: GRPCClient {
   static var serviceDescriptor: GRPCServiceDescriptor { get }
@@ -640,3 +711,497 @@ public enum Proto_FileServiceClientMetadata {
   }
 }
 
+///*
+/// Service gRPC definitions for the Hedera File Service (HFS).
+///
+/// #### Signature Requirements
+/// The HFS manages file authorization differently, depending on type of file
+/// transaction, and this can be surprising.<br/>
+/// The core element of file authorization is the `keys` field,
+/// which is a `KeyList`; a list of individual `Key` messages, each of which
+/// may represent a simple or complex key.<br/>
+/// The file service transactions treat this list differently.<br/>
+/// A `fileCreate`, `fileAppend`, or `fileUpdate` MUST have a valid signature
+/// from _each_ key in the list.<br/>
+/// A `fileDelete` MUST have a valid signature from _at least one_ key in
+/// the list. This is different, and allows a file "owned" by many entities
+/// to be deleted by any one of those entities. A deleted file cannot be
+/// restored, so it is important to consider this when assigning keys for
+/// a file.<br/>
+/// If any of the keys in a `KeyList` are complex, the full requirements of
+/// each complex key must be met to count as a "valid signature" for that key.
+/// A complex key structure (i.e. a `ThresholdKey`, or `KeyList`, possibly
+/// including additional `ThresholdKey` or `KeyList` descendants) may be
+/// assigned as the sole entry in a file `keys` field to ensure all transactions
+/// have the same signature requirements.
+///
+/// To build a server, implement a class that conforms to this protocol.
+public protocol Proto_FileServiceProvider: CallHandlerProvider {
+  var interceptors: Proto_FileServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Create a file in HFS.
+  func createFile(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Update a file in HFS.
+  func updateFile(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Delete a file in HFS.<br/>
+  /// The content of a file deleted in this manner is completely removed
+  /// from network state, but the file metadata remains.
+  func deleteFile(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Append content to a file in HFS.
+  func appendContent(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Retrieve the content of a file in HFS.<br/>
+  /// Note that this query retrieves _only_ the file content, not any of
+  /// the metadata for the file.
+  func getFileContent(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Retrieve the metadata for a file in HFS.<br/>
+  /// Note that this query does not retrieve the file _content_.
+  func getFileInfo(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Delete a "regular" file without "owner" authorization.<br/>
+  /// This transaction _does not_ require signatures for the keys in
+  /// the file `keys` list, but must be signed by a "privileged" account.
+  /// <p>
+  /// This transaction SHALL NOT accept a file identifier for
+  /// a "system" file.<br/>
+  /// This transaction SHALL NOT remove the _content_ of the file from state.
+  /// This permits use of the `systemUndelete` to reverse this action if
+  /// performed in error.
+  /// <p>
+  /// This is a privileged transaction, and only accounts 2-59 are permitted
+  /// to call this function, by default. The actual restriction is in the
+  /// `api-permission.properties` file in the consensus node configuration.
+  func systemDelete(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Undelete a "regular" file.
+  /// This transaction must be signed by a "privileged" account.<br/>
+  /// <p>
+  /// This transaction SHALL NOT accept a file identifier for
+  /// a "system" file.<br/>
+  /// The file identified SHOULD have been previously deleted.<br/>
+  /// This transaction SHALL NOT recover the _content_ of a file unless that
+  /// file was deleted with a `systemDelete` transaction. The _content_ of a
+  /// file deleted with a `fileDelete` transaction is not retained in state.
+  /// <p>
+  /// This is a privileged transaction, and only accounts 2-60 are permitted
+  /// to call this function, by default. The actual restriction is in the
+  /// `api-permission.properties` file in the consensus node configuration.
+  func systemUndelete(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+}
+
+extension Proto_FileServiceProvider {
+  public var serviceName: Substring {
+    return Proto_FileServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+  /// Returns nil for methods not handled by this service.
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "createFile":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateFileInterceptors() ?? [],
+        userFunction: self.createFile(request:context:)
+      )
+
+    case "updateFile":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateFileInterceptors() ?? [],
+        userFunction: self.updateFile(request:context:)
+      )
+
+    case "deleteFile":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteFileInterceptors() ?? [],
+        userFunction: self.deleteFile(request:context:)
+      )
+
+    case "appendContent":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeappendContentInterceptors() ?? [],
+        userFunction: self.appendContent(request:context:)
+      )
+
+    case "getFileContent":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetFileContentInterceptors() ?? [],
+        userFunction: self.getFileContent(request:context:)
+      )
+
+    case "getFileInfo":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetFileInfoInterceptors() ?? [],
+        userFunction: self.getFileInfo(request:context:)
+      )
+
+    case "systemDelete":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makesystemDeleteInterceptors() ?? [],
+        userFunction: self.systemDelete(request:context:)
+      )
+
+    case "systemUndelete":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makesystemUndeleteInterceptors() ?? [],
+        userFunction: self.systemUndelete(request:context:)
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+///*
+/// Service gRPC definitions for the Hedera File Service (HFS).
+///
+/// #### Signature Requirements
+/// The HFS manages file authorization differently, depending on type of file
+/// transaction, and this can be surprising.<br/>
+/// The core element of file authorization is the `keys` field,
+/// which is a `KeyList`; a list of individual `Key` messages, each of which
+/// may represent a simple or complex key.<br/>
+/// The file service transactions treat this list differently.<br/>
+/// A `fileCreate`, `fileAppend`, or `fileUpdate` MUST have a valid signature
+/// from _each_ key in the list.<br/>
+/// A `fileDelete` MUST have a valid signature from _at least one_ key in
+/// the list. This is different, and allows a file "owned" by many entities
+/// to be deleted by any one of those entities. A deleted file cannot be
+/// restored, so it is important to consider this when assigning keys for
+/// a file.<br/>
+/// If any of the keys in a `KeyList` are complex, the full requirements of
+/// each complex key must be met to count as a "valid signature" for that key.
+/// A complex key structure (i.e. a `ThresholdKey`, or `KeyList`, possibly
+/// including additional `ThresholdKey` or `KeyList` descendants) may be
+/// assigned as the sole entry in a file `keys` field to ensure all transactions
+/// have the same signature requirements.
+///
+/// To implement a server, implement an object which conforms to this protocol.
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+public protocol Proto_FileServiceAsyncProvider: CallHandlerProvider, Sendable {
+  static var serviceDescriptor: GRPCServiceDescriptor { get }
+  var interceptors: Proto_FileServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Create a file in HFS.
+  func createFile(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Update a file in HFS.
+  func updateFile(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Delete a file in HFS.<br/>
+  /// The content of a file deleted in this manner is completely removed
+  /// from network state, but the file metadata remains.
+  func deleteFile(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Append content to a file in HFS.
+  func appendContent(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Retrieve the content of a file in HFS.<br/>
+  /// Note that this query retrieves _only_ the file content, not any of
+  /// the metadata for the file.
+  func getFileContent(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Retrieve the metadata for a file in HFS.<br/>
+  /// Note that this query does not retrieve the file _content_.
+  func getFileInfo(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Delete a "regular" file without "owner" authorization.<br/>
+  /// This transaction _does not_ require signatures for the keys in
+  /// the file `keys` list, but must be signed by a "privileged" account.
+  /// <p>
+  /// This transaction SHALL NOT accept a file identifier for
+  /// a "system" file.<br/>
+  /// This transaction SHALL NOT remove the _content_ of the file from state.
+  /// This permits use of the `systemUndelete` to reverse this action if
+  /// performed in error.
+  /// <p>
+  /// This is a privileged transaction, and only accounts 2-59 are permitted
+  /// to call this function, by default. The actual restriction is in the
+  /// `api-permission.properties` file in the consensus node configuration.
+  func systemDelete(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Undelete a "regular" file.
+  /// This transaction must be signed by a "privileged" account.<br/>
+  /// <p>
+  /// This transaction SHALL NOT accept a file identifier for
+  /// a "system" file.<br/>
+  /// The file identified SHOULD have been previously deleted.<br/>
+  /// This transaction SHALL NOT recover the _content_ of a file unless that
+  /// file was deleted with a `systemDelete` transaction. The _content_ of a
+  /// file deleted with a `fileDelete` transaction is not retained in state.
+  /// <p>
+  /// This is a privileged transaction, and only accounts 2-60 are permitted
+  /// to call this function, by default. The actual restriction is in the
+  /// `api-permission.properties` file in the consensus node configuration.
+  func systemUndelete(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension Proto_FileServiceAsyncProvider {
+  public static var serviceDescriptor: GRPCServiceDescriptor {
+    return Proto_FileServiceServerMetadata.serviceDescriptor
+  }
+
+  public var serviceName: Substring {
+    return Proto_FileServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  public var interceptors: Proto_FileServiceServerInterceptorFactoryProtocol? {
+    return nil
+  }
+
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "createFile":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateFileInterceptors() ?? [],
+        wrapping: { try await self.createFile(request: $0, context: $1) }
+      )
+
+    case "updateFile":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateFileInterceptors() ?? [],
+        wrapping: { try await self.updateFile(request: $0, context: $1) }
+      )
+
+    case "deleteFile":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteFileInterceptors() ?? [],
+        wrapping: { try await self.deleteFile(request: $0, context: $1) }
+      )
+
+    case "appendContent":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeappendContentInterceptors() ?? [],
+        wrapping: { try await self.appendContent(request: $0, context: $1) }
+      )
+
+    case "getFileContent":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetFileContentInterceptors() ?? [],
+        wrapping: { try await self.getFileContent(request: $0, context: $1) }
+      )
+
+    case "getFileInfo":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetFileInfoInterceptors() ?? [],
+        wrapping: { try await self.getFileInfo(request: $0, context: $1) }
+      )
+
+    case "systemDelete":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makesystemDeleteInterceptors() ?? [],
+        wrapping: { try await self.systemDelete(request: $0, context: $1) }
+      )
+
+    case "systemUndelete":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makesystemUndeleteInterceptors() ?? [],
+        wrapping: { try await self.systemUndelete(request: $0, context: $1) }
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+public protocol Proto_FileServiceServerInterceptorFactoryProtocol: Sendable {
+
+  /// - Returns: Interceptors to use when handling 'createFile'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecreateFileInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'updateFile'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeupdateFileInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'deleteFile'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makedeleteFileInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'appendContent'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeappendContentInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'getFileContent'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetFileContentInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'getFileInfo'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetFileInfoInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'systemDelete'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makesystemDeleteInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'systemUndelete'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makesystemUndeleteInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+}
+
+public enum Proto_FileServiceServerMetadata {
+  public static let serviceDescriptor = GRPCServiceDescriptor(
+    name: "FileService",
+    fullName: "proto.FileService",
+    methods: [
+      Proto_FileServiceServerMetadata.Methods.createFile,
+      Proto_FileServiceServerMetadata.Methods.updateFile,
+      Proto_FileServiceServerMetadata.Methods.deleteFile,
+      Proto_FileServiceServerMetadata.Methods.appendContent,
+      Proto_FileServiceServerMetadata.Methods.getFileContent,
+      Proto_FileServiceServerMetadata.Methods.getFileInfo,
+      Proto_FileServiceServerMetadata.Methods.systemDelete,
+      Proto_FileServiceServerMetadata.Methods.systemUndelete,
+    ]
+  )
+
+  public enum Methods {
+    public static let createFile = GRPCMethodDescriptor(
+      name: "createFile",
+      path: "/proto.FileService/createFile",
+      type: GRPCCallType.unary
+    )
+
+    public static let updateFile = GRPCMethodDescriptor(
+      name: "updateFile",
+      path: "/proto.FileService/updateFile",
+      type: GRPCCallType.unary
+    )
+
+    public static let deleteFile = GRPCMethodDescriptor(
+      name: "deleteFile",
+      path: "/proto.FileService/deleteFile",
+      type: GRPCCallType.unary
+    )
+
+    public static let appendContent = GRPCMethodDescriptor(
+      name: "appendContent",
+      path: "/proto.FileService/appendContent",
+      type: GRPCCallType.unary
+    )
+
+    public static let getFileContent = GRPCMethodDescriptor(
+      name: "getFileContent",
+      path: "/proto.FileService/getFileContent",
+      type: GRPCCallType.unary
+    )
+
+    public static let getFileInfo = GRPCMethodDescriptor(
+      name: "getFileInfo",
+      path: "/proto.FileService/getFileInfo",
+      type: GRPCCallType.unary
+    )
+
+    public static let systemDelete = GRPCMethodDescriptor(
+      name: "systemDelete",
+      path: "/proto.FileService/systemDelete",
+      type: GRPCCallType.unary
+    )
+
+    public static let systemUndelete = GRPCMethodDescriptor(
+      name: "systemUndelete",
+      path: "/proto.FileService/systemUndelete",
+      type: GRPCCallType.unary
+    )
+  }
+}

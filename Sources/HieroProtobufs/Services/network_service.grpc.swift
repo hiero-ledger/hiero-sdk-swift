@@ -12,7 +12,10 @@ import SwiftProtobuf
 
 
 ///*
-/// The requests and responses for different network services.
+/// Basic "network information" queries.
+///
+/// This service supports queries for the active services and API versions,
+/// and a query for account details.
 ///
 /// Usage: instantiate `Proto_NetworkServiceClient`, then call methods of this protocol to make API calls.
 public protocol Proto_NetworkServiceClientProtocol: GRPCClient {
@@ -20,6 +23,11 @@ public protocol Proto_NetworkServiceClientProtocol: GRPCClient {
   var interceptors: Proto_NetworkServiceClientInterceptorFactoryProtocol? { get }
 
   func getVersionInfo(
+    _ request: Proto_Query,
+    callOptions: CallOptions?
+  ) -> UnaryCall<Proto_Query, Proto_Response>
+
+  func getAccountDetails(
     _ request: Proto_Query,
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Query, Proto_Response>
@@ -33,11 +41,6 @@ public protocol Proto_NetworkServiceClientProtocol: GRPCClient {
     _ request: Proto_Transaction,
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse>
-
-  func getAccountDetails(
-    _ request: Proto_Query,
-    callOptions: CallOptions?
-  ) -> UnaryCall<Proto_Query, Proto_Response>
 }
 
 extension Proto_NetworkServiceClientProtocol {
@@ -46,7 +49,7 @@ extension Proto_NetworkServiceClientProtocol {
   }
 
   ///*
-  /// Retrieves the active versions of Hedera Services and HAPI proto
+  /// Retrieve the active versions of Hedera Services and API messages.
   ///
   /// - Parameters:
   ///   - request: Request to send to getVersionInfo.
@@ -65,10 +68,42 @@ extension Proto_NetworkServiceClientProtocol {
   }
 
   ///*
-  /// Retrieves the time in nanoseconds spent in <tt>handleTransaction</tt> for one or more 
-  /// TransactionIDs (assuming they have reached consensus "recently", since only a limited 
-  /// number of execution times are kept in-memory, depending on the value of the node-local 
-  /// property <tt>stats.executionTimesToTrack</tt>).
+  /// Request detail information about an account.
+  /// <p>
+  /// The returned information SHALL include balance and allowances.<br/>
+  /// The returned information SHALL NOT include a list of account records.
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to getAccountDetails.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  public func getAccountDetails(
+    _ request: Proto_Query,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Proto_Query, Proto_Response> {
+    return self.makeUnaryCall(
+      path: Proto_NetworkServiceClientMetadata.Methods.getAccountDetails.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makegetAccountDetailsInterceptors() ?? []
+    )
+  }
+
+  ///*
+  /// Retrieve the time, in nanoseconds, spent in direct processing for one or
+  /// more recent transactions.
+  /// <p>
+  /// For each transaction identifier provided, if that transaction is
+  /// sufficiently recent (that is, it is within the range of the
+  /// configuration value `stats.executionTimesToTrack`), the node SHALL
+  /// return the time, in nanoseconds, spent to directly process that
+  /// transaction (that is, excluding time to reach consensus).<br/>
+  /// Note that because each node processes every transaction for the Hedera
+  /// network, this query MAY be sent to any node.
+  /// <p>
+  /// <blockquote>Important<blockquote>
+  /// This query is obsolete, not supported, and SHALL fail with a pre-check
+  /// result of `NOT_SUPPORTED`.</blockquote></blockquote>
   ///
   /// - Parameters:
   ///   - request: Request to send to getExecutionTime.
@@ -87,10 +122,13 @@ extension Proto_NetworkServiceClientProtocol {
   }
 
   ///*
-  /// Submits a "wrapped" transaction to the network, skipping its standard prechecks. (Note that
-  /// the "wrapper" <tt>UncheckedSubmit</tt> transaction is still subject to normal prechecks,
-  /// including an authorization requirement that its payer be either the treasury or system admin
-  /// account.)
+  /// Submit a transaction that wraps another transaction which will
+  /// skip most validation.
+  /// <p>
+  /// <blockquote>Important<blockquote>
+  /// This query is obsolete, not supported, and SHALL fail with a pre-check
+  /// result of `NOT_SUPPORTED`.
+  /// </blockquote></blockquote>
   ///
   /// - Parameters:
   ///   - request: Request to send to uncheckedSubmit.
@@ -105,26 +143,6 @@ extension Proto_NetworkServiceClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makeuncheckedSubmitInterceptors() ?? []
-    )
-  }
-
-  ///*
-  /// Get all the information about an account, including balance and allowances. This does not get the list of
-  /// account records.
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to getAccountDetails.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func getAccountDetails(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<Proto_Query, Proto_Response> {
-    return self.makeUnaryCall(
-      path: Proto_NetworkServiceClientMetadata.Methods.getAccountDetails.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetAccountDetailsInterceptors() ?? []
     )
   }
 }
@@ -187,13 +205,21 @@ public struct Proto_NetworkServiceNIOClient: Proto_NetworkServiceClientProtocol 
 }
 
 ///*
-/// The requests and responses for different network services.
+/// Basic "network information" queries.
+///
+/// This service supports queries for the active services and API versions,
+/// and a query for account details.
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol Proto_NetworkServiceAsyncClientProtocol: GRPCClient {
   static var serviceDescriptor: GRPCServiceDescriptor { get }
   var interceptors: Proto_NetworkServiceClientInterceptorFactoryProtocol? { get }
 
   func makeGetVersionInfoCall(
+    _ request: Proto_Query,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
+
+  func makeGetAccountDetailsCall(
     _ request: Proto_Query,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
@@ -207,11 +233,6 @@ public protocol Proto_NetworkServiceAsyncClientProtocol: GRPCClient {
     _ request: Proto_Transaction,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse>
-
-  func makeGetAccountDetailsCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -233,6 +254,18 @@ extension Proto_NetworkServiceAsyncClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makegetVersionInfoInterceptors() ?? []
+    )
+  }
+
+  public func makeGetAccountDetailsCall(
+    _ request: Proto_Query,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response> {
+    return self.makeAsyncUnaryCall(
+      path: Proto_NetworkServiceClientMetadata.Methods.getAccountDetails.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makegetAccountDetailsInterceptors() ?? []
     )
   }
 
@@ -259,18 +292,6 @@ extension Proto_NetworkServiceAsyncClientProtocol {
       interceptors: self.interceptors?.makeuncheckedSubmitInterceptors() ?? []
     )
   }
-
-  public func makeGetAccountDetailsCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response> {
-    return self.makeAsyncUnaryCall(
-      path: Proto_NetworkServiceClientMetadata.Methods.getAccountDetails.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetAccountDetailsInterceptors() ?? []
-    )
-  }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -284,6 +305,18 @@ extension Proto_NetworkServiceAsyncClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makegetVersionInfoInterceptors() ?? []
+    )
+  }
+
+  public func getAccountDetails(
+    _ request: Proto_Query,
+    callOptions: CallOptions? = nil
+  ) async throws -> Proto_Response {
+    return try await self.performAsyncUnaryCall(
+      path: Proto_NetworkServiceClientMetadata.Methods.getAccountDetails.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makegetAccountDetailsInterceptors() ?? []
     )
   }
 
@@ -310,18 +343,6 @@ extension Proto_NetworkServiceAsyncClientProtocol {
       interceptors: self.interceptors?.makeuncheckedSubmitInterceptors() ?? []
     )
   }
-
-  public func getAccountDetails(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) async throws -> Proto_Response {
-    return try await self.performAsyncUnaryCall(
-      path: Proto_NetworkServiceClientMetadata.Methods.getAccountDetails.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetAccountDetailsInterceptors() ?? []
-    )
-  }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -346,14 +367,14 @@ public protocol Proto_NetworkServiceClientInterceptorFactoryProtocol: Sendable {
   /// - Returns: Interceptors to use when invoking 'getVersionInfo'.
   func makegetVersionInfoInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
 
+  /// - Returns: Interceptors to use when invoking 'getAccountDetails'.
+  func makegetAccountDetailsInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
+
   /// - Returns: Interceptors to use when invoking 'getExecutionTime'.
   func makegetExecutionTimeInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
 
   /// - Returns: Interceptors to use when invoking 'uncheckedSubmit'.
   func makeuncheckedSubmitInterceptors() -> [ClientInterceptor<Proto_Transaction, Proto_TransactionResponse>]
-
-  /// - Returns: Interceptors to use when invoking 'getAccountDetails'.
-  func makegetAccountDetailsInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
 }
 
 public enum Proto_NetworkServiceClientMetadata {
@@ -362,9 +383,9 @@ public enum Proto_NetworkServiceClientMetadata {
     fullName: "proto.NetworkService",
     methods: [
       Proto_NetworkServiceClientMetadata.Methods.getVersionInfo,
+      Proto_NetworkServiceClientMetadata.Methods.getAccountDetails,
       Proto_NetworkServiceClientMetadata.Methods.getExecutionTime,
       Proto_NetworkServiceClientMetadata.Methods.uncheckedSubmit,
-      Proto_NetworkServiceClientMetadata.Methods.getAccountDetails,
     ]
   )
 
@@ -372,6 +393,12 @@ public enum Proto_NetworkServiceClientMetadata {
     public static let getVersionInfo = GRPCMethodDescriptor(
       name: "getVersionInfo",
       path: "/proto.NetworkService/getVersionInfo",
+      type: GRPCCallType.unary
+    )
+
+    public static let getAccountDetails = GRPCMethodDescriptor(
+      name: "getAccountDetails",
+      path: "/proto.NetworkService/getAccountDetails",
       type: GRPCCallType.unary
     )
 
@@ -386,12 +413,290 @@ public enum Proto_NetworkServiceClientMetadata {
       path: "/proto.NetworkService/uncheckedSubmit",
       type: GRPCCallType.unary
     )
+  }
+}
+
+///*
+/// Basic "network information" queries.
+///
+/// This service supports queries for the active services and API versions,
+/// and a query for account details.
+///
+/// To build a server, implement a class that conforms to this protocol.
+public protocol Proto_NetworkServiceProvider: CallHandlerProvider {
+  var interceptors: Proto_NetworkServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Retrieve the active versions of Hedera Services and API messages.
+  func getVersionInfo(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Request detail information about an account.
+  /// <p>
+  /// The returned information SHALL include balance and allowances.<br/>
+  /// The returned information SHALL NOT include a list of account records.
+  func getAccountDetails(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Retrieve the time, in nanoseconds, spent in direct processing for one or
+  /// more recent transactions.
+  /// <p>
+  /// For each transaction identifier provided, if that transaction is
+  /// sufficiently recent (that is, it is within the range of the
+  /// configuration value `stats.executionTimesToTrack`), the node SHALL
+  /// return the time, in nanoseconds, spent to directly process that
+  /// transaction (that is, excluding time to reach consensus).<br/>
+  /// Note that because each node processes every transaction for the Hedera
+  /// network, this query MAY be sent to any node.
+  /// <p>
+  /// <blockquote>Important<blockquote>
+  /// This query is obsolete, not supported, and SHALL fail with a pre-check
+  /// result of `NOT_SUPPORTED`.</blockquote></blockquote>
+  func getExecutionTime(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Submit a transaction that wraps another transaction which will
+  /// skip most validation.
+  /// <p>
+  /// <blockquote>Important<blockquote>
+  /// This query is obsolete, not supported, and SHALL fail with a pre-check
+  /// result of `NOT_SUPPORTED`.
+  /// </blockquote></blockquote>
+  func uncheckedSubmit(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+}
+
+extension Proto_NetworkServiceProvider {
+  public var serviceName: Substring {
+    return Proto_NetworkServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+  /// Returns nil for methods not handled by this service.
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "getVersionInfo":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetVersionInfoInterceptors() ?? [],
+        userFunction: self.getVersionInfo(request:context:)
+      )
+
+    case "getAccountDetails":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetAccountDetailsInterceptors() ?? [],
+        userFunction: self.getAccountDetails(request:context:)
+      )
+
+    case "getExecutionTime":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetExecutionTimeInterceptors() ?? [],
+        userFunction: self.getExecutionTime(request:context:)
+      )
+
+    case "uncheckedSubmit":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeuncheckedSubmitInterceptors() ?? [],
+        userFunction: self.uncheckedSubmit(request:context:)
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+///*
+/// Basic "network information" queries.
+///
+/// This service supports queries for the active services and API versions,
+/// and a query for account details.
+///
+/// To implement a server, implement an object which conforms to this protocol.
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+public protocol Proto_NetworkServiceAsyncProvider: CallHandlerProvider, Sendable {
+  static var serviceDescriptor: GRPCServiceDescriptor { get }
+  var interceptors: Proto_NetworkServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Retrieve the active versions of Hedera Services and API messages.
+  func getVersionInfo(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Request detail information about an account.
+  /// <p>
+  /// The returned information SHALL include balance and allowances.<br/>
+  /// The returned information SHALL NOT include a list of account records.
+  func getAccountDetails(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Retrieve the time, in nanoseconds, spent in direct processing for one or
+  /// more recent transactions.
+  /// <p>
+  /// For each transaction identifier provided, if that transaction is
+  /// sufficiently recent (that is, it is within the range of the
+  /// configuration value `stats.executionTimesToTrack`), the node SHALL
+  /// return the time, in nanoseconds, spent to directly process that
+  /// transaction (that is, excluding time to reach consensus).<br/>
+  /// Note that because each node processes every transaction for the Hedera
+  /// network, this query MAY be sent to any node.
+  /// <p>
+  /// <blockquote>Important<blockquote>
+  /// This query is obsolete, not supported, and SHALL fail with a pre-check
+  /// result of `NOT_SUPPORTED`.</blockquote></blockquote>
+  func getExecutionTime(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Submit a transaction that wraps another transaction which will
+  /// skip most validation.
+  /// <p>
+  /// <blockquote>Important<blockquote>
+  /// This query is obsolete, not supported, and SHALL fail with a pre-check
+  /// result of `NOT_SUPPORTED`.
+  /// </blockquote></blockquote>
+  func uncheckedSubmit(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension Proto_NetworkServiceAsyncProvider {
+  public static var serviceDescriptor: GRPCServiceDescriptor {
+    return Proto_NetworkServiceServerMetadata.serviceDescriptor
+  }
+
+  public var serviceName: Substring {
+    return Proto_NetworkServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  public var interceptors: Proto_NetworkServiceServerInterceptorFactoryProtocol? {
+    return nil
+  }
+
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "getVersionInfo":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetVersionInfoInterceptors() ?? [],
+        wrapping: { try await self.getVersionInfo(request: $0, context: $1) }
+      )
+
+    case "getAccountDetails":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetAccountDetailsInterceptors() ?? [],
+        wrapping: { try await self.getAccountDetails(request: $0, context: $1) }
+      )
+
+    case "getExecutionTime":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetExecutionTimeInterceptors() ?? [],
+        wrapping: { try await self.getExecutionTime(request: $0, context: $1) }
+      )
+
+    case "uncheckedSubmit":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeuncheckedSubmitInterceptors() ?? [],
+        wrapping: { try await self.uncheckedSubmit(request: $0, context: $1) }
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+public protocol Proto_NetworkServiceServerInterceptorFactoryProtocol: Sendable {
+
+  /// - Returns: Interceptors to use when handling 'getVersionInfo'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetVersionInfoInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'getAccountDetails'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetAccountDetailsInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'getExecutionTime'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetExecutionTimeInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'uncheckedSubmit'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeuncheckedSubmitInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+}
+
+public enum Proto_NetworkServiceServerMetadata {
+  public static let serviceDescriptor = GRPCServiceDescriptor(
+    name: "NetworkService",
+    fullName: "proto.NetworkService",
+    methods: [
+      Proto_NetworkServiceServerMetadata.Methods.getVersionInfo,
+      Proto_NetworkServiceServerMetadata.Methods.getAccountDetails,
+      Proto_NetworkServiceServerMetadata.Methods.getExecutionTime,
+      Proto_NetworkServiceServerMetadata.Methods.uncheckedSubmit,
+    ]
+  )
+
+  public enum Methods {
+    public static let getVersionInfo = GRPCMethodDescriptor(
+      name: "getVersionInfo",
+      path: "/proto.NetworkService/getVersionInfo",
+      type: GRPCCallType.unary
+    )
 
     public static let getAccountDetails = GRPCMethodDescriptor(
       name: "getAccountDetails",
       path: "/proto.NetworkService/getAccountDetails",
       type: GRPCCallType.unary
     )
+
+    public static let getExecutionTime = GRPCMethodDescriptor(
+      name: "getExecutionTime",
+      path: "/proto.NetworkService/getExecutionTime",
+      type: GRPCCallType.unary
+    )
+
+    public static let uncheckedSubmit = GRPCMethodDescriptor(
+      name: "uncheckedSubmit",
+      path: "/proto.NetworkService/uncheckedSubmit",
+      type: GRPCCallType.unary
+    )
   }
 }
-

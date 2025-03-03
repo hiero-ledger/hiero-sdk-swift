@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Topic Information
+/// Query response describing a topic of the Hedera Consensus Service (HCS).
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,100 +33,214 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Current state of a topic.
+/// A query response describing the current state of a topic for the Hedera
+/// Consensus Service (HCS).
 public struct Proto_ConsensusTopicInfo: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The memo associated with the topic (UTF-8 encoding max 100 bytes)
-  public var memo: String = String()
+  /// A short description of this topic.
+  /// <p>
+  /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+  /// (default 100) bytes when encoded as UTF-8.
+  public var memo: String {
+    get {return _storage._memo}
+    set {_uniqueStorage()._memo = newValue}
+  }
 
   ///*
-  /// When a topic is created, its running hash is initialized to 48 bytes of binary zeros.
-  /// For each submitted message, the topic's running hash is then updated to the output
-  /// of a particular SHA-384 digest whose input data include the previous running hash.
-  /// 
-  /// See the TransactionReceipt.proto documentation for an exact description of the
-  /// data included in the SHA-384 digest used for the update.
-  public var runningHash: Data = Data()
+  /// The latest running hash of the topic.
+  /// <p>
+  /// This 48-byte field is the output of a SHA-384 digest with input
+  /// data determined by the current version of the running hash algorithm
+  /// used by the network.<br/>
+  /// All new transactions SHALL use algorithm version `3`.<br/>
+  /// The bytes of each uint64 or uint32 encoded for the hash input
+  /// MUST be in Big-Endian format.
+  /// <p>
+  /// <hr/>
+  /// If the algorithm version is '3', then the input data to the
+  /// SHA-384 digest are, in order:
+  /// <ol>
+  ///   <li>The previous running hash of the topic (48 bytes)</li>
+  ///   <li>The `topicRunningHashVersion` (8 bytes)</li>
+  ///   <li>The payer account's shard (8 bytes)</li>
+  ///   <li>The payer account's realm (8 bytes)</li>
+  ///   <li>The payer account's number (8 bytes)</li>
+  ///   <li>The topic's shard (8 bytes)</li>
+  ///   <li>The topic's realm (8 bytes)</li>
+  ///   <li>The topic's number (8 bytes)</li>
+  ///   <li>The number of seconds since the epoch when the
+  ///       `ConsensusSubmitMessage` reached consensus (8 bytes)</li>
+  ///   <li>The number of nanoseconds within the second when the
+  ///       `ConsensusSubmitMessage` reached consensus (4 bytes)</li>
+  ///   <li>The `topicSequenceNumber` (8 bytes)</li>
+  ///   <li>The output of a SHA-384 digest of the message bytes from the
+  ///       `ConsensusSubmitMessage` (48 bytes)</li>
+  /// </ol>
+  public var runningHash: Data {
+    get {return _storage._runningHash}
+    set {_uniqueStorage()._runningHash = newValue}
+  }
 
   ///*
-  /// Sequence number (starting at 1 for the first submitMessage) of messages on the topic.
-  public var sequenceNumber: UInt64 = 0
+  /// A current sequence number (starting at 1 for the first message)
+  /// for messages on this topic.
+  public var sequenceNumber: UInt64 {
+    get {return _storage._sequenceNumber}
+    set {_uniqueStorage()._sequenceNumber = newValue}
+  }
 
   ///*
-  /// Effective consensus timestamp at (and after) which submitMessage calls will no longer succeed on the topic
-  /// and the topic will expire and after AUTORENEW_GRACE_PERIOD be automatically deleted.
+  /// An expiration time for this topic, in seconds since the epoch.
+  /// <p>
+  /// For this purpose, `epoch` SHALL be the UNIX epoch
+  /// with 0 at `1970-01-01T00:00:00.000Z`.
   public var expirationTime: Proto_Timestamp {
-    get {return _expirationTime ?? Proto_Timestamp()}
-    set {_expirationTime = newValue}
+    get {return _storage._expirationTime ?? Proto_Timestamp()}
+    set {_uniqueStorage()._expirationTime = newValue}
   }
   /// Returns true if `expirationTime` has been explicitly set.
-  public var hasExpirationTime: Bool {return self._expirationTime != nil}
+  public var hasExpirationTime: Bool {return _storage._expirationTime != nil}
   /// Clears the value of `expirationTime`. Subsequent reads from it will return its default value.
-  public mutating func clearExpirationTime() {self._expirationTime = nil}
+  public mutating func clearExpirationTime() {_uniqueStorage()._expirationTime = nil}
 
   ///*
-  /// Access control for update/delete of the topic. Null if there is no key.
+  /// A key that MUST sign any transaction to update or delete this topic.
+  /// <p>
+  /// If this value is not set (null) then the topic CANNOT be deleted,
+  /// modified, or updated.
   public var adminKey: Proto_Key {
-    get {return _adminKey ?? Proto_Key()}
-    set {_adminKey = newValue}
+    get {return _storage._adminKey ?? Proto_Key()}
+    set {_uniqueStorage()._adminKey = newValue}
   }
   /// Returns true if `adminKey` has been explicitly set.
-  public var hasAdminKey: Bool {return self._adminKey != nil}
+  public var hasAdminKey: Bool {return _storage._adminKey != nil}
   /// Clears the value of `adminKey`. Subsequent reads from it will return its default value.
-  public mutating func clearAdminKey() {self._adminKey = nil}
+  public mutating func clearAdminKey() {_uniqueStorage()._adminKey = nil}
 
   ///*
-  /// Access control for ConsensusService.submitMessage. Null if there is no key.
+  /// A key that MUST sign any transaction to submit a message to this topic.
+  /// <p>
+  /// If this value is not set (null) then any account MAY submit messages to
+  /// this topic.
   public var submitKey: Proto_Key {
-    get {return _submitKey ?? Proto_Key()}
-    set {_submitKey = newValue}
+    get {return _storage._submitKey ?? Proto_Key()}
+    set {_uniqueStorage()._submitKey = newValue}
   }
   /// Returns true if `submitKey` has been explicitly set.
-  public var hasSubmitKey: Bool {return self._submitKey != nil}
+  public var hasSubmitKey: Bool {return _storage._submitKey != nil}
   /// Clears the value of `submitKey`. Subsequent reads from it will return its default value.
-  public mutating func clearSubmitKey() {self._submitKey = nil}
+  public mutating func clearSubmitKey() {_uniqueStorage()._submitKey = nil}
 
   ///*
-  /// If an auto-renew account is specified, when the topic expires, its lifetime will be extended
-  /// by up to this duration (depending on the solvency of the auto-renew account). If the
-  /// auto-renew account has no funds at all, the topic will be deleted instead.
+  /// A duration, in seconds, to extend the `expirationTime` value when
+  /// this topic is automatically renewed.
+  /// <p>
+  /// If the `autoRenewAccount` value for this topic is set to a valid account
+  /// with sufficient HBAR balance to pay renewal fees when this topic
+  /// expires, the system SHALL automatically renew this topic, extending the
+  /// `expirationTime` value by the number of seconds described here.<br/>
+  /// If, however, the `autoRenewAccount` lacks sufficient HBAR balance
+  /// to pay renewal fees when this topic expires, this topic SHALL be
+  /// deleted after the time period specified in the `AUTORENEW_GRACE_PERIOD`
+  /// configuration value.
   public var autoRenewPeriod: Proto_Duration {
-    get {return _autoRenewPeriod ?? Proto_Duration()}
-    set {_autoRenewPeriod = newValue}
+    get {return _storage._autoRenewPeriod ?? Proto_Duration()}
+    set {_uniqueStorage()._autoRenewPeriod = newValue}
   }
   /// Returns true if `autoRenewPeriod` has been explicitly set.
-  public var hasAutoRenewPeriod: Bool {return self._autoRenewPeriod != nil}
+  public var hasAutoRenewPeriod: Bool {return _storage._autoRenewPeriod != nil}
   /// Clears the value of `autoRenewPeriod`. Subsequent reads from it will return its default value.
-  public mutating func clearAutoRenewPeriod() {self._autoRenewPeriod = nil}
+  public mutating func clearAutoRenewPeriod() {_uniqueStorage()._autoRenewPeriod = nil}
 
   ///*
-  /// The account, if any, to charge for automatic renewal of the topic's lifetime upon expiry.
+  /// An account that is designated to pay automatic renewal fees.
+  /// <p>
+  /// If this value is a valid account ID when this topic expires,
+  /// this account SHALL be charged the renewal fees for this topic,
+  /// if it holds sufficient HBAR balance. If the account does not hold
+  /// sufficient HBAR balance to pay renewal fees when necessary, then
+  /// this topic SHALL be deleted.<br/>
+  /// If this value is not set (null), or is not a valid account ID, when
+  /// this topic expires, then this topic SHALL be deleted after the time
+  /// period specified in the `AUTORENEW_GRACE_PERIOD` configuration value.
   public var autoRenewAccount: Proto_AccountID {
-    get {return _autoRenewAccount ?? Proto_AccountID()}
-    set {_autoRenewAccount = newValue}
+    get {return _storage._autoRenewAccount ?? Proto_AccountID()}
+    set {_uniqueStorage()._autoRenewAccount = newValue}
   }
   /// Returns true if `autoRenewAccount` has been explicitly set.
-  public var hasAutoRenewAccount: Bool {return self._autoRenewAccount != nil}
+  public var hasAutoRenewAccount: Bool {return _storage._autoRenewAccount != nil}
   /// Clears the value of `autoRenewAccount`. Subsequent reads from it will return its default value.
-  public mutating func clearAutoRenewAccount() {self._autoRenewAccount = nil}
+  public mutating func clearAutoRenewAccount() {_uniqueStorage()._autoRenewAccount = nil}
 
   ///*
-  /// The ledger ID the response was returned from; please see <a href="https://github.com/hashgraph/hedera-improvement-proposal/blob/master/HIP/hip-198.md">HIP-198</a> for the network-specific IDs. 
-  public var ledgerID: Data = Data()
+  /// A ledger ID of the network that generated this response.
+  /// <p>
+  /// This value SHALL identify the distributed ledger that responded to
+  /// this query.
+  public var ledgerID: Data {
+    get {return _storage._ledgerID}
+    set {_uniqueStorage()._ledgerID = newValue}
+  }
+
+  ///*
+  /// Access control for update/delete of custom fees.
+  /// <p>
+  /// If unset, custom fees CANNOT be set for this topic.<br/>
+  /// If not set when the topic is created, this field CANNOT be set via
+  /// update.<br/>
+  /// If set when the topic is created, this field MAY be changed via update.
+  public var feeScheduleKey: Proto_Key {
+    get {return _storage._feeScheduleKey ?? Proto_Key()}
+    set {_uniqueStorage()._feeScheduleKey = newValue}
+  }
+  /// Returns true if `feeScheduleKey` has been explicitly set.
+  public var hasFeeScheduleKey: Bool {return _storage._feeScheduleKey != nil}
+  /// Clears the value of `feeScheduleKey`. Subsequent reads from it will return its default value.
+  public mutating func clearFeeScheduleKey() {_uniqueStorage()._feeScheduleKey = nil}
+
+  ///*
+  /// A set of keys.<br/>
+  /// Keys in this list are permitted to submit messages to this topic without
+  /// paying custom fees associated with this topic.
+  /// <p>
+  /// If a topic submit message is signed by _any_ key included in this set,
+  /// custom fees SHALL NOT be charged for that transaction.<br/>
+  /// `fee_exempt_key_list` MAY contain keys for accounts that are inactive,
+  /// deleted, or non-existent.<br/>
+  /// If not set, there SHALL NOT be any fee-exempt keys.  In particular, the
+  /// following keys SHALL NOT be implicitly or automatically added to this
+  /// list: `adminKey`, `submitKey`, `fee_schedule_key`.
+  /// A `fee_exempt_key_list` MUST NOT contain more than
+  /// `MAX_ENTRIES_FOR_FEE_EXEMPT_KEY_LIST` keys.
+  /// A `fee_exempt_key_list` MUST NOT contain any duplicate keys.
+  public var feeExemptKeyList: [Proto_Key] {
+    get {return _storage._feeExemptKeyList}
+    set {_uniqueStorage()._feeExemptKeyList = newValue}
+  }
+
+  ///*
+  /// A set of custom fee definitions.<br/>
+  /// These are fees to be assessed for each submit to this topic.
+  /// <p>
+  /// Each fee defined in this set SHALL be evaluated for
+  /// each message submitted to this topic, and the resultant
+  /// total assessed fees SHALL be charged.<br/>
+  /// Custom fees defined here SHALL be assessed in addition to the base
+  /// network and node fees.
+  public var customFees: [Proto_FixedCustomFee] {
+    get {return _storage._customFees}
+    set {_uniqueStorage()._customFees = newValue}
+  }
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
 
-  fileprivate var _expirationTime: Proto_Timestamp? = nil
-  fileprivate var _adminKey: Proto_Key? = nil
-  fileprivate var _submitKey: Proto_Key? = nil
-  fileprivate var _autoRenewPeriod: Proto_Duration? = nil
-  fileprivate var _autoRenewAccount: Proto_AccountID? = nil
+  fileprivate var _storage = _StorageClass.defaultInstance
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -134,73 +259,153 @@ extension Proto_ConsensusTopicInfo: SwiftProtobuf.Message, SwiftProtobuf._Messag
     7: .same(proto: "autoRenewPeriod"),
     8: .same(proto: "autoRenewAccount"),
     9: .standard(proto: "ledger_id"),
+    10: .standard(proto: "fee_schedule_key"),
+    11: .standard(proto: "fee_exempt_key_list"),
+    12: .standard(proto: "custom_fees"),
   ]
 
+  fileprivate class _StorageClass {
+    var _memo: String = String()
+    var _runningHash: Data = Data()
+    var _sequenceNumber: UInt64 = 0
+    var _expirationTime: Proto_Timestamp? = nil
+    var _adminKey: Proto_Key? = nil
+    var _submitKey: Proto_Key? = nil
+    var _autoRenewPeriod: Proto_Duration? = nil
+    var _autoRenewAccount: Proto_AccountID? = nil
+    var _ledgerID: Data = Data()
+    var _feeScheduleKey: Proto_Key? = nil
+    var _feeExemptKeyList: [Proto_Key] = []
+    var _customFees: [Proto_FixedCustomFee] = []
+
+    #if swift(>=5.10)
+      // This property is used as the initial default value for new instances of the type.
+      // The type itself is protecting the reference to its storage via CoW semantics.
+      // This will force a copy to be made of this reference when the first mutation occurs;
+      // hence, it is safe to mark this as `nonisolated(unsafe)`.
+      static nonisolated(unsafe) let defaultInstance = _StorageClass()
+    #else
+      static let defaultInstance = _StorageClass()
+    #endif
+
+    private init() {}
+
+    init(copying source: _StorageClass) {
+      _memo = source._memo
+      _runningHash = source._runningHash
+      _sequenceNumber = source._sequenceNumber
+      _expirationTime = source._expirationTime
+      _adminKey = source._adminKey
+      _submitKey = source._submitKey
+      _autoRenewPeriod = source._autoRenewPeriod
+      _autoRenewAccount = source._autoRenewAccount
+      _ledgerID = source._ledgerID
+      _feeScheduleKey = source._feeScheduleKey
+      _feeExemptKeyList = source._feeExemptKeyList
+      _customFees = source._customFees
+    }
+  }
+
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
+    }
+    return _storage
+  }
+
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.memo) }()
-      case 2: try { try decoder.decodeSingularBytesField(value: &self.runningHash) }()
-      case 3: try { try decoder.decodeSingularUInt64Field(value: &self.sequenceNumber) }()
-      case 4: try { try decoder.decodeSingularMessageField(value: &self._expirationTime) }()
-      case 5: try { try decoder.decodeSingularMessageField(value: &self._adminKey) }()
-      case 6: try { try decoder.decodeSingularMessageField(value: &self._submitKey) }()
-      case 7: try { try decoder.decodeSingularMessageField(value: &self._autoRenewPeriod) }()
-      case 8: try { try decoder.decodeSingularMessageField(value: &self._autoRenewAccount) }()
-      case 9: try { try decoder.decodeSingularBytesField(value: &self.ledgerID) }()
-      default: break
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularStringField(value: &_storage._memo) }()
+        case 2: try { try decoder.decodeSingularBytesField(value: &_storage._runningHash) }()
+        case 3: try { try decoder.decodeSingularUInt64Field(value: &_storage._sequenceNumber) }()
+        case 4: try { try decoder.decodeSingularMessageField(value: &_storage._expirationTime) }()
+        case 5: try { try decoder.decodeSingularMessageField(value: &_storage._adminKey) }()
+        case 6: try { try decoder.decodeSingularMessageField(value: &_storage._submitKey) }()
+        case 7: try { try decoder.decodeSingularMessageField(value: &_storage._autoRenewPeriod) }()
+        case 8: try { try decoder.decodeSingularMessageField(value: &_storage._autoRenewAccount) }()
+        case 9: try { try decoder.decodeSingularBytesField(value: &_storage._ledgerID) }()
+        case 10: try { try decoder.decodeSingularMessageField(value: &_storage._feeScheduleKey) }()
+        case 11: try { try decoder.decodeRepeatedMessageField(value: &_storage._feeExemptKeyList) }()
+        case 12: try { try decoder.decodeRepeatedMessageField(value: &_storage._customFees) }()
+        default: break
+        }
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    if !self.memo.isEmpty {
-      try visitor.visitSingularStringField(value: self.memo, fieldNumber: 1)
-    }
-    if !self.runningHash.isEmpty {
-      try visitor.visitSingularBytesField(value: self.runningHash, fieldNumber: 2)
-    }
-    if self.sequenceNumber != 0 {
-      try visitor.visitSingularUInt64Field(value: self.sequenceNumber, fieldNumber: 3)
-    }
-    try { if let v = self._expirationTime {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-    } }()
-    try { if let v = self._adminKey {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
-    } }()
-    try { if let v = self._submitKey {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
-    } }()
-    try { if let v = self._autoRenewPeriod {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
-    } }()
-    try { if let v = self._autoRenewAccount {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
-    } }()
-    if !self.ledgerID.isEmpty {
-      try visitor.visitSingularBytesField(value: self.ledgerID, fieldNumber: 9)
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      if !_storage._memo.isEmpty {
+        try visitor.visitSingularStringField(value: _storage._memo, fieldNumber: 1)
+      }
+      if !_storage._runningHash.isEmpty {
+        try visitor.visitSingularBytesField(value: _storage._runningHash, fieldNumber: 2)
+      }
+      if _storage._sequenceNumber != 0 {
+        try visitor.visitSingularUInt64Field(value: _storage._sequenceNumber, fieldNumber: 3)
+      }
+      try { if let v = _storage._expirationTime {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+      } }()
+      try { if let v = _storage._adminKey {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+      } }()
+      try { if let v = _storage._submitKey {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+      } }()
+      try { if let v = _storage._autoRenewPeriod {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+      } }()
+      try { if let v = _storage._autoRenewAccount {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
+      } }()
+      if !_storage._ledgerID.isEmpty {
+        try visitor.visitSingularBytesField(value: _storage._ledgerID, fieldNumber: 9)
+      }
+      try { if let v = _storage._feeScheduleKey {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
+      } }()
+      if !_storage._feeExemptKeyList.isEmpty {
+        try visitor.visitRepeatedMessageField(value: _storage._feeExemptKeyList, fieldNumber: 11)
+      }
+      if !_storage._customFees.isEmpty {
+        try visitor.visitRepeatedMessageField(value: _storage._customFees, fieldNumber: 12)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Proto_ConsensusTopicInfo, rhs: Proto_ConsensusTopicInfo) -> Bool {
-    if lhs.memo != rhs.memo {return false}
-    if lhs.runningHash != rhs.runningHash {return false}
-    if lhs.sequenceNumber != rhs.sequenceNumber {return false}
-    if lhs._expirationTime != rhs._expirationTime {return false}
-    if lhs._adminKey != rhs._adminKey {return false}
-    if lhs._submitKey != rhs._submitKey {return false}
-    if lhs._autoRenewPeriod != rhs._autoRenewPeriod {return false}
-    if lhs._autoRenewAccount != rhs._autoRenewAccount {return false}
-    if lhs.ledgerID != rhs.ledgerID {return false}
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._memo != rhs_storage._memo {return false}
+        if _storage._runningHash != rhs_storage._runningHash {return false}
+        if _storage._sequenceNumber != rhs_storage._sequenceNumber {return false}
+        if _storage._expirationTime != rhs_storage._expirationTime {return false}
+        if _storage._adminKey != rhs_storage._adminKey {return false}
+        if _storage._submitKey != rhs_storage._submitKey {return false}
+        if _storage._autoRenewPeriod != rhs_storage._autoRenewPeriod {return false}
+        if _storage._autoRenewAccount != rhs_storage._autoRenewAccount {return false}
+        if _storage._ledgerID != rhs_storage._ledgerID {return false}
+        if _storage._feeScheduleKey != rhs_storage._feeScheduleKey {return false}
+        if _storage._feeExemptKeyList != rhs_storage._feeExemptKeyList {return false}
+        if _storage._customFees != rhs_storage._customFees {return false}
+        return true
+      }
+      if !storagesAreEqual {return false}
+    }
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

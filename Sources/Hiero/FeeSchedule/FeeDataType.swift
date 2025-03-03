@@ -41,6 +41,10 @@ public enum FeeDataType {
     /// The resource prices are scoped to a `ScheduleCreateTransaction`
     /// containing a `ContractExecuteTransaction`.
     case scheduleCreateContractCall
+
+    /// The resource prices are scoped to a `TopicCreateTransaction`
+    /// with custom fees.
+    case topicCreateWithCustomFees
 }
 
 extension FeeDataType: TryProtobufCodable {
@@ -54,6 +58,7 @@ extension FeeDataType: TryProtobufCodable {
         case .tokenFungibleCommonWithCustomFees: self = .tokenFungibleCommonWithCustomFees
         case .tokenNonFungibleUniqueWithCustomFees: self = .tokenNonFungibleUniqueWithCustomFees
         case .scheduleCreateContractCall: self = .scheduleCreateContractCall
+        case .topicCreateWithCustomFees: self = .topicCreateWithCustomFees
         case .UNRECOGNIZED(let code):
             throw HError.fromProtobuf("unrecognized FeeDataType `\(code)`")
         }
@@ -67,6 +72,7 @@ extension FeeDataType: TryProtobufCodable {
         case .tokenFungibleCommonWithCustomFees: return .tokenFungibleCommonWithCustomFees
         case .tokenNonFungibleUniqueWithCustomFees: return .tokenNonFungibleUniqueWithCustomFees
         case .scheduleCreateContractCall: return .scheduleCreateContractCall
+        case .topicCreateWithCustomFees: return .topicCreateWithCustomFees
         }
     }
 }

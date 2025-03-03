@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get Version
+/// Standard query for services and API message versions.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,15 +32,17 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get the deployed versions of Hedera Services and the HAPI proto in semantic version format
+/// Query the deployed versions of Hedera Services and the API definitions in
+/// semantic version format
 public struct Proto_NetworkGetVersionInfoQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -47,15 +60,19 @@ public struct Proto_NetworkGetVersionInfoQuery: Sendable {
 }
 
 ///*
-/// Response when the client sends the node NetworkGetVersionInfoQuery
+/// A response to a `NetworkGetVersionInfoQuery`.
+///
+/// This SHALL return `SemanticVersion` information for both Hedera API (HAPI)
+/// and Hedera Services.
 public struct Proto_NetworkGetVersionInfoResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -66,7 +83,10 @@ public struct Proto_NetworkGetVersionInfoResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The Hedera API (HAPI) protobuf version recognized by the responding node.
+  /// An API version.
+  /// <p>
+  /// This SHALL be the current Hedera API (HAPI) protobuf message version
+  /// accepted by the network.
   public var hapiProtoVersion: Proto_SemanticVersion {
     get {return _hapiProtoVersion ?? Proto_SemanticVersion()}
     set {_hapiProtoVersion = newValue}
@@ -77,7 +97,10 @@ public struct Proto_NetworkGetVersionInfoResponse: Sendable {
   public mutating func clearHapiProtoVersion() {self._hapiProtoVersion = nil}
 
   ///*
-  /// The version of the Hedera Services software deployed on the responding node.
+  /// A Services version.
+  /// <p>
+  /// This SHALL be the current version of the Hedera Services software
+  /// operating the network.
   public var hederaServicesVersion: Proto_SemanticVersion {
     get {return _hederaServicesVersion ?? Proto_SemanticVersion()}
     set {_hederaServicesVersion = newValue}

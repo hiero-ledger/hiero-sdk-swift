@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Query Response
+/// The `Response` message is returned from a query transaction.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,8 +32,12 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// A single response, which is returned from the node to the client, after the client sent the node
-/// a query. This includes all responses.
+/// A single query response.
+///
+/// Each query MUST define its specific response type.<br/>
+/// Each query response MUST include both the information request and a
+/// `ResponseHeader`.<br/>
+/// All possible query response types MUST be listed here in a `oneof`.
 public struct Proto_Response: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -31,7 +46,10 @@ public struct Proto_Response: Sendable {
   public var response: Proto_Response.OneOf_Response? = nil
 
   ///*
-  /// Get all entities associated with a given key
+  /// A response for a query requesting all accounts, claims, files, and
+  /// smart contract instances whose associated keys include the given Key.
+  /// <p>
+  /// > This query is no longer supported.
   public var getByKey: Proto_GetByKeyResponse {
     get {
       if case .getByKey(let v)? = response {return v}
@@ -41,7 +59,8 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get the IDs in the format used in transactions, given the format used in Solidity
+  /// A response for a query requesting Contract, Account, and File
+  /// identifiers for a smart contract, given a Solidity identifier.
   public var getBySolidityID: Proto_GetBySolidityIDResponse {
     get {
       if case .getBySolidityID(let v)? = response {return v}
@@ -51,7 +70,11 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Response to call a function of a smart contract instance
+  /// A response for a _local_ call to a query function of a given smart
+  /// contract, providing function parameter inputs as needed.
+  /// <p>
+  /// > This call is only performed on the local node. It is _not_ a
+  /// > network consensus result.
   public var contractCallLocal: Proto_ContractCallLocalResponse {
     get {
       if case .contractCallLocal(let v)? = response {return v}
@@ -61,7 +84,8 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get the runtime code for a smart contract instance
+  /// A response for a query requesting the current bytecode for
+  /// a smart contract.
   public var contractGetBytecodeResponse: Proto_ContractGetBytecodeResponse {
     get {
       if case .contractGetBytecodeResponse(let v)? = response {return v}
@@ -71,7 +95,8 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get information about a smart contract instance
+  /// A response for a query requesting detailed information about
+  /// a smart contract.
   public var contractGetInfo: Proto_ContractGetInfoResponse {
     get {
       if case .contractGetInfo(let v)? = response {return v}
@@ -81,7 +106,10 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get all existing records for a smart contract instance
+  /// A response for a query requesting records of all transactions
+  /// against the given contract in the last 25 hours.
+  /// <p>
+  /// > This query is no longer supported.
   public var contractGetRecordsResponse: Proto_ContractGetRecordsResponse {
     get {
       if case .contractGetRecordsResponse(let v)? = response {return v}
@@ -91,7 +119,8 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get the current balance in a cryptocurrency account
+  /// A response for a query requesting the HBAR balance of an account
+  /// or contract.
   public var cryptogetAccountBalance: Proto_CryptoGetAccountBalanceResponse {
     get {
       if case .cryptogetAccountBalance(let v)? = response {return v}
@@ -101,7 +130,8 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get all the records that currently exist for transactions involving an account
+  /// A response for a query requesting records of all "recent"
+  /// transactions for which the specified account is the effective payer.
   public var cryptoGetAccountRecords: Proto_CryptoGetAccountRecordsResponse {
     get {
       if case .cryptoGetAccountRecords(let v)? = response {return v}
@@ -111,7 +141,9 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get all information about an account
+  /// A response for a query requesting information for an account.<br/>
+  /// This query includes balance, but not allowances or token
+  /// relationships.
   public var cryptoGetInfo: Proto_CryptoGetInfoResponse {
     get {
       if case .cryptoGetInfo(let v)? = response {return v}
@@ -121,7 +153,10 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Contains a livehash associated to an account
+  /// A response for a query requesting detail for a specific live hash
+  /// associated to a specific account.
+  /// <p>
+  /// > This query is no longer supported.
   public var cryptoGetLiveHash: Proto_CryptoGetLiveHashResponse {
     get {
       if case .cryptoGetLiveHash(let v)? = response {return v}
@@ -131,7 +166,10 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get all the accounts that proxy stake to a given account, and how much they proxy stake
+  /// A response for a query requesting all the accounts that are proxy
+  /// staking to this account.
+  /// <p>
+  /// > This query is no longer supported.
   public var cryptoGetProxyStakers: Proto_CryptoGetStakersResponse {
     get {
       if case .cryptoGetProxyStakers(let v)? = response {return v}
@@ -141,7 +179,8 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get the contents of a file (the bytes stored in it)
+  /// A response for a query requesting the content of a file in the
+  /// Hedera File Service (HFS).
   public var fileGetContents: Proto_FileGetContentsResponse {
     get {
       if case .fileGetContents(let v)? = response {return v}
@@ -151,7 +190,8 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get information about a file, such as its expiration date
+  /// A response for a query requesting file metadata from the
+  /// Hedera File Service (HFS).
   public var fileGetInfo: Proto_FileGetInfoResponse {
     get {
       if case .fileGetInfo(let v)? = response {return v}
@@ -161,7 +201,8 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get a receipt for a transaction
+  /// A response for a query requesting the post-consensus (final)
+  /// result of a transaction.
   public var transactionGetReceipt: Proto_TransactionGetReceiptResponse {
     get {
       if case .transactionGetReceipt(let v)? = response {return v}
@@ -171,7 +212,8 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get a record for a transaction
+  /// A response for a query requesting a transaction record; the detail
+  /// changes completed in response to a transaction.
   public var transactionGetRecord: Proto_TransactionGetRecordResponse {
     get {
       if case .transactionGetRecord(let v)? = response {return v}
@@ -181,7 +223,9 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get a record for a transaction (lasts 180 seconds)
+  /// A response for a query requesting a very recent transaction record.
+  /// <p>
+  /// > This query is no longer supported.
   public var transactionGetFastRecord: Proto_TransactionGetFastRecordResponse {
     get {
       if case .transactionGetFastRecord(let v)? = response {return v}
@@ -191,7 +235,8 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Parameters of and state of a consensus topic..
+  /// A response for a query requesting the current state of a topic for
+  /// the Hedera Consensus Service (HCS).
   public var consensusGetTopicInfo: Proto_ConsensusGetTopicInfoResponse {
     get {
       if case .consensusGetTopicInfo(let v)? = response {return v}
@@ -201,7 +246,8 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Semantic versions of Hedera Services and HAPI proto
+  /// A response for a query requesting the deployed versions of Hedera
+  /// Services and the API definitions in semantic version format
   public var networkGetVersionInfo: Proto_NetworkGetVersionInfoResponse {
     get {
       if case .networkGetVersionInfo(let v)? = response {return v}
@@ -211,7 +257,7 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get all information about a token
+  /// A response for a query requesting metadata for a specific Token.
   public var tokenGetInfo: Proto_TokenGetInfoResponse {
     get {
       if case .tokenGetInfo(let v)? = response {return v}
@@ -221,7 +267,7 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Get all information about a schedule entity
+  /// A response for a query requesting detail for a scheduled transaction.
   public var scheduleGetInfo: Proto_ScheduleGetInfoResponse {
     get {
       if case .scheduleGetInfo(let v)? = response {return v}
@@ -231,7 +277,10 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// A list of the NFTs associated with the account
+  /// A response for a query requesting detail for a subset of individual
+  /// non-fungible/unique tokens owned by an account.<br/>
+  /// The requested tokens are selected by a list index, which is based
+  /// on the order in which the tokens were added to the account.
   public var tokenGetAccountNftInfos: Proto_TokenGetAccountNftInfosResponse {
     get {
       if case .tokenGetAccountNftInfos(let v)? = response {return v}
@@ -241,7 +290,9 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// All information about an NFT
+  /// A response for a query requesting detail for a specific
+  /// non-fungible/unique token selected by both token identifier and
+  /// serial number.
   public var tokenGetNftInfo: Proto_TokenGetNftInfoResponse {
     get {
       if case .tokenGetNftInfo(let v)? = response {return v}
@@ -251,7 +302,10 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// A list of the NFTs for the token
+  /// A response for a query requesting detail for a subset of individual
+  /// non-fungible/unique tokens.<br/>
+  /// The requested tokens are selected by a list index, which is based
+  /// on the order in which the tokens were minted.
   public var tokenGetNftInfos: Proto_TokenGetNftInfosResponse {
     get {
       if case .tokenGetNftInfos(let v)? = response {return v}
@@ -261,7 +315,10 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Execution times of "sufficiently recent" transactions
+  /// A response for a query requesting the time, in nanoseconds, spent
+  /// in direct processing for one or more recent transactions.
+  /// <p>
+  /// > This query is no longer supported.
   public var networkGetExecutionTime: Proto_NetworkGetExecutionTimeResponse {
     get {
       if case .networkGetExecutionTime(let v)? = response {return v}
@@ -271,7 +328,11 @@ public struct Proto_Response: Sendable {
   }
 
   ///*
-  /// Gets all information about an account including allowances granted by the account
+  /// A response for a query requesting detail information
+  /// about an account.
+  /// <p>
+  /// This query is a privileged query and "system" account authorization
+  /// is REQUIRED for this query.
   public var accountDetails: Proto_GetAccountDetailsResponse {
     get {
       if case .accountDetails(let v)? = response {return v}
@@ -284,79 +345,125 @@ public struct Proto_Response: Sendable {
 
   public enum OneOf_Response: Equatable, Sendable {
     ///*
-    /// Get all entities associated with a given key
+    /// A response for a query requesting all accounts, claims, files, and
+    /// smart contract instances whose associated keys include the given Key.
+    /// <p>
+    /// > This query is no longer supported.
     case getByKey(Proto_GetByKeyResponse)
     ///*
-    /// Get the IDs in the format used in transactions, given the format used in Solidity
+    /// A response for a query requesting Contract, Account, and File
+    /// identifiers for a smart contract, given a Solidity identifier.
     case getBySolidityID(Proto_GetBySolidityIDResponse)
     ///*
-    /// Response to call a function of a smart contract instance
+    /// A response for a _local_ call to a query function of a given smart
+    /// contract, providing function parameter inputs as needed.
+    /// <p>
+    /// > This call is only performed on the local node. It is _not_ a
+    /// > network consensus result.
     case contractCallLocal(Proto_ContractCallLocalResponse)
     ///*
-    /// Get the runtime code for a smart contract instance
+    /// A response for a query requesting the current bytecode for
+    /// a smart contract.
     case contractGetBytecodeResponse(Proto_ContractGetBytecodeResponse)
     ///*
-    /// Get information about a smart contract instance
+    /// A response for a query requesting detailed information about
+    /// a smart contract.
     case contractGetInfo(Proto_ContractGetInfoResponse)
     ///*
-    /// Get all existing records for a smart contract instance
+    /// A response for a query requesting records of all transactions
+    /// against the given contract in the last 25 hours.
+    /// <p>
+    /// > This query is no longer supported.
     case contractGetRecordsResponse(Proto_ContractGetRecordsResponse)
     ///*
-    /// Get the current balance in a cryptocurrency account
+    /// A response for a query requesting the HBAR balance of an account
+    /// or contract.
     case cryptogetAccountBalance(Proto_CryptoGetAccountBalanceResponse)
     ///*
-    /// Get all the records that currently exist for transactions involving an account
+    /// A response for a query requesting records of all "recent"
+    /// transactions for which the specified account is the effective payer.
     case cryptoGetAccountRecords(Proto_CryptoGetAccountRecordsResponse)
     ///*
-    /// Get all information about an account
+    /// A response for a query requesting information for an account.<br/>
+    /// This query includes balance, but not allowances or token
+    /// relationships.
     case cryptoGetInfo(Proto_CryptoGetInfoResponse)
     ///*
-    /// Contains a livehash associated to an account
+    /// A response for a query requesting detail for a specific live hash
+    /// associated to a specific account.
+    /// <p>
+    /// > This query is no longer supported.
     case cryptoGetLiveHash(Proto_CryptoGetLiveHashResponse)
     ///*
-    /// Get all the accounts that proxy stake to a given account, and how much they proxy stake
+    /// A response for a query requesting all the accounts that are proxy
+    /// staking to this account.
+    /// <p>
+    /// > This query is no longer supported.
     case cryptoGetProxyStakers(Proto_CryptoGetStakersResponse)
     ///*
-    /// Get the contents of a file (the bytes stored in it)
+    /// A response for a query requesting the content of a file in the
+    /// Hedera File Service (HFS).
     case fileGetContents(Proto_FileGetContentsResponse)
     ///*
-    /// Get information about a file, such as its expiration date
+    /// A response for a query requesting file metadata from the
+    /// Hedera File Service (HFS).
     case fileGetInfo(Proto_FileGetInfoResponse)
     ///*
-    /// Get a receipt for a transaction
+    /// A response for a query requesting the post-consensus (final)
+    /// result of a transaction.
     case transactionGetReceipt(Proto_TransactionGetReceiptResponse)
     ///*
-    /// Get a record for a transaction
+    /// A response for a query requesting a transaction record; the detail
+    /// changes completed in response to a transaction.
     case transactionGetRecord(Proto_TransactionGetRecordResponse)
     ///*
-    /// Get a record for a transaction (lasts 180 seconds)
+    /// A response for a query requesting a very recent transaction record.
+    /// <p>
+    /// > This query is no longer supported.
     case transactionGetFastRecord(Proto_TransactionGetFastRecordResponse)
     ///*
-    /// Parameters of and state of a consensus topic..
+    /// A response for a query requesting the current state of a topic for
+    /// the Hedera Consensus Service (HCS).
     case consensusGetTopicInfo(Proto_ConsensusGetTopicInfoResponse)
     ///*
-    /// Semantic versions of Hedera Services and HAPI proto
+    /// A response for a query requesting the deployed versions of Hedera
+    /// Services and the API definitions in semantic version format
     case networkGetVersionInfo(Proto_NetworkGetVersionInfoResponse)
     ///*
-    /// Get all information about a token
+    /// A response for a query requesting metadata for a specific Token.
     case tokenGetInfo(Proto_TokenGetInfoResponse)
     ///*
-    /// Get all information about a schedule entity
+    /// A response for a query requesting detail for a scheduled transaction.
     case scheduleGetInfo(Proto_ScheduleGetInfoResponse)
     ///*
-    /// A list of the NFTs associated with the account
+    /// A response for a query requesting detail for a subset of individual
+    /// non-fungible/unique tokens owned by an account.<br/>
+    /// The requested tokens are selected by a list index, which is based
+    /// on the order in which the tokens were added to the account.
     case tokenGetAccountNftInfos(Proto_TokenGetAccountNftInfosResponse)
     ///*
-    /// All information about an NFT
+    /// A response for a query requesting detail for a specific
+    /// non-fungible/unique token selected by both token identifier and
+    /// serial number.
     case tokenGetNftInfo(Proto_TokenGetNftInfoResponse)
     ///*
-    /// A list of the NFTs for the token
+    /// A response for a query requesting detail for a subset of individual
+    /// non-fungible/unique tokens.<br/>
+    /// The requested tokens are selected by a list index, which is based
+    /// on the order in which the tokens were minted.
     case tokenGetNftInfos(Proto_TokenGetNftInfosResponse)
     ///*
-    /// Execution times of "sufficiently recent" transactions
+    /// A response for a query requesting the time, in nanoseconds, spent
+    /// in direct processing for one or more recent transactions.
+    /// <p>
+    /// > This query is no longer supported.
     case networkGetExecutionTime(Proto_NetworkGetExecutionTimeResponse)
     ///*
-    /// Gets all information about an account including allowances granted by the account
+    /// A response for a query requesting detail information
+    /// about an account.
+    /// <p>
+    /// This query is a privileged query and "system" account authorization
+    /// is REQUIRED for this query.
     case accountDetails(Proto_GetAccountDetailsResponse)
 
   }

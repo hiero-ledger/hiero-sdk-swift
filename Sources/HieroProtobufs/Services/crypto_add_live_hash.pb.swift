@@ -8,6 +8,22 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Add Live Hash
+/// Associate content to an account via a SHA-384 hash.
+///
+/// > Important
+/// >> This transaction is obsolete and not supported.<br/>
+/// >> Any transaction of this type that is submitted SHALL fail
+/// >> with a `PRE_CHECK` result of `NOT_SUPPORTED`.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,15 +38,18 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// A hash---presumably of some kind of credential or certificate---along with a list of keys, each
-/// of which may be either a primitive or a threshold key. 
+/// A Live Hash value associating some item of content to an account.
+///
+/// This message represents a desired entry in the ledger for a SHA-384
+/// hash of some content, an associated specific account, a list of authorized
+/// keys, and a duration the live hash is "valid".
 public struct Proto_LiveHash: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The account to which the livehash is attached
+  /// An account associated via this live hash to the hashed content.
   public var accountID: Proto_AccountID {
     get {return _accountID ?? Proto_AccountID()}
     set {_accountID = newValue}
@@ -41,11 +60,15 @@ public struct Proto_LiveHash: @unchecked Sendable {
   public mutating func clearAccountID() {self._accountID = nil}
 
   ///*
-  /// The SHA-384 hash of a credential or certificate
+  /// A SHA-384 hash of some content that is associated to the account
+  /// or account holder.
   public var hash: Data = Data()
 
   ///*
-  /// A list of keys (primitive or threshold), all of which must sign to attach the livehash to an account, and any one of which can later delete it.
+  /// A list of keys, all of which MUST sign the transaction to add the
+  /// live hash.<br/>
+  /// Any one of these keys may, however, remove the live hash to revoke
+  /// the association.
   public var keys: Proto_KeyList {
     get {return _keys ?? Proto_KeyList()}
     set {_keys = newValue}
@@ -56,7 +79,8 @@ public struct Proto_LiveHash: @unchecked Sendable {
   public mutating func clearKeys() {self._keys = nil}
 
   ///*
-  /// The duration for which the livehash will remain valid
+  /// A duration describing how long this Live Hash SHALL remain valid.<br/>
+  /// A Live Hash SHOULD NOT be relied upon after this duration has elapsed.
   public var duration: Proto_Duration {
     get {return _duration ?? Proto_Duration()}
     set {_duration = newValue}
@@ -76,22 +100,28 @@ public struct Proto_LiveHash: @unchecked Sendable {
 }
 
 ///*
-/// At consensus, attaches the given livehash to the given account.  The hash can be deleted by the
-/// key controlling the account, or by any of the keys associated to the livehash.  Hence livehashes
-/// provide a revocation service for their implied credentials; for example, when an authority grants
-/// a credential to the account, the account owner will cosign with the authority (or authorities) to
-/// attach a hash of the credential to the account---hence proving the grant. If the credential is
-/// revoked, then any of the authorities may delete it (or the account owner). In this way, the
-/// livehash mechanism acts as a revocation service.  An account cannot have two identical livehashes
-/// associated. To modify the list of keys in a livehash, the livehash should first be deleted, then
-/// recreated with a new list of keys.
+/// Add a hash value to the ledger and associate it with an account.
+///
+/// Create an entry in the ledger for a SHA-384 hash of some content, and
+/// associate that with a specific account.  This is sometimes used to associate
+/// a credential or certificate with an account as a public record.<br/>
+/// The entry created is also associated with a list of keys, all of which
+/// MUST sign this transaction.<br/>
+/// The account key for the associated account MUST sign this transaction.<br/>
+///
+/// The live hash, once created, MAY be removed from the ledger with one
+/// or more signatures.
+/// - The account key of the account associated to the live hash.
+/// - Any one key from the key list in the live hash entry.
+/// - Any combination of keys from the key list in the live hash entry.
 public struct Proto_CryptoAddLiveHashTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// A hash of some credential or certificate, along with the keys of the entities that asserted it validity
+  /// A Live Hash to be added to the ledger and associated with
+  /// the identified account.
   public var liveHash: Proto_LiveHash {
     get {return _liveHash ?? Proto_LiveHash()}
     set {_liveHash = newValue}

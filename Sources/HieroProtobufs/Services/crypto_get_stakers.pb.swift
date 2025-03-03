@@ -8,6 +8,22 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get Stakers
+/// Query all of the accounts proxy staking _to_ a specified account.
+///
+/// > Important
+/// >> This query is obsolete and not supported.<br/>
+/// >> Any query of this type that is submitted SHALL fail with a `PRE_CHECK`
+/// >> result of `NOT_SUPPORTED`.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,16 +37,19 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get all the accounts that are proxy staking to this account. For each of them, give the amount
-/// currently staked. This is not yet implemented, but will be in a future version of the API.
+/// Get all the accounts that are proxy staking to this account. For each of
+/// them, give the amount currently staked. This was never implemented.
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_CryptoGetStakersQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -61,6 +80,8 @@ public struct Proto_CryptoGetStakersQuery: Sendable {
 
 ///*
 /// information about a single account that is proxy staking
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_ProxyStaker: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -89,7 +110,10 @@ public struct Proto_ProxyStaker: Sendable {
 }
 
 ///*
-/// all of the accounts proxy staking to a given account, and the amounts proxy staked
+/// All of the accounts proxy staking to a given account, and the amounts proxy
+/// staked
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_AllProxyStakers: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -119,14 +143,17 @@ public struct Proto_AllProxyStakers: Sendable {
 
 ///*
 /// Response when the client sends the node CryptoGetStakersQuery
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_CryptoGetStakersResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -137,8 +164,8 @@ public struct Proto_CryptoGetStakersResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// List of accounts proxy staking to this account, and the amount each is currently proxy
-  /// staking
+  /// List of accounts proxy staking to this account, and the amount each is
+  /// currently proxy staking
   public var stakers: Proto_AllProxyStakers {
     get {return _stakers ?? Proto_AllProxyStakers()}
     set {_stakers = newValue}

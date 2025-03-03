@@ -12,7 +12,10 @@ import SwiftProtobuf
 
 
 ///*
-/// The request and responses for freeze service.
+/// A service to manage network "freeze" events.
+///
+/// This service provides a facility to prepare for network upgrades, halt network processing,
+/// perform network software upgrades, and automatically restart the network following an upgrade.
 ///
 /// Usage: instantiate `Proto_FreezeServiceClient`, then call methods of this protocol to make API calls.
 public protocol Proto_FreezeServiceClientProtocol: GRPCClient {
@@ -31,8 +34,15 @@ extension Proto_FreezeServiceClientProtocol {
   }
 
   ///*
-  /// Freezes the nodes by submitting the transaction. The grpc server returns the
-  /// TransactionResponse
+  /// Freeze, cancel, or prepare a freeze.
+  /// This single transaction performs all of the functions supported
+  /// by the network freeze service. These functions include actions to
+  /// prepare an upgrade, prepare a telemetry upgrade, freeze the network,
+  /// freeze the network for upgrade, or abort a scheduled freeze.
+  /// <p>
+  /// The actual freeze action SHALL be determined by the `freeze_type` field
+  /// of the `FreezeTransactionBody`.<br/>
+  /// The transaction body MUST be a `FreezeTransactionBody`.
   ///
   /// - Parameters:
   ///   - request: Request to send to freeze.
@@ -109,7 +119,10 @@ public struct Proto_FreezeServiceNIOClient: Proto_FreezeServiceClientProtocol {
 }
 
 ///*
-/// The request and responses for freeze service.
+/// A service to manage network "freeze" events.
+///
+/// This service provides a facility to prepare for network upgrades, halt network processing,
+/// perform network software upgrades, and automatically restart the network following an upgrade.
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol Proto_FreezeServiceAsyncClientProtocol: GRPCClient {
   static var serviceDescriptor: GRPCServiceDescriptor { get }
@@ -200,3 +213,139 @@ public enum Proto_FreezeServiceClientMetadata {
   }
 }
 
+///*
+/// A service to manage network "freeze" events.
+///
+/// This service provides a facility to prepare for network upgrades, halt network processing,
+/// perform network software upgrades, and automatically restart the network following an upgrade.
+///
+/// To build a server, implement a class that conforms to this protocol.
+public protocol Proto_FreezeServiceProvider: CallHandlerProvider {
+  var interceptors: Proto_FreezeServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Freeze, cancel, or prepare a freeze.
+  /// This single transaction performs all of the functions supported
+  /// by the network freeze service. These functions include actions to
+  /// prepare an upgrade, prepare a telemetry upgrade, freeze the network,
+  /// freeze the network for upgrade, or abort a scheduled freeze.
+  /// <p>
+  /// The actual freeze action SHALL be determined by the `freeze_type` field
+  /// of the `FreezeTransactionBody`.<br/>
+  /// The transaction body MUST be a `FreezeTransactionBody`.
+  func freeze(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+}
+
+extension Proto_FreezeServiceProvider {
+  public var serviceName: Substring {
+    return Proto_FreezeServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+  /// Returns nil for methods not handled by this service.
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "freeze":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makefreezeInterceptors() ?? [],
+        userFunction: self.freeze(request:context:)
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+///*
+/// A service to manage network "freeze" events.
+///
+/// This service provides a facility to prepare for network upgrades, halt network processing,
+/// perform network software upgrades, and automatically restart the network following an upgrade.
+///
+/// To implement a server, implement an object which conforms to this protocol.
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+public protocol Proto_FreezeServiceAsyncProvider: CallHandlerProvider, Sendable {
+  static var serviceDescriptor: GRPCServiceDescriptor { get }
+  var interceptors: Proto_FreezeServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Freeze, cancel, or prepare a freeze.
+  /// This single transaction performs all of the functions supported
+  /// by the network freeze service. These functions include actions to
+  /// prepare an upgrade, prepare a telemetry upgrade, freeze the network,
+  /// freeze the network for upgrade, or abort a scheduled freeze.
+  /// <p>
+  /// The actual freeze action SHALL be determined by the `freeze_type` field
+  /// of the `FreezeTransactionBody`.<br/>
+  /// The transaction body MUST be a `FreezeTransactionBody`.
+  func freeze(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension Proto_FreezeServiceAsyncProvider {
+  public static var serviceDescriptor: GRPCServiceDescriptor {
+    return Proto_FreezeServiceServerMetadata.serviceDescriptor
+  }
+
+  public var serviceName: Substring {
+    return Proto_FreezeServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  public var interceptors: Proto_FreezeServiceServerInterceptorFactoryProtocol? {
+    return nil
+  }
+
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "freeze":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makefreezeInterceptors() ?? [],
+        wrapping: { try await self.freeze(request: $0, context: $1) }
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+public protocol Proto_FreezeServiceServerInterceptorFactoryProtocol: Sendable {
+
+  /// - Returns: Interceptors to use when handling 'freeze'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makefreezeInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+}
+
+public enum Proto_FreezeServiceServerMetadata {
+  public static let serviceDescriptor = GRPCServiceDescriptor(
+    name: "FreezeService",
+    fullName: "proto.FreezeService",
+    methods: [
+      Proto_FreezeServiceServerMetadata.Methods.freeze,
+    ]
+  )
+
+  public enum Methods {
+    public static let freeze = GRPCMethodDescriptor(
+      name: "freeze",
+      path: "/proto.FreezeService/freeze",
+      type: GRPCCallType.unary
+    )
+  }
+}

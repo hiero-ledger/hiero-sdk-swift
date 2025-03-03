@@ -15,7 +15,9 @@
 /// ### Keywords
 /// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 /// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
-/// document are to be interpreted as described in [RFC2119](https://www.ietf.org/rfc/rfc2119).
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
 
 import SwiftProtobuf
 
@@ -43,7 +45,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 /// SHALL NOT be restated in the record file.<br/>
 /// All claims MUST succeed for this transaction to succeed.
 ///
-/// ### Record Stream Effects
+/// ### Block Stream Effects
 /// The completed transfers SHALL be present in the transfer list.
 public struct Proto_TokenClaimAirdropTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the

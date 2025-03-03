@@ -269,16 +269,19 @@ public enum RequestType {
     /// Claim one or more pending airdrops
     case tokenClaimAirdrop
 
-    /// A message produced as part of Threshold Signature Scheme (TSS) processing.
-    case tssMessage
+    /// State signature transaction
+    case stateSignatureTransaction
 
-    /// Submit a vote as part of the Threshold Signature Scheme (TSS) processing.
-    case tssVote
+    /// History assembly signature
+    case historyAssemblySignature
 
-    /// Submit a node signature as part of the Threshold Signature Scheme (TSS) processing.
-    case tssShareSignature
+    /// History proof key publication
+    case historyProofKeyPublication
 
-    // this literally can't be smaller.
+    /// History proof vote
+    case historyProofVote
+
+    /// this literally can't be smaller.
     // swiftlint:disable:next function_body_length
     internal init?(protobuf proto: Proto_HederaFunctionality) throws {
         switch proto {
@@ -364,9 +367,10 @@ public enum RequestType {
         case .tokenAirdrop: self = .tokenAirdrop
         case .tokenCancelAirdrop: self = .tokenCancelAirdrop
         case .tokenClaimAirdrop: self = .tokenClaimAirdrop
-        case .tssMessage: self = .tssMessage
-        case .tssVote: self = .tssVote
-        case .tssShareSignature: self = .tssShareSignature
+        case .stateSignatureTransaction: self = .stateSignatureTransaction
+        case .historyAssemblySignature: self = .historyAssemblySignature
+        case .historyProofKeyPublication: self = .historyProofKeyPublication
+        case .historyProofVote: self = .historyProofVote
         case .UNRECOGNIZED(let code):
             throw HError.fromProtobuf("unrecognized RequestType: `\(code)`")
         }
@@ -455,9 +459,10 @@ public enum RequestType {
         case .tokenAirdrop: return .tokenAirdrop
         case .tokenCancelAirdrop: return .tokenCancelAirdrop
         case .tokenClaimAirdrop: return .tokenClaimAirdrop
-        case .tssMessage: return .tssMessage
-        case .tssVote: return .tssVote
-        case .tssShareSignature: return .tssShareSignature
+        case .stateSignatureTransaction: return .stateSignatureTransaction
+        case .historyAssemblySignature: return .historyAssemblySignature
+        case .historyProofKeyPublication: return .historyProofKeyPublication
+        case .historyProofVote: return .historyProofVote
         }
     }
 }

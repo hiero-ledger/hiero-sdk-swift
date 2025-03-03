@@ -8,6 +8,29 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get Transaction Record
+/// Messages for a query to obtain a transaction record. This particular
+/// query is used by `getTxRecordByTxID` in the "Crypto" service API.
+///
+/// > Note
+/// >> Much more detailed information for transaction records is available
+/// >> from a mirror node, and the mirror node retains transaction records
+/// >> long term, rather than for a short "cache" duration. Clients may
+/// >> prefer the mirror node graph API to query transaction records, rather
+/// >> than this query.
+///
+/// > Implementation Note
+/// >> This query is _defined_ for "Crypto" service, but is _implemented_ by
+/// >> the "Network Admin" service.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,21 +44,36 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get the record for a transaction. If the transaction requested a record, then the record lasts
-/// for one hour, and a state proof is available for it. If the transaction created an account, file,
-/// or smart contract instance, then the record will contain the ID for what it created. If the
-/// transaction called a smart contract function, then the record contains the result of that call.
-/// If the transaction was a cryptocurrency transfer, then the record includes the TransferList which
-/// gives the details of that transfer. If the transaction didn't return anything that should be in
-/// the record, then the results field will be set to nothing.
+/// Request for a `TransactionGetRecord` (a.k.a. `getTxRecordByTxID`) query.
+/// <p>
+/// A transaction record SHALL be available after the network reaches
+/// consensus and completes execution for a transaction.<br/>
+/// A transaction record SHALL NOT be available after the end of the network
+/// configured "record cache duration".
+///
+/// <dl>
+///   <dt>What is the "first" transaction?</dt>
+///   <dd>The "first" transaction SHALL be the the transaction with
+///       the earliest consensus time and a status that is neither
+///       `INVALID_NODE_ACCOUNT` nor `INVALID_PAYER_SIGNATURE`.<br/>
+///       If no transaction is found meeting this status criteria, the
+///       "first" transaction SHALL be the transaction with the earliest
+///       consensus time.</dd>
+///  <dt>What is a "child" transaction?</dt>
+///  <dd>A "child" transaction is any transaction created in the process of
+///      completing another transaction. These are most common with a smart
+///      contract call, where a call to a contract may initiate one or more
+///      additional transactions to complete a complex process.</dd>
+/// </dl>
 public struct Proto_TransactionGetRecordQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -46,7 +84,10 @@ public struct Proto_TransactionGetRecordQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The ID of the transaction for which the record is requested.
+  /// A transaction identifier.
+  /// <p>
+  /// This MUST contain the full identifier, as submitted, for the
+  /// transaction to query.
   public var transactionID: Proto_TransactionID {
     get {return _transactionID ?? Proto_TransactionID()}
     set {_transactionID = newValue}
@@ -57,16 +98,22 @@ public struct Proto_TransactionGetRecordQuery: Sendable {
   public mutating func clearTransactionID() {self._transactionID = nil}
 
   ///*
-  /// Whether records of processing duplicate transactions should be returned along with the record
-  /// of processing the first consensus transaction with the given id whose status was neither
-  /// <tt>INVALID_NODE_ACCOUNT</tt> nor <tt>INVALID_PAYER_SIGNATURE</tt>; <b>or</b>, if no such
-  /// record exists, the record of processing the first transaction to reach consensus with the
-  /// given transaction id..
+  /// A flag to request duplicates.
+  /// <p>
+  /// If set, every transaction record within the record cache duration that
+  /// matches the requested transaction identifier SHALL be returned.<br/>
+  /// If not set, duplicate transactions SHALL NOT be returned.<br/>
+  /// If not set, only the record for the first matching transaction to
+  /// reach consensus SHALL be returned.
   public var includeDuplicates: Bool = false
 
   ///*
-  /// Whether the response should include the records of any child transactions spawned by the 
-  /// top-level transaction with the given transactionID. 
+  /// A flag to request "child" records.
+  /// <p>
+  /// If set, the response SHALL include records for each child transaction
+  /// executed as part of the requested parent transaction.<br/>
+  /// If not set, the response SHALL NOT include any records for child
+  /// transactions.
   public var includeChildRecords: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -78,15 +125,40 @@ public struct Proto_TransactionGetRecordQuery: Sendable {
 }
 
 ///*
-/// Response when the client sends the node TransactionGetRecordQuery
+/// Response message for a `getTxRecordByTxID` query.
+///
+/// The `transactionRecord` field SHALL return the record for the "first"
+/// transaction that matches the transaction identifier requested.<br/>
+/// If records for duplicate transactions are requested, those duplicate
+/// records SHALL be present in the `duplicateTransactionReceipts` list.<br/>
+/// If records for child transactions are requested, those child records SHALL
+/// be present in the `child_transaction_records` list.<br/>
+/// A state proof MAY be provided for this response; provided the record is
+/// still available from the consensus nodes.
+///
+/// <dl>
+///   <dt>What is the "first" transaction?</dt>
+///   <dd>The "first" transaction receipt SHALL be the receipt for the
+///       first transaction with status that is neither
+///       `INVALID_NODE_ACCOUNT` nor `INVALID_PAYER_SIGNATURE`.<br/>
+///       If no transaction is found meeting the status criteria, the
+///       "first" transaction SHALL be the first transaction by
+///       consensus time.</dd>
+///  <dt>What is a "child" transaction?</dt>
+///  <dd>A "child" transaction is any transaction created in the process of
+///      completing another transaction. These are most common with a smart
+///      contract call, where a call to a contract may initiate one or more
+///      additional transactions to complete a complex process.</dd>
+/// </dl>
 public struct Proto_TransactionGetRecordResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither.
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -97,10 +169,15 @@ public struct Proto_TransactionGetRecordResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// Either the record of processing the first consensus transaction with the given id whose
-  /// status was neither <tt>INVALID_NODE_ACCOUNT</tt> nor <tt>INVALID_PAYER_SIGNATURE</tt>;
-  /// <b>or</b>, if no such record exists, the record of processing the first transaction to reach
-  /// consensus with the given transaction id.
+  /// A transaction record.
+  /// <p>
+  /// This SHALL be the record for the "first" transaction that matches
+  /// the transaction identifier requested.<br/>
+  /// If the identified transaction has not reached consensus, this
+  /// record SHALL have a `status` of `UNKNOWN`.<br/>
+  /// If the identified transaction reached consensus prior to the
+  /// current configured record cache duration, this record SHALL
+  /// have a `status` of `UNKNOWN`.
   public var transactionRecord: Proto_TransactionRecord {
     get {return _transactionRecord ?? Proto_TransactionRecord()}
     set {_transactionRecord = newValue}
@@ -111,13 +188,32 @@ public struct Proto_TransactionGetRecordResponse: Sendable {
   public mutating func clearTransactionRecord() {self._transactionRecord = nil}
 
   ///*
-  /// The records of processing all consensus transaction with the same id as the distinguished
-  /// record above, in chronological order.
+  /// A list of duplicate transaction records.
+  /// <p>
+  /// If the request set the `includeDuplicates` flat, this list SHALL
+  /// include the records for each duplicate transaction associated to the
+  /// requested transaction identifier.
+  /// If the request did not set the `includeDuplicates` flag, this list
+  /// SHALL be empty.<br/>
+  /// If the `transactionRecord` status is `UNKNOWN`, this list
+  /// SHALL be empty.<br/>
+  /// This list SHALL be in order by consensus timestamp.
   public var duplicateTransactionRecords: [Proto_TransactionRecord] = []
 
   ///*
-  /// The records of processing all child transaction spawned by the transaction with the given 
-  /// top-level id, in consensus order. Always empty if the top-level status is UNKNOWN.
+  /// A list of records for all child transactions spawned by the requested
+  /// transaction.
+  /// <p>
+  /// If the request set the `include_child_records` flag, this list SHALL
+  /// include records for each child transaction executed as part of the
+  /// requested parent transaction.<br/>
+  /// If the request did not set the `include_child_records` flag, this
+  /// list SHALL be empty. <br/>
+  /// If the parent transaction did not initiate any child transactions
+  /// this list SHALL be empty.<br/>
+  /// If the `transactionRecord` status is `UNKNOWN`, this list
+  /// SHALL be empty.<br/>
+  /// This list SHALL be in order by consensus timestamp.
   public var childTransactionRecords: [Proto_TransactionRecord] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

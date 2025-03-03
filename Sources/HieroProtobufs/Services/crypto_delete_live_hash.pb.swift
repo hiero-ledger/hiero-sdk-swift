@@ -8,6 +8,22 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Delete Live Hash
+/// Dissociate a specific live hash from a specified account.
+///
+/// > Important
+/// >> This transaction is obsolete and not supported.<br/>
+/// >> Any transaction of this type that is submitted SHALL fail with a `PRE_CHECK` result
+/// >> of `NOT_SUPPORTED`.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,15 +38,20 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// At consensus, deletes a livehash associated to the given account. The transaction must be signed
-/// by either the key of the owning account, or at least one of the keys associated to the livehash.
+/// Delete a specific live hash associated to a given account.
+///
+/// This transaction MUST be signed by either the key of the associated account,
+/// or at least one of the keys listed in the live hash.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_CryptoDeleteLiveHashTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The account owning the livehash
+  /// An account associated to a live hash.
   public var accountOfLiveHash: Proto_AccountID {
     get {return _accountOfLiveHash ?? Proto_AccountID()}
     set {_accountOfLiveHash = newValue}
@@ -41,7 +62,7 @@ public struct Proto_CryptoDeleteLiveHashTransactionBody: @unchecked Sendable {
   public mutating func clearAccountOfLiveHash() {self._accountOfLiveHash = nil}
 
   ///*
-  /// The SHA-384 livehash to delete from the account
+  /// The SHA-384 value of a specific live hash to delete.
   public var liveHashToDelete: Data = Data()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
