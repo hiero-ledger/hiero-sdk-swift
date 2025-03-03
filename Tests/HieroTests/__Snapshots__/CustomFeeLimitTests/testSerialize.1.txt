@@ -1,0 +1,7 @@
+HieroProtobufs.Proto_CustomFeeLimit:
+account_id {
+  accountNum: 1234
+}
+fees {
+  amount: 1000
+}
