@@ -82,4 +82,68 @@ internal final class TopicMessageSubmitTransactionTests: XCTestCase {
 
         XCTAssertEqual(tx.message, Self.testMessageBytes)
     }
+
+    internal func testSetCustomFeeLimits() throws {
+        let customFeeLimits = [
+            CustomFeeLimit(
+                payerId: AccountId("0.0.1"),
+                customFees: [
+                    CustomFixedFee(1, nil, TokenId("0.0.1"))
+                ]),
+            CustomFeeLimit(
+                payerId: AccountId("0.0.2"),
+                customFees: [
+                    CustomFixedFee(1, nil, TokenId("0.0.2"))
+                ]),
+        ]
+
+        let tx = TopicMessageSubmitTransaction()
+        tx.customFeeLimits(customFeeLimits)
+
+        XCTAssertEqual(tx.customFeeLimits, customFeeLimits)
+    }
+
+    internal func testAddCustomFeeLimitToList() throws {
+        let customFeeLimits = [
+            CustomFeeLimit(
+                payerId: AccountId("0.0.1"),
+                customFees: [
+                    CustomFixedFee(1, nil, TokenId("0.0.1"))
+                ]),
+            CustomFeeLimit(
+                payerId: AccountId("0.0.2"),
+                customFees: [
+                    CustomFixedFee(1, nil, TokenId("0.0.2"))
+                ]),
+        ]
+
+        let customFeeLimitToAdd = CustomFeeLimit(
+            payerId: AccountId("0.0.3"),
+            customFees: [
+                CustomFixedFee(3, nil, TokenId("0.0.3"))
+            ])
+
+        var expectedCustomFeeLimits = customFeeLimits
+        expectedCustomFeeLimits.append(customFeeLimitToAdd)
+
+        let tx = TopicMessageSubmitTransaction()
+            .customFeeLimits(customFeeLimits)
+            .addCustomFeeLimit(customFeeLimitToAdd)
+
+        XCTAssertEqual(tx.customFeeLimits, expectedCustomFeeLimits)
+    }
+
+    internal func testAddCustomFeeLimitToEmptyList() throws {
+        let customFeeLimitToAdd = CustomFeeLimit(
+            payerId: AccountId("0.0.3"),
+            customFees: [
+                CustomFixedFee(3, nil, TokenId("0.0.3"))
+            ])
+
+        let tx = TopicMessageSubmitTransaction()
+            .customFeeLimits([])
+            .addCustomFeeLimit(customFeeLimitToAdd)
+
+        XCTAssertEqual(tx.customFeeLimits, [customFeeLimitToAdd])
+    }
 }

@@ -79,12 +79,20 @@ internal final class TransactionTests: XCTestCase {
         let client = Client.forTestnet()
         client.setOperator(AccountId(0), PrivateKey.generateEd25519())
 
-        let bytes = try TopicMessageSubmitTransaction().topicId(314).message("Fish cutlery".data(using: .utf8)!)
+        let bytes = try TopicMessageSubmitTransaction().topicId(314).message(Data("Fish cutlery".utf8))
             .chunkSize(8).maxChunks(2).transactionId(Resources.txId).nodeAccountIds(Resources.nodeAccountIds)
+            .customFeeLimits([
+                CustomFeeLimit(
+                    payerId: AccountId(0),
+                    customFees: [CustomFixedFee(1, AccountId(0), TokenId("0.0.1"))]
+                )
+            ])
             .freezeWith(client).toBytes()
 
         let tx = try Transaction.fromBytes(bytes)
 
         _ = try tx.toBytes()
+
+        print("tx.customFeeLimits: \(tx.customFeeLimits)")
     }
 }

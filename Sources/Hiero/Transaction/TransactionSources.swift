@@ -361,6 +361,7 @@ internal struct SourceTransaction<Tx: Transaction> {
                 client, SourceTransactionExecuteView(inner: inner, chunk: chunk), timeoutPerChunk)
 
             if waitForReceipt {
+                print("waiting for receipt")
                 _ = try await response.getReceipt(client)
             }
 

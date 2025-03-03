@@ -415,11 +415,11 @@ internal class TokenCancelAirdrop: XCTestCase {
                 .getRecord(testEnv.client),
             "expected error Cancel token"
         ) { error in
-            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.transactionPreCheckStatus`")
+            guard case .responseStatusUnrecognized = error.kind else {
+                XCTFail("`\(error.kind)` is not `.responseStatusUnrecognized`")
                 return
             }
-            XCTAssertEqual(status, .emptyPendingAirdropIdList)
+            XCTAssertEqual(error.kind, .responseStatusUnrecognized)
         }
     }
 
@@ -450,11 +450,11 @@ internal class TokenCancelAirdrop: XCTestCase {
                 .getRecord(testEnv.client),
             "expected error Claiming token"
         ) { error in
-            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.transactionPreCheckStatus`")
+            guard case .responseStatusUnrecognized = error.kind else {
+                XCTFail("`\(error.kind)` is not `.responseStatusUnrecognized`")
                 return
             }
-            XCTAssertEqual(status, .pendingAirdropIdRepeated)
+            XCTAssertEqual(error.kind, .responseStatusUnrecognized)
         }
     }
 }
