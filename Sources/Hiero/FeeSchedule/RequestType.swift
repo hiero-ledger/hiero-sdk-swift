@@ -281,7 +281,6 @@ public enum RequestType {
     /// History proof vote
     case historyProofVote
 
-    /// this literally can't be smaller.
     // swiftlint:disable:next function_body_length
     internal init?(protobuf proto: Proto_HederaFunctionality) throws {
         switch proto {

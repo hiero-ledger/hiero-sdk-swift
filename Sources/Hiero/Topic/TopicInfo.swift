@@ -54,6 +54,15 @@ public struct TopicInfo {
     /// The ledger ID the response was returned from
     public let ledgerId: LedgerId
 
+    /// The key used to schedule the fee schedule for the topic.
+    public let feeScheduleKey: Key?
+
+    /// The list of keys that are exempt from the fee schedule for the topic.
+    public let feeExemptKeys: [Key]
+
+    /// The list of custom fees for the topic.
+    public let customFees: [CustomFixedFee]
+
     /// Decode `Self` from protobuf-encoded `bytes`.
     ///
     /// - Throws: ``HError/ErrorKind/fromProtobuf`` if:
@@ -80,7 +89,9 @@ extension TopicInfo: TryProtobufCodable {
         let submitKey = info.hasSubmitKey ? info.submitKey : nil
         let autoRenewAccountId = info.hasAutoRenewAccount ? info.autoRenewAccount : nil
         let autoRenewPeriod = info.hasAutoRenewPeriod ? info.autoRenewPeriod : nil
-
+        let feeScheduleKey = info.hasFeeScheduleKey ? info.feeScheduleKey : nil
+        let feeExemptKeys = try info.feeExemptKeyList.map { try Key.fromProtobuf($0) }
+        let customFees = try info.customFees.map { try CustomFixedFee.fromProtobuf($0) }
         self.init(
             topicId: .fromProtobuf(proto.topicID),
             topicMemo: info.memo,
@@ -91,7 +102,10 @@ extension TopicInfo: TryProtobufCodable {
             submitKey: try .fromProtobuf(submitKey),
             autoRenewAccountId: try .fromProtobuf(autoRenewAccountId),
             autoRenewPeriod: .fromProtobuf(autoRenewPeriod),
-            ledgerId: LedgerId(info.ledgerID)
+            ledgerId: LedgerId(info.ledgerID),
+            feeScheduleKey: try .fromProtobuf(feeScheduleKey),
+            feeExemptKeys: feeExemptKeys,
+            customFees: customFees
         )
     }
 
@@ -122,6 +136,18 @@ extension TopicInfo: TryProtobufCodable {
                 }
                 if let autoRenewPeriod = autoRenewPeriod {
                     info.autoRenewPeriod = autoRenewPeriod.toProtobuf()
+                }
+
+                if let feeScheduleKey = feeScheduleKey {
+                    info.feeScheduleKey = feeScheduleKey.toProtobuf()
+                }
+
+                if !feeExemptKeys.isEmpty {
+                    info.feeExemptKeyList = feeExemptKeys.map { $0.toProtobuf() }
+                }
+
+                if !customFees.isEmpty {
+                    info.customFees = customFees.map { $0.toTopicFeeProtobuf() }
                 }
 
                 info.ledgerID = ledgerId.bytes

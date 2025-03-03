@@ -41,8 +41,23 @@ public final class TopicCreateTransaction: Transaction {
         submitKey = data.hasSubmitKey ? try .fromProtobuf(data.submitKey) : nil
         autoRenewPeriod = data.hasAutoRenewPeriod ? .fromProtobuf(data.autoRenewPeriod) : nil
         autoRenewAccountId = data.hasAutoRenewAccount ? try .fromProtobuf(data.autoRenewAccount) : nil
+        feeScheduleKey = data.hasFeeScheduleKey ? try .fromProtobuf(data.feeScheduleKey) : nil
+        feeExemptKeys = try data.feeExemptKeyList.map { try .fromProtobuf($0) }
+        customFees = try data.customFees.map { try .fromProtobuf($0) }
 
         try super.init(protobuf: proto)
+    }
+
+    public override func freezeWith(_ client: Client?) throws -> Self {
+        if let client = client {
+            if self.autoRenewAccountId == nil {
+                self.autoRenewAccountId = transactionId?.accountId ?? client.operator?.accountId
+            }
+        }
+
+        try super.freezeWith(client)
+
+        return self
     }
 
     /// Short publicly visible memo about the topic. No guarantee of uniqueness.
@@ -123,6 +138,83 @@ public final class TopicCreateTransaction: Transaction {
         return self
     }
 
+    /// The key that can be used to update the fee schedule for the topic.
+    public var feeScheduleKey: Key? {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// Sets the key that can be used to update the fee schedule for the topic.
+    @discardableResult
+    public func feeScheduleKey(_ feeScheduleKey: Key) -> Self {
+        self.feeScheduleKey = feeScheduleKey
+
+        return self
+    }
+
+    /// The keys that can be used to update the fee schedule for the topic.
+    public var feeExemptKeys: [Key] = [] {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// Sets the keys that can be used to update the fee schedule for the topic.
+    @discardableResult
+    public func feeExemptKeys(_ feeExemptKeys: [Key]) -> Self {
+        self.feeExemptKeys = feeExemptKeys
+
+        return self
+    }
+
+    /// Clears all keys that will be exempt from paying fees.
+    @discardableResult
+    public func clearFeeExemptKeys() -> Self {
+        self.feeExemptKeys = []
+
+        return self
+    }
+
+    /// Adds a key that will be exempt from paying fees.
+    @discardableResult
+    public func addFeeExemptKeys(_ feeExemptKey: Key) -> Self {
+        self.feeExemptKeys.append(feeExemptKey)
+
+        return self
+    }
+
+    /// The custom fees that will be applied to the topic.
+    public var customFees: [CustomFixedFee] = [] {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// Sets the custom fees that will be applied to the topic.
+    @discardableResult
+    public func customFees(_ customFees: [CustomFixedFee]) -> Self {
+        self.customFees = customFees
+
+        return self
+    }
+
+    /// Clears the custom fees that will be applied to the topic.
+    @discardableResult
+    public func clearCustomFees() -> Self {
+        self.customFees = []
+
+        return self
+    }
+
+    /// Adds a custom fee that will be applied to the topic.
+    @discardableResult
+    public func addCustomFee(_ customFee: CustomFixedFee) -> Self {
+        self.customFees.append(customFee)
+
+        return self
+    }
+
     internal override func validateChecksums(on ledgerId: LedgerId) throws {
         try autoRenewAccountId?.validateChecksums(on: ledgerId)
         try super.validateChecksums(on: ledgerId)
@@ -151,6 +243,17 @@ extension TopicCreateTransaction: ToProtobuf {
             submitKey?.toProtobufInto(&proto.submitKey)
             autoRenewPeriod?.toProtobufInto(&proto.autoRenewPeriod)
             autoRenewAccountId?.toProtobufInto(&proto.autoRenewAccount)
+            if let feeScheduleKey = feeScheduleKey {
+                proto.feeScheduleKey = feeScheduleKey.toProtobuf()
+            }
+
+            if !feeExemptKeys.isEmpty {
+                proto.feeExemptKeyList = feeExemptKeys.map { $0.toProtobuf() }
+            }
+
+            if !customFees.isEmpty {
+                proto.customFees = customFees.map { $0.toTopicFeeProtobuf() }
+            }
         }
     }
 }

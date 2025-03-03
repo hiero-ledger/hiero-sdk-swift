@@ -237,10 +237,10 @@ extension Transaction {
             throw HError.fromProtobuf("unrecognized: historyProofSignature `\(code)`")
 
         case .historyProofKeyPublication(let code):
-            throw HError.fromProtobuf("unrecognized  `\(code)`")
+            throw HError.fromProtobuf("unrecognized: historyProofKeyPublication `\(code)`")
 
         case .historyProofVote(let code):
-            throw HError.fromProtobuf("unrecognized  `\(code)`")
+            throw HError.fromProtobuf("unrecognized: historyProofVote `\(code)`")
         }
     }
 }
