@@ -134,4 +134,80 @@ internal final class TopicUpdateTransactionTests: XCTestCase {
         tx.clearAutoRenewAccountId()
         XCTAssertEqual(tx.autoRenewAccountId, 0)
     }
+
+    internal func testGetSetFeeScheduleKey() {
+        let tx = TopicUpdateTransaction()
+        tx.feeScheduleKey(.single(Resources.publicKey))
+
+        XCTAssertEqual(tx.feeScheduleKey, .single(Resources.publicKey))
+    }
+
+    internal func testGetSetFeeExemptKeys() {
+        let feeExemptKeys: [Key] = [
+            .single(PrivateKey.generateEcdsa().publicKey), .single(PrivateKey.generateEcdsa().publicKey),
+        ]
+        let tx = TopicUpdateTransaction()
+        tx.feeExemptKeys(feeExemptKeys)
+
+        XCTAssertEqual(tx.feeExemptKeys, feeExemptKeys)
+    }
+
+    internal func testAddFeeExemptKeyToEmptyList() {
+        let tx = TopicUpdateTransaction()
+
+        let feeExemptKey: Key = .single(PrivateKey.generateEcdsa().publicKey)
+        tx.feeExemptKeys([])
+        tx.addFeeExemptKey(feeExemptKey)
+
+        XCTAssertEqual(tx.feeExemptKeys, [feeExemptKey])
+    }
+
+    internal func testAddFeeExemptKeyToList() {
+        let tx = TopicUpdateTransaction()
+
+        let feeExemptKey: Key = .single(PrivateKey.generateEcdsa().publicKey)
+        tx.feeExemptKeys([])
+        tx.addFeeExemptKey(feeExemptKey)
+
+        XCTAssertEqual(tx.feeExemptKeys, [feeExemptKey])
+    }
+
+    internal func testSetCustomFees() {
+        let customFees: [CustomFixedFee] = [
+            CustomFixedFee(1, nil, TokenId("0.0.1")),
+            CustomFixedFee(2, nil, TokenId("0.0.2")),
+            CustomFixedFee(3, nil, TokenId("0.0.3")),
+        ]
+
+        let tx = TopicUpdateTransaction()
+        tx.customFees(customFees)
+
+        XCTAssertEqual(tx.customFees, customFees)
+    }
+
+    internal func testAddCustomFeeToList() {
+        var customFees: [CustomFixedFee] = [
+            CustomFixedFee(1, nil, TokenId("0.0.1")),
+            CustomFixedFee(2, nil, TokenId("0.0.2")),
+            CustomFixedFee(3, nil, TokenId("0.0.3")),
+        ]
+
+        let customFeeToAdd = CustomFixedFee(1, nil, TokenId("0.0.1"))
+
+        let tx = TopicUpdateTransaction()
+        tx.customFees(customFees)
+        tx.addCustomFee(customFeeToAdd)
+
+        customFees.append(customFeeToAdd)
+
+        XCTAssertEqual(tx.customFees, customFees)
+    }
+
+    internal func testClearCustomFees() {
+        let tx = TopicUpdateTransaction()
+        tx.customFees([CustomFixedFee(1, nil, TokenId("0.0.1"))])
+        tx.clearCustomFees()
+
+        XCTAssertEqual(tx.customFees, [])
+    }
 }

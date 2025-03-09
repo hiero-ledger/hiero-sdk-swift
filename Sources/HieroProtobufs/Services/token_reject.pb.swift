@@ -16,7 +16,9 @@
 /// ### Keywords
 /// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 /// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
-/// document are to be interpreted as described in [RFC2119](https://www.ietf.org/rfc/rfc2119).
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
 
 import SwiftProtobuf
 
@@ -32,25 +34,36 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 
 ///*
 /// Reject undesired token(s).<br/>
-/// Transfer one or more token balances held by the requesting account to the treasury for each
-/// token type.<br/>
+/// Transfer one or more token balances held by the requesting account to the
+/// treasury for each token type.
+///
 /// Each transfer SHALL be one of the following
 /// - A single non-fungible/unique token.
-/// - The full balance held for a fungible/common token type.
+/// - The full balance held for a fungible/common token.
+/// A single `tokenReject` transaction SHALL support a maximum
+/// of 10 transfers.<br/>
+/// A token that is `pause`d MUST NOT be rejected.<br/>
+/// If the `owner` account is `frozen` with respect to the identified token(s)
+/// the token(s) MUST NOT be rejected.<br/>
+/// The `payer` for this transaction, and `owner` if set, SHALL NOT be charged
+/// any custom fees or other fees beyond the `tokenReject` transaction fee.
 ///
-/// A single tokenReject transaction SHALL support a maximum of 10 transfers.
-///
-/// ### Transaction Record Effects
-/// - Each successful transfer from `payer` to `treasury` SHALL be recorded in `token_transfer_list` for the transaction record.
+/// ### Block Stream Effects
+/// - Each successful transfer from `payer` to `treasury` SHALL be recorded in
+///   the `token_transfer_list` for the transaction record.
 public struct Proto_TokenRejectTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// An account holding the tokens to be rejected.<br/>
+  /// An account identifier.<br/>
+  /// This OPTIONAL field identifies the account holding the
+  /// tokens to be rejected.
+  /// <p>
   /// If set, this account MUST sign this transaction.
-  /// If not set, the payer for this transaction SHALL be the account rejecting tokens.
+  /// If not set, the `payer` for this transaction SHALL be the effective
+  /// `owner` for this transaction.
   public var owner: Proto_AccountID {
     get {return _owner ?? Proto_AccountID()}
     set {_owner = newValue}
@@ -61,11 +74,17 @@ public struct Proto_TokenRejectTransactionBody: Sendable {
   public mutating func clearOwner() {self._owner = nil}
 
   ///*
-  /// A list of one or more token rejections.<br/>
-  /// On success each rejected token serial number or balance SHALL be transferred from
-  /// the requesting account to the treasury account for that token type.<br/>
-  /// After rejection the requesting account SHALL continue to be associated with the token.<br/>
-  /// if dissociation is desired then a separate TokenDissociate transaction MUST be submitted to remove the association.
+  /// A list of one or more token rejections.
+  /// <p>
+  /// On success each rejected token serial number or balance SHALL be
+  /// transferred from the requesting account to the treasury account for
+  /// that token type.<br/>
+  /// After rejection the requesting account SHALL continue to be associated
+  /// with the token.<br/>
+  /// If dissociation is desired then a separate `TokenDissociate` transaction
+  /// MUST be submitted to remove the association.<br/>
+  /// This list MUST contain at least one (1) entry and MUST NOT contain more
+  /// than ten (10) entries.
   public var rejections: [Proto_TokenReference] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -78,7 +97,8 @@ public struct Proto_TokenRejectTransactionBody: Sendable {
 ///*
 /// A union token identifier.
 ///
-/// Identify a fungible/common token type, or a single non-fungible/unique token serial.
+/// Identify a fungible/common token type, or a single
+/// non-fungible/unique token serial.
 public struct Proto_TokenReference: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for

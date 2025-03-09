@@ -8,6 +8,24 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get Execution Time
+/// Given a list of transaction identifiers, return the time required to
+/// process each transaction, excluding pre-consensus processing, consensus,
+/// and post-processing (e.g. record stream generation).
+///
+/// > Important
+/// >> This query is obsolete and not supported.<br/>
+/// >> Any query of this type that is submitted SHALL fail with a `PRE_CHECK`
+/// >> result of `NOT_SUPPORTED`.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,18 +39,30 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Gets the time in nanoseconds spent in <tt>handleTransaction</tt> for one or more 
-/// TransactionIDs (assuming they have reached consensus "recently", since only a limited 
-/// number of execution times are kept in-memory, depending on the value of the node-local 
-/// property <tt>stats.executionTimesToTrack</tt>).
+/// Retrieve the time, in nanoseconds, spent in direct processing for one
+/// or more recent transactions.
+///
+/// For each transaction identifier provided, if that transaction is
+/// sufficiently recent (that is, it is within the range of the configuration
+/// value `stats.executionTimesToTrack`), the node SHALL return the time, in
+/// nanoseconds, spent to directly process that transaction.<br/>
+/// This time will generally correspond to the time spent in a `handle` call
+/// within the workflow.
+///
+/// Note that because each node processes every transaction for the Hedera
+/// network, this query MAY be sent to any node, and results MAY be different
+/// between different nodes.
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_NetworkGetExecutionTimeQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// standard info sent from client to node including the signed payment, and what kind of response
-  /// is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -43,7 +73,11 @@ public struct Proto_NetworkGetExecutionTimeQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The id(s) of the transactions to get the execution time(s) of
+  /// A list of transaction identifiers to query.
+  /// <p>
+  /// All of the queried transaction identifiers MUST have execution time
+  /// available. If any identifier does not have available execution time,
+  /// the query SHALL fail with an `INVALID_TRANSACTION_ID` response.
   public var transactionIds: [Proto_TransactionID] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -54,17 +88,18 @@ public struct Proto_NetworkGetExecutionTimeQuery: Sendable {
 }
 
 ///*
-/// Response when the client sends the node NetworkGetExecutionTimeQuery; returns
-/// INVALID_TRANSACTION_ID if any of the given TransactionIDs do not have available
-/// execution times in the answering node.
+/// A response to a `networkGetExecutionTime` query.
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_NetworkGetExecutionTimeResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -75,7 +110,10 @@ public struct Proto_NetworkGetExecutionTimeResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The execution time(s) of the requested TransactionIDs, if available
+  /// A list of execution times, in nanoseconds.
+  /// <p>
+  /// This list SHALL be in the same order as the transaction
+  /// identifiers were presented in the query.
   public var executionTimes: [UInt64] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

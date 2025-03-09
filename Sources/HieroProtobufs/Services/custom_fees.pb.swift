@@ -8,6 +8,18 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Custom Fees
+/// Fees defined by token creators that are charged as part of each
+/// transfer of that token type.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,16 +33,39 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// A fraction of the transferred units of a token to assess as a fee. The amount assessed will never
-/// be less than the given minimum_amount, and never greater than the given maximum_amount.  The
-/// denomination is always units of the token to which this fractional fee is attached.
+/// A descriptor for a fee based on a portion of the tokens transferred.
+///
+/// This fee option describes fees as a fraction of the amount of
+/// fungible/common token(s) transferred.  The fee also describes a minimum
+/// and maximum amount, both of which are OPTIONAL.
+///
+/// This type of fee SHALL be assessed only for fungible/common tokens.<br/>
+/// This type of fee MUST NOT be defined for a non-fungible/unique
+/// token type.<br/>
+/// This fee SHALL be paid with the same type of tokens as those
+/// transferred.<br/>
+/// The fee MAY be subtracted from the transferred tokens, or MAY be assessed
+/// to the sender in addition to the tokens actually transferred, based on
+/// the `net_of_transfers` field.
+///
+/// When a single transaction sends tokens from one sender to multiple
+/// recipients, and the `net_of_transfers` flag is false, the network
+/// SHALL attempt to evenly assess the total fee across all recipients
+/// proportionally. This may be inexact and, particularly when there are
+/// large differences between recipients, MAY result in small deviations
+/// from an ideal "fair" distribution.<br/>
+/// If the sender lacks sufficient tokens to pay fees, or the assessment
+/// of custom fees reduces the net amount transferred to or below zero,
+/// the transaction MAY fail due to insufficient funds to pay all fees.
 public struct Proto_FractionalFee: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The fraction of the transferred units to assess as a fee
+  /// A Fraction of the transferred tokens to assess as a fee.<br/>
+  /// This value MUST be less than or equal to one.<br/>
+  /// This value MUST be greater than zero.
   public var fractionalAmount: Proto_Fraction {
     get {return _fractionalAmount ?? Proto_Fraction()}
     set {_fractionalAmount = newValue}
@@ -41,17 +76,45 @@ public struct Proto_FractionalFee: Sendable {
   public mutating func clearFractionalAmount() {self._fractionalAmount = nil}
 
   ///*
-  /// The minimum amount to assess
+  /// A minimum fee to charge, in units of 10<sup>-decimals</sup> tokens.
+  /// <p>
+  /// This value is OPTIONAL, with a default of `0` indicating no minimum.<br/>
+  /// If set, this value MUST be greater than zero.<br/>
+  /// If set, all transfers SHALL pay at least this amount.
   public var minimumAmount: Int64 = 0
 
   ///*
-  /// The maximum amount to assess (zero implies no maximum)
+  /// A maximum fee to charge, in units of 10<sup>-decimals</sup> tokens.
+  /// <p>
+  /// This value is OPTIONAL, with a default of `0` indicating no maximum.<br/>
+  /// If set, this value MUST be greater than zero.<br/>
+  /// If set, any fee charged SHALL NOT exceed this value.<br/>
+  /// This value SHOULD be strictly greater than `minimum_amount`.
+  /// If this amount is less than or equal to `minimum_amount`, then
+  /// the fee charged SHALL always be equal to this value and
+  /// `fractional_amount` SHALL NOT have any effect.
   public var maximumAmount: Int64 = 0
 
   ///*
-  /// If true, assesses the fee to the sender, so the receiver gets the full amount from the token
-  /// transfer list, and the sender is charged an additional fee; if false, the receiver does NOT get
-  /// the full amount, but only what is left over after paying the fractional fee
+  /// Flag requesting to assess the calculated fee against the sender,
+  /// without reducing the amount transferred.<br/>
+  /// #### Effects of this flag
+  /// <ol>
+  ///   <li>If this value is true
+  ///     <ul>
+  ///       <li>The receiver of a transfer SHALL receive the entire
+  ///           amount sent.</li>
+  ///       <li>The fee SHALL be charged to the sender as an additional
+  ///           amount, increasing the token transfer debit.</li>
+  ///     </ul>
+  ///   </li>
+  ///   <li>If this value is false
+  ///     <ul>
+  ///       <li>The receiver of a transfer SHALL receive the amount sent
+  ///           _after_ deduction of the calculated fee.</li>
+  ///     </ul>
+  ///   </li>
+  /// </ol>
   public var netOfTransfers: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -62,20 +125,37 @@ public struct Proto_FractionalFee: Sendable {
 }
 
 ///*
-/// A fixed number of units (hbar or token) to assess as a fee during a CryptoTransfer that transfers
-/// units of the token to which this fixed fee is attached.
+/// A fixed fee to assess for each token transfer, regardless of the
+/// amount transferred.<br/>
+/// This fee type describes a fixed fee for each transfer of a token type.
+///
+/// The fee SHALL be charged to the `sender` for the token transfer
+/// transaction.<br/>
+/// This fee MAY be assessed in HBAR, the token type transferred, or any
+/// other token type, as determined by the `denominating_token_id` field.
 public struct Proto_FixedFee: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The number of units to assess as a fee
+  /// The amount to assess for each transfer.
+  /// <p>
+  /// This value MUST be greater than `0`.<br/>
+  /// This amount is expressed in units of 10<sup>-decimals</sup> tokens.
   public var amount: Int64 = 0
 
   ///*
-  /// The denomination of the fee; taken as hbar if left unset and, in a TokenCreate, taken as the id
-  /// of the newly created token if set to the sentinel value of 0.0.0
+  /// The token type used to pay the assessed fee.
+  /// <p>
+  /// If this is unset, the fee SHALL be assessed in HBAR.<br/>
+  /// If this is set, the fee SHALL be assessed in the token identified.
+  /// This MAY be any token type. Custom fees assessed in other token types
+  /// are more likely to fail, however, and it is RECOMMENDED that token
+  /// creators denominate custom fees in the transferred token, HBAR, or
+  /// well documented and closely related token types.<br/>
+  /// If this value is set to `0.0.0` in the `tokenCreate` transaction, it
+  /// SHALL be replaced with the `TokenID` of the newly created token.
   public var denominatingTokenID: Proto_TokenID {
     get {return _denominatingTokenID ?? Proto_TokenID()}
     set {_denominatingTokenID = newValue}
@@ -93,36 +173,71 @@ public struct Proto_FixedFee: Sendable {
 }
 
 ///*
-/// A fee to assess during a CryptoTransfer that changes ownership of an NFT. Defines the fraction of
-/// the fungible value exchanged for an NFT that the ledger should collect as a royalty. ("Fungible
-/// value" includes both ℏ and units of fungible HTS tokens.) When the NFT sender does not receive
-/// any fungible value, the ledger will assess the fallback fee, if present, to the new NFT owner.
-/// Royalty fees can only be added to tokens of type type NON_FUNGIBLE_UNIQUE.
+/// A fee to assess during a CryptoTransfer that changes ownership of a
+/// non-fungible/unique (NFT) token.<br/>
+/// This message defines the fraction of the fungible value exchanged for an
+/// NFT that the ledger should collect as a royalty.
+/// "Fungible value" includes both HBAR (ℏ) and units of fungible HTS tokens.
+/// When the NFT sender does not receive any fungible value, the ledger will
+/// assess the fallback fee, if present, to the new NFT owner. Royalty fees
+/// can only be added to non-fungible/unique tokens.
 ///
-/// **IMPORTANT:** Users must understand that native royalty fees are _strictly_ a convenience feature, 
-/// and that the network cannot enforce inescapable royalties on the exchange of a non-fractional NFT. 
-/// For example, if the counterparties agree to split their value transfer and NFT exchange into separate 
-/// transactions, the network cannot possibly intervene. (And note the counterparties could use a smart 
-/// contract to make this split transaction atomic if they do not trust each other.)
-/// 
-/// Counterparties that _do_ wish to respect creator royalties should follow the pattern the network 
-/// recognizes: The NFT sender and receiver should both sign a single `CryptoTransfer` that credits 
-/// the sender with all the fungible value the receiver is exchanging for the NFT.
-/// 
-/// Similarly, a marketplace using an approved spender account for an escrow transaction should credit 
-/// the account selling the NFT in the same `CryptoTransfer` that deducts fungible value from the buying 
-/// account. 
-/// 
-/// There is an [open HIP discussion](https://github.com/hashgraph/hedera-improvement-proposal/discussions/578)
-/// that proposes to broaden the class of transactions for which the network automatically collects
-/// royalties. If this interests or concerns you, please add your voice to that discussion.
+/// #### Important Note
+/// > Users should be aware that native royalty fees are _strictly_ a
+/// > convenience feature, SHALL NOT be guaranteed, and the network SHALL NOT
+/// > enforce _inescapable_ royalties on the exchange of a unique NFT.<br/>
+/// > For _one_ example, if the counterparties agree to split their value
+/// > transfer and NFT exchange into separate transactions, the network cannot
+/// > possibly determine the value exchanged. Even trustless transactions,
+/// > using a smart contract or other form of escrow, can arrange such split
+/// > transactions as a single _logical_ transfer.
+///
+/// Counterparties that wish to _respect_ creator royalties MUST follow the
+/// pattern the network recognizes.
+/// <div style="margin-left: 2em; margin-top: -0.8em">
+/// A single transaction MUST contain all three elements, transfer of the NFT,
+/// debit of fungible value from the receiver, and credit of fungible value to
+/// the sender, in order for the network to accurately assess royalty fees.
+/// </div>
+/// <div style="margin-left: 1em; margin-top: -0.8em">
+/// Two examples are presented here.
+/// <div style="margin-left: 1em">
+/// The NFT sender and receiver MUST both sign a single `cryptoTransfer` that
+/// transfers the NFT from sender to receiver, debits the fungible value from
+/// the receiver, and credits the sender with the fungible value the receiver
+/// is exchanging for the NFT.<br/>
+/// A marketplace using an approved spender account for an escrow transaction
+/// MUST credit the account selling the NFT in the same `cryptoTransfer`
+/// transaction that transfers the NFT to, and deducts fungible value from,
+/// the buying account.
+/// </div></div>
+/// This type of fee MAY NOT produce accurate results if multiple transfers
+/// are executed in a single transaction. It is RECOMMENDED that each
+/// NFT subject to royalty fees be transferred separately and without
+/// unrelated fungible token transfers.
+///
+/// The network SHALL NOT consider third-party transfers, including
+/// "approved spender" accounts, in collecting royalty fees. An honest
+/// broker MUST ensure that transfer of an NFT and payment delivered to
+/// the sender are present in the same transaction.
+/// There is an
+/// [open suggestion](https://github.com/hashgraph/hedera-improvement-proposal/discussions/578)
+/// that proposes to broaden the scope of transfers from which the network
+/// automatically collects royalties to cover related third parties. If this
+/// interests or concerns you, please add your voice to that discussion.
 public struct Proto_RoyaltyFee: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The fraction of fungible value exchanged for an NFT to collect as royalty
+  /// The fraction of fungible value exchanged for an NFT to collect
+  /// as royalty.
+  /// <p>
+  /// This SHALL be applied once to the total fungible value transferred
+  /// for the transaction.<br/>
+  /// There SHALL NOT be any adjustment based on multiple transfers
+  /// involving the NFT sender as part of a single transaction.
   public var exchangeValueFraction: Proto_Fraction {
     get {return _exchangeValueFraction ?? Proto_Fraction()}
     set {_exchangeValueFraction = newValue}
@@ -133,8 +248,17 @@ public struct Proto_RoyaltyFee: Sendable {
   public mutating func clearExchangeValueFraction() {self._exchangeValueFraction = nil}
 
   ///*
-  /// If present, the fixed fee to assess to the NFT receiver when no fungible value is exchanged
-  /// with the sender
+  /// A fixed fee to assess if no fungible value is known to be traded
+  /// for the NFT.
+  /// <p>
+  /// If an NFT is transferred without a corresponding transfer of
+  /// _fungible_ value returned in the same transaction, the network
+  /// SHALL charge this fee as a fallback.<br/>
+  /// Fallback fees MAY have unexpected effects when interacting with
+  /// escrow, market transfers, and smart contracts.
+  /// It is RECOMMENDED that developers carefully consider possible
+  /// effects from fallback fees when designing systems that facilitate
+  /// the transfer of NFTs.
   public var fallbackFee: Proto_FixedFee {
     get {return _fallbackFee ?? Proto_FixedFee()}
     set {_fallbackFee = newValue}
@@ -153,9 +277,12 @@ public struct Proto_RoyaltyFee: Sendable {
 }
 
 ///*
-/// A transfer fee to assess during a CryptoTransfer that transfers units of the token to which the
-/// fee is attached. A custom fee may be either fixed or fractional, and must specify a fee collector
-/// account to receive the assessed fees. Only positive fees may be assessed.
+/// A transfer fee to assess during a CryptoTransfer.<br/>
+/// This fee applies to transactions that transfer units of the token to
+/// which the fee is attached. A custom fee may be either fixed or fractional,
+/// and must specify a fee collector account to receive the assessed fees.
+///
+/// Custom fees MUST be greater than zero (0).
 public struct Proto_CustomFee: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -164,7 +291,11 @@ public struct Proto_CustomFee: Sendable {
   public var fee: Proto_CustomFee.OneOf_Fee? = nil
 
   ///*
-  /// Fixed fee to be charged
+  /// A fixed fee to be charged to the `sender` for every token transfer.
+  /// <p>
+  /// This type of fee MAY be defined for any token type.<br/>
+  /// This type of fee MAY be more consistent and reliable than
+  /// other types.
   public var fixedFee: Proto_FixedFee {
     get {
       if case .fixedFee(let v)? = fee {return v}
@@ -174,7 +305,12 @@ public struct Proto_CustomFee: Sendable {
   }
 
   ///*
-  /// Fractional fee to be charged
+  /// A fee defined as a fraction of the tokens transferred.
+  /// <p>
+  /// This type of fee MUST NOT be defined for a non-fungible/unique
+  /// token type.<br/>
+  /// This fee MAY be charged to either sender, as an increase to the
+  /// amount sent, or receiver, as a reduction to the amount received.
   public var fractionalFee: Proto_FractionalFee {
     get {
       if case .fractionalFee(let v)? = fee {return v}
@@ -184,7 +320,11 @@ public struct Proto_CustomFee: Sendable {
   }
 
   ///*
-  /// Royalty fee to be charged
+  /// A fee charged as royalty for any transfer of a
+  /// non-fungible/unique token.
+  /// <p>
+  /// This type of fee MUST NOT be defined for a
+  /// fungible/common token type.
   public var royaltyFee: Proto_RoyaltyFee {
     get {
       if case .royaltyFee(let v)? = fee {return v}
@@ -194,7 +334,7 @@ public struct Proto_CustomFee: Sendable {
   }
 
   ///*
-  /// The account to receive the custom fee
+  /// The account to receive the custom fee.
   public var feeCollectorAccountID: Proto_AccountID {
     get {return _feeCollectorAccountID ?? Proto_AccountID()}
     set {_feeCollectorAccountID = newValue}
@@ -205,23 +345,42 @@ public struct Proto_CustomFee: Sendable {
   public mutating func clearFeeCollectorAccountID() {self._feeCollectorAccountID = nil}
 
   ///*
-  /// If true, exempts all the token's fee collection accounts from this fee.
-  /// (The token's treasury and the above fee_collector_account_id will always
-  /// be exempt. Please see <a href="https://hips.hedera.com/hip/hip-573">HIP-573</a> 
-  /// for details.)
+  /// Flag indicating to exempt all custom fee collector accounts for this
+  /// token type from paying this custom fee when sending tokens.
+  /// <p>
+  /// The treasury account for a token, and the account identified by the
+  /// `fee_collector_account_id` field of this `CustomFee` are always exempt
+  /// from this custom fee to avoid redundant and unnecessary transfers.
+  /// If this value is `true` then the account(s) identified in
+  /// `fee_collector_account_id` for _all_ custom fee definitions for this
+  /// token type SHALL also be exempt from this custom fee.
+  /// This behavior is specified in HIP-573.
   public var allCollectorsAreExempt: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_Fee: Equatable, Sendable {
     ///*
-    /// Fixed fee to be charged
+    /// A fixed fee to be charged to the `sender` for every token transfer.
+    /// <p>
+    /// This type of fee MAY be defined for any token type.<br/>
+    /// This type of fee MAY be more consistent and reliable than
+    /// other types.
     case fixedFee(Proto_FixedFee)
     ///*
-    /// Fractional fee to be charged
+    /// A fee defined as a fraction of the tokens transferred.
+    /// <p>
+    /// This type of fee MUST NOT be defined for a non-fungible/unique
+    /// token type.<br/>
+    /// This fee MAY be charged to either sender, as an increase to the
+    /// amount sent, or receiver, as a reduction to the amount received.
     case fractionalFee(Proto_FractionalFee)
     ///*
-    /// Royalty fee to be charged
+    /// A fee charged as royalty for any transfer of a
+    /// non-fungible/unique token.
+    /// <p>
+    /// This type of fee MUST NOT be defined for a
+    /// fungible/common token type.
     case royaltyFee(Proto_RoyaltyFee)
 
   }
@@ -232,18 +391,29 @@ public struct Proto_CustomFee: Sendable {
 }
 
 ///*
-/// A custom transfer fee that was assessed during handling of a CryptoTransfer.
+/// Description of a transfer added to a `cryptoTransfer` transaction that
+/// satisfies custom fee requirements.
+///
+/// It is important to note that this is not the actual transfer. The transfer
+/// of value SHALL be merged into the original transaction to minimize the
+/// number of actual transfers. This descriptor presents the fee assessed
+/// separately in the record stream so that the details of the fee assessed
+/// are not hidden in this process.
 public struct Proto_AssessedCustomFee: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The number of units assessed for the fee
+  /// An amount of tokens assessed for this custom fee.
+  /// <p>
+  /// This shall be expressed in units of 10<sup>-decimals</sup> tokens.
   public var amount: Int64 = 0
 
   ///*
-  /// The denomination of the fee; taken as hbar if left unset
+  /// The token transferred to satisfy this fee.
+  /// <p>
+  /// If the token transferred is HBAR, this field SHALL NOT be set.
   public var tokenID: Proto_TokenID {
     get {return _tokenID ?? Proto_TokenID()}
     set {_tokenID = newValue}
@@ -254,7 +424,10 @@ public struct Proto_AssessedCustomFee: Sendable {
   public mutating func clearTokenID() {self._tokenID = nil}
 
   ///*
-  /// The account to receive the assessed fee
+  /// An account that received the fee assessed.
+  /// <p>
+  /// This SHALL NOT be the sender or receiver of the original
+  /// cryptoTransfer transaction.
   public var feeCollectorAccountID: Proto_AccountID {
     get {return _feeCollectorAccountID ?? Proto_AccountID()}
     set {_feeCollectorAccountID = newValue}
@@ -265,7 +438,14 @@ public struct Proto_AssessedCustomFee: Sendable {
   public mutating func clearFeeCollectorAccountID() {self._feeCollectorAccountID = nil}
 
   ///*
-  /// The account(s) whose final balances would have been higher in the absence of this assessed fee
+  /// An account that provided the tokens assessed as a fee.
+  /// <p>
+  /// This SHALL be the account that _would have_ had a higher balance
+  /// absent the fee. In most cases this SHALL be the `sender`, but
+  /// some _fractional_ fees reduce the amount transferred, and in those
+  /// cases the `receiver` SHALL be the effective payer for the fee.<br/>
+  /// There are currently no situations where a third party pays a custom
+  /// fee. This MAY change in a future release.
   public var effectivePayerAccountID: [Proto_AccountID] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -274,6 +454,138 @@ public struct Proto_AssessedCustomFee: Sendable {
 
   fileprivate var _tokenID: Proto_TokenID? = nil
   fileprivate var _feeCollectorAccountID: Proto_AccountID? = nil
+}
+
+///*
+/// A custom fee definition for a consensus topic.
+/// <p>
+/// This fee definition is specific to an Hedera Consensus Service (HCS) topic
+/// and SHOULD NOT be used in any other context.<br/>
+/// All fields for this message are REQUIRED.<br/>
+/// Only "fixed" fee definitions are supported because there is no basis for
+/// a fractional fee on a consensus submit transaction.
+public struct Proto_FixedCustomFee: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  ///*
+  /// A fixed custom fee.
+  /// <p>
+  /// The amount of HBAR or other token described by this `FixedFee` SHALL
+  /// be charged to the transction payer for each message submitted to a
+  /// topic that assigns this consensus custom fee.
+  public var fixedFee: Proto_FixedFee {
+    get {return _fixedFee ?? Proto_FixedFee()}
+    set {_fixedFee = newValue}
+  }
+  /// Returns true if `fixedFee` has been explicitly set.
+  public var hasFixedFee: Bool {return self._fixedFee != nil}
+  /// Clears the value of `fixedFee`. Subsequent reads from it will return its default value.
+  public mutating func clearFixedFee() {self._fixedFee = nil}
+
+  ///*
+  /// A collection account identifier.
+  /// <p>
+  /// All amounts collected for this consensus custom fee SHALL be transferred
+  /// to the account identified by this field.
+  public var feeCollectorAccountID: Proto_AccountID {
+    get {return _feeCollectorAccountID ?? Proto_AccountID()}
+    set {_feeCollectorAccountID = newValue}
+  }
+  /// Returns true if `feeCollectorAccountID` has been explicitly set.
+  public var hasFeeCollectorAccountID: Bool {return self._feeCollectorAccountID != nil}
+  /// Clears the value of `feeCollectorAccountID`. Subsequent reads from it will return its default value.
+  public mutating func clearFeeCollectorAccountID() {self._feeCollectorAccountID = nil}
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _fixedFee: Proto_FixedFee? = nil
+  fileprivate var _feeCollectorAccountID: Proto_AccountID? = nil
+}
+
+///*
+/// A wrapper around a consensus custom fee list.<br/>
+/// This wrapper exists to enable an update transaction to differentiate between
+///  a field that is not set and an empty list of custom fees.
+/// <p>
+/// An _unset_ field of this type SHALL NOT modify existing values.<br/>
+/// A _set_ field of this type with an empty `fees` list SHALL remove any
+///  existing values.
+public struct Proto_FixedCustomFeeList: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  ///*
+  /// A set of custom fee definitions.<br/>
+  /// These are fees to be assessed for each submit to a topic.
+  public var fees: [Proto_FixedCustomFee] = []
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+///*
+/// A wrapper for fee exempt key list.<br/>
+/// This wrapper exists to enable an update transaction to differentiate between
+/// a field that is not set and an empty list of keys.
+/// <p>
+/// An _unset_ field of this type SHALL NOT modify existing values.<br/>
+/// A _set_ field of this type with an empty `keys` list SHALL remove any
+/// existing values.
+public struct Proto_FeeExemptKeyList: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  ///*
+  /// A set of keys.<br/>
+  /// The keys in this list are permitted to submit messages to the
+  /// topic without paying the topic's custom fees.
+  /// <p>
+  /// If a submit transaction is signed by _any_ key included in this set,
+  /// custom fees SHALL NOT be charged for that transaction.
+  public var keys: [Proto_Key] = []
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+///*
+/// A maximum custom fee that the user is willing to pay.
+/// <p>
+/// This message is used to specify the maximum custom fee that given user is
+/// willing to pay.
+public struct Proto_CustomFeeLimit: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  ///*
+  /// A payer account identifier.
+  public var accountID: Proto_AccountID {
+    get {return _accountID ?? Proto_AccountID()}
+    set {_accountID = newValue}
+  }
+  /// Returns true if `accountID` has been explicitly set.
+  public var hasAccountID: Bool {return self._accountID != nil}
+  /// Clears the value of `accountID`. Subsequent reads from it will return its default value.
+  public mutating func clearAccountID() {self._accountID = nil}
+
+  ///*
+  /// The maximum fees that the user is willing to pay for the message.
+  public var fees: [Proto_FixedFee] = []
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _accountID: Proto_AccountID? = nil
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -566,6 +878,154 @@ extension Proto_AssessedCustomFee: SwiftProtobuf.Message, SwiftProtobuf._Message
     if lhs._tokenID != rhs._tokenID {return false}
     if lhs._feeCollectorAccountID != rhs._feeCollectorAccountID {return false}
     if lhs.effectivePayerAccountID != rhs.effectivePayerAccountID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Proto_FixedCustomFee: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".FixedCustomFee"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "fixed_fee"),
+    2: .standard(proto: "fee_collector_account_id"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._fixedFee) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._feeCollectorAccountID) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._fixedFee {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._feeCollectorAccountID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Proto_FixedCustomFee, rhs: Proto_FixedCustomFee) -> Bool {
+    if lhs._fixedFee != rhs._fixedFee {return false}
+    if lhs._feeCollectorAccountID != rhs._feeCollectorAccountID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Proto_FixedCustomFeeList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".FixedCustomFeeList"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "fees"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.fees) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.fees.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.fees, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Proto_FixedCustomFeeList, rhs: Proto_FixedCustomFeeList) -> Bool {
+    if lhs.fees != rhs.fees {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Proto_FeeExemptKeyList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".FeeExemptKeyList"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "keys"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.keys) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.keys.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.keys, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Proto_FeeExemptKeyList, rhs: Proto_FeeExemptKeyList) -> Bool {
+    if lhs.keys != rhs.keys {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Proto_CustomFeeLimit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".CustomFeeLimit"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "account_id"),
+    2: .same(proto: "fees"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._accountID) }()
+      case 2: try { try decoder.decodeRepeatedMessageField(value: &self.fees) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._accountID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if !self.fees.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.fees, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Proto_CustomFeeLimit, rhs: Proto_CustomFeeLimit) -> Bool {
+    if lhs._accountID != rhs._accountID {return false}
+    if lhs.fees != rhs.fees {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

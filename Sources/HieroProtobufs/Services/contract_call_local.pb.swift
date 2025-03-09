@@ -8,6 +8,18 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Local Contract Call
+/// A Contract Call executed directly on the current node
+/// (that is, without consensus).
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,231 +34,38 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// The log information for an event returned by a smart contract function call. One function call
-/// may return several such events.
-public struct Proto_ContractLoginfo: @unchecked Sendable {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  ///*
-  /// address of a contract that emitted the event
-  public var contractID: Proto_ContractID {
-    get {return _contractID ?? Proto_ContractID()}
-    set {_contractID = newValue}
-  }
-  /// Returns true if `contractID` has been explicitly set.
-  public var hasContractID: Bool {return self._contractID != nil}
-  /// Clears the value of `contractID`. Subsequent reads from it will return its default value.
-  public mutating func clearContractID() {self._contractID = nil}
-
-  ///*
-  /// bloom filter for a particular log
-  public var bloom: Data = Data()
-
-  ///*
-  /// topics of a particular event
-  public var topic: [Data] = []
-
-  ///*
-  /// event data
-  public var data: Data = Data()
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  public init() {}
-
-  fileprivate var _contractID: Proto_ContractID? = nil
-}
-
-///*
-/// The result returned by a call to a smart contract function. This is part of the response to a
-/// ContractCallLocal query, and is in the record for a ContractCall or ContractCreateInstance
-/// transaction. The ContractCreateInstance transaction record has the results of the call to the
-/// constructor.
-public struct Proto_ContractFunctionResult: @unchecked Sendable {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  ///*
-  /// the smart contract instance whose function was called
-  public var contractID: Proto_ContractID {
-    get {return _storage._contractID ?? Proto_ContractID()}
-    set {_uniqueStorage()._contractID = newValue}
-  }
-  /// Returns true if `contractID` has been explicitly set.
-  public var hasContractID: Bool {return _storage._contractID != nil}
-  /// Clears the value of `contractID`. Subsequent reads from it will return its default value.
-  public mutating func clearContractID() {_uniqueStorage()._contractID = nil}
-
-  ///*
-  /// the result returned by the function
-  public var contractCallResult: Data {
-    get {return _storage._contractCallResult}
-    set {_uniqueStorage()._contractCallResult = newValue}
-  }
-
-  ///*
-  /// message In case there was an error during smart contract execution
-  public var errorMessage: String {
-    get {return _storage._errorMessage}
-    set {_uniqueStorage()._errorMessage = newValue}
-  }
-
-  ///*
-  /// bloom filter for record
-  public var bloom: Data {
-    get {return _storage._bloom}
-    set {_uniqueStorage()._bloom = newValue}
-  }
-
-  ///*
-  /// units of gas used to execute contract
-  public var gasUsed: UInt64 {
-    get {return _storage._gasUsed}
-    set {_uniqueStorage()._gasUsed = newValue}
-  }
-
-  ///*
-  /// the log info for events returned by the function
-  public var logInfo: [Proto_ContractLoginfo] {
-    get {return _storage._logInfo}
-    set {_uniqueStorage()._logInfo = newValue}
-  }
-
-  ///*
-  /// [DEPRECATED] the list of smart contracts that were created by the function call.
-  /// 
-  /// The created ids will now _also_ be externalized through internal transaction 
-  /// records, where each record has its alias field populated with the new contract's 
-  /// EVM address. (This is needed for contracts created with CREATE2, since 
-  /// there is no longer a simple relationship between the new contract's 0.0.X id 
-  /// and its Solidity address.)
-  ///
-  /// NOTE: This field was marked as deprecated in the .proto file.
-  public var createdContractIds: [Proto_ContractID] {
-    get {return _storage._createdContractIds}
-    set {_uniqueStorage()._createdContractIds = newValue}
-  }
-
-  ///*
-  /// The new contract's 20-byte EVM address. Only populated after release 0.23, 
-  /// where each created contract will have its own record. (This is an important 
-  /// point--the field is not <tt>repeated</tt> because there will be a separate 
-  /// child record for each created contract.)
-  /// 
-  /// Every contract has an EVM address determined by its <tt>shard.realm.num</tt> id.
-  /// This address is as follows:
-  ///   <ol>
-  ///     <li>The first 4 bytes are the big-endian representation of the shard.</li>
-  ///     <li>The next 8 bytes are the big-endian representation of the realm.</li>
-  ///     <li>The final 8 bytes are the big-endian representation of the number.</li>
-  ///   </ol>  
-  /// 
-  /// Contracts created via CREATE2 have an <b>additional, primary address</b> that is 
-  /// derived from the <a href="https://eips.ethereum.org/EIPS/eip-1014">EIP-1014</a> 
-  /// specification, and does not have a simple relation to a <tt>shard.realm.num</tt> id. 
-  /// 
-  /// (Please do note that CREATE2 contracts can also be referenced by the three-part 
-  /// EVM address described above.)
-  public var evmAddress: SwiftProtobuf.Google_Protobuf_BytesValue {
-    get {return _storage._evmAddress ?? SwiftProtobuf.Google_Protobuf_BytesValue()}
-    set {_uniqueStorage()._evmAddress = newValue}
-  }
-  /// Returns true if `evmAddress` has been explicitly set.
-  public var hasEvmAddress: Bool {return _storage._evmAddress != nil}
-  /// Clears the value of `evmAddress`. Subsequent reads from it will return its default value.
-  public mutating func clearEvmAddress() {_uniqueStorage()._evmAddress = nil}
-
-  ///*
-  /// The amount of gas available for the call, aka the gasLimit. 
-  ///
-  /// This field should only be populated when the paired TransactionBody in the record stream is not a
-  /// ContractCreateTransactionBody or a ContractCallTransactionBody.     
-  public var gas: Int64 {
-    get {return _storage._gas}
-    set {_uniqueStorage()._gas = newValue}
-  }
-
-  ///*
-  /// Number of tinybars sent (the function must be payable if this is nonzero).
-  ///
-  /// This field should only be populated when the paired TransactionBody in the record stream is not a
-  /// ContractCreateTransactionBody or a ContractCallTransactionBody.     
-  public var amount: Int64 {
-    get {return _storage._amount}
-    set {_uniqueStorage()._amount = newValue}
-  }
-
-  ///*
-  /// The parameters passed into the contract call.
-  ///
-  /// This field should only be populated when the paired TransactionBody in the record stream is not a
-  /// ContractCreateTransactionBody or a ContractCallTransactionBody.     
-  public var functionParameters: Data {
-    get {return _storage._functionParameters}
-    set {_uniqueStorage()._functionParameters = newValue}
-  }
-
-  ///*
-  /// The account that is the "sender." If not present it is the accountId from the transactionId.
-  ///
-  /// This field should only be populated when the paired TransactionBody in the record stream is not a
-  /// ContractCreateTransactionBody or a ContractCallTransactionBody.     
-  public var senderID: Proto_AccountID {
-    get {return _storage._senderID ?? Proto_AccountID()}
-    set {_uniqueStorage()._senderID = newValue}
-  }
-  /// Returns true if `senderID` has been explicitly set.
-  public var hasSenderID: Bool {return _storage._senderID != nil}
-  /// Clears the value of `senderID`. Subsequent reads from it will return its default value.
-  public mutating func clearSenderID() {_uniqueStorage()._senderID = nil}
-
-  ///*
-  /// A list of updated contract account nonces containing the new nonce value for each contract account.
-  /// This is always empty in a ContractCallLocalResponse#ContractFunctionResult message, since no internal creations can happen in a static EVM call.
-  public var contractNonces: [Proto_ContractNonceInfo] {
-    get {return _storage._contractNonces}
-    set {_uniqueStorage()._contractNonces = newValue}
-  }
-
-  ///*
-  /// If not null this field specifies what the value of the signer account nonce is post transaction execution.
-  /// For transactions that don't update the signer nonce, this field should be null.
-  public var signerNonce: SwiftProtobuf.Google_Protobuf_Int64Value {
-    get {return _storage._signerNonce ?? SwiftProtobuf.Google_Protobuf_Int64Value()}
-    set {_uniqueStorage()._signerNonce = newValue}
-  }
-  /// Returns true if `signerNonce` has been explicitly set.
-  public var hasSignerNonce: Bool {return _storage._signerNonce != nil}
-  /// Clears the value of `signerNonce`. Subsequent reads from it will return its default value.
-  public mutating func clearSignerNonce() {_uniqueStorage()._signerNonce = nil}
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  public init() {}
-
-  fileprivate var _storage = _StorageClass.defaultInstance
-}
-
-///*
-/// Call a function of the given smart contract instance, giving it functionParameters as its inputs.
-/// This is performed locally on the particular node that the client is communicating with.
-/// It cannot change the state of the contract instance (and so, cannot spend anything from the instance's cryptocurrency account).
-/// It will not have a consensus timestamp. It cannot generate a record or a receipt. The response will contain the output
-/// returned by the function call.  This is useful for calling getter functions, which purely read the state and don't change it.
-/// It is faster and cheaper than a normal call, because it is purely local to a single  node.
-/// 
-/// Unlike a ContractCall transaction, the node will consume the entire amount of provided gas in determining
-/// the fee for this query.
+/// Call a view function of a given smart contract<br/>
+/// The call must provide function parameter inputs as needed.<br/>
+/// This is potentially useful for calling view functions that will not revert
+/// when executed in a static EVM context. Many such use cases will be better
+/// served by using a Mirror Node API, however.
+///
+/// This is performed locally on the particular node that the client is
+/// communicating with. Executing the call locally is faster and less costly,
+/// but imposes certain restrictions.<br/>
+/// The call MUST NOT change the state of the contract instance. This also
+/// precludes any expenditure or transfer of HBAR or other tokens.<br/>
+/// The call SHALL NOT have a separate consensus timestamp.<br/>
+/// The call SHALL NOT generate a record nor a receipt.<br/>
+/// The response SHALL contain the output returned by the function call.<br/>
+/// Any contract call that would use the `STATICCALL` opcode MAY be called via
+/// contract call local with performance and cost benefits.
+///
+/// Unlike a ContractCall transaction, the node SHALL always consume the
+/// _entire_ amount of offered "gas" in determining the fee for this query, so
+/// accurate gas estimation is important.
 public struct Proto_ContractCallLocalQuery: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// standard info sent from client to node, including the signed payment, and what kind of response is requested (cost, state proof, both, or neither). The payment must cover the fees and all of the gas offered.
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
+  /// <p>
+  /// The payment MUST be sufficient for the base fees _and_ the full amount
+  /// in the `gas` field.
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -257,7 +76,7 @@ public struct Proto_ContractCallLocalQuery: @unchecked Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The contract to make a static call against
+  /// The ID of a smart contract to call.
   public var contractID: Proto_ContractID {
     get {return _contractID ?? Proto_ContractID()}
     set {_contractID = newValue}
@@ -268,23 +87,37 @@ public struct Proto_ContractCallLocalQuery: @unchecked Sendable {
   public mutating func clearContractID() {self._contractID = nil}
 
   ///*
-  /// The amount of gas to use for the call; all of the gas offered will be used and charged a corresponding fee
+  /// The amount of "gas" to use for this call.
+  /// <p>
+  /// This transaction SHALL consume all of the gas offered and charge the
+  /// corresponding fee according to the current exchange rate between
+  /// HBAR and "gas".
   public var gas: Int64 = 0
 
   ///*
-  /// which function to call, and the parameters to pass to the function
+  /// The smart contract function to call, and the parameters to pass to that
+  /// function.
+  /// <p>
+  /// These SHALL be presented in EVM bytecode function call format.
   public var functionParameters: Data = Data()
 
   ///*
-  /// max number of bytes that the result might include. The run will fail if it would have returned more than this number of bytes.
+  /// Do not use this field; it is ignored in the current software.
+  /// <p>
+  /// The maximum number of bytes that the result might include.<br/>
+  /// The call will fail if it would have returned more than this number
+  /// of bytes.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var maxResultSize: Int64 = 0
 
   ///*
-  /// The account that is the "sender." If not present it is the accountId from the transactionId.
-  /// Typically a different value than specified in the transactionId requires a valid signature 
-  /// over either the hedera transaction or foreign transaction data.
+  /// The account that is the "sender" for this contract call.
+  /// <p>
+  /// If this is not set it SHALL be interpreted as the accountId from the
+  /// associated transactionId.<br/>
+  /// If this is set then either the associated transaction or the foreign
+  /// transaction data MUST be signed by the referenced account.
   public var senderID: Proto_AccountID {
     get {return _senderID ?? Proto_AccountID()}
     set {_senderID = newValue}
@@ -304,14 +137,16 @@ public struct Proto_ContractCallLocalQuery: @unchecked Sendable {
 }
 
 ///*
-/// Response when the client sends the node ContractCallLocalQuery
+/// The response returned by a `ContractCallLocalQuery` transaction.
 public struct Proto_ContractCallLocalResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// standard response from node to client, including the requested fields: cost, or state proof, or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -322,7 +157,9 @@ public struct Proto_ContractCallLocalResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// the value returned by the function (if it completed and didn't fail)
+  /// The result(s) returned by the function call, if successful.
+  /// <p>
+  /// If the call failed this value SHALL be unset.
   public var functionResult: Proto_ContractFunctionResult {
     get {return _functionResult ?? Proto_ContractFunctionResult()}
     set {_functionResult = newValue}
@@ -343,240 +180,6 @@ public struct Proto_ContractCallLocalResponse: Sendable {
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "proto"
-
-extension Proto_ContractLoginfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ContractLoginfo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "contractID"),
-    2: .same(proto: "bloom"),
-    3: .same(proto: "topic"),
-    4: .same(proto: "data"),
-  ]
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularMessageField(value: &self._contractID) }()
-      case 2: try { try decoder.decodeSingularBytesField(value: &self.bloom) }()
-      case 3: try { try decoder.decodeRepeatedBytesField(value: &self.topic) }()
-      case 4: try { try decoder.decodeSingularBytesField(value: &self.data) }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    try { if let v = self._contractID {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    } }()
-    if !self.bloom.isEmpty {
-      try visitor.visitSingularBytesField(value: self.bloom, fieldNumber: 2)
-    }
-    if !self.topic.isEmpty {
-      try visitor.visitRepeatedBytesField(value: self.topic, fieldNumber: 3)
-    }
-    if !self.data.isEmpty {
-      try visitor.visitSingularBytesField(value: self.data, fieldNumber: 4)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: Proto_ContractLoginfo, rhs: Proto_ContractLoginfo) -> Bool {
-    if lhs._contractID != rhs._contractID {return false}
-    if lhs.bloom != rhs.bloom {return false}
-    if lhs.topic != rhs.topic {return false}
-    if lhs.data != rhs.data {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension Proto_ContractFunctionResult: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ContractFunctionResult"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "contractID"),
-    2: .same(proto: "contractCallResult"),
-    3: .same(proto: "errorMessage"),
-    4: .same(proto: "bloom"),
-    5: .same(proto: "gasUsed"),
-    6: .same(proto: "logInfo"),
-    7: .same(proto: "createdContractIDs"),
-    9: .standard(proto: "evm_address"),
-    10: .same(proto: "gas"),
-    11: .same(proto: "amount"),
-    12: .same(proto: "functionParameters"),
-    13: .standard(proto: "sender_id"),
-    14: .standard(proto: "contract_nonces"),
-    15: .standard(proto: "signer_nonce"),
-  ]
-
-  fileprivate class _StorageClass {
-    var _contractID: Proto_ContractID? = nil
-    var _contractCallResult: Data = Data()
-    var _errorMessage: String = String()
-    var _bloom: Data = Data()
-    var _gasUsed: UInt64 = 0
-    var _logInfo: [Proto_ContractLoginfo] = []
-    var _createdContractIds: [Proto_ContractID] = []
-    var _evmAddress: SwiftProtobuf.Google_Protobuf_BytesValue? = nil
-    var _gas: Int64 = 0
-    var _amount: Int64 = 0
-    var _functionParameters: Data = Data()
-    var _senderID: Proto_AccountID? = nil
-    var _contractNonces: [Proto_ContractNonceInfo] = []
-    var _signerNonce: SwiftProtobuf.Google_Protobuf_Int64Value? = nil
-
-    #if swift(>=5.10)
-      // This property is used as the initial default value for new instances of the type.
-      // The type itself is protecting the reference to its storage via CoW semantics.
-      // This will force a copy to be made of this reference when the first mutation occurs;
-      // hence, it is safe to mark this as `nonisolated(unsafe)`.
-      static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
-
-    private init() {}
-
-    init(copying source: _StorageClass) {
-      _contractID = source._contractID
-      _contractCallResult = source._contractCallResult
-      _errorMessage = source._errorMessage
-      _bloom = source._bloom
-      _gasUsed = source._gasUsed
-      _logInfo = source._logInfo
-      _createdContractIds = source._createdContractIds
-      _evmAddress = source._evmAddress
-      _gas = source._gas
-      _amount = source._amount
-      _functionParameters = source._functionParameters
-      _senderID = source._senderID
-      _contractNonces = source._contractNonces
-      _signerNonce = source._signerNonce
-    }
-  }
-
-  fileprivate mutating func _uniqueStorage() -> _StorageClass {
-    if !isKnownUniquelyReferenced(&_storage) {
-      _storage = _StorageClass(copying: _storage)
-    }
-    return _storage
-  }
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    _ = _uniqueStorage()
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      while let fieldNumber = try decoder.nextFieldNumber() {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every case branch when no optimizations are
-        // enabled. https://github.com/apple/swift-protobuf/issues/1034
-        switch fieldNumber {
-        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._contractID) }()
-        case 2: try { try decoder.decodeSingularBytesField(value: &_storage._contractCallResult) }()
-        case 3: try { try decoder.decodeSingularStringField(value: &_storage._errorMessage) }()
-        case 4: try { try decoder.decodeSingularBytesField(value: &_storage._bloom) }()
-        case 5: try { try decoder.decodeSingularUInt64Field(value: &_storage._gasUsed) }()
-        case 6: try { try decoder.decodeRepeatedMessageField(value: &_storage._logInfo) }()
-        case 7: try { try decoder.decodeRepeatedMessageField(value: &_storage._createdContractIds) }()
-        case 9: try { try decoder.decodeSingularMessageField(value: &_storage._evmAddress) }()
-        case 10: try { try decoder.decodeSingularInt64Field(value: &_storage._gas) }()
-        case 11: try { try decoder.decodeSingularInt64Field(value: &_storage._amount) }()
-        case 12: try { try decoder.decodeSingularBytesField(value: &_storage._functionParameters) }()
-        case 13: try { try decoder.decodeSingularMessageField(value: &_storage._senderID) }()
-        case 14: try { try decoder.decodeRepeatedMessageField(value: &_storage._contractNonces) }()
-        case 15: try { try decoder.decodeSingularMessageField(value: &_storage._signerNonce) }()
-        default: break
-        }
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every if/case branch local when no optimizations
-      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-      // https://github.com/apple/swift-protobuf/issues/1182
-      try { if let v = _storage._contractID {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-      } }()
-      if !_storage._contractCallResult.isEmpty {
-        try visitor.visitSingularBytesField(value: _storage._contractCallResult, fieldNumber: 2)
-      }
-      if !_storage._errorMessage.isEmpty {
-        try visitor.visitSingularStringField(value: _storage._errorMessage, fieldNumber: 3)
-      }
-      if !_storage._bloom.isEmpty {
-        try visitor.visitSingularBytesField(value: _storage._bloom, fieldNumber: 4)
-      }
-      if _storage._gasUsed != 0 {
-        try visitor.visitSingularUInt64Field(value: _storage._gasUsed, fieldNumber: 5)
-      }
-      if !_storage._logInfo.isEmpty {
-        try visitor.visitRepeatedMessageField(value: _storage._logInfo, fieldNumber: 6)
-      }
-      if !_storage._createdContractIds.isEmpty {
-        try visitor.visitRepeatedMessageField(value: _storage._createdContractIds, fieldNumber: 7)
-      }
-      try { if let v = _storage._evmAddress {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
-      } }()
-      if _storage._gas != 0 {
-        try visitor.visitSingularInt64Field(value: _storage._gas, fieldNumber: 10)
-      }
-      if _storage._amount != 0 {
-        try visitor.visitSingularInt64Field(value: _storage._amount, fieldNumber: 11)
-      }
-      if !_storage._functionParameters.isEmpty {
-        try visitor.visitSingularBytesField(value: _storage._functionParameters, fieldNumber: 12)
-      }
-      try { if let v = _storage._senderID {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 13)
-      } }()
-      if !_storage._contractNonces.isEmpty {
-        try visitor.visitRepeatedMessageField(value: _storage._contractNonces, fieldNumber: 14)
-      }
-      try { if let v = _storage._signerNonce {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 15)
-      } }()
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: Proto_ContractFunctionResult, rhs: Proto_ContractFunctionResult) -> Bool {
-    if lhs._storage !== rhs._storage {
-      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
-        let _storage = _args.0
-        let rhs_storage = _args.1
-        if _storage._contractID != rhs_storage._contractID {return false}
-        if _storage._contractCallResult != rhs_storage._contractCallResult {return false}
-        if _storage._errorMessage != rhs_storage._errorMessage {return false}
-        if _storage._bloom != rhs_storage._bloom {return false}
-        if _storage._gasUsed != rhs_storage._gasUsed {return false}
-        if _storage._logInfo != rhs_storage._logInfo {return false}
-        if _storage._createdContractIds != rhs_storage._createdContractIds {return false}
-        if _storage._evmAddress != rhs_storage._evmAddress {return false}
-        if _storage._gas != rhs_storage._gas {return false}
-        if _storage._amount != rhs_storage._amount {return false}
-        if _storage._functionParameters != rhs_storage._functionParameters {return false}
-        if _storage._senderID != rhs_storage._senderID {return false}
-        if _storage._contractNonces != rhs_storage._contractNonces {return false}
-        if _storage._signerNonce != rhs_storage._signerNonce {return false}
-        return true
-      }
-      if !storagesAreEqual {return false}
-    }
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
 
 extension Proto_ContractCallLocalQuery: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ContractCallLocalQuery"

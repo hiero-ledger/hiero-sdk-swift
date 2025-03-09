@@ -12,7 +12,7 @@ import SwiftProtobuf
 
 
 ///*
-/// Transactions and queries for the Crypto Service
+/// Transactions and queries for the Hedera Crypto Service.
 ///
 /// Usage: instantiate `Proto_CryptoServiceClient`, then call methods of this protocol to make API calls.
 public protocol Proto_CryptoServiceClientProtocol: GRPCClient {
@@ -84,17 +84,7 @@ public protocol Proto_CryptoServiceClientProtocol: GRPCClient {
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Query, Proto_Response>
 
-  func getFastTransactionRecord(
-    _ request: Proto_Query,
-    callOptions: CallOptions?
-  ) -> UnaryCall<Proto_Query, Proto_Response>
-
   func getTxRecordByTxID(
-    _ request: Proto_Query,
-    callOptions: CallOptions?
-  ) -> UnaryCall<Proto_Query, Proto_Response>
-
-  func getStakersByAccountID(
     _ request: Proto_Query,
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Query, Proto_Response>
@@ -106,7 +96,7 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// Creates a new account by submitting the transaction
+  /// Create a new account by submitting the transaction
   ///
   /// - Parameters:
   ///   - request: Request to send to createAccount.
@@ -125,7 +115,7 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// Updates an account by submitting the transaction
+  /// Update an account by submitting the transaction
   ///
   /// - Parameters:
   ///   - request: Request to send to updateAccount.
@@ -144,7 +134,7 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// Initiates a transfer by submitting the transaction
+  /// Initiate a transfer by submitting the transaction
   ///
   /// - Parameters:
   ///   - request: Request to send to cryptoTransfer.
@@ -163,7 +153,7 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// Deletes and account by submitting the transaction
+  /// Delete an account by submitting the transaction
   ///
   /// - Parameters:
   ///   - request: Request to send to cryptoDelete.
@@ -182,7 +172,8 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// Adds one or more approved allowances for spenders to transfer the paying account's hbar or tokens.
+  /// Add one or more approved allowances for spenders to transfer the paying
+  /// account's hbar or tokens.
   ///
   /// - Parameters:
   ///   - request: Request to send to approveAllowances.
@@ -201,7 +192,8 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// Deletes one or more of the specific approved NFT serial numbers on an owner account.
+  /// Delete one or more of the specific approved NFT serial numbers on an
+  /// owner account.
   ///
   /// - Parameters:
   ///   - request: Request to send to deleteAllowances.
@@ -220,7 +212,10 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// (NOT CURRENTLY SUPPORTED) Adds a livehash
+  /// Add a livehash
+  /// <blockquote>Important<blockquote>
+  /// This transaction is obsolete, not supported, and SHALL fail with a
+  /// pre-check result of `NOT_SUPPORTED`.</blockquote></blockquote>
   ///
   /// - Parameters:
   ///   - request: Request to send to addLiveHash.
@@ -239,7 +234,10 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// (NOT CURRENTLY SUPPORTED) Deletes a livehash
+  /// Delete a livehash
+  /// <blockquote>Important<blockquote>
+  /// This transaction is obsolete, not supported, and SHALL fail with a
+  /// pre-check result of `NOT_SUPPORTED`.</blockquote></blockquote>
   ///
   /// - Parameters:
   ///   - request: Request to send to deleteLiveHash.
@@ -258,7 +256,10 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// (NOT CURRENTLY SUPPORTED) Retrieves a livehash for an account
+  /// Retrieve a livehash for an account
+  /// <blockquote>Important<blockquote>
+  /// This query is obsolete, not supported, and SHALL fail with a pre-check
+  /// result of `NOT_SUPPORTED`.</blockquote></blockquote>
   ///
   /// - Parameters:
   ///   - request: Request to send to getLiveHash.
@@ -277,9 +278,9 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// Returns all transactions in the last 180s of consensus time for which the given account was
-  /// the effective payer <b>and</b> network property <tt>ledger.keepRecordsInState</tt> was
-  /// <tt>true</tt>.
+  /// Return all transactions in the last 180s of consensus time for which
+  /// the given account was the effective payer **and** network property
+  /// `ledger.keepRecordsInState` was `true`.
   ///
   /// - Parameters:
   ///   - request: Request to send to getAccountRecords.
@@ -298,7 +299,7 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// Retrieves the balance of an account
+  /// Retrieve the balance of an account
   ///
   /// - Parameters:
   ///   - request: Request to send to cryptoGetBalance.
@@ -317,7 +318,7 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// Retrieves the metadata of an account
+  /// Retrieve the metadata of an account
   ///
   /// - Parameters:
   ///   - request: Request to send to getAccountInfo.
@@ -336,8 +337,8 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// Retrieves the latest receipt for a transaction that is either awaiting consensus, or reached
-  /// consensus in the last 180 seconds
+  /// Retrieve the latest receipt for a transaction that is either awaiting
+  /// consensus, or reached consensus in the last 180 seconds
   ///
   /// - Parameters:
   ///   - request: Request to send to getTransactionReceipts.
@@ -356,27 +357,8 @@ extension Proto_CryptoServiceClientProtocol {
   }
 
   ///*
-  /// (NOT CURRENTLY SUPPORTED) Returns the records of transactions recently funded by an account
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to getFastTransactionRecord.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func getFastTransactionRecord(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<Proto_Query, Proto_Response> {
-    return self.makeUnaryCall(
-      path: Proto_CryptoServiceClientMetadata.Methods.getFastTransactionRecord.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetFastTransactionRecordInterceptors() ?? []
-    )
-  }
-
-  ///*
-  /// Retrieves the record of a transaction that is either awaiting consensus, or reached consensus
-  /// in the last 180 seconds
+  /// Retrieve the record of a transaction that is either awaiting consensus,
+  /// or reached consensus in the last 180 seconds
   ///
   /// - Parameters:
   ///   - request: Request to send to getTxRecordByTxID.
@@ -391,25 +373,6 @@ extension Proto_CryptoServiceClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makegetTxRecordByTxIDInterceptors() ?? []
-    )
-  }
-
-  ///*
-  /// (NOT CURRENTLY SUPPORTED) Retrieves the stakers for a node by account id
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to getStakersByAccountID.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func getStakersByAccountID(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<Proto_Query, Proto_Response> {
-    return self.makeUnaryCall(
-      path: Proto_CryptoServiceClientMetadata.Methods.getStakersByAccountID.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetStakersByAccountIDInterceptors() ?? []
     )
   }
 }
@@ -472,7 +435,7 @@ public struct Proto_CryptoServiceNIOClient: Proto_CryptoServiceClientProtocol {
 }
 
 ///*
-/// Transactions and queries for the Crypto Service
+/// Transactions and queries for the Hedera Crypto Service.
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol Proto_CryptoServiceAsyncClientProtocol: GRPCClient {
   static var serviceDescriptor: GRPCServiceDescriptor { get }
@@ -543,17 +506,7 @@ public protocol Proto_CryptoServiceAsyncClientProtocol: GRPCClient {
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
 
-  func makeGetFastTransactionRecordCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
-
   func makeGetTxRecordByTxIDCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
-
-  func makeGetStakersByAccountIDCall(
     _ request: Proto_Query,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
@@ -725,18 +678,6 @@ extension Proto_CryptoServiceAsyncClientProtocol {
     )
   }
 
-  public func makeGetFastTransactionRecordCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response> {
-    return self.makeAsyncUnaryCall(
-      path: Proto_CryptoServiceClientMetadata.Methods.getFastTransactionRecord.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetFastTransactionRecordInterceptors() ?? []
-    )
-  }
-
   public func makeGetTxRecordByTxIDCall(
     _ request: Proto_Query,
     callOptions: CallOptions? = nil
@@ -746,18 +687,6 @@ extension Proto_CryptoServiceAsyncClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makegetTxRecordByTxIDInterceptors() ?? []
-    )
-  }
-
-  public func makeGetStakersByAccountIDCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response> {
-    return self.makeAsyncUnaryCall(
-      path: Proto_CryptoServiceClientMetadata.Methods.getStakersByAccountID.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetStakersByAccountIDInterceptors() ?? []
     )
   }
 }
@@ -920,18 +849,6 @@ extension Proto_CryptoServiceAsyncClientProtocol {
     )
   }
 
-  public func getFastTransactionRecord(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) async throws -> Proto_Response {
-    return try await self.performAsyncUnaryCall(
-      path: Proto_CryptoServiceClientMetadata.Methods.getFastTransactionRecord.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetFastTransactionRecordInterceptors() ?? []
-    )
-  }
-
   public func getTxRecordByTxID(
     _ request: Proto_Query,
     callOptions: CallOptions? = nil
@@ -941,18 +858,6 @@ extension Proto_CryptoServiceAsyncClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makegetTxRecordByTxIDInterceptors() ?? []
-    )
-  }
-
-  public func getStakersByAccountID(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) async throws -> Proto_Response {
-    return try await self.performAsyncUnaryCall(
-      path: Proto_CryptoServiceClientMetadata.Methods.getStakersByAccountID.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetStakersByAccountIDInterceptors() ?? []
     )
   }
 }
@@ -1015,14 +920,8 @@ public protocol Proto_CryptoServiceClientInterceptorFactoryProtocol: Sendable {
   /// - Returns: Interceptors to use when invoking 'getTransactionReceipts'.
   func makegetTransactionReceiptsInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
 
-  /// - Returns: Interceptors to use when invoking 'getFastTransactionRecord'.
-  func makegetFastTransactionRecordInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
-
   /// - Returns: Interceptors to use when invoking 'getTxRecordByTxID'.
   func makegetTxRecordByTxIDInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
-
-  /// - Returns: Interceptors to use when invoking 'getStakersByAccountID'.
-  func makegetStakersByAccountIDInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
 }
 
 public enum Proto_CryptoServiceClientMetadata {
@@ -1043,9 +942,7 @@ public enum Proto_CryptoServiceClientMetadata {
       Proto_CryptoServiceClientMetadata.Methods.cryptoGetBalance,
       Proto_CryptoServiceClientMetadata.Methods.getAccountInfo,
       Proto_CryptoServiceClientMetadata.Methods.getTransactionReceipts,
-      Proto_CryptoServiceClientMetadata.Methods.getFastTransactionRecord,
       Proto_CryptoServiceClientMetadata.Methods.getTxRecordByTxID,
-      Proto_CryptoServiceClientMetadata.Methods.getStakersByAccountID,
     ]
   )
 
@@ -1128,9 +1025,668 @@ public enum Proto_CryptoServiceClientMetadata {
       type: GRPCCallType.unary
     )
 
-    public static let getFastTransactionRecord = GRPCMethodDescriptor(
-      name: "getFastTransactionRecord",
-      path: "/proto.CryptoService/getFastTransactionRecord",
+    public static let getTxRecordByTxID = GRPCMethodDescriptor(
+      name: "getTxRecordByTxID",
+      path: "/proto.CryptoService/getTxRecordByTxID",
+      type: GRPCCallType.unary
+    )
+  }
+}
+
+///*
+/// Transactions and queries for the Hedera Crypto Service.
+///
+/// To build a server, implement a class that conforms to this protocol.
+public protocol Proto_CryptoServiceProvider: CallHandlerProvider {
+  var interceptors: Proto_CryptoServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Create a new account by submitting the transaction
+  func createAccount(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Update an account by submitting the transaction
+  func updateAccount(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Initiate a transfer by submitting the transaction
+  func cryptoTransfer(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Delete an account by submitting the transaction
+  func cryptoDelete(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Add one or more approved allowances for spenders to transfer the paying
+  /// account's hbar or tokens.
+  func approveAllowances(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Delete one or more of the specific approved NFT serial numbers on an
+  /// owner account.
+  func deleteAllowances(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Add a livehash
+  /// <blockquote>Important<blockquote>
+  /// This transaction is obsolete, not supported, and SHALL fail with a
+  /// pre-check result of `NOT_SUPPORTED`.</blockquote></blockquote>
+  func addLiveHash(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Delete a livehash
+  /// <blockquote>Important<blockquote>
+  /// This transaction is obsolete, not supported, and SHALL fail with a
+  /// pre-check result of `NOT_SUPPORTED`.</blockquote></blockquote>
+  func deleteLiveHash(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Retrieve a livehash for an account
+  /// <blockquote>Important<blockquote>
+  /// This query is obsolete, not supported, and SHALL fail with a pre-check
+  /// result of `NOT_SUPPORTED`.</blockquote></blockquote>
+  func getLiveHash(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Return all transactions in the last 180s of consensus time for which
+  /// the given account was the effective payer **and** network property
+  /// `ledger.keepRecordsInState` was `true`.
+  func getAccountRecords(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Retrieve the balance of an account
+  func cryptoGetBalance(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Retrieve the metadata of an account
+  func getAccountInfo(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Retrieve the latest receipt for a transaction that is either awaiting
+  /// consensus, or reached consensus in the last 180 seconds
+  func getTransactionReceipts(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Retrieve the record of a transaction that is either awaiting consensus,
+  /// or reached consensus in the last 180 seconds
+  func getTxRecordByTxID(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+}
+
+extension Proto_CryptoServiceProvider {
+  public var serviceName: Substring {
+    return Proto_CryptoServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+  /// Returns nil for methods not handled by this service.
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "createAccount":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateAccountInterceptors() ?? [],
+        userFunction: self.createAccount(request:context:)
+      )
+
+    case "updateAccount":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateAccountInterceptors() ?? [],
+        userFunction: self.updateAccount(request:context:)
+      )
+
+    case "cryptoTransfer":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecryptoTransferInterceptors() ?? [],
+        userFunction: self.cryptoTransfer(request:context:)
+      )
+
+    case "cryptoDelete":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecryptoDeleteInterceptors() ?? [],
+        userFunction: self.cryptoDelete(request:context:)
+      )
+
+    case "approveAllowances":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeapproveAllowancesInterceptors() ?? [],
+        userFunction: self.approveAllowances(request:context:)
+      )
+
+    case "deleteAllowances":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteAllowancesInterceptors() ?? [],
+        userFunction: self.deleteAllowances(request:context:)
+      )
+
+    case "addLiveHash":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeaddLiveHashInterceptors() ?? [],
+        userFunction: self.addLiveHash(request:context:)
+      )
+
+    case "deleteLiveHash":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteLiveHashInterceptors() ?? [],
+        userFunction: self.deleteLiveHash(request:context:)
+      )
+
+    case "getLiveHash":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetLiveHashInterceptors() ?? [],
+        userFunction: self.getLiveHash(request:context:)
+      )
+
+    case "getAccountRecords":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetAccountRecordsInterceptors() ?? [],
+        userFunction: self.getAccountRecords(request:context:)
+      )
+
+    case "cryptoGetBalance":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makecryptoGetBalanceInterceptors() ?? [],
+        userFunction: self.cryptoGetBalance(request:context:)
+      )
+
+    case "getAccountInfo":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetAccountInfoInterceptors() ?? [],
+        userFunction: self.getAccountInfo(request:context:)
+      )
+
+    case "getTransactionReceipts":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetTransactionReceiptsInterceptors() ?? [],
+        userFunction: self.getTransactionReceipts(request:context:)
+      )
+
+    case "getTxRecordByTxID":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetTxRecordByTxIDInterceptors() ?? [],
+        userFunction: self.getTxRecordByTxID(request:context:)
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+///*
+/// Transactions and queries for the Hedera Crypto Service.
+///
+/// To implement a server, implement an object which conforms to this protocol.
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+public protocol Proto_CryptoServiceAsyncProvider: CallHandlerProvider, Sendable {
+  static var serviceDescriptor: GRPCServiceDescriptor { get }
+  var interceptors: Proto_CryptoServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Create a new account by submitting the transaction
+  func createAccount(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Update an account by submitting the transaction
+  func updateAccount(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Initiate a transfer by submitting the transaction
+  func cryptoTransfer(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Delete an account by submitting the transaction
+  func cryptoDelete(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Add one or more approved allowances for spenders to transfer the paying
+  /// account's hbar or tokens.
+  func approveAllowances(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Delete one or more of the specific approved NFT serial numbers on an
+  /// owner account.
+  func deleteAllowances(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Add a livehash
+  /// <blockquote>Important<blockquote>
+  /// This transaction is obsolete, not supported, and SHALL fail with a
+  /// pre-check result of `NOT_SUPPORTED`.</blockquote></blockquote>
+  func addLiveHash(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Delete a livehash
+  /// <blockquote>Important<blockquote>
+  /// This transaction is obsolete, not supported, and SHALL fail with a
+  /// pre-check result of `NOT_SUPPORTED`.</blockquote></blockquote>
+  func deleteLiveHash(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Retrieve a livehash for an account
+  /// <blockquote>Important<blockquote>
+  /// This query is obsolete, not supported, and SHALL fail with a pre-check
+  /// result of `NOT_SUPPORTED`.</blockquote></blockquote>
+  func getLiveHash(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Return all transactions in the last 180s of consensus time for which
+  /// the given account was the effective payer **and** network property
+  /// `ledger.keepRecordsInState` was `true`.
+  func getAccountRecords(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Retrieve the balance of an account
+  func cryptoGetBalance(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Retrieve the metadata of an account
+  func getAccountInfo(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Retrieve the latest receipt for a transaction that is either awaiting
+  /// consensus, or reached consensus in the last 180 seconds
+  func getTransactionReceipts(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Retrieve the record of a transaction that is either awaiting consensus,
+  /// or reached consensus in the last 180 seconds
+  func getTxRecordByTxID(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension Proto_CryptoServiceAsyncProvider {
+  public static var serviceDescriptor: GRPCServiceDescriptor {
+    return Proto_CryptoServiceServerMetadata.serviceDescriptor
+  }
+
+  public var serviceName: Substring {
+    return Proto_CryptoServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  public var interceptors: Proto_CryptoServiceServerInterceptorFactoryProtocol? {
+    return nil
+  }
+
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "createAccount":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateAccountInterceptors() ?? [],
+        wrapping: { try await self.createAccount(request: $0, context: $1) }
+      )
+
+    case "updateAccount":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateAccountInterceptors() ?? [],
+        wrapping: { try await self.updateAccount(request: $0, context: $1) }
+      )
+
+    case "cryptoTransfer":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecryptoTransferInterceptors() ?? [],
+        wrapping: { try await self.cryptoTransfer(request: $0, context: $1) }
+      )
+
+    case "cryptoDelete":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecryptoDeleteInterceptors() ?? [],
+        wrapping: { try await self.cryptoDelete(request: $0, context: $1) }
+      )
+
+    case "approveAllowances":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeapproveAllowancesInterceptors() ?? [],
+        wrapping: { try await self.approveAllowances(request: $0, context: $1) }
+      )
+
+    case "deleteAllowances":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteAllowancesInterceptors() ?? [],
+        wrapping: { try await self.deleteAllowances(request: $0, context: $1) }
+      )
+
+    case "addLiveHash":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeaddLiveHashInterceptors() ?? [],
+        wrapping: { try await self.addLiveHash(request: $0, context: $1) }
+      )
+
+    case "deleteLiveHash":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteLiveHashInterceptors() ?? [],
+        wrapping: { try await self.deleteLiveHash(request: $0, context: $1) }
+      )
+
+    case "getLiveHash":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetLiveHashInterceptors() ?? [],
+        wrapping: { try await self.getLiveHash(request: $0, context: $1) }
+      )
+
+    case "getAccountRecords":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetAccountRecordsInterceptors() ?? [],
+        wrapping: { try await self.getAccountRecords(request: $0, context: $1) }
+      )
+
+    case "cryptoGetBalance":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makecryptoGetBalanceInterceptors() ?? [],
+        wrapping: { try await self.cryptoGetBalance(request: $0, context: $1) }
+      )
+
+    case "getAccountInfo":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetAccountInfoInterceptors() ?? [],
+        wrapping: { try await self.getAccountInfo(request: $0, context: $1) }
+      )
+
+    case "getTransactionReceipts":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetTransactionReceiptsInterceptors() ?? [],
+        wrapping: { try await self.getTransactionReceipts(request: $0, context: $1) }
+      )
+
+    case "getTxRecordByTxID":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetTxRecordByTxIDInterceptors() ?? [],
+        wrapping: { try await self.getTxRecordByTxID(request: $0, context: $1) }
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+public protocol Proto_CryptoServiceServerInterceptorFactoryProtocol: Sendable {
+
+  /// - Returns: Interceptors to use when handling 'createAccount'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecreateAccountInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'updateAccount'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeupdateAccountInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'cryptoTransfer'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecryptoTransferInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'cryptoDelete'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecryptoDeleteInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'approveAllowances'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeapproveAllowancesInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'deleteAllowances'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makedeleteAllowancesInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'addLiveHash'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeaddLiveHashInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'deleteLiveHash'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makedeleteLiveHashInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'getLiveHash'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetLiveHashInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'getAccountRecords'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetAccountRecordsInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'cryptoGetBalance'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecryptoGetBalanceInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'getAccountInfo'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetAccountInfoInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'getTransactionReceipts'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetTransactionReceiptsInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'getTxRecordByTxID'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetTxRecordByTxIDInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+}
+
+public enum Proto_CryptoServiceServerMetadata {
+  public static let serviceDescriptor = GRPCServiceDescriptor(
+    name: "CryptoService",
+    fullName: "proto.CryptoService",
+    methods: [
+      Proto_CryptoServiceServerMetadata.Methods.createAccount,
+      Proto_CryptoServiceServerMetadata.Methods.updateAccount,
+      Proto_CryptoServiceServerMetadata.Methods.cryptoTransfer,
+      Proto_CryptoServiceServerMetadata.Methods.cryptoDelete,
+      Proto_CryptoServiceServerMetadata.Methods.approveAllowances,
+      Proto_CryptoServiceServerMetadata.Methods.deleteAllowances,
+      Proto_CryptoServiceServerMetadata.Methods.addLiveHash,
+      Proto_CryptoServiceServerMetadata.Methods.deleteLiveHash,
+      Proto_CryptoServiceServerMetadata.Methods.getLiveHash,
+      Proto_CryptoServiceServerMetadata.Methods.getAccountRecords,
+      Proto_CryptoServiceServerMetadata.Methods.cryptoGetBalance,
+      Proto_CryptoServiceServerMetadata.Methods.getAccountInfo,
+      Proto_CryptoServiceServerMetadata.Methods.getTransactionReceipts,
+      Proto_CryptoServiceServerMetadata.Methods.getTxRecordByTxID,
+    ]
+  )
+
+  public enum Methods {
+    public static let createAccount = GRPCMethodDescriptor(
+      name: "createAccount",
+      path: "/proto.CryptoService/createAccount",
+      type: GRPCCallType.unary
+    )
+
+    public static let updateAccount = GRPCMethodDescriptor(
+      name: "updateAccount",
+      path: "/proto.CryptoService/updateAccount",
+      type: GRPCCallType.unary
+    )
+
+    public static let cryptoTransfer = GRPCMethodDescriptor(
+      name: "cryptoTransfer",
+      path: "/proto.CryptoService/cryptoTransfer",
+      type: GRPCCallType.unary
+    )
+
+    public static let cryptoDelete = GRPCMethodDescriptor(
+      name: "cryptoDelete",
+      path: "/proto.CryptoService/cryptoDelete",
+      type: GRPCCallType.unary
+    )
+
+    public static let approveAllowances = GRPCMethodDescriptor(
+      name: "approveAllowances",
+      path: "/proto.CryptoService/approveAllowances",
+      type: GRPCCallType.unary
+    )
+
+    public static let deleteAllowances = GRPCMethodDescriptor(
+      name: "deleteAllowances",
+      path: "/proto.CryptoService/deleteAllowances",
+      type: GRPCCallType.unary
+    )
+
+    public static let addLiveHash = GRPCMethodDescriptor(
+      name: "addLiveHash",
+      path: "/proto.CryptoService/addLiveHash",
+      type: GRPCCallType.unary
+    )
+
+    public static let deleteLiveHash = GRPCMethodDescriptor(
+      name: "deleteLiveHash",
+      path: "/proto.CryptoService/deleteLiveHash",
+      type: GRPCCallType.unary
+    )
+
+    public static let getLiveHash = GRPCMethodDescriptor(
+      name: "getLiveHash",
+      path: "/proto.CryptoService/getLiveHash",
+      type: GRPCCallType.unary
+    )
+
+    public static let getAccountRecords = GRPCMethodDescriptor(
+      name: "getAccountRecords",
+      path: "/proto.CryptoService/getAccountRecords",
+      type: GRPCCallType.unary
+    )
+
+    public static let cryptoGetBalance = GRPCMethodDescriptor(
+      name: "cryptoGetBalance",
+      path: "/proto.CryptoService/cryptoGetBalance",
+      type: GRPCCallType.unary
+    )
+
+    public static let getAccountInfo = GRPCMethodDescriptor(
+      name: "getAccountInfo",
+      path: "/proto.CryptoService/getAccountInfo",
+      type: GRPCCallType.unary
+    )
+
+    public static let getTransactionReceipts = GRPCMethodDescriptor(
+      name: "getTransactionReceipts",
+      path: "/proto.CryptoService/getTransactionReceipts",
       type: GRPCCallType.unary
     )
 
@@ -1139,12 +1695,5 @@ public enum Proto_CryptoServiceClientMetadata {
       path: "/proto.CryptoService/getTxRecordByTxID",
       type: GRPCCallType.unary
     )
-
-    public static let getStakersByAccountID = GRPCMethodDescriptor(
-      name: "getStakersByAccountID",
-      path: "/proto.CryptoService/getStakersByAccountID",
-      type: GRPCCallType.unary
-    )
   }
 }
-

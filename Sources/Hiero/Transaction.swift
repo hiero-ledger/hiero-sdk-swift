@@ -33,6 +33,7 @@ public class Transaction: ValidateChecksums {
         maxTransactionFee = .fromTinybars(Int64(proto.transactionFee))
         transactionMemo = proto.memo
         transactionId = try .fromProtobuf(proto.transactionID)
+        customFeeLimits = try .fromProtobuf(proto.maxCustomFees)
     }
 
     internal private(set) final var signers: [Signer] = []
@@ -141,6 +142,37 @@ public class Transaction: ValidateChecksums {
     @discardableResult
     public final func regenerateTransactionId(_ regenerateTransactionId: Bool) -> Self {
         self.regenerateTransactionId = regenerateTransactionId
+
+        return self
+    }
+
+    /// The custom fees that will be applied to the transaction.
+    internal final var customFeeLimits: [CustomFeeLimit] = [] {
+        willSet {
+            ensureNotFrozen(fieldName: "customFeeLimits")
+        }
+    }
+
+    /// Sets the custom fees that will be applied to the transaction.
+    @discardableResult
+    internal func customFeeLimits(_ customFeeLimits: [CustomFeeLimit]) -> Self {
+        self.customFeeLimits = customFeeLimits
+
+        return self
+    }
+
+    /// Adds a custom fee limit to the list of custom fee limits.
+    @discardableResult
+    internal func addCustomFeeLimit(_ customFeeLimit: CustomFeeLimit) -> Self {
+        self.customFeeLimits.append(customFeeLimit)
+
+        return self
+    }
+
+    /// Clears the custom fee limit for the topic.
+    @discardableResult
+    internal func clearCustomFeeLimits() -> Self {
+        self.customFeeLimits = []
 
         return self
     }
@@ -307,7 +339,7 @@ public class Transaction: ValidateChecksums {
     }
 
     @discardableResult
-    public final func freezeWith(_ client: Client?) throws -> Self {
+    public func freezeWith(_ client: Client?) throws -> Self {
         if isFrozen {
             return self
         }
@@ -324,6 +356,7 @@ public class Transaction: ValidateChecksums {
         self.nodeAccountIds = nodeAccountIds
         self.maxTransactionFee = maxTransactionFee
         self.`operator` = `operator`
+        self.customFeeLimits = customFeeLimits
 
         isFrozen = true
 
@@ -562,6 +595,8 @@ extension Transaction {
 
         let maxTransactionFee = self.maxTransactionFee ?? self.defaultMaxTransactionFee
 
+        let customFeeLimits = self.customFeeLimits
+
         return .with { proto in
             proto.data = data
             proto.transactionID = chunkInfo.currentTransactionId.toProtobuf()
@@ -570,6 +605,9 @@ extension Transaction {
             proto.nodeAccountID = chunkInfo.nodeAccountId.toProtobuf()
             proto.generateRecord = false
             proto.transactionFee = UInt64(maxTransactionFee.toTinybars())
+            if !customFeeLimits.isEmpty {
+                proto.maxCustomFees = customFeeLimits.map { $0.toProtobuf() }
+            }
         }
     }
 }

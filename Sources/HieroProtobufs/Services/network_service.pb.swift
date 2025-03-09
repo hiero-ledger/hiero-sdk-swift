@@ -8,4 +8,15 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Network Service
+/// This service offers some basic "network information" queries.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 // This file contained no messages, enums, or extensions.

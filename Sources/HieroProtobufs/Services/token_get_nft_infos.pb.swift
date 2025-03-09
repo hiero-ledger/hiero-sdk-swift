@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Token Get NFT Infos
+/// Deprecated and permanently disabled
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,29 +32,19 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Applicable only to tokens of type NON_FUNGIBLE_UNIQUE. Gets info on NFTs N through M on the list
-/// of NFTs associated with a given NON_FUNGIBLE_UNIQUE Token.
-/// Example: If there are 10 NFTs issued, having start=0 and end=5 will query for the first 5 NFTs.
-/// Querying +all 10 NFTs will require start=0 and end=10
+/// Deleted and unsupported.
 ///
-/// INVALID_QUERY_RANGE response code will be returned if:
-/// 1) Start > End
-/// 2) Start and End indices are non-positive
-/// 3) Start and End indices are out of boundaries for the retrieved nft list
-/// 4) The range between Start and End is bigger than the global dynamic property for maximum query
-/// range
-///
-/// NOT_SUPPORTED response code will be returned if the queried token is of type FUNGIBLE_COMMON
-///
-/// INVALID_TOKEN_ID response code will be returned if the queried token does not exist
+/// This query is not implemented and any query of this type submitted
+/// SHALL return a `NOT_SUPPORTED` response code.
 public struct Proto_TokenGetNftInfosQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -54,7 +55,11 @@ public struct Proto_TokenGetNftInfosQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The ID of the token for which information is requested
+  /// A token identifier.
+  /// <p>
+  /// This SHALL identify the token to query.<br/>
+  /// The identified token MUST exist, MUST NOT be deleted, and MUST be
+  /// a non-fungible/unique type.
   public var tokenID: Proto_TokenID {
     get {return _tokenID ?? Proto_TokenID()}
     set {_tokenID = newValue}
@@ -65,13 +70,13 @@ public struct Proto_TokenGetNftInfosQuery: Sendable {
   public mutating func clearTokenID() {self._tokenID = nil}
 
   ///*
-  /// Specifies the start index (inclusive) of the range of NFTs to query for. Value must be in the
-  /// range [0; ownedNFTs-1]
+  /// Specifies the start index (inclusive) of the range of NFTs to query for.
+  /// Value must be in the range [0; mintedNFTs-1]
   public var start: Int64 = 0
 
   ///*
-  /// Specifies the end index (exclusive) of the range of NFTs to query for. Value must be in the
-  /// range (start; ownedNFTs]
+  /// Specifies the end index (exclusive) of the range of NFTs to query for.
+  /// Value must be in the range (start; mintedNFTs]
   public var end: Int64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -82,14 +87,17 @@ public struct Proto_TokenGetNftInfosQuery: Sendable {
   fileprivate var _tokenID: Proto_TokenID? = nil
 }
 
+///*
+/// Deleted and unsupported.
 public struct Proto_TokenGetNftInfosResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -100,7 +108,11 @@ public struct Proto_TokenGetNftInfosResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The Token with type NON_FUNGIBLE that this record is for
+  /// A token identifier.
+  /// <p>
+  /// This SHALL identify the token type to query.<br/>
+  /// The identified token MUST exist, and MUST NOT be deleted.
+  /// The identified token MUST be a non-fungible/unique type.
   public var tokenID: Proto_TokenID {
     get {return _tokenID ?? Proto_TokenID()}
     set {_tokenID = newValue}
@@ -111,7 +123,7 @@ public struct Proto_TokenGetNftInfosResponse: Sendable {
   public mutating func clearTokenID() {self._tokenID = nil}
 
   ///*
-  /// List of NFTs associated to the specified token
+  /// A list of messages, each of which describes one NFT.
   public var nfts: [Proto_TokenNftInfo] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

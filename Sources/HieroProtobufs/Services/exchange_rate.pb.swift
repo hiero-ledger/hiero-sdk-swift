@@ -8,6 +8,22 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Exchange Rates
+/// Exchange rates that define ratios between HBAR and USD.
+///
+/// Fees are denominated in USD, but paid in HBAR, so accurate exchange
+/// rates are important and the exchange rates kept in state are updated
+/// frequently.<br/>
+/// Exchange rates are also reported in every receipt for fee transparency.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,23 +37,35 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// An exchange rate between hbar and cents (USD) and the time at which the exchange rate will
-/// expire, and be superseded by a new exchange rate. 
+/// An exchange rate as a ratio of USD cents per HBAR.
+///
+/// This ratio SHALL be used to convert tinycent (`10<sup>-8</sup>` USD cent)
+/// to tinybar for fees and other purposes.<br/>
+/// When applying an `ExchangeRate`, implementations SHOULD ensure input values
+/// are `tinycent` and/or `tinybar` before applying the exchange ratio.<br/>
+/// Exchange results MAY be converted to USD or HBAR via division if whole
+/// unit values are required.
+///
+/// The ratio described here SHALL be assigned such that a value in `tinybar`
+/// may be obtained with the following equation.
+/// ```
+///   amountInTinybar = (amountInTinycent * hbarEquiv) / centEquiv
+/// ```
 public struct Proto_ExchangeRate: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Denominator in calculation of exchange rate between hbar and cents
+  /// Denominator for a ratio of USD cents per HBAR.
   public var hbarEquiv: Int32 = 0
 
   ///*
-  /// Numerator in calculation of exchange rate between hbar and cents
+  /// Numerator for a ratio of USD cents per HBAR.
   public var centEquiv: Int32 = 0
 
   ///*
-  /// Expiration time in seconds for this exchange rate
+  /// Expiration time stamp for this exchange rate.
   public var expirationTime: Proto_TimestampSeconds {
     get {return _expirationTime ?? Proto_TimestampSeconds()}
     set {_expirationTime = newValue}
@@ -55,14 +83,26 @@ public struct Proto_ExchangeRate: Sendable {
 }
 
 ///*
-/// Two sets of exchange rates
+/// A set of two exchange rates.<br/>
+/// The exchange rate for the network is stored and reported as a set of
+/// two rates; current and next. This structure supports the network cleanly
+/// switching between exchange rates when necessary. This also provides clear
+/// notice to clients when the exchange rate will change and the exchange
+/// rate that will be applied for the next time period.
+///
+/// The difference in rate between `currentRate` and `nextRate` MUST NOT exceed
+/// the configured maximum percentage change. This limit SHALL be a
+/// network configuration value.
 public struct Proto_ExchangeRateSet: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Current exchange rate
+  /// A current exchange rate.
+  /// <p>
+  /// When present in a receipt, this SHALL be the exchange rate used to
+  /// compute the fees for that transaction.
   public var currentRate: Proto_ExchangeRate {
     get {return _currentRate ?? Proto_ExchangeRate()}
     set {_currentRate = newValue}
@@ -73,7 +113,10 @@ public struct Proto_ExchangeRateSet: Sendable {
   public mutating func clearCurrentRate() {self._currentRate = nil}
 
   ///*
-  /// Next exchange rate which will take effect when current rate expires
+  /// A future exchange rate.
+  /// <p>
+  /// This exchange rate SHALL be applied after the current exchange
+  /// rate expires.
   public var nextRate: Proto_ExchangeRate {
     get {return _nextRate ?? Proto_ExchangeRate()}
     set {_nextRate = newValue}

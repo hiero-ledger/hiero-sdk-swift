@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Response Code Enumeration
+/// An enumeration of possible response codes.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,7 +32,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// UNDOCUMENTED
+/// An enumeration of possible response codes.
 public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
@@ -383,13 +394,13 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   case invalidInitialBalance // = 85
 
   ///*
-  /// [Deprecated]. attempt to set negative receive record threshold
+  /// Attempt to set negative receive record threshold
   ///
   /// NOTE: This enum value was marked as deprecated in the .proto file
   case invalidReceiveRecordThreshold // = 86
 
   ///*
-  /// [Deprecated]. attempt to set negative send record threshold
+  /// Attempt to set negative send record threshold
   ///
   /// NOTE: This enum value was marked as deprecated in the .proto file
   case invalidSendRecordThreshold // = 87
@@ -991,7 +1002,7 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   case unexpectedTokenDecimals // = 283
 
   ///*
-  /// [Deprecated] The proxy account id is invalid or does not exist.
+  /// The proxy account id is invalid or does not exist.
   ///
   /// NOTE: This enum value was marked as deprecated in the .proto file
   case invalidProxyAccountID // = 284
@@ -1023,7 +1034,7 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   case negativeAllowanceAmount // = 290
 
   ///*
-  /// [Deprecated] The approveForAll flag cannot be set for a fungible token.
+  /// The approveForAll flag cannot be set for a fungible token.
   ///
   /// NOTE: This enum value was marked as deprecated in the .proto file
   case cannotApproveForAllFungibleCommon // = 291
@@ -1046,14 +1057,14 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   case emptyAllowances // = 295
 
   ///*
-  /// [Deprecated] Spender is repeated more than once in Crypto or Token or NFT allowance lists in a single
+  /// Spender is repeated more than once in Crypto or Token or NFT allowance lists in a single
   /// CryptoApproveAllowance transaction.
   ///
   /// NOTE: This enum value was marked as deprecated in the .proto file
   case spenderAccountRepeatedInAllowances // = 296
 
   ///*
-  /// [Deprecated] Serial numbers are repeated in nft allowance for a single spender account
+  /// Serial numbers are repeated in nft allowance for a single spender account
   ///
   /// NOTE: This enum value was marked as deprecated in the .proto file
   case repeatedSerialNumsInNftAllowances // = 297
@@ -1265,7 +1276,9 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
 
   ///*
   /// A transaction failed because the TLS certificate provided for the
-  /// node is missing or invalid.<br/>
+  /// node is missing or invalid.
+  /// <p>
+  /// #### Probable Causes
   /// The certificate MUST be a TLS certificate of a type permitted for gossip
   /// signatures.<br/>
   /// The value presented MUST be a UTF-8 NFKD encoding of the TLS
@@ -1276,7 +1289,9 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
 
   ///*
   /// A transaction failed because the hash provided for the gRPC certificate
-  /// is present but invalid.<br/>
+  /// is present but invalid.
+  /// <p>
+  /// #### Probable Causes
   /// The `grpc_certificate_hash` MUST be a SHA-384 hash.<br/>
   /// The input hashed MUST be a UTF-8 NFKD encoding of the actual TLS
   /// certificate.<br/>
@@ -1346,15 +1361,16 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   case tokenHasNoMetadataOrSupplyKey // = 360
 
   ///*
-  /// The transaction attempted to the use an empty List of `PendingAirdropId`.
+  /// The list of `PendingAirdropId`s is empty and MUST NOT be empty.
   case emptyPendingAirdropIDList // = 361
 
   ///*
-  /// The transaction attempted to the same `PendingAirdropId` twice.
+  /// A `PendingAirdropId` is repeated in a `claim` or `cancel` transaction.
   case pendingAirdropIDRepeated // = 362
 
   ///*
-  /// The transaction attempted to use more than the allowed number of `PendingAirdropId`.
+  /// The number of `PendingAirdropId` values in the list exceeds the maximum
+  /// allowable number.
   case pendingAirdropIDListTooLong // = 363
 
   ///
@@ -1363,8 +1379,9 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
 
   ///
   /// The identified account is sender for one or more pending airdrop(s)
-  /// and cannot be deleted.<br/>
-  /// Requester should cancel all pending airdrops before resending
+  /// and cannot be deleted.
+  /// <p>
+  /// The requester SHOULD cancel all pending airdrops before resending
   /// this transaction.
   case accountHasPendingAirdrops // = 365
 
@@ -1391,8 +1408,8 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   /// The token might be deleted, or the sender may not have enough tokens
   /// to fulfill the offer.
   /// <p>
-  /// The client SHOULD query mirror node to determine the status of the pending
-  /// airdrop and whether the sender can fulfill the offer.
+  /// The client SHOULD query mirror node to determine the status of the
+  /// pending airdrop and whether the sender can fulfill the offer.
   case invalidTokenInPendingAirdrop // = 369
 
   ///*
@@ -1409,6 +1426,74 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   /// A scheduled transaction configured to wait for expiry to execute was not
   /// given an explicit expiration time.
   case missingExpiryTime // = 372
+
+  ///*
+  /// A contract operation attempted to schedule another transaction after it
+  /// had already scheduled a recursive contract call.
+  case noSchedulingAllowedAfterScheduledRecursion // = 373
+
+  ///*
+  /// A contract can schedule recursive calls a finite number of times (this is
+  /// approximately four million times with typical network configuration.)
+  case recursiveSchedulingLimitReached // = 374
+
+  ///*
+  /// The target network is waiting for the ledger ID to be set, which is a
+  /// side effect of finishing the network's TSS construction.
+  case waitingForLedgerID // = 375
+
+  ///*
+  /// The provided fee exempt key list size exceeded the limit.
+  case maxEntriesForFeeExemptKeyListExceeded // = 376
+
+  ///*
+  /// The provided fee exempt key list contains duplicated keys.
+  case feeExemptKeyListContainsDuplicatedKeys // = 377
+
+  ///*
+  /// The provided fee exempt key list contains an invalid key.
+  case invalidKeyInFeeExemptKeyList // = 378
+
+  ///*
+  /// The provided fee schedule key contains an invalid key.
+  case invalidFeeScheduleKey // = 379
+
+  ///*
+  /// If a fee schedule key is not set when we create a topic
+  /// we cannot add it on update.
+  case feeScheduleKeyCannotBeUpdated // = 380
+
+  ///*
+  /// If the topic's custom fees are updated the topic SHOULD have a
+  /// fee schedule key
+  case feeScheduleKeyNotSet // = 381
+
+  ///*
+  /// The fee amount is exceeding the amount that the payer
+  /// is willing to pay.
+  case maxCustomFeeLimitExceeded // = 382
+
+  ///*
+  /// There are no corresponding custom fees.
+  case noValidMaxCustomFee // = 383
+
+  ///*
+  /// The provided list contains invalid max custom fee.
+  case invalidMaxCustomFees // = 384
+
+  ///*
+  /// The provided max custom fee list contains fees with
+  /// duplicate denominations.
+  case duplicateDenominationInMaxCustomFeeList // = 385
+
+  ///*
+  /// The provided max custom fee list contains fees with
+  /// duplicate account id.
+  case duplicateAccountIDInMaxCustomFeeList // = 386
+
+  ///*
+  /// Max custom fees list is not supported for this operation.
+  case maxCustomFeesIsNotSupported // = 387
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -1748,6 +1833,21 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 370: self = .scheduleExpiryIsBusy
     case 371: self = .invalidGrpcCertificateHash
     case 372: self = .missingExpiryTime
+    case 373: self = .noSchedulingAllowedAfterScheduledRecursion
+    case 374: self = .recursiveSchedulingLimitReached
+    case 375: self = .waitingForLedgerID
+    case 376: self = .maxEntriesForFeeExemptKeyListExceeded
+    case 377: self = .feeExemptKeyListContainsDuplicatedKeys
+    case 378: self = .invalidKeyInFeeExemptKeyList
+    case 379: self = .invalidFeeScheduleKey
+    case 380: self = .feeScheduleKeyCannotBeUpdated
+    case 381: self = .feeScheduleKeyNotSet
+    case 382: self = .maxCustomFeeLimitExceeded
+    case 383: self = .noValidMaxCustomFee
+    case 384: self = .invalidMaxCustomFees
+    case 385: self = .duplicateDenominationInMaxCustomFeeList
+    case 386: self = .duplicateAccountIDInMaxCustomFeeList
+    case 387: self = .maxCustomFeesIsNotSupported
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -2085,6 +2185,21 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .scheduleExpiryIsBusy: return 370
     case .invalidGrpcCertificateHash: return 371
     case .missingExpiryTime: return 372
+    case .noSchedulingAllowedAfterScheduledRecursion: return 373
+    case .recursiveSchedulingLimitReached: return 374
+    case .waitingForLedgerID: return 375
+    case .maxEntriesForFeeExemptKeyListExceeded: return 376
+    case .feeExemptKeyListContainsDuplicatedKeys: return 377
+    case .invalidKeyInFeeExemptKeyList: return 378
+    case .invalidFeeScheduleKey: return 379
+    case .feeScheduleKeyCannotBeUpdated: return 380
+    case .feeScheduleKeyNotSet: return 381
+    case .maxCustomFeeLimitExceeded: return 382
+    case .noValidMaxCustomFee: return 383
+    case .invalidMaxCustomFees: return 384
+    case .duplicateDenominationInMaxCustomFeeList: return 385
+    case .duplicateAccountIDInMaxCustomFeeList: return 386
+    case .maxCustomFeesIsNotSupported: return 387
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -2422,6 +2537,21 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     .scheduleExpiryIsBusy,
     .invalidGrpcCertificateHash,
     .missingExpiryTime,
+    .noSchedulingAllowedAfterScheduledRecursion,
+    .recursiveSchedulingLimitReached,
+    .waitingForLedgerID,
+    .maxEntriesForFeeExemptKeyListExceeded,
+    .feeExemptKeyListContainsDuplicatedKeys,
+    .invalidKeyInFeeExemptKeyList,
+    .invalidFeeScheduleKey,
+    .feeScheduleKeyCannotBeUpdated,
+    .feeScheduleKeyNotSet,
+    .maxCustomFeeLimitExceeded,
+    .noValidMaxCustomFee,
+    .invalidMaxCustomFees,
+    .duplicateDenominationInMaxCustomFeeList,
+    .duplicateAccountIDInMaxCustomFeeList,
+    .maxCustomFeesIsNotSupported,
   ]
 
 }
@@ -2761,5 +2891,20 @@ extension Proto_ResponseCodeEnum: SwiftProtobuf._ProtoNameProviding {
     370: .same(proto: "SCHEDULE_EXPIRY_IS_BUSY"),
     371: .same(proto: "INVALID_GRPC_CERTIFICATE_HASH"),
     372: .same(proto: "MISSING_EXPIRY_TIME"),
+    373: .same(proto: "NO_SCHEDULING_ALLOWED_AFTER_SCHEDULED_RECURSION"),
+    374: .same(proto: "RECURSIVE_SCHEDULING_LIMIT_REACHED"),
+    375: .same(proto: "WAITING_FOR_LEDGER_ID"),
+    376: .same(proto: "MAX_ENTRIES_FOR_FEE_EXEMPT_KEY_LIST_EXCEEDED"),
+    377: .same(proto: "FEE_EXEMPT_KEY_LIST_CONTAINS_DUPLICATED_KEYS"),
+    378: .same(proto: "INVALID_KEY_IN_FEE_EXEMPT_KEY_LIST"),
+    379: .same(proto: "INVALID_FEE_SCHEDULE_KEY"),
+    380: .same(proto: "FEE_SCHEDULE_KEY_CANNOT_BE_UPDATED"),
+    381: .same(proto: "FEE_SCHEDULE_KEY_NOT_SET"),
+    382: .same(proto: "MAX_CUSTOM_FEE_LIMIT_EXCEEDED"),
+    383: .same(proto: "NO_VALID_MAX_CUSTOM_FEE"),
+    384: .same(proto: "INVALID_MAX_CUSTOM_FEES"),
+    385: .same(proto: "DUPLICATE_DENOMINATION_IN_MAX_CUSTOM_FEE_LIST"),
+    386: .same(proto: "DUPLICATE_ACCOUNT_ID_IN_MAX_CUSTOM_FEE_LIST"),
+    387: .same(proto: "MAX_CUSTOM_FEES_IS_NOT_SUPPORTED"),
   ]
 }

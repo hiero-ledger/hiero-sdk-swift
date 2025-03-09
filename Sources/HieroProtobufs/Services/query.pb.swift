@@ -8,6 +8,21 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Query
+/// This is the parent message for all queries, and this message is
+/// serialized and signed, with the signature included in the QueryHeader.
+///
+/// All of the entries in the `query` `oneof` are fully specified elsewhere;
+/// we only include a short summary here.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,8 +36,10 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// A single query, which is sent from the client to a node. This includes all possible queries. Each
-/// Query should not have more than 50 levels.
+/// A query transaction.<br/>
+/// This message is serialized to bytes and those bytes are signed by the
+/// submitter, with the signature included in the QueryHeader for the query
+/// request.
 public struct Proto_Query: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -31,7 +48,7 @@ public struct Proto_Query: Sendable {
   public var query: Proto_Query.OneOf_Query? = nil
 
   ///*
-  /// Get all entities associated with a given key
+  /// Get all entities associated with a given key.
   public var getByKey: Proto_GetByKeyQuery {
     get {
       if case .getByKey(let v)? = query {return v}
@@ -41,7 +58,11 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get the IDs in the format used in transactions, given the format used in Solidity
+  /// Get an Hedera identifier associated with an identifier in EVM
+  /// "Solidity" form.<br/>
+  /// Most often used in smart contracts to find an Hedera account,
+  /// file, or contract identifier to pass to a system contract or
+  /// precompile.
   public var getBySolidityID: Proto_GetBySolidityIDQuery {
     get {
       if case .getBySolidityID(let v)? = query {return v}
@@ -51,7 +72,10 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Call a function of a smart contract instance
+  /// Call a function of a smart contract.<br/>
+  /// This call is executed exclusively on the node to which it is
+  /// submitted, and is much less expensive than a `contractCall`
+  /// transaction.
   public var contractCallLocal: Proto_ContractCallLocalQuery {
     get {
       if case .contractCallLocal(let v)? = query {return v}
@@ -61,7 +85,7 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get information about a smart contract instance
+  /// Get information about a smart contract.
   public var contractGetInfo: Proto_ContractGetInfoQuery {
     get {
       if case .contractGetInfo(let v)? = query {return v}
@@ -71,7 +95,7 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get runtime code used by a smart contract instance
+  /// Get runtime bytecode used by a smart contract.
   public var contractGetBytecode: Proto_ContractGetBytecodeQuery {
     get {
       if case .contractGetBytecode(let v)? = query {return v}
@@ -81,7 +105,12 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get Records of the contract instance
+  /// This query is unsupported and SHALL fail.<br/>
+  /// Requests for this information MUST be directed to a mirror node.
+  /// <p>
+  /// Get Records of a smart contract.
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
   public var contractGetRecords: Proto_ContractGetRecordsQuery {
     get {
       if case .contractGetRecords(let v)? = query {return v}
@@ -91,7 +120,7 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get the current balance in a cryptocurrency account
+  /// Get the current HBAR balance of an Hedera account or smart contract.
   public var cryptogetAccountBalance: Proto_CryptoGetAccountBalanceQuery {
     get {
       if case .cryptogetAccountBalance(let v)? = query {return v}
@@ -101,7 +130,8 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get all the records that currently exist for transactions involving an account
+  /// Get records of all "recent" transactions for which a specified
+  /// account is the effective payer.
   public var cryptoGetAccountRecords: Proto_CryptoGetAccountRecordsQuery {
     get {
       if case .cryptoGetAccountRecords(let v)? = query {return v}
@@ -111,7 +141,8 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get all information about an account
+  /// Get information about an account, including the balance.<br/>
+  /// This does not get the list of account records.
   public var cryptoGetInfo: Proto_CryptoGetInfoQuery {
     get {
       if case .cryptoGetInfo(let v)? = query {return v}
@@ -121,7 +152,12 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get a single livehash from a single account, if present
+  /// This query is unsupported and SHALL fail.<br/>
+  /// Requests for this information MUST be directed to a mirror node.
+  /// <p>
+  /// Get a single livehash from a single account, if present.
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
   public var cryptoGetLiveHash: Proto_CryptoGetLiveHashQuery {
     get {
       if case .cryptoGetLiveHash(let v)? = query {return v}
@@ -131,8 +167,12 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get all the accounts that proxy stake to a given account, and how much they proxy stake
-  /// (not yet implemented in the current API)
+  /// This query is unsupported and SHALL fail.<br/>
+  /// Requests for this information MUST be directed to a mirror node.
+  /// <p>
+  /// Get all the accounts that are proxy staking to this account.
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
   public var cryptoGetProxyStakers: Proto_CryptoGetStakersQuery {
     get {
       if case .cryptoGetProxyStakers(let v)? = query {return v}
@@ -142,7 +182,7 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get the contents of a file (the bytes stored in it)
+  /// Get the content of a file.
   public var fileGetContents: Proto_FileGetContentsQuery {
     get {
       if case .fileGetContents(let v)? = query {return v}
@@ -152,7 +192,7 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get information about a file, such as its expiration date
+  /// Get metadata for a file.
   public var fileGetInfo: Proto_FileGetInfoQuery {
     get {
       if case .fileGetInfo(let v)? = query {return v}
@@ -162,7 +202,9 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get a receipt for a transaction (lasts 180 seconds)
+  /// Get a receipt for a transaction.<br/>
+  /// This only returns a receipt if the transaction is "recent", which
+  /// is typically within the previous 180 seconds (3 minutes).
   public var transactionGetReceipt: Proto_TransactionGetReceiptQuery {
     get {
       if case .transactionGetReceipt(let v)? = query {return v}
@@ -172,7 +214,9 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get a record for a transaction
+  /// Get a record for a transaction.
+  /// This only returns a record if the transaction is "available", which
+  /// is typically within the previous 1 hour.
   public var transactionGetRecord: Proto_TransactionGetRecordQuery {
     get {
       if case .transactionGetRecord(let v)? = query {return v}
@@ -182,7 +226,9 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get a record for a transaction (lasts 180 seconds)
+  /// Get a record for a transaction.
+  /// This only returns a record if the transaction is "recent", which
+  /// is typically within the previous 180 seconds (3 minutes).
   public var transactionGetFastRecord: Proto_TransactionGetFastRecordQuery {
     get {
       if case .transactionGetFastRecord(let v)? = query {return v}
@@ -192,7 +238,7 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get the parameters of and state of a consensus topic.
+  /// Get metadata for a consensus topic.
   public var consensusGetTopicInfo: Proto_ConsensusGetTopicInfoQuery {
     get {
       if case .consensusGetTopicInfo(let v)? = query {return v}
@@ -202,8 +248,8 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get the versions of the HAPI protobuf and Hedera Services software deployed on the
-  /// responding node.
+  /// Get the versions of Hedera Services and the HAPI API deployed on
+  /// the responding consensus node.
   public var networkGetVersionInfo: Proto_NetworkGetVersionInfoQuery {
     get {
       if case .networkGetVersionInfo(let v)? = query {return v}
@@ -213,7 +259,7 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get all information about a token
+  /// Get metadata for a token.
   public var tokenGetInfo: Proto_TokenGetInfoQuery {
     get {
       if case .tokenGetInfo(let v)? = query {return v}
@@ -223,7 +269,9 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get all information about a scheduled entity
+  /// Get metadata for a schedule.<br/>
+  /// A schedule is a request to execute a transaction at a future
+  /// time.
   public var scheduleGetInfo: Proto_ScheduleGetInfoQuery {
     get {
       if case .scheduleGetInfo(let v)? = query {return v}
@@ -233,7 +281,12 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get a list of NFTs associated with the account
+  /// This query is unsupported and SHALL fail.<br/>
+  /// Requests for this information MUST be directed to a mirror node.
+  /// <p>
+  /// Get a list of non-fungible/unique tokens associated with an account.
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
   public var tokenGetAccountNftInfos: Proto_TokenGetAccountNftInfosQuery {
     get {
       if case .tokenGetAccountNftInfos(let v)? = query {return v}
@@ -243,7 +296,8 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get all information about a NFT
+  /// Get metadata for a specific, serial numbered, non-fungible/unique
+  /// token (NFT).
   public var tokenGetNftInfo: Proto_TokenGetNftInfoQuery {
     get {
       if case .tokenGetNftInfo(let v)? = query {return v}
@@ -253,7 +307,13 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Get a list of NFTs for the token
+  /// This query is unsupported and SHALL fail.<br/>
+  /// Requests for this information MUST be directed to a mirror node.
+  /// <p>
+  /// Get metadata for all non-fungible/unique tokens (NFTs) of a single
+  /// type within a range of indices (0-based count of minted tokens).
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
   public var tokenGetNftInfos: Proto_TokenGetNftInfosQuery {
     get {
       if case .tokenGetNftInfos(let v)? = query {return v}
@@ -263,7 +323,12 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Gets <tt>handleTransaction</tt> times for one or more "sufficiently recent" TransactionIDs
+  /// This query is unsupported and SHALL fail.<br/>
+  /// Requests for this information MUST be directed to a mirror node.
+  /// <p>
+  /// Get the execution time for a recent transaction.
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
   public var networkGetExecutionTime: Proto_NetworkGetExecutionTimeQuery {
     get {
       if case .networkGetExecutionTime(let v)? = query {return v}
@@ -273,7 +338,7 @@ public struct Proto_Query: Sendable {
   }
 
   ///*
-  /// Gets all information about an account including allowances granted by the account
+  /// Get detail metadata for an account.
   public var accountDetails: Proto_GetAccountDetailsQuery {
     get {
       if case .accountDetails(let v)? = query {return v}
@@ -286,81 +351,129 @@ public struct Proto_Query: Sendable {
 
   public enum OneOf_Query: Equatable, Sendable {
     ///*
-    /// Get all entities associated with a given key
+    /// Get all entities associated with a given key.
     case getByKey(Proto_GetByKeyQuery)
     ///*
-    /// Get the IDs in the format used in transactions, given the format used in Solidity
+    /// Get an Hedera identifier associated with an identifier in EVM
+    /// "Solidity" form.<br/>
+    /// Most often used in smart contracts to find an Hedera account,
+    /// file, or contract identifier to pass to a system contract or
+    /// precompile.
     case getBySolidityID(Proto_GetBySolidityIDQuery)
     ///*
-    /// Call a function of a smart contract instance
+    /// Call a function of a smart contract.<br/>
+    /// This call is executed exclusively on the node to which it is
+    /// submitted, and is much less expensive than a `contractCall`
+    /// transaction.
     case contractCallLocal(Proto_ContractCallLocalQuery)
     ///*
-    /// Get information about a smart contract instance
+    /// Get information about a smart contract.
     case contractGetInfo(Proto_ContractGetInfoQuery)
     ///*
-    /// Get runtime code used by a smart contract instance
+    /// Get runtime bytecode used by a smart contract.
     case contractGetBytecode(Proto_ContractGetBytecodeQuery)
     ///*
-    /// Get Records of the contract instance
+    /// This query is unsupported and SHALL fail.<br/>
+    /// Requests for this information MUST be directed to a mirror node.
+    /// <p>
+    /// Get Records of a smart contract.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     case contractGetRecords(Proto_ContractGetRecordsQuery)
     ///*
-    /// Get the current balance in a cryptocurrency account
+    /// Get the current HBAR balance of an Hedera account or smart contract.
     case cryptogetAccountBalance(Proto_CryptoGetAccountBalanceQuery)
     ///*
-    /// Get all the records that currently exist for transactions involving an account
+    /// Get records of all "recent" transactions for which a specified
+    /// account is the effective payer.
     case cryptoGetAccountRecords(Proto_CryptoGetAccountRecordsQuery)
     ///*
-    /// Get all information about an account
+    /// Get information about an account, including the balance.<br/>
+    /// This does not get the list of account records.
     case cryptoGetInfo(Proto_CryptoGetInfoQuery)
     ///*
-    /// Get a single livehash from a single account, if present
+    /// This query is unsupported and SHALL fail.<br/>
+    /// Requests for this information MUST be directed to a mirror node.
+    /// <p>
+    /// Get a single livehash from a single account, if present.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     case cryptoGetLiveHash(Proto_CryptoGetLiveHashQuery)
     ///*
-    /// Get all the accounts that proxy stake to a given account, and how much they proxy stake
-    /// (not yet implemented in the current API)
+    /// This query is unsupported and SHALL fail.<br/>
+    /// Requests for this information MUST be directed to a mirror node.
+    /// <p>
+    /// Get all the accounts that are proxy staking to this account.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     case cryptoGetProxyStakers(Proto_CryptoGetStakersQuery)
     ///*
-    /// Get the contents of a file (the bytes stored in it)
+    /// Get the content of a file.
     case fileGetContents(Proto_FileGetContentsQuery)
     ///*
-    /// Get information about a file, such as its expiration date
+    /// Get metadata for a file.
     case fileGetInfo(Proto_FileGetInfoQuery)
     ///*
-    /// Get a receipt for a transaction (lasts 180 seconds)
+    /// Get a receipt for a transaction.<br/>
+    /// This only returns a receipt if the transaction is "recent", which
+    /// is typically within the previous 180 seconds (3 minutes).
     case transactionGetReceipt(Proto_TransactionGetReceiptQuery)
     ///*
-    /// Get a record for a transaction
+    /// Get a record for a transaction.
+    /// This only returns a record if the transaction is "available", which
+    /// is typically within the previous 1 hour.
     case transactionGetRecord(Proto_TransactionGetRecordQuery)
     ///*
-    /// Get a record for a transaction (lasts 180 seconds)
+    /// Get a record for a transaction.
+    /// This only returns a record if the transaction is "recent", which
+    /// is typically within the previous 180 seconds (3 minutes).
     case transactionGetFastRecord(Proto_TransactionGetFastRecordQuery)
     ///*
-    /// Get the parameters of and state of a consensus topic.
+    /// Get metadata for a consensus topic.
     case consensusGetTopicInfo(Proto_ConsensusGetTopicInfoQuery)
     ///*
-    /// Get the versions of the HAPI protobuf and Hedera Services software deployed on the
-    /// responding node.
+    /// Get the versions of Hedera Services and the HAPI API deployed on
+    /// the responding consensus node.
     case networkGetVersionInfo(Proto_NetworkGetVersionInfoQuery)
     ///*
-    /// Get all information about a token
+    /// Get metadata for a token.
     case tokenGetInfo(Proto_TokenGetInfoQuery)
     ///*
-    /// Get all information about a scheduled entity
+    /// Get metadata for a schedule.<br/>
+    /// A schedule is a request to execute a transaction at a future
+    /// time.
     case scheduleGetInfo(Proto_ScheduleGetInfoQuery)
     ///*
-    /// Get a list of NFTs associated with the account
+    /// This query is unsupported and SHALL fail.<br/>
+    /// Requests for this information MUST be directed to a mirror node.
+    /// <p>
+    /// Get a list of non-fungible/unique tokens associated with an account.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     case tokenGetAccountNftInfos(Proto_TokenGetAccountNftInfosQuery)
     ///*
-    /// Get all information about a NFT
+    /// Get metadata for a specific, serial numbered, non-fungible/unique
+    /// token (NFT).
     case tokenGetNftInfo(Proto_TokenGetNftInfoQuery)
     ///*
-    /// Get a list of NFTs for the token
+    /// This query is unsupported and SHALL fail.<br/>
+    /// Requests for this information MUST be directed to a mirror node.
+    /// <p>
+    /// Get metadata for all non-fungible/unique tokens (NFTs) of a single
+    /// type within a range of indices (0-based count of minted tokens).
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     case tokenGetNftInfos(Proto_TokenGetNftInfosQuery)
     ///*
-    /// Gets <tt>handleTransaction</tt> times for one or more "sufficiently recent" TransactionIDs
+    /// This query is unsupported and SHALL fail.<br/>
+    /// Requests for this information MUST be directed to a mirror node.
+    /// <p>
+    /// Get the execution time for a recent transaction.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     case networkGetExecutionTime(Proto_NetworkGetExecutionTimeQuery)
     ///*
-    /// Gets all information about an account including allowances granted by the account
+    /// Get detail metadata for an account.
     case accountDetails(Proto_GetAccountDetailsQuery)
 
   }

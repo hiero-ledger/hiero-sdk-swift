@@ -8,6 +8,21 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get contract records
+/// Deprecated query messages to read all recent contract transaction records.
+///
+/// > REVIEW QUESTION
+/// >> Can we delete this file and remove the related query entirely?
+/// >> It appears it hasn't been supported for over 3½ years...
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,7 +36,8 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Before v0.9.0, requested records of all transactions against the given contract in the last 25 hours.
+/// Deprecated and not supported after release `0.9.0`.
+/// Request records of all transactions against the given contract in the last 25 hours.
 ///
 /// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_ContractGetRecordsQuery: Sendable {
@@ -30,7 +46,9 @@ public struct Proto_ContractGetRecordsQuery: Sendable {
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -41,7 +59,9 @@ public struct Proto_ContractGetRecordsQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The smart contract instance for which the records should be retrieved
+  /// A smart contract ID.
+  /// <p>
+  /// The network SHALL return information for this smart contract, if successful.
   public var contractID: Proto_ContractID {
     get {return _contractID ?? Proto_ContractID()}
     set {_contractID = newValue}
@@ -60,7 +80,8 @@ public struct Proto_ContractGetRecordsQuery: Sendable {
 }
 
 ///*
-/// Before v0.9.0, returned records of all transactions against the given contract in the last 25 hours.
+/// Deprecated and not supported after release `0.9.0`.
+/// Response with records of all transactions against the given contract in the last 25 hours.
 ///
 /// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_ContractGetRecordsResponse: Sendable {
@@ -69,7 +90,9 @@ public struct Proto_ContractGetRecordsResponse: Sendable {
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof, or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -80,7 +103,7 @@ public struct Proto_ContractGetRecordsResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The smart contract instance that this record is for
+  /// A smart contract that this response describes.
   public var contractID: Proto_ContractID {
     get {return _contractID ?? Proto_ContractID()}
     set {_contractID = newValue}
@@ -91,7 +114,7 @@ public struct Proto_ContractGetRecordsResponse: Sendable {
   public mutating func clearContractID() {self._contractID = nil}
 
   ///*
-  /// List of records, each with contractCreateResult or contractCallResult as its body
+  /// A list of records, each with contractCreateResult or contractCallResult as its body
   public var records: [Proto_TransactionRecord] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

@@ -8,6 +8,16 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get NFT Info Query
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -30,8 +40,9 @@ public struct Proto_TokenGetNftInfoQuery: Sendable {
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -42,7 +53,10 @@ public struct Proto_TokenGetNftInfoQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The ID of the NFT
+  /// A non-fungible/unique token (NFT) identifier.
+  /// <p>
+  /// This SHALL identify the NFT to query.<br/>
+  /// The identified NFT MUST exist, and MUST NOT be deleted.
   public var nftID: Proto_NftID {
     get {return _nftID ?? Proto_NftID()}
     set {_nftID = newValue}
@@ -61,14 +75,16 @@ public struct Proto_TokenGetNftInfoQuery: Sendable {
 }
 
 ///*
-/// UNDOCUMENTED
+/// Information for one non-fungible/unique token (NFT).
 public struct Proto_TokenNftInfo: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The ID of the NFT
+  /// A non-fungible/unique token (NFT) identifier.
+  /// <p>
+  /// This SHALL match the NFT requested.<br/>
   public var nftID: Proto_NftID {
     get {return _nftID ?? Proto_NftID()}
     set {_nftID = newValue}
@@ -105,7 +121,10 @@ public struct Proto_TokenNftInfo: @unchecked Sendable {
   public var metadata: Data = Data()
 
   ///*
-  /// The ledger ID the response was returned from; please see <a href="https://github.com/hashgraph/hedera-improvement-proposal/blob/master/HIP/hip-198.md">HIP-198</a> for the network-specific IDs. 
+  /// The ledger ID of the network that generated this response.
+  /// <p>
+  /// This value SHALL identify the distributed ledger that responded to
+  /// this query.
   public var ledgerID: Data = Data()
 
   ///*
@@ -137,8 +156,9 @@ public struct Proto_TokenGetNftInfoResponse: @unchecked Sendable {
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _storage._header ?? Proto_ResponseHeader()}
     set {_uniqueStorage()._header = newValue}

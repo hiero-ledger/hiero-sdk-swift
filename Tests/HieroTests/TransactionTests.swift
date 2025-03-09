@@ -81,10 +81,13 @@ internal final class TransactionTests: XCTestCase {
 
         let bytes = try TopicMessageSubmitTransaction().topicId(314).message("Fish cutlery".data(using: .utf8)!)
             .chunkSize(8).maxChunks(2).transactionId(Resources.txId).nodeAccountIds(Resources.nodeAccountIds)
+            .customFeeLimits([CustomFeeLimit(payerId: AccountId(0), customFees: [AnyCustomFee.fixed(FixedFee(amount: 1, denominatingTokenId: TokenId("0.0.1")))])])
             .freezeWith(client).toBytes()
 
         let tx = try Transaction.fromBytes(bytes)
 
         _ = try tx.toBytes()
+
+        print("tx.customFeeLimits: \(tx.customFeeLimits)")
     }
 }

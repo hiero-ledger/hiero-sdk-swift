@@ -8,6 +8,23 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get By Solidity
+/// A standard query to obtain account and contract identifiers for a smart
+/// contract, given the Solidity identifier for that contract.
+///
+/// > Important
+/// >> This query is obsolete and not supported.<br/>
+/// >> Any query of this type that is submitted SHALL fail with a `PRE_CHECK`
+/// >> result of `NOT_SUPPORTED`.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,17 +38,19 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get the IDs in the format used by transactions, given the ID in the format used by Solidity. If
-/// the Solidity ID is for a smart contract instance, then both the ContractID and associated
-/// AccountID will be returned.
+/// Query to read Contract, Account, and File identifiers for a smart
+/// contract given a Solidity identifier.
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_GetBySolidityIDQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -42,7 +61,9 @@ public struct Proto_GetBySolidityIDQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The ID in the format used by Solidity
+  /// A contract ID in the format used by Solidity.
+  /// <p>
+  /// This field is REQUIRED.
   public var solidityID: String = String()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -53,15 +74,21 @@ public struct Proto_GetBySolidityIDQuery: Sendable {
 }
 
 ///*
-/// Response when the client sends the node GetBySolidityIDQuery
+/// Response to a getBySolidityId query.
+///
+/// This message returns the account, contract, and file identifiers for
+/// a smart contract.
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_GetBySolidityIDResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -72,7 +99,9 @@ public struct Proto_GetBySolidityIDResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The Account ID for the cryptocurrency account
+  /// An account identifier.
+  /// <p>
+  /// This SHALL identify an account that backs the requested smart contract.
   public var accountID: Proto_AccountID {
     get {return _accountID ?? Proto_AccountID()}
     set {_accountID = newValue}
@@ -83,7 +112,10 @@ public struct Proto_GetBySolidityIDResponse: Sendable {
   public mutating func clearAccountID() {self._accountID = nil}
 
   ///*
-  /// The file Id for the file
+  /// A file identifier.
+  /// <p>
+  /// This SHALL identify a file, the contents of which are the EVM
+  /// bytecode for the requested smart contract.
   public var fileID: Proto_FileID {
     get {return _fileID ?? Proto_FileID()}
     set {_fileID = newValue}
@@ -94,8 +126,9 @@ public struct Proto_GetBySolidityIDResponse: Sendable {
   public mutating func clearFileID() {self._fileID = nil}
 
   ///*
-  /// A smart contract ID for the instance (if this is included, then the associated accountID will
-  /// also be included)
+  /// A contract identifier.
+  /// <p>
+  /// This SHALL identify the requested smart contract.
   public var contractID: Proto_ContractID {
     get {return _contractID ?? Proto_ContractID()}
     set {_contractID = newValue}

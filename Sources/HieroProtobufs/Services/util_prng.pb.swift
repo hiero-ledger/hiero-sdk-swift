@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Utility PRNG query
+/// A query to retrieve a deterministic pseudo-random value.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,15 +32,26 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Generates a pseudorandom number
+/// Request a deterministic pseudo-random number.
+///
+/// The value returned SHALL be deterministic, but not easily predicted.
+/// The value returned SHALL NOT be suitable for cryptographic use.
+///
+/// ### Block Stream Effects
+/// The result of this transaction is reported in a `UtilPrngOutput` message.
 public struct Proto_UtilPrngTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// If provided and is positive, returns a 32-bit pseudorandom number from the given range in the transaction record.
-  /// If not set or set to zero, will return a 384-bit pseudorandom number in the record.
+  /// A range for the requested value.
+  /// <p>
+  /// If this is greater than `0`, the service SHALL return a 32-bit
+  /// pseudo-random number between 0 and the value provided in the
+  /// transaction record.<br/>
+  /// If this is unset, zero, or negative; the service SHALL return a
+  /// 384-bit unsigned pseudo-random number in the record.
   public var range: Int32 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

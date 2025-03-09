@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Contract Call
+/// Transaction body for calls to a Smart Contract.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,23 +33,25 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Call a function of the given smart contract instance, giving it functionParameters as its inputs.
-/// The call can use at maximum the given amount of gas - the paying account will not be charged for
-/// any unspent gas.
+/// Call a function of a given smart contract, providing function parameter
+/// inputs as needed.
 ///
-/// If this function results in data being stored, an amount of gas is calculated that reflects this
-/// storage burden.
+/// Resource ("gas") charges SHALL include all relevant fees incurred by the
+/// contract execution, including any storage required.<br/>
+/// The total transaction fee SHALL incorporate all of the "gas" actually
+/// consumed as well as the standard fees for transaction handling, data
+/// transfers, signature verification, etc...<br/>
+/// The response SHALL contain the output returned by the function call.
 ///
-/// The amount of gas used, as well as other attributes of the transaction, e.g. size, number of
-/// signatures to be verified, determine the fee for the transaction - which is charged to the paying
-/// account.
+/// ### Block Stream Effects
+/// A `CallContractOutput` message SHALL be emitted for each transaction.
 public struct Proto_ContractCallTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The contract to call
+  /// The ID of a smart contract to call.
   public var contractID: Proto_ContractID {
     get {return _contractID ?? Proto_ContractID()}
     set {_contractID = newValue}
@@ -49,15 +62,30 @@ public struct Proto_ContractCallTransactionBody: @unchecked Sendable {
   public mutating func clearContractID() {self._contractID = nil}
 
   ///*
-  /// the maximum amount of gas to use for the call
+  /// A maximum limit to the amount of gas to use for this call.
+  /// <p>
+  /// The network SHALL charge the greater of the following, but
+  /// SHALL NOT charge more than the value of this field.
+  /// <ol>
+  ///   <li>The actual gas consumed by the smart contract call.</li>
+  ///   <li>`80%` of this value.</li>
+  /// </ol>
+  /// The `80%` factor encourages reasonable estimation, while allowing for
+  /// some overage to ensure successful execution.
   public var gas: Int64 = 0
 
   ///*
-  /// number of tinybars sent (the function must be payable if this is nonzero)
+  /// An amount of tinybar sent via this contract call.
+  /// <p>
+  /// If this is non-zero, the function MUST be `payable`.
   public var amount: Int64 = 0
 
   ///*
-  /// which function to call, and the parameters to pass to the function
+  /// The smart contract function to call.
+  /// <p>
+  /// This MUST contain The application binary interface (ABI) encoding of the
+  /// function call per the Ethereum contract ABI standard, giving the
+  /// function signature and arguments being passed to the function.
   public var functionParameters: Data = Data()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

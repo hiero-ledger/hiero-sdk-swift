@@ -71,6 +71,11 @@ internal enum ServicesTransactionDataList {
     case tokenAirdrop([Proto_TokenAirdropTransactionBody])
     case tokenClaimAirdrop([Proto_TokenClaimAirdropTransactionBody])
     case tokenCancelAirdrop([Proto_TokenCancelAirdropTransactionBody])
+    case stateSignatureTransaction([Com_Hedera_Hapi_Platform_Event_StateSignatureTransaction])
+    case historyProofSignature([Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofSignatureTransactionBody])
+    case historyProofKeyPublication(
+        [Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofKeyPublicationTransactionBody])
+    case historyProofVote([Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofVoteTransactionBody])
 
     internal mutating func append(_ transaction: Proto_TransactionBody.OneOf_Data) throws {
         switch (self, transaction) {
@@ -341,12 +346,13 @@ extension ServicesTransactionDataList: TryFromProtobuf {
         case .tokenAirdrop(let data): value = .tokenAirdrop([data])
         case .tokenCancelAirdrop(let data): value = .tokenCancelAirdrop([data])
         case .tokenClaimAirdrop(let data): value = .tokenClaimAirdrop([data])
-        case .tssMessage(_):
-            throw HError.fromProtobuf("Unsupported transaction `TssMessageTransaction`")
-        case .tssVote(_):
-            throw HError.fromProtobuf("Unsupported transaction `TssVoteTransaction`")
-        case .tssShareSignature(_):
-            throw HError.fromProtobuf("Unsupported transaction `TssShareSignatureTransaction`")
+        case .stateSignatureTransaction:
+            throw HError.fromProtobuf("Unsupported transaction `StateSignatureTransaction`")
+        case .historyProofSignature:
+            throw HError.fromProtobuf("Unsupported transaction `HistoryAssemblySignatureTransaction`")
+        case .historyProofKeyPublication:
+            throw HError.fromProtobuf("Unsupported transaction `HistoryProofKeyPublicationTransaction`")
+        case .historyProofVote: throw HError.fromProtobuf("Unsupported transaction `HistoryProofVoteTransaction`")
         }
 
         for transaction in iter {

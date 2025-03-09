@@ -88,6 +88,29 @@ public final class TopicMessageSubmitTransaction: ChunkedTransaction {
         return self
     }
 
+    /// Sets the custom fees that will be applied to the transaction.
+    @discardableResult
+    public override func customFeeLimits(_ customFeeLimits: [CustomFeeLimit]) -> Self {
+        self.customFeeLimits = customFeeLimits
+
+        return self
+    }
+
+    /// Adds a custom fee limit to the list of custom fee limits.
+    @discardableResult
+    public override func addCustomFeeLimit(_ customFeeLimit: CustomFeeLimit) -> Self {
+        customFeeLimits.append(customFeeLimit)
+
+        return self
+    }
+
+    /// Clears the custom fee limit for the topic.
+    @discardableResult
+    public override func clearCustomFeeLimits() -> Self {
+        self.customFeeLimits = []
+        return self
+    }
+
     internal override func validateChecksums(on ledgerId: LedgerId) throws {
         try topicId?.validateChecksums(on: ledgerId)
         try super.validateChecksums(on: ledgerId)
