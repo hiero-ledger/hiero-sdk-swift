@@ -1,22 +1,4 @@
-/*
- * ‌
- * Hedera Swift SDK
- * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
- * ​
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ‍
- */
+// SPDX-License-Identifier: Apache-2.0
 
 import Foundation
 import GRPC
@@ -40,7 +22,10 @@ public final class TopicUpdateTransaction: Transaction {
         adminKey: Key? = nil,
         submitKey: Key? = nil,
         autoRenewPeriod: Duration? = nil,
-        autoRenewAccountId: AccountId? = nil
+        autoRenewAccountId: AccountId? = nil,
+        feeScheduleKey: Key? = nil,
+        feeExemptKeys: [Key] = [],
+        customFees: [CustomFixedFee] = []
     ) {
         self.topicId = topicId
         self.expirationTime = expirationTime
@@ -49,6 +34,9 @@ public final class TopicUpdateTransaction: Transaction {
         self.submitKey = submitKey
         self.autoRenewPeriod = autoRenewPeriod
         self.autoRenewAccountId = autoRenewAccountId
+        self.feeScheduleKey = feeScheduleKey
+        self.feeExemptKeys = feeExemptKeys
+        self.customFees = customFees
 
         super.init()
     }
@@ -61,6 +49,9 @@ public final class TopicUpdateTransaction: Transaction {
         submitKey = data.hasSubmitKey ? try .fromProtobuf(data.submitKey) : nil
         autoRenewPeriod = data.hasAutoRenewPeriod ? .fromProtobuf(data.autoRenewPeriod) : nil
         autoRenewAccountId = data.hasAutoRenewAccount ? try .fromProtobuf(data.autoRenewAccount) : nil
+        feeScheduleKey = data.hasFeeScheduleKey ? try .fromProtobuf(data.feeScheduleKey) : nil
+        feeExemptKeys = data.hasFeeExemptKeyList ? try data.feeExemptKeyList.keys.map { try Key.fromProtobuf($0) } : []
+        customFees = data.hasCustomFees ? try data.customFees.fees.map { try CustomFixedFee.fromProtobuf($0) } : []
 
         try super.init(protobuf: proto)
     }
@@ -197,6 +188,83 @@ public final class TopicUpdateTransaction: Transaction {
         return self
     }
 
+    /// Access control for update/delete of custom fees.
+    public var feeScheduleKey: Key? {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// Sets the key that can be used to update the fee schedule for the topic.
+    @discardableResult
+    public func feeScheduleKey(_ feeScheduleKey: Key) -> Self {
+        self.feeScheduleKey = feeScheduleKey
+
+        return self
+    }
+
+    /// The keys that can be used to update the fee schedule for the topic.
+    public var feeExemptKeys: [Key] = [] {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// If the transaction contains a signer from this list, no custom fees are applied.
+    @discardableResult
+    public func feeExemptKeys(_ feeExemptKeys: [Key]) -> Self {
+        self.feeExemptKeys = feeExemptKeys
+
+        return self
+    }
+
+    /// Clears all keys that will be exempt from paying fees.
+    @discardableResult
+    public func clearFeeExemptKeys() -> Self {
+        self.feeExemptKeys = []
+
+        return self
+    }
+
+    /// Adds a key that will be exempt from paying fees.
+    @discardableResult
+    public func addFeeExemptKey(_ feeExemptKey: Key) -> Self {
+        self.feeExemptKeys.append(feeExemptKey)
+
+        return self
+    }
+
+    /// The custom fixed fee to be assessed during a message submission to this topic.
+    public var customFees: [CustomFixedFee] = [] {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// Sets the fixed fees for the existing topic.
+    @discardableResult
+    public func customFees(_ customFees: [CustomFixedFee]) -> Self {
+        self.customFees = customFees
+
+        return self
+    }
+
+    /// Clears the fixed fees for the existing topic.
+    @discardableResult
+    public func clearCustomFees() -> Self {
+        self.customFees = []
+
+        return self
+    }
+
+    /// Appends a fixed fee to the existing topic.
+    @discardableResult
+    public func addCustomFee(_ customFee: CustomFixedFee) -> Self {
+        self.customFees.append(customFee)
+
+        return self
+    }
+
     internal override func validateChecksums(on ledgerId: LedgerId) throws {
         try topicId?.validateChecksums(on: ledgerId)
         try autoRenewAccountId?.validateChecksums(on: ledgerId)
@@ -220,7 +288,11 @@ extension TopicUpdateTransaction: ToProtobuf {
     internal typealias Protobuf = Proto_ConsensusUpdateTopicTransactionBody
 
     internal func toProtobuf() -> Protobuf {
-        .with { proto in
+
+        let feeExemptKeys = feeExemptKeys.map { $0.toProtobuf() }
+        let customFees = customFees.map { $0.toTopicFeeProtobuf() }
+
+        return .with { proto in
             topicId?.toProtobufInto(&proto.topicID)
             expirationTime?.toProtobufInto(&proto.expirationTime)
             proto.memo = Google_Protobuf_StringValue(topicMemo)
@@ -228,6 +300,15 @@ extension TopicUpdateTransaction: ToProtobuf {
             submitKey?.toProtobufInto(&proto.submitKey)
             autoRenewPeriod?.toProtobufInto(&proto.autoRenewPeriod)
             autoRenewAccountId?.toProtobufInto(&proto.autoRenewAccount)
+            feeScheduleKey?.toProtobufInto(&proto.feeScheduleKey)
+
+            if !feeExemptKeys.isEmpty {
+                proto.feeExemptKeyList.keys.append(contentsOf: feeExemptKeys)
+            }
+
+            if !customFees.isEmpty {
+                proto.customFees.fees.append(contentsOf: customFees)
+            }
         }
     }
 }

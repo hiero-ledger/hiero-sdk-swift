@@ -67,6 +67,7 @@ let exampleTargets = [
     "InitializeClientWithMirrorNetwork",
     "LongTermScheduledTransaction",
     "CreateAccountWithAlias",
+    "CreateTopicWithRevenue",
 ].map { name in
     Target.executableTarget(
         name: "\(name)Example",
@@ -93,7 +94,7 @@ let package = Package(
         .package(url: "https://github.com/objecthub/swift-numberkit.git", from: "2.5.1"),
         .package(url: "https://github.com/thebarndog/swift-dotenv.git", from: "1.0.0"),
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.23.0"),
-        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.26.0"),
+        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.29.0"),
         .package(url: "https://github.com/vsanthanam/AnyAsyncSequence.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
         // swift-asn1 wants swift 5.7+ past 0.4

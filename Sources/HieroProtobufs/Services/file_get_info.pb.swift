@@ -8,6 +8,20 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # File Get Information
+/// Messages for a query to retrieve the metadata for a file in the
+/// Hedera File Service (HFS).
+///
+/// The query defined here does not include the content of the file.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,19 +36,23 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get all of the information about a file, except for its contents. When a file expires, it no
-/// longer exists, and there will be no info about it, and the fileInfo field will be blank. If a
-/// transaction or smart contract deletes the file, but it has not yet expired, then the fileInfo
-/// field will be non-empty, the deleted field will be true, its size will be 0, and its contents
-/// will be empty.
+/// Query to request file metadata from the Hedera File Service (HFS).<br/>
+/// This query requests all of the information _about_ a file, but none of the
+/// _content_ of a file. A client should submit a `fileGetContents` query to
+/// view the content of a file. File content _may_ also be available from a
+/// block node or mirror node, generally at lower cost.
+///
+/// File metadata SHALL be available for active files and deleted files.<br/>
+/// The size of a deleted file SHALL be `0` and the content SHALL be empty.
 public struct Proto_FileGetInfoQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -45,7 +63,10 @@ public struct Proto_FileGetInfoQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The file ID of the file for which information is requested
+  /// A file identifier.
+  /// <p>
+  /// This MUST be the identifier of a file that exists in HFS.<br/>
+  /// This value SHALL identify the file to be queried.
   public var fileID: Proto_FileID {
     get {return _fileID ?? Proto_FileID()}
     set {_fileID = newValue}
@@ -64,15 +85,16 @@ public struct Proto_FileGetInfoQuery: Sendable {
 }
 
 ///*
-/// Response when the client sends the node FileGetInfoQuery
+/// A response to a query for the metadata of a file in the HFS.
 public struct Proto_FileGetInfoResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -83,7 +105,10 @@ public struct Proto_FileGetInfoResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The information about the file
+  /// A combination of fields from the requested file metadata.
+  /// <p>
+  /// This SHALL NOT be set if the identified file does not exist
+  /// or has expired.
   public var fileInfo: Proto_FileGetInfoResponse.FileInfo {
     get {return _fileInfo ?? Proto_FileGetInfoResponse.FileInfo()}
     set {_fileInfo = newValue}
@@ -101,7 +126,10 @@ public struct Proto_FileGetInfoResponse: Sendable {
     // methods supported on all messages.
 
     ///*
-    /// The file ID of the file for which information is requested
+    /// A file identifier.
+    /// <p>
+    /// This SHALL be the identifier of a file that exists in HFS.<br/>
+    /// This value SHALL identify the file that was queried.
     public var fileID: Proto_FileID {
       get {return _fileID ?? Proto_FileID()}
       set {_fileID = newValue}
@@ -112,11 +140,16 @@ public struct Proto_FileGetInfoResponse: Sendable {
     public mutating func clearFileID() {self._fileID = nil}
 
     ///*
-    /// Number of bytes in contents
+    /// A size, in bytes, for the file.
     public var size: Int64 = 0
 
     ///*
-    /// The current time at which this account is set to expire
+    /// An expiration timestamp.
+    /// <p>
+    /// The file SHALL NOT expire before the network consensus time
+    /// exceeds this value.<br/>
+    /// The file SHALL expire after the network consensus time
+    /// exceeds this value.<br/>
     public var expirationTime: Proto_Timestamp {
       get {return _expirationTime ?? Proto_Timestamp()}
       set {_expirationTime = newValue}
@@ -127,11 +160,21 @@ public struct Proto_FileGetInfoResponse: Sendable {
     public mutating func clearExpirationTime() {self._expirationTime = nil}
 
     ///*
-    /// True if deleted but not yet expired
+    /// A flag indicating this file is deleted.
+    /// <p>
+    /// A deleted file SHALL have a size `0` and empty content.
     public var deleted: Bool = false
 
     ///*
-    /// One of these keys must sign in order to modify or delete the file
+    /// A KeyList listing all keys that "own" the file.
+    /// <p>
+    /// All keys in this list MUST sign a transaction to append to the
+    /// file content, or to modify file metadata.<br/>
+    /// At least _one_ key in this list MUST sign a transaction to delete
+    /// this file.<br/>
+    /// If this is an empty `KeyList`, the file is immutable, cannot be
+    /// modified or deleted, but MAY expire. A `fileUpdate` transaction MAY
+    /// extend the expiration time for an immutable file.
     public var keys: Proto_KeyList {
       get {return _keys ?? Proto_KeyList()}
       set {_keys = newValue}
@@ -142,11 +185,17 @@ public struct Proto_FileGetInfoResponse: Sendable {
     public mutating func clearKeys() {self._keys = nil}
 
     ///*
-    /// The memo associated with the file
+    /// A short description for this file.
+    /// <p>
+    /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+    /// (default 100) bytes when encoded as UTF-8.
     public var memo: String = String()
 
     ///*
-    /// The ledger ID the response was returned from; please see <a href="https://github.com/hashgraph/hedera-improvement-proposal/blob/master/HIP/hip-198.md">HIP-198</a> for the network-specific IDs. 
+    /// A ledger identifier for the responding network.
+    /// <p>
+    /// This value SHALL identify the distributed ledger that responded to
+    /// this query.
     public var ledgerID: Data = Data()
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()

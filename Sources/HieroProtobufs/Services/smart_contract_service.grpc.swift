@@ -12,7 +12,10 @@ import SwiftProtobuf
 
 
 ///*
-/// Transactions and queries for the file service. 
+/// The Hedera Smart Contract Service (HSCS) provides an interface to an EVM
+/// compatible environment to create, store, manage, and execute smart contract
+/// calls. Smart Contracts implement useful and often highly complex
+/// interactions between individuals, systems, and the distributed ledger.
 ///
 /// Usage: instantiate `Proto_SmartContractServiceClient`, then call methods of this protocol to make API calls.
 public protocol Proto_SmartContractServiceClientProtocol: GRPCClient {
@@ -34,12 +37,12 @@ public protocol Proto_SmartContractServiceClientProtocol: GRPCClient {
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse>
 
-  func getContractInfo(
+  func contractCallLocalMethod(
     _ request: Proto_Query,
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Query, Proto_Response>
 
-  func contractCallLocalMethod(
+  func getContractInfo(
     _ request: Proto_Query,
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Query, Proto_Response>
@@ -86,7 +89,22 @@ extension Proto_SmartContractServiceClientProtocol {
   }
 
   ///*
-  /// Creates a contract
+  /// Create a new smart contract.
+  /// <p>
+  /// If this transaction succeeds, the `ContractID` for the new smart
+  /// contract SHALL be set in the transaction receipt.<br/>
+  /// The contract is defined by the initial bytecode (or `initcode`).
+  /// The `initcode` SHALL be provided either in a previously created file,
+  /// or in the transaction body itself for very small contracts.<br/>
+  /// As part of contract creation, the constructor defined for the new
+  /// smart contract SHALL run with the parameters provided in
+  /// the `constructorParameters` field.<br/>
+  /// The gas to "power" that constructor MUST be provided via the `gas`
+  /// field, and SHALL be charged to the payer for this transaction.<br/>
+  /// If the contract _constructor_ stores information, it is charged gas for
+  /// that storage. There is a separate fee in HBAR to maintain that storage
+  /// until the expiration, and that fee SHALL be added to this transaction
+  /// as part of the _transaction fee_, rather than gas.
   ///
   /// - Parameters:
   ///   - request: Request to send to createContract.
@@ -105,7 +123,12 @@ extension Proto_SmartContractServiceClientProtocol {
   }
 
   ///*
-  /// Updates a contract with the content
+  /// Modify a smart contract.<br/>
+  /// Any change other than updating the expiration time requires that the
+  /// contract be modifiable (has a valid `adminKey`) and that the
+  /// transaction be signed by the `adminKey`
+  /// <p>
+  /// Fields _not set_ on the request SHALL NOT be modified.
   ///
   /// - Parameters:
   ///   - request: Request to send to updateContract.
@@ -124,7 +147,14 @@ extension Proto_SmartContractServiceClientProtocol {
   }
 
   ///*
-  /// Calls a contract
+  /// Call a function of a given smart contract, providing function parameter
+  /// inputs as needed.
+  /// <p>
+  /// Resource ("gas") charges SHALL include all relevant fees incurred by
+  /// the contract execution, including any storage required.<br/>
+  /// The total transaction fee SHALL incorporate all of the "gas" actually
+  /// consumed as well as the standard fees for transaction handling,
+  /// data transfers, signature verification, etc...
   ///
   /// - Parameters:
   ///   - request: Request to send to contractCallMethod.
@@ -143,26 +173,26 @@ extension Proto_SmartContractServiceClientProtocol {
   }
 
   ///*
-  /// Retrieves the contract information
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to getContractInfo.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func getContractInfo(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<Proto_Query, Proto_Response> {
-    return self.makeUnaryCall(
-      path: Proto_SmartContractServiceClientMetadata.Methods.getContractInfo.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetContractInfoInterceptors() ?? []
-    )
-  }
-
-  ///*
-  /// Calls a smart contract to be run on a single node
+  /// Call a query function of a given smart contract, providing
+  /// function parameter inputs as needed.<br/>
+  /// This is performed locally on the particular node that the client is
+  /// communicating with. Executing the call locally is faster and less
+  /// costly, but imposes certain restrictions.
+  /// <p>
+  /// The call MUST NOT change the state of the contract instance. This also
+  /// precludes any expenditure or transfer of HBAR or other tokens.<br/>
+  /// The call SHALL NOT have a separate consensus timestamp.<br/>
+  /// The call SHALL NOT generate a record nor a receipt.<br/>
+  /// The response SHALL contain the output returned by the function call.<br/>
+  /// <p>
+  /// This is generally useful for calling accessor functions which read
+  /// (query) state without changes or side effects. Any contract call that
+  /// would use the `STATICCALL` opcode MAY be called via contract call local
+  /// with performance and cost benefits.
+  /// <p>
+  /// Unlike a ContractCall transaction, the node SHALL always consume the
+  /// _entire_ amount of offered "gas" in determining the fee for this query,
+  /// so accurate gas estimation is important.
   ///
   /// - Parameters:
   ///   - request: Request to send to contractCallLocalMethod.
@@ -181,7 +211,26 @@ extension Proto_SmartContractServiceClientProtocol {
   }
 
   ///*
-  /// Retrieves the runtime code of a contract
+  /// A standard query to obtain detailed information for a smart contract.
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to getContractInfo.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  public func getContractInfo(
+    _ request: Proto_Query,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Proto_Query, Proto_Response> {
+    return self.makeUnaryCall(
+      path: Proto_SmartContractServiceClientMetadata.Methods.getContractInfo.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makegetContractInfoInterceptors() ?? []
+    )
+  }
+
+  ///*
+  /// A standard query to read the current bytecode for a smart contract.
   ///
   /// - Parameters:
   ///   - request: Request to send to ContractGetBytecode.
@@ -200,7 +249,8 @@ extension Proto_SmartContractServiceClientProtocol {
   }
 
   ///*
-  /// Retrieves a contract by its Solidity address
+  /// A standard query to obtain account and contract identifiers for a smart
+  /// contract, given the Solidity identifier for that contract.
   ///
   /// - Parameters:
   ///   - request: Request to send to getBySolidityID.
@@ -219,8 +269,8 @@ extension Proto_SmartContractServiceClientProtocol {
   }
 
   ///*
-  /// Always returns an empty record list, as contract accounts are never effective payers for
-  /// transactions
+  /// <blockquote>This query is no longer supported.</blockquote>
+  /// This query always returned an empty record list.
   ///
   /// - Parameters:
   ///   - request: Request to send to getTxRecordByContractID.
@@ -239,7 +289,11 @@ extension Proto_SmartContractServiceClientProtocol {
   }
 
   ///*
-  /// Deletes a contract instance and transfers any remaining hbars to a specified receiver
+  /// Delete a smart contract, and transfer any remaining HBAR balance
+  /// to a designated account.
+  /// <p>
+  /// If this call succeeds then all subsequent calls to that smart
+  /// contract SHALL fail.<br/>
   ///
   /// - Parameters:
   ///   - request: Request to send to deleteContract.
@@ -258,7 +312,17 @@ extension Proto_SmartContractServiceClientProtocol {
   }
 
   ///*
-  /// Deletes a contract if the submitting account has network admin privileges
+  /// Delete a smart contract, as a system-initiated deletion, this
+  /// SHALL NOT transfer balances.
+  /// <blockquote>
+  /// This call is an administrative function of the Hedera network, and
+  /// SHALL require network administration authorization.<br/>
+  /// This transaction MUST be signed by one of the network administration
+  /// accounts (typically `0.0.2` through `0.0.59`, as defined in the
+  /// `api-permission.properties` file).
+  /// </blockquote>
+  /// If this call succeeds then all subsequent calls to that smart
+  /// contract SHALL fail.<br/>
   ///
   /// - Parameters:
   ///   - request: Request to send to systemDelete.
@@ -277,7 +341,21 @@ extension Proto_SmartContractServiceClientProtocol {
   }
 
   ///*
-  /// Undeletes a contract if the submitting account has network admin privileges
+  /// Un-Delete a smart contract, returning it (mostly) to its state
+  /// prior to deletion.
+  /// <p>
+  /// The contract to be restored MUST have been deleted via `systemDelete`.
+  /// If the contract was deleted via `deleteContract`, it
+  /// SHALL NOT be recoverable.
+  /// <blockquote>
+  /// This call is an administrative function of the Hedera network, and
+  /// SHALL require network administration authorization.<br/>
+  /// This transaction MUST be signed by one of the network administration
+  /// accounts (typically `0.0.2` through `0.0.59`, as defined in the
+  /// `api-permission.properties` file).
+  /// </blockquote>
+  /// If this call succeeds then subsequent calls to that smart
+  /// contract MAY succeed.<br/>
   ///
   /// - Parameters:
   ///   - request: Request to send to systemUndelete.
@@ -296,7 +374,13 @@ extension Proto_SmartContractServiceClientProtocol {
   }
 
   ///*
-  /// Ethereum transaction
+  /// Make an Ethereum transaction "call" with all data in Ethereum formats,
+  /// including the contract alias.
+  /// <p>
+  /// Call data MAY be in the transaction, or stored within a "File".<br/>
+  /// The caller MAY offer additional gas above what is offered in the call
+  /// data, but MAY be charged up to 80% of that value if the amount required
+  /// is less than this "floor" amount.
   ///
   /// - Parameters:
   ///   - request: Request to send to callEthereum.
@@ -373,7 +457,10 @@ public struct Proto_SmartContractServiceNIOClient: Proto_SmartContractServiceCli
 }
 
 ///*
-/// Transactions and queries for the file service. 
+/// The Hedera Smart Contract Service (HSCS) provides an interface to an EVM
+/// compatible environment to create, store, manage, and execute smart contract
+/// calls. Smart Contracts implement useful and often highly complex
+/// interactions between individuals, systems, and the distributed ledger.
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol Proto_SmartContractServiceAsyncClientProtocol: GRPCClient {
   static var serviceDescriptor: GRPCServiceDescriptor { get }
@@ -394,12 +481,12 @@ public protocol Proto_SmartContractServiceAsyncClientProtocol: GRPCClient {
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse>
 
-  func makeGetContractInfoCall(
+  func makeContractCallLocalMethodCall(
     _ request: Proto_Query,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
 
-  func makeContractCallLocalMethodCall(
+  func makeGetContractInfoCall(
     _ request: Proto_Query,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response>
@@ -486,18 +573,6 @@ extension Proto_SmartContractServiceAsyncClientProtocol {
     )
   }
 
-  public func makeGetContractInfoCall(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response> {
-    return self.makeAsyncUnaryCall(
-      path: Proto_SmartContractServiceClientMetadata.Methods.getContractInfo.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetContractInfoInterceptors() ?? []
-    )
-  }
-
   public func makeContractCallLocalMethodCall(
     _ request: Proto_Query,
     callOptions: CallOptions? = nil
@@ -507,6 +582,18 @@ extension Proto_SmartContractServiceAsyncClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makecontractCallLocalMethodInterceptors() ?? []
+    )
+  }
+
+  public func makeGetContractInfoCall(
+    _ request: Proto_Query,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Proto_Query, Proto_Response> {
+    return self.makeAsyncUnaryCall(
+      path: Proto_SmartContractServiceClientMetadata.Methods.getContractInfo.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makegetContractInfoInterceptors() ?? []
     )
   }
 
@@ -633,18 +720,6 @@ extension Proto_SmartContractServiceAsyncClientProtocol {
     )
   }
 
-  public func getContractInfo(
-    _ request: Proto_Query,
-    callOptions: CallOptions? = nil
-  ) async throws -> Proto_Response {
-    return try await self.performAsyncUnaryCall(
-      path: Proto_SmartContractServiceClientMetadata.Methods.getContractInfo.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makegetContractInfoInterceptors() ?? []
-    )
-  }
-
   public func contractCallLocalMethod(
     _ request: Proto_Query,
     callOptions: CallOptions? = nil
@@ -654,6 +729,18 @@ extension Proto_SmartContractServiceAsyncClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makecontractCallLocalMethodInterceptors() ?? []
+    )
+  }
+
+  public func getContractInfo(
+    _ request: Proto_Query,
+    callOptions: CallOptions? = nil
+  ) async throws -> Proto_Response {
+    return try await self.performAsyncUnaryCall(
+      path: Proto_SmartContractServiceClientMetadata.Methods.getContractInfo.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makegetContractInfoInterceptors() ?? []
     )
   }
 
@@ -770,11 +857,11 @@ public protocol Proto_SmartContractServiceClientInterceptorFactoryProtocol: Send
   /// - Returns: Interceptors to use when invoking 'contractCallMethod'.
   func makecontractCallMethodInterceptors() -> [ClientInterceptor<Proto_Transaction, Proto_TransactionResponse>]
 
-  /// - Returns: Interceptors to use when invoking 'getContractInfo'.
-  func makegetContractInfoInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
-
   /// - Returns: Interceptors to use when invoking 'contractCallLocalMethod'.
   func makecontractCallLocalMethodInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when invoking 'getContractInfo'.
+  func makegetContractInfoInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
 
   /// - Returns: Interceptors to use when invoking 'contractGetBytecode'.
   func makeContractGetBytecodeInterceptors() -> [ClientInterceptor<Proto_Query, Proto_Response>]
@@ -806,8 +893,8 @@ public enum Proto_SmartContractServiceClientMetadata {
       Proto_SmartContractServiceClientMetadata.Methods.createContract,
       Proto_SmartContractServiceClientMetadata.Methods.updateContract,
       Proto_SmartContractServiceClientMetadata.Methods.contractCallMethod,
-      Proto_SmartContractServiceClientMetadata.Methods.getContractInfo,
       Proto_SmartContractServiceClientMetadata.Methods.contractCallLocalMethod,
+      Proto_SmartContractServiceClientMetadata.Methods.getContractInfo,
       Proto_SmartContractServiceClientMetadata.Methods.contractGetBytecode,
       Proto_SmartContractServiceClientMetadata.Methods.getBySolidityID,
       Proto_SmartContractServiceClientMetadata.Methods.getTxRecordByContractID,
@@ -837,15 +924,15 @@ public enum Proto_SmartContractServiceClientMetadata {
       type: GRPCCallType.unary
     )
 
-    public static let getContractInfo = GRPCMethodDescriptor(
-      name: "getContractInfo",
-      path: "/proto.SmartContractService/getContractInfo",
-      type: GRPCCallType.unary
-    )
-
     public static let contractCallLocalMethod = GRPCMethodDescriptor(
       name: "contractCallLocalMethod",
       path: "/proto.SmartContractService/contractCallLocalMethod",
+      type: GRPCCallType.unary
+    )
+
+    public static let getContractInfo = GRPCMethodDescriptor(
+      name: "getContractInfo",
+      path: "/proto.SmartContractService/getContractInfo",
       type: GRPCCallType.unary
     )
 
@@ -893,3 +980,727 @@ public enum Proto_SmartContractServiceClientMetadata {
   }
 }
 
+///*
+/// The Hedera Smart Contract Service (HSCS) provides an interface to an EVM
+/// compatible environment to create, store, manage, and execute smart contract
+/// calls. Smart Contracts implement useful and often highly complex
+/// interactions between individuals, systems, and the distributed ledger.
+///
+/// To build a server, implement a class that conforms to this protocol.
+public protocol Proto_SmartContractServiceProvider: CallHandlerProvider {
+  var interceptors: Proto_SmartContractServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Create a new smart contract.
+  /// <p>
+  /// If this transaction succeeds, the `ContractID` for the new smart
+  /// contract SHALL be set in the transaction receipt.<br/>
+  /// The contract is defined by the initial bytecode (or `initcode`).
+  /// The `initcode` SHALL be provided either in a previously created file,
+  /// or in the transaction body itself for very small contracts.<br/>
+  /// As part of contract creation, the constructor defined for the new
+  /// smart contract SHALL run with the parameters provided in
+  /// the `constructorParameters` field.<br/>
+  /// The gas to "power" that constructor MUST be provided via the `gas`
+  /// field, and SHALL be charged to the payer for this transaction.<br/>
+  /// If the contract _constructor_ stores information, it is charged gas for
+  /// that storage. There is a separate fee in HBAR to maintain that storage
+  /// until the expiration, and that fee SHALL be added to this transaction
+  /// as part of the _transaction fee_, rather than gas.
+  func createContract(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Modify a smart contract.<br/>
+  /// Any change other than updating the expiration time requires that the
+  /// contract be modifiable (has a valid `adminKey`) and that the
+  /// transaction be signed by the `adminKey`
+  /// <p>
+  /// Fields _not set_ on the request SHALL NOT be modified.
+  func updateContract(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Call a function of a given smart contract, providing function parameter
+  /// inputs as needed.
+  /// <p>
+  /// Resource ("gas") charges SHALL include all relevant fees incurred by
+  /// the contract execution, including any storage required.<br/>
+  /// The total transaction fee SHALL incorporate all of the "gas" actually
+  /// consumed as well as the standard fees for transaction handling,
+  /// data transfers, signature verification, etc...
+  func contractCallMethod(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Call a query function of a given smart contract, providing
+  /// function parameter inputs as needed.<br/>
+  /// This is performed locally on the particular node that the client is
+  /// communicating with. Executing the call locally is faster and less
+  /// costly, but imposes certain restrictions.
+  /// <p>
+  /// The call MUST NOT change the state of the contract instance. This also
+  /// precludes any expenditure or transfer of HBAR or other tokens.<br/>
+  /// The call SHALL NOT have a separate consensus timestamp.<br/>
+  /// The call SHALL NOT generate a record nor a receipt.<br/>
+  /// The response SHALL contain the output returned by the function call.<br/>
+  /// <p>
+  /// This is generally useful for calling accessor functions which read
+  /// (query) state without changes or side effects. Any contract call that
+  /// would use the `STATICCALL` opcode MAY be called via contract call local
+  /// with performance and cost benefits.
+  /// <p>
+  /// Unlike a ContractCall transaction, the node SHALL always consume the
+  /// _entire_ amount of offered "gas" in determining the fee for this query,
+  /// so accurate gas estimation is important.
+  func contractCallLocalMethod(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// A standard query to obtain detailed information for a smart contract.
+  func getContractInfo(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// A standard query to read the current bytecode for a smart contract.
+  func contractGetBytecode(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// A standard query to obtain account and contract identifiers for a smart
+  /// contract, given the Solidity identifier for that contract.
+  func getBySolidityID(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// <blockquote>This query is no longer supported.</blockquote>
+  /// This query always returned an empty record list.
+  func getTxRecordByContractID(request: Proto_Query, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_Response>
+
+  ///*
+  /// Delete a smart contract, and transfer any remaining HBAR balance
+  /// to a designated account.
+  /// <p>
+  /// If this call succeeds then all subsequent calls to that smart
+  /// contract SHALL fail.<br/>
+  func deleteContract(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Delete a smart contract, as a system-initiated deletion, this
+  /// SHALL NOT transfer balances.
+  /// <blockquote>
+  /// This call is an administrative function of the Hedera network, and
+  /// SHALL require network administration authorization.<br/>
+  /// This transaction MUST be signed by one of the network administration
+  /// accounts (typically `0.0.2` through `0.0.59`, as defined in the
+  /// `api-permission.properties` file).
+  /// </blockquote>
+  /// If this call succeeds then all subsequent calls to that smart
+  /// contract SHALL fail.<br/>
+  func systemDelete(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Un-Delete a smart contract, returning it (mostly) to its state
+  /// prior to deletion.
+  /// <p>
+  /// The contract to be restored MUST have been deleted via `systemDelete`.
+  /// If the contract was deleted via `deleteContract`, it
+  /// SHALL NOT be recoverable.
+  /// <blockquote>
+  /// This call is an administrative function of the Hedera network, and
+  /// SHALL require network administration authorization.<br/>
+  /// This transaction MUST be signed by one of the network administration
+  /// accounts (typically `0.0.2` through `0.0.59`, as defined in the
+  /// `api-permission.properties` file).
+  /// </blockquote>
+  /// If this call succeeds then subsequent calls to that smart
+  /// contract MAY succeed.<br/>
+  func systemUndelete(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// Make an Ethereum transaction "call" with all data in Ethereum formats,
+  /// including the contract alias.
+  /// <p>
+  /// Call data MAY be in the transaction, or stored within a "File".<br/>
+  /// The caller MAY offer additional gas above what is offered in the call
+  /// data, but MAY be charged up to 80% of that value if the amount required
+  /// is less than this "floor" amount.
+  func callEthereum(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+}
+
+extension Proto_SmartContractServiceProvider {
+  public var serviceName: Substring {
+    return Proto_SmartContractServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+  /// Returns nil for methods not handled by this service.
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "createContract":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateContractInterceptors() ?? [],
+        userFunction: self.createContract(request:context:)
+      )
+
+    case "updateContract":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateContractInterceptors() ?? [],
+        userFunction: self.updateContract(request:context:)
+      )
+
+    case "contractCallMethod":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecontractCallMethodInterceptors() ?? [],
+        userFunction: self.contractCallMethod(request:context:)
+      )
+
+    case "contractCallLocalMethod":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makecontractCallLocalMethodInterceptors() ?? [],
+        userFunction: self.contractCallLocalMethod(request:context:)
+      )
+
+    case "getContractInfo":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetContractInfoInterceptors() ?? [],
+        userFunction: self.getContractInfo(request:context:)
+      )
+
+    case "ContractGetBytecode":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makeContractGetBytecodeInterceptors() ?? [],
+        userFunction: self.contractGetBytecode(request:context:)
+      )
+
+    case "getBySolidityID":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetBySolidityIDInterceptors() ?? [],
+        userFunction: self.getBySolidityID(request:context:)
+      )
+
+    case "getTxRecordByContractID":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetTxRecordByContractIDInterceptors() ?? [],
+        userFunction: self.getTxRecordByContractID(request:context:)
+      )
+
+    case "deleteContract":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteContractInterceptors() ?? [],
+        userFunction: self.deleteContract(request:context:)
+      )
+
+    case "systemDelete":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makesystemDeleteInterceptors() ?? [],
+        userFunction: self.systemDelete(request:context:)
+      )
+
+    case "systemUndelete":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makesystemUndeleteInterceptors() ?? [],
+        userFunction: self.systemUndelete(request:context:)
+      )
+
+    case "callEthereum":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecallEthereumInterceptors() ?? [],
+        userFunction: self.callEthereum(request:context:)
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+///*
+/// The Hedera Smart Contract Service (HSCS) provides an interface to an EVM
+/// compatible environment to create, store, manage, and execute smart contract
+/// calls. Smart Contracts implement useful and often highly complex
+/// interactions between individuals, systems, and the distributed ledger.
+///
+/// To implement a server, implement an object which conforms to this protocol.
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+public protocol Proto_SmartContractServiceAsyncProvider: CallHandlerProvider, Sendable {
+  static var serviceDescriptor: GRPCServiceDescriptor { get }
+  var interceptors: Proto_SmartContractServiceServerInterceptorFactoryProtocol? { get }
+
+  ///*
+  /// Create a new smart contract.
+  /// <p>
+  /// If this transaction succeeds, the `ContractID` for the new smart
+  /// contract SHALL be set in the transaction receipt.<br/>
+  /// The contract is defined by the initial bytecode (or `initcode`).
+  /// The `initcode` SHALL be provided either in a previously created file,
+  /// or in the transaction body itself for very small contracts.<br/>
+  /// As part of contract creation, the constructor defined for the new
+  /// smart contract SHALL run with the parameters provided in
+  /// the `constructorParameters` field.<br/>
+  /// The gas to "power" that constructor MUST be provided via the `gas`
+  /// field, and SHALL be charged to the payer for this transaction.<br/>
+  /// If the contract _constructor_ stores information, it is charged gas for
+  /// that storage. There is a separate fee in HBAR to maintain that storage
+  /// until the expiration, and that fee SHALL be added to this transaction
+  /// as part of the _transaction fee_, rather than gas.
+  func createContract(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Modify a smart contract.<br/>
+  /// Any change other than updating the expiration time requires that the
+  /// contract be modifiable (has a valid `adminKey`) and that the
+  /// transaction be signed by the `adminKey`
+  /// <p>
+  /// Fields _not set_ on the request SHALL NOT be modified.
+  func updateContract(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Call a function of a given smart contract, providing function parameter
+  /// inputs as needed.
+  /// <p>
+  /// Resource ("gas") charges SHALL include all relevant fees incurred by
+  /// the contract execution, including any storage required.<br/>
+  /// The total transaction fee SHALL incorporate all of the "gas" actually
+  /// consumed as well as the standard fees for transaction handling,
+  /// data transfers, signature verification, etc...
+  func contractCallMethod(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Call a query function of a given smart contract, providing
+  /// function parameter inputs as needed.<br/>
+  /// This is performed locally on the particular node that the client is
+  /// communicating with. Executing the call locally is faster and less
+  /// costly, but imposes certain restrictions.
+  /// <p>
+  /// The call MUST NOT change the state of the contract instance. This also
+  /// precludes any expenditure or transfer of HBAR or other tokens.<br/>
+  /// The call SHALL NOT have a separate consensus timestamp.<br/>
+  /// The call SHALL NOT generate a record nor a receipt.<br/>
+  /// The response SHALL contain the output returned by the function call.<br/>
+  /// <p>
+  /// This is generally useful for calling accessor functions which read
+  /// (query) state without changes or side effects. Any contract call that
+  /// would use the `STATICCALL` opcode MAY be called via contract call local
+  /// with performance and cost benefits.
+  /// <p>
+  /// Unlike a ContractCall transaction, the node SHALL always consume the
+  /// _entire_ amount of offered "gas" in determining the fee for this query,
+  /// so accurate gas estimation is important.
+  func contractCallLocalMethod(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// A standard query to obtain detailed information for a smart contract.
+  func getContractInfo(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// A standard query to read the current bytecode for a smart contract.
+  func contractGetBytecode(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// A standard query to obtain account and contract identifiers for a smart
+  /// contract, given the Solidity identifier for that contract.
+  func getBySolidityID(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// <blockquote>This query is no longer supported.</blockquote>
+  /// This query always returned an empty record list.
+  func getTxRecordByContractID(
+    request: Proto_Query,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_Response
+
+  ///*
+  /// Delete a smart contract, and transfer any remaining HBAR balance
+  /// to a designated account.
+  /// <p>
+  /// If this call succeeds then all subsequent calls to that smart
+  /// contract SHALL fail.<br/>
+  func deleteContract(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Delete a smart contract, as a system-initiated deletion, this
+  /// SHALL NOT transfer balances.
+  /// <blockquote>
+  /// This call is an administrative function of the Hedera network, and
+  /// SHALL require network administration authorization.<br/>
+  /// This transaction MUST be signed by one of the network administration
+  /// accounts (typically `0.0.2` through `0.0.59`, as defined in the
+  /// `api-permission.properties` file).
+  /// </blockquote>
+  /// If this call succeeds then all subsequent calls to that smart
+  /// contract SHALL fail.<br/>
+  func systemDelete(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Un-Delete a smart contract, returning it (mostly) to its state
+  /// prior to deletion.
+  /// <p>
+  /// The contract to be restored MUST have been deleted via `systemDelete`.
+  /// If the contract was deleted via `deleteContract`, it
+  /// SHALL NOT be recoverable.
+  /// <blockquote>
+  /// This call is an administrative function of the Hedera network, and
+  /// SHALL require network administration authorization.<br/>
+  /// This transaction MUST be signed by one of the network administration
+  /// accounts (typically `0.0.2` through `0.0.59`, as defined in the
+  /// `api-permission.properties` file).
+  /// </blockquote>
+  /// If this call succeeds then subsequent calls to that smart
+  /// contract MAY succeed.<br/>
+  func systemUndelete(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// Make an Ethereum transaction "call" with all data in Ethereum formats,
+  /// including the contract alias.
+  /// <p>
+  /// Call data MAY be in the transaction, or stored within a "File".<br/>
+  /// The caller MAY offer additional gas above what is offered in the call
+  /// data, but MAY be charged up to 80% of that value if the amount required
+  /// is less than this "floor" amount.
+  func callEthereum(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension Proto_SmartContractServiceAsyncProvider {
+  public static var serviceDescriptor: GRPCServiceDescriptor {
+    return Proto_SmartContractServiceServerMetadata.serviceDescriptor
+  }
+
+  public var serviceName: Substring {
+    return Proto_SmartContractServiceServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  public var interceptors: Proto_SmartContractServiceServerInterceptorFactoryProtocol? {
+    return nil
+  }
+
+  public func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "createContract":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateContractInterceptors() ?? [],
+        wrapping: { try await self.createContract(request: $0, context: $1) }
+      )
+
+    case "updateContract":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateContractInterceptors() ?? [],
+        wrapping: { try await self.updateContract(request: $0, context: $1) }
+      )
+
+    case "contractCallMethod":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecontractCallMethodInterceptors() ?? [],
+        wrapping: { try await self.contractCallMethod(request: $0, context: $1) }
+      )
+
+    case "contractCallLocalMethod":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makecontractCallLocalMethodInterceptors() ?? [],
+        wrapping: { try await self.contractCallLocalMethod(request: $0, context: $1) }
+      )
+
+    case "getContractInfo":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetContractInfoInterceptors() ?? [],
+        wrapping: { try await self.getContractInfo(request: $0, context: $1) }
+      )
+
+    case "ContractGetBytecode":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makeContractGetBytecodeInterceptors() ?? [],
+        wrapping: { try await self.contractGetBytecode(request: $0, context: $1) }
+      )
+
+    case "getBySolidityID":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetBySolidityIDInterceptors() ?? [],
+        wrapping: { try await self.getBySolidityID(request: $0, context: $1) }
+      )
+
+    case "getTxRecordByContractID":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Query>(),
+        responseSerializer: ProtobufSerializer<Proto_Response>(),
+        interceptors: self.interceptors?.makegetTxRecordByContractIDInterceptors() ?? [],
+        wrapping: { try await self.getTxRecordByContractID(request: $0, context: $1) }
+      )
+
+    case "deleteContract":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteContractInterceptors() ?? [],
+        wrapping: { try await self.deleteContract(request: $0, context: $1) }
+      )
+
+    case "systemDelete":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makesystemDeleteInterceptors() ?? [],
+        wrapping: { try await self.systemDelete(request: $0, context: $1) }
+      )
+
+    case "systemUndelete":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makesystemUndeleteInterceptors() ?? [],
+        wrapping: { try await self.systemUndelete(request: $0, context: $1) }
+      )
+
+    case "callEthereum":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecallEthereumInterceptors() ?? [],
+        wrapping: { try await self.callEthereum(request: $0, context: $1) }
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+public protocol Proto_SmartContractServiceServerInterceptorFactoryProtocol: Sendable {
+
+  /// - Returns: Interceptors to use when handling 'createContract'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecreateContractInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'updateContract'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeupdateContractInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'contractCallMethod'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecontractCallMethodInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'contractCallLocalMethod'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecontractCallLocalMethodInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'getContractInfo'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetContractInfoInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'contractGetBytecode'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeContractGetBytecodeInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'getBySolidityID'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetBySolidityIDInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'getTxRecordByContractID'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetTxRecordByContractIDInterceptors() -> [ServerInterceptor<Proto_Query, Proto_Response>]
+
+  /// - Returns: Interceptors to use when handling 'deleteContract'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makedeleteContractInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'systemDelete'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makesystemDeleteInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'systemUndelete'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makesystemUndeleteInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'callEthereum'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecallEthereumInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+}
+
+public enum Proto_SmartContractServiceServerMetadata {
+  public static let serviceDescriptor = GRPCServiceDescriptor(
+    name: "SmartContractService",
+    fullName: "proto.SmartContractService",
+    methods: [
+      Proto_SmartContractServiceServerMetadata.Methods.createContract,
+      Proto_SmartContractServiceServerMetadata.Methods.updateContract,
+      Proto_SmartContractServiceServerMetadata.Methods.contractCallMethod,
+      Proto_SmartContractServiceServerMetadata.Methods.contractCallLocalMethod,
+      Proto_SmartContractServiceServerMetadata.Methods.getContractInfo,
+      Proto_SmartContractServiceServerMetadata.Methods.contractGetBytecode,
+      Proto_SmartContractServiceServerMetadata.Methods.getBySolidityID,
+      Proto_SmartContractServiceServerMetadata.Methods.getTxRecordByContractID,
+      Proto_SmartContractServiceServerMetadata.Methods.deleteContract,
+      Proto_SmartContractServiceServerMetadata.Methods.systemDelete,
+      Proto_SmartContractServiceServerMetadata.Methods.systemUndelete,
+      Proto_SmartContractServiceServerMetadata.Methods.callEthereum,
+    ]
+  )
+
+  public enum Methods {
+    public static let createContract = GRPCMethodDescriptor(
+      name: "createContract",
+      path: "/proto.SmartContractService/createContract",
+      type: GRPCCallType.unary
+    )
+
+    public static let updateContract = GRPCMethodDescriptor(
+      name: "updateContract",
+      path: "/proto.SmartContractService/updateContract",
+      type: GRPCCallType.unary
+    )
+
+    public static let contractCallMethod = GRPCMethodDescriptor(
+      name: "contractCallMethod",
+      path: "/proto.SmartContractService/contractCallMethod",
+      type: GRPCCallType.unary
+    )
+
+    public static let contractCallLocalMethod = GRPCMethodDescriptor(
+      name: "contractCallLocalMethod",
+      path: "/proto.SmartContractService/contractCallLocalMethod",
+      type: GRPCCallType.unary
+    )
+
+    public static let getContractInfo = GRPCMethodDescriptor(
+      name: "getContractInfo",
+      path: "/proto.SmartContractService/getContractInfo",
+      type: GRPCCallType.unary
+    )
+
+    public static let contractGetBytecode = GRPCMethodDescriptor(
+      name: "ContractGetBytecode",
+      path: "/proto.SmartContractService/ContractGetBytecode",
+      type: GRPCCallType.unary
+    )
+
+    public static let getBySolidityID = GRPCMethodDescriptor(
+      name: "getBySolidityID",
+      path: "/proto.SmartContractService/getBySolidityID",
+      type: GRPCCallType.unary
+    )
+
+    public static let getTxRecordByContractID = GRPCMethodDescriptor(
+      name: "getTxRecordByContractID",
+      path: "/proto.SmartContractService/getTxRecordByContractID",
+      type: GRPCCallType.unary
+    )
+
+    public static let deleteContract = GRPCMethodDescriptor(
+      name: "deleteContract",
+      path: "/proto.SmartContractService/deleteContract",
+      type: GRPCCallType.unary
+    )
+
+    public static let systemDelete = GRPCMethodDescriptor(
+      name: "systemDelete",
+      path: "/proto.SmartContractService/systemDelete",
+      type: GRPCCallType.unary
+    )
+
+    public static let systemUndelete = GRPCMethodDescriptor(
+      name: "systemUndelete",
+      path: "/proto.SmartContractService/systemUndelete",
+      type: GRPCCallType.unary
+    )
+
+    public static let callEthereum = GRPCMethodDescriptor(
+      name: "callEthereum",
+      path: "/proto.SmartContractService/callEthereum",
+      type: GRPCCallType.unary
+    )
+  }
+}

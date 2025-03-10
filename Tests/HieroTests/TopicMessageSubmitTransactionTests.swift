@@ -1,22 +1,4 @@
-/*
- * ‌
- * Hedera Swift SDK
- * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
- * ​
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ‍
- */
+// SPDX-License-Identifier: Apache-2.0
 
 import HieroProtobufs
 import SnapshotTesting
@@ -81,5 +63,69 @@ internal final class TopicMessageSubmitTransactionTests: XCTestCase {
         tx.message(Self.testMessageBytes)
 
         XCTAssertEqual(tx.message, Self.testMessageBytes)
+    }
+
+    internal func testSetCustomFeeLimits() throws {
+        let customFeeLimits = [
+            CustomFeeLimit(
+                payerId: AccountId("0.0.1"),
+                customFees: [
+                    CustomFixedFee(1, nil, TokenId("0.0.1"))
+                ]),
+            CustomFeeLimit(
+                payerId: AccountId("0.0.2"),
+                customFees: [
+                    CustomFixedFee(1, nil, TokenId("0.0.2"))
+                ]),
+        ]
+
+        let tx = TopicMessageSubmitTransaction()
+        tx.customFeeLimits(customFeeLimits)
+
+        XCTAssertEqual(tx.customFeeLimits, customFeeLimits)
+    }
+
+    internal func testAddCustomFeeLimitToList() throws {
+        let customFeeLimits = [
+            CustomFeeLimit(
+                payerId: AccountId("0.0.1"),
+                customFees: [
+                    CustomFixedFee(1, nil, TokenId("0.0.1"))
+                ]),
+            CustomFeeLimit(
+                payerId: AccountId("0.0.2"),
+                customFees: [
+                    CustomFixedFee(1, nil, TokenId("0.0.2"))
+                ]),
+        ]
+
+        let customFeeLimitToAdd = CustomFeeLimit(
+            payerId: AccountId("0.0.3"),
+            customFees: [
+                CustomFixedFee(3, nil, TokenId("0.0.3"))
+            ])
+
+        var expectedCustomFeeLimits = customFeeLimits
+        expectedCustomFeeLimits.append(customFeeLimitToAdd)
+
+        let tx = TopicMessageSubmitTransaction()
+            .customFeeLimits(customFeeLimits)
+            .addCustomFeeLimit(customFeeLimitToAdd)
+
+        XCTAssertEqual(tx.customFeeLimits, expectedCustomFeeLimits)
+    }
+
+    internal func testAddCustomFeeLimitToEmptyList() throws {
+        let customFeeLimitToAdd = CustomFeeLimit(
+            payerId: AccountId("0.0.3"),
+            customFees: [
+                CustomFixedFee(3, nil, TokenId("0.0.3"))
+            ])
+
+        let tx = TopicMessageSubmitTransaction()
+            .customFeeLimits([])
+            .addCustomFeeLimit(customFeeLimitToAdd)
+
+        XCTAssertEqual(tx.customFeeLimits, [customFeeLimitToAdd])
     }
 }

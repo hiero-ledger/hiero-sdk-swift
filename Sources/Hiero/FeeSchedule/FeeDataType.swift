@@ -1,22 +1,4 @@
-/*
- * ‌
- * Hedera Swift SDK
- * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
- * ​
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ‍
- */
+// SPDX-License-Identifier: Apache-2.0
 
 import Foundation
 import HieroProtobufs
@@ -41,6 +23,10 @@ public enum FeeDataType {
     /// The resource prices are scoped to a `ScheduleCreateTransaction`
     /// containing a `ContractExecuteTransaction`.
     case scheduleCreateContractCall
+
+    /// The resource prices are scoped to a `TopicCreateTransaction`
+    /// with custom fees.
+    case topicCreateWithCustomFees
 }
 
 extension FeeDataType: TryProtobufCodable {
@@ -54,6 +40,7 @@ extension FeeDataType: TryProtobufCodable {
         case .tokenFungibleCommonWithCustomFees: self = .tokenFungibleCommonWithCustomFees
         case .tokenNonFungibleUniqueWithCustomFees: self = .tokenNonFungibleUniqueWithCustomFees
         case .scheduleCreateContractCall: self = .scheduleCreateContractCall
+        case .topicCreateWithCustomFees: self = .topicCreateWithCustomFees
         case .UNRECOGNIZED(let code):
             throw HError.fromProtobuf("unrecognized FeeDataType `\(code)`")
         }
@@ -67,6 +54,7 @@ extension FeeDataType: TryProtobufCodable {
         case .tokenFungibleCommonWithCustomFees: return .tokenFungibleCommonWithCustomFees
         case .tokenNonFungibleUniqueWithCustomFees: return .tokenNonFungibleUniqueWithCustomFees
         case .scheduleCreateContractCall: return .scheduleCreateContractCall
+        case .topicCreateWithCustomFees: return .topicCreateWithCustomFees
         }
     }
 }

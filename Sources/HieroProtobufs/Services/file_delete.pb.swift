@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # File Delete
+/// A message for a transaction to delete a file.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,19 +32,41 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Delete the given file. After deletion, it will be marked as deleted and will have no contents.
-/// But information about it will continue to exist until it expires. A list of keys was given when
-/// the file was created. All the top level keys on that list must sign transactions to create or
-/// modify the file, but any single one of the top level keys can be used to delete the file. This
-/// transaction must be signed by 1-of-M KeyList keys. If keys contains additional KeyList or
-/// ThresholdKey then 1-of-M secondary KeyList or ThresholdKey signing requirements must be meet.
+/// Mark a file as deleted and remove its content from network state.
+///
+/// The metadata for a deleted file SHALL be retained at least until the
+/// expiration time for the file is exceeded.<br/>
+/// On completion, the identified file SHALL be marked `deleted`.<br/>
+/// On completion, the identified file SHALL have an empty `contents` array.<br/>
+/// This transaction SHALL be final and irreversible.<br/>
+///
+/// #### Signature Requirements
+/// At least _one_ key from the `KeyList` in the `keys` field of the
+/// identified file MUST sign this transaction.<br/>
+/// If the keys field for the identified file is an empty `KeyList` (because that
+/// file was previously created or updated to have an empty `KeyList`), then the
+/// file is considered immutable and this message SHALL fail as UNAUTHORIZED.
+/// See the [File Service](#FileService) specification for a detailed
+/// explanation of the signature requirements for all file transactions.
+///
+/// ### What is a "system" file
+/// A "system" file is any file with a file number less than or equal to the
+/// current configuration value for `ledger.numReservedSystemEntities`,
+/// typically `750`.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_FileDeleteTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The file to delete. It will be marked as deleted until it expires. Then it will disappear.
+  /// A file identifier.<br/>
+  /// This identifies the file to delete.
+  /// <p>
+  /// The identified file MUST NOT be a "system" file.<br/>
+  /// This field is REQUIRED.
   public var fileID: Proto_FileID {
     get {return _fileID ?? Proto_FileID()}
     set {_fileID = newValue}

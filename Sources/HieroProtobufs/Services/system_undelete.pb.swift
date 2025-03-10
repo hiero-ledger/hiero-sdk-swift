@@ -8,6 +8,27 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # System Undelete
+/// A system transaction to "undo" a `systemDelete` transaction.<br/>
+/// This transaction is a privileged operation restricted to "system"
+/// accounts.
+///
+/// > Note
+/// >> System undelete is defined here for a smart contract (to delete
+/// >> the bytecode), but was never implemented.
+/// >
+/// >> Currently, system delete and system undelete specifying a smart
+/// >> contract identifier SHALL return `INVALID_FILE_ID`
+/// >> or `MISSING_ENTITY_ID`.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,8 +42,25 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Undelete a file or smart contract that was deleted by SystemDelete; requires a Hedera
-/// administrative multisignature. 
+/// Recover a file or contract bytecode deleted from the Hedera File
+/// System (HFS) by a `systemDelete` transaction.
+///
+/// > Note
+/// >> A system delete/undelete for a `contractID` is not supported and
+/// >> SHALL return `INVALID_FILE_ID` or `MISSING_ENTITY_ID`.
+///
+/// This transaction can _only_ recover a file removed with the `systemDelete`
+/// transaction. A file deleted via `fileDelete` SHALL be irrecoverable.<br/>
+/// This transaction MUST be signed by an Hedera administrative ("system")
+/// account.
+///
+/// ### What is a "system" file
+/// A "system" file is any file with a file number less than or equal to the
+/// current configuration value for `ledger.numReservedSystemEntities`,
+/// typically `750`.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_SystemUndeleteTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -31,7 +69,14 @@ public struct Proto_SystemUndeleteTransactionBody: Sendable {
   public var id: Proto_SystemUndeleteTransactionBody.OneOf_ID? = nil
 
   ///*
-  /// The file ID to undelete, in the format used in transactions
+  /// A file identifier.
+  /// <p>
+  /// The identified file MUST exist in the HFS.<br/>
+  /// The identified file MUST be deleted.<br/>
+  /// The identified file deletion MUST be a result of a
+  /// `systemDelete` transaction.<br/>
+  /// The identified file MUST NOT be a "system" file.<br/>
+  /// This field is REQUIRED.
   public var fileID: Proto_FileID {
     get {
       if case .fileID(let v)? = id {return v}
@@ -41,7 +86,14 @@ public struct Proto_SystemUndeleteTransactionBody: Sendable {
   }
 
   ///*
-  /// The contract ID instance to undelete, in the format used in transactions
+  /// A contract identifier.
+  /// <p>
+  /// The identified contract MUST exist in network state.<br/>
+  /// The identified contract bytecode MUST be deleted.<br/>
+  /// The identified contract deletion MUST be a result of a
+  /// `systemDelete` transaction.
+  /// <p>
+  /// This option is _unsupported_.
   public var contractID: Proto_ContractID {
     get {
       if case .contractID(let v)? = id {return v}
@@ -54,10 +106,24 @@ public struct Proto_SystemUndeleteTransactionBody: Sendable {
 
   public enum OneOf_ID: Equatable, Sendable {
     ///*
-    /// The file ID to undelete, in the format used in transactions
+    /// A file identifier.
+    /// <p>
+    /// The identified file MUST exist in the HFS.<br/>
+    /// The identified file MUST be deleted.<br/>
+    /// The identified file deletion MUST be a result of a
+    /// `systemDelete` transaction.<br/>
+    /// The identified file MUST NOT be a "system" file.<br/>
+    /// This field is REQUIRED.
     case fileID(Proto_FileID)
     ///*
-    /// The contract ID instance to undelete, in the format used in transactions
+    /// A contract identifier.
+    /// <p>
+    /// The identified contract MUST exist in network state.<br/>
+    /// The identified contract bytecode MUST be deleted.<br/>
+    /// The identified contract deletion MUST be a result of a
+    /// `systemDelete` transaction.
+    /// <p>
+    /// This option is _unsupported_.
     case contractID(Proto_ContractID)
 
   }

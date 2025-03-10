@@ -69,7 +69,8 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   ///*
   /// A short description of the node.
   /// <p>
-  /// This value, if set, MUST NOT exceed 100 bytes when encoded as UTF-8.<br/>
+  /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+  /// (default 100) bytes when encoded as UTF-8.<br/>
   /// If set, this value SHALL replace the previous value.
   public var description_p: SwiftProtobuf.Google_Protobuf_StringValue {
     get {return _description_p ?? SwiftProtobuf.Google_Protobuf_StringValue()}

@@ -1,22 +1,4 @@
-/*
- * ‌
- * Hedera Swift SDK
- * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
- * ​
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ‍
- */
+// SPDX-License-Identifier: Apache-2.0
 
 import Foundation
 import HieroProtobufs
@@ -54,6 +36,15 @@ public struct TopicInfo {
     /// The ledger ID the response was returned from
     public let ledgerId: LedgerId
 
+    /// The key used to schedule the fee schedule for the topic.
+    public let feeScheduleKey: Key?
+
+    /// The list of keys that are exempt from the fee schedule for the topic.
+    public let feeExemptKeys: [Key]
+
+    /// The list of custom fees for the topic.
+    public let customFees: [CustomFixedFee]
+
     /// Decode `Self` from protobuf-encoded `bytes`.
     ///
     /// - Throws: ``HError/ErrorKind/fromProtobuf`` if:
@@ -80,7 +71,9 @@ extension TopicInfo: TryProtobufCodable {
         let submitKey = info.hasSubmitKey ? info.submitKey : nil
         let autoRenewAccountId = info.hasAutoRenewAccount ? info.autoRenewAccount : nil
         let autoRenewPeriod = info.hasAutoRenewPeriod ? info.autoRenewPeriod : nil
-
+        let feeScheduleKey = info.hasFeeScheduleKey ? info.feeScheduleKey : nil
+        let feeExemptKeys = try info.feeExemptKeyList.map { try Key.fromProtobuf($0) }
+        let customFees = try info.customFees.map { try CustomFixedFee.fromProtobuf($0) }
         self.init(
             topicId: .fromProtobuf(proto.topicID),
             topicMemo: info.memo,
@@ -91,7 +84,10 @@ extension TopicInfo: TryProtobufCodable {
             submitKey: try .fromProtobuf(submitKey),
             autoRenewAccountId: try .fromProtobuf(autoRenewAccountId),
             autoRenewPeriod: .fromProtobuf(autoRenewPeriod),
-            ledgerId: LedgerId(info.ledgerID)
+            ledgerId: LedgerId(info.ledgerID),
+            feeScheduleKey: try .fromProtobuf(feeScheduleKey),
+            feeExemptKeys: feeExemptKeys,
+            customFees: customFees
         )
     }
 
@@ -122,6 +118,18 @@ extension TopicInfo: TryProtobufCodable {
                 }
                 if let autoRenewPeriod = autoRenewPeriod {
                     info.autoRenewPeriod = autoRenewPeriod.toProtobuf()
+                }
+
+                if let feeScheduleKey = feeScheduleKey {
+                    info.feeScheduleKey = feeScheduleKey.toProtobuf()
+                }
+
+                if !feeExemptKeys.isEmpty {
+                    info.feeExemptKeyList = feeExemptKeys.map { $0.toProtobuf() }
+                }
+
+                if !customFees.isEmpty {
+                    info.customFees = customFees.map { $0.toTopicFeeProtobuf() }
                 }
 
                 info.ledgerID = ledgerId.bytes

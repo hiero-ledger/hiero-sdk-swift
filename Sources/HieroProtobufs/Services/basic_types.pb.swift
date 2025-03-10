@@ -8,6 +8,41 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Basic Types
+/// Fundamental message types used across transactions and state as field types.
+///
+/// ### Requirements for identifier values
+/// - Most entities in the network SHALL be identified by a multi-part
+///   identifier. These identifier values SHALL consist of a shard, a realm, and
+///   an entity identifier.
+/// - Shard, Realm, and Entity Number MUST all be whole numbers.
+/// - A Shard SHALL be globally unique.
+/// - A Realm MAY be reused between shards, but SHALL be unique within a shard.
+/// - An Entity Number MAY be reused between shards and realms, but SHALL be
+///   unique within each combination of shard and realm.
+/// - Every object (e.g. account, file, token, etc...) SHALL be scoped to exactly
+///   one realm and shard. Thus a File has a FileID, a numeric triplet, such as
+///   0.0.2 for shard 0, realm 0, entity 2.
+/// - Identifier values SHOULD use an Entity Number as the third component of the
+///   identifier. Some, however, MAY use alternative or composite values for the
+///   Entity portion of the three part identifier. Any such alternative or
+///   composite value MUST be unique within that shard and realm combination.
+/// - The entity portion of the identifier, regardless of type, MUST be unique
+///   within that realm and shard combination and MAY be globally unique.
+/// - The triplet of shard.realm.entity MUST be globally unique, even across
+///   different identifier types.
+/// - Each realm SHALL maintain a single counter for entity numbers, so if there
+///   is an identifier with value 0.1.2, then there MUST NOT be an identifier
+///   with value 0.1.2 for any other object.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -71,22 +106,52 @@ public enum Proto_BlockHashAlgorithm: SwiftProtobuf.Enum, Swift.CaseIterable {
 
 ///*
 /// Possible Token Types (IWA Compatibility).
-/// Apart from fungible and non-fungible, Tokens can have either a common or unique representation.
-/// This distinction might seem subtle, but it is important when considering how tokens can be traced
-/// and if they can have isolated and unique properties.
+///
+/// Apart from fungible and non-fungible, Tokens can have either a common or
+/// unique representation. Furthermore, tokens can have intrinsic or referential
+/// value, and can be whole and indivisible or fractional.<br/>
+/// These distinction might seem subtle, but it is important when considering
+/// how tokens can be traced, used, transferred, and if they can have isolated
+/// unique properties.
+///
+/// A few examples (these may not match enumerations below) using IWA taxonomy.
+/// <dl>
+///   <dt>fungible, whole, intrinsic, unique</dt>
+///     <dd>Physical fiat currency</dd>
+///   <dt>fungible, fractional, intrinsic, common</dt>
+///     <dd>bank balance fiat currency</dd>
+///   <dt>non-fungible, fractional, reference, unique</dt>
+///     <dd>"mutual" collectible/art/property ownership</dd>
+///   <dt>non-fungible, whole, intrinsic, unique</dt>
+///     <dd>Physical work of fine art</dd>
+///   <dt>non-fungible, whole, reference, unique</dt>
+///     <dd>Registered property title</dd>
+/// </dl>
 public enum Proto_TokenType: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   ///*
-  /// Interchangeable value with one another, where any quantity of them has the same value as
-  /// another equal quantity if they are in the same class.  Share a single set of properties, not
-  /// distinct from one another. Simply represented as a balance or quantity to a given Hedera
-  /// account.
+  /// A fungible/common token.<br/>
+  /// Tokens of this type are interchangeable with one another, where any
+  /// quantity of tokens has the same value as another equal quantity, if
+  /// they are in the same class. Tokens share a single set of properties,
+  /// and are not distinct from one another. Ownership is represented as a
+  /// balance or quantity associated to a given account. Tokens may be
+  /// divided into fractional tokens, within reasonable limits.
+  /// <p>
+  /// IWA taxonomy _fungible, fractional, intrinsic, common_
   case fungibleCommon // = 0
 
   ///*
-  /// Unique, not interchangeable with other tokens of the same type as they typically have
-  /// different values.  Individually traced and can carry unique properties (e.g. serial number).
+  /// A non-fungible/unique token.<br/>
+  /// Tokens of this type are unique, and are not interchangeable with other
+  /// tokens of the same type. Each token carries a serial number which is
+  /// unique for that token, these tokens may have a different trade value
+  /// for each individual token. The tokens are individually accounted and
+  /// often carry additional unique properties. Tokens cannot be subdivided,
+  /// and value is related to what the individual token represents.
+  /// <p>
+  /// IWA taxonomy _non-fungible, whole, reference, unique_
   case nonFungibleUnique // = 1
   case UNRECOGNIZED(Int)
 
@@ -119,43 +184,55 @@ public enum Proto_TokenType: SwiftProtobuf.Enum, Swift.CaseIterable {
 }
 
 ///*
-/// Allows a set of resource prices to be scoped to a certain type of a HAPI operation.
+/// A transaction sub type.<br/>
+/// This enumeration enables a set of transaction base fees to be broadly
+/// defined for a type of operation and also be modified, when necessary,
+/// based on specifics of the operation.
 ///
-/// For example, the resource prices for a TokenMint operation are different between minting fungible
-/// and non-fungible tokens. This enum allows us to "mark" a set of prices as applying to one or the
-/// other.
-///
-/// Similarly, the resource prices for a basic TokenCreate without a custom fee schedule yield a
-/// total price of $1. The resource prices for a TokenCreate with a custom fee schedule are different
-/// and yield a total base price of $2.
+/// ### Explanation
+/// The resource cost for a TokenMint operation is different between minting
+/// fungible/common and non-fungible/unique tokens. This `enum` is used to
+/// "mark" a cost as applying to one or the other.<br/>
+/// Similarly, the resource cost for a basic `tokenCreate` without a custom
+/// fee schedule may yield a _base_ fee of $1. The resource cost for a
+/// `tokenCreate` _with_ a custom fee schedule is different and may yield a
+/// _base_ fee of $2 or more.
 public enum Proto_SubType: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   ///*
-  /// The resource prices have no special scope
+  /// The resource cost for the transaction type has no additional attributes
   case `default` // = 0
 
   ///*
-  /// The resource prices are scoped to an operation on a fungible common token
+  /// The resource cost for the transaction type includes an operation on a
+  /// fungible/common token
   case tokenFungibleCommon // = 1
 
   ///*
-  /// The resource prices are scoped to an operation on a non-fungible unique token
+  /// The resource cost for the transaction type includes an operation on
+  /// a non-fungible/unique token
   case tokenNonFungibleUnique // = 2
 
   ///*
-  /// The resource prices are scoped to an operation on a fungible common
-  /// token with a custom fee schedule
+  /// The resource cost for the transaction type includes an operation on a
+  /// fungible/common token with a custom fee schedule
   case tokenFungibleCommonWithCustomFees // = 3
 
   ///*
-  /// The resource prices are scoped to an operation on a non-fungible unique
-  /// token with a custom fee schedule
+  /// The resource cost for the transaction type includes an operation on a
+  /// non-fungible/unique token with a custom fee schedule
   case tokenNonFungibleUniqueWithCustomFees // = 4
 
   ///*
-  /// The resource prices are scoped to a ScheduleCreate containing a ContractCall.
+  /// The resource cost for the transaction type includes a ScheduleCreate
+  /// containing a ContractCall.
   case scheduleCreateContractCall // = 5
+
+  ///*
+  /// The resource cost for the transaction type includes a TopicCreate
+  /// with custom fees.
+  case topicCreateWithCustomFees // = 6
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -170,6 +247,7 @@ public enum Proto_SubType: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 3: self = .tokenFungibleCommonWithCustomFees
     case 4: self = .tokenNonFungibleUniqueWithCustomFees
     case 5: self = .scheduleCreateContractCall
+    case 6: self = .topicCreateWithCustomFees
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -182,6 +260,7 @@ public enum Proto_SubType: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .tokenFungibleCommonWithCustomFees: return 3
     case .tokenNonFungibleUniqueWithCustomFees: return 4
     case .scheduleCreateContractCall: return 5
+    case .topicCreateWithCustomFees: return 6
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -194,23 +273,36 @@ public enum Proto_SubType: SwiftProtobuf.Enum, Swift.CaseIterable {
     .tokenFungibleCommonWithCustomFees,
     .tokenNonFungibleUniqueWithCustomFees,
     .scheduleCreateContractCall,
+    .topicCreateWithCustomFees,
   ]
 
 }
 
 ///*
 /// Possible Token Supply Types (IWA Compatibility).
-/// Indicates how many tokens can have during its lifetime.
+///
+/// This `enum` indicates the limit of tokens that can exist during the
+/// lifetime of a token definition. The "infinite" supply is only theoretically
+/// infinite, as it is still limited to the magnitude of a 64-bit signed
+/// integer. A "finite" supply is further limited to a value specified when
+/// the token is created (or updated, if not immutable).
 public enum Proto_TokenSupplyType: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   ///*
-  /// Indicates that tokens of that type have an upper bound of Long.MAX_VALUE.
+  /// An unlimited supply.<br/>
+  /// This indicates that tokens of this type have an upper bound of
+  /// Long.MAX_VALUE.<br/>
+  /// The supply is accounted in the smallest units of the token
+  /// (i.e. 10<sup>-`decimals`</sup> whole tokens)
   case infinite // = 0
 
   ///*
-  /// Indicates that tokens of that type have an upper bound of maxSupply,
-  /// provided on token creation.
+  /// A limited supply.<br/>
+  /// This indicates that tokens of this type have an upper bound of
+  /// `maxSupply`.<br/>
+  /// The maximum supply SHALL be provided on token creation, but MAY be
+  /// changed thereafter if the token has an `admin_key` set.
   case finite // = 1
   case UNRECOGNIZED(Int)
 
@@ -248,7 +340,8 @@ public enum Proto_TokenKeyValidation: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   ///*
-  /// Currently the default behaviour. It will perform all token key validations.
+  /// Perform all token key validations.<br/>
+  /// This is the default value and behavior.
   case fullValidation // = 0
 
   ///*
@@ -285,21 +378,25 @@ public enum Proto_TokenKeyValidation: SwiftProtobuf.Enum, Swift.CaseIterable {
 }
 
 ///*
-/// Possible Freeze statuses returned on TokenGetInfoQuery or CryptoGetInfoResponse in
-/// TokenRelationship
+/// Possible token freeze status values.
+///
+/// This is returned by `TokenGetInfoQuery` or `CryptoGetInfoResponse`
+/// in `TokenRelationship`.
 public enum Proto_TokenFreezeStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   ///*
-  /// UNDOCUMENTED
+  /// The token does not support freeze or cannot be frozen for the designated
+  /// account.<br/>
+  /// Typically this indicates that the token does not have a `freeze_key` set.
   case freezeNotApplicable // = 0
 
   ///*
-  /// UNDOCUMENTED
+  /// The token is currently frozen for the designated account.
   case frozen // = 1
 
   ///*
-  /// UNDOCUMENTED
+  /// The token is not currently frozen for the designated account.
   case unfrozen // = 2
   case UNRECOGNIZED(Int)
 
@@ -335,20 +432,27 @@ public enum Proto_TokenFreezeStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
 }
 
 ///*
-/// Possible KYC statuses returned on TokenGetInfoQuery or CryptoGetInfoResponse in TokenRelationship
+/// Possible token "KYC" status values.
+///
+/// This is returned by `TokenGetInfoQuery` or `CryptoGetInfoResponse`
+/// in `TokenRelationship`.
 public enum Proto_TokenKycStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   ///*
-  /// UNDOCUMENTED
+  /// The token does not support KYC or cannot grant KYC for the
+  /// designated account.<br/>
+  /// Typically this indicates that the token does not have a `kyc_key` set.
   case kycNotApplicable // = 0
 
   ///*
-  /// UNDOCUMENTED
+  /// The designated account is currently granted KYC status for the
+  /// designated token.
   case granted // = 1
 
   ///*
-  /// UNDOCUMENTED
+  /// The designated account is not currently granted KYC status for the
+  /// designated token.
   case revoked // = 2
   case UNRECOGNIZED(Int)
 
@@ -384,20 +488,23 @@ public enum Proto_TokenKycStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
 }
 
 ///*
-/// Possible Pause statuses returned on TokenGetInfoQuery
+/// Possible Pause status values.
+///
+/// This is returned by `TokenGetInfoQuery` in `TokenRelationship`.
 public enum Proto_TokenPauseStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   ///*
-  /// Indicates that a Token has no pauseKey
+  /// The token does not support pause or cannot be paused.<br/>
+  /// Typically this indicates that the token does not have a `pause_key` set.
   case pauseNotApplicable // = 0
 
   ///*
-  /// Indicates that a Token is Paused
+  /// The token is currently paused.
   case paused // = 1
 
   ///*
-  /// Indicates that a Token is Unpaused.
+  /// The token is not currently paused.
   case unpaused // = 2
   case UNRECOGNIZED(Int)
 
@@ -438,298 +545,356 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   ///*
-  /// UNSPECIFIED - Need to keep first value as unspecified because first element is ignored and
-  /// not parsed (0 is ignored by parser)
+  /// Unused - The first value is unused because this default value is
+  /// ambiguous with an "unset" value and therefore should not be used.
   case none // = 0
 
   ///*
-  /// crypto transfer
+  /// Transfer tokens among accounts.
   case cryptoTransfer // = 1
 
   ///*
-  /// crypto update account
+  /// Update an account.
   case cryptoUpdate // = 2
 
   ///*
-  /// crypto delete account
+  /// Delete an account.
   case cryptoDelete // = 3
 
   ///*
-  /// Add a livehash to a crypto account
+  /// Add a livehash to an account
+  ///
+  /// NOTE: This enum value was marked as deprecated in the .proto file
   case cryptoAddLiveHash // = 4
 
   ///*
-  /// Delete a livehash from a crypto account
+  /// Delete a livehash from an account
+  ///
+  /// NOTE: This enum value was marked as deprecated in the .proto file
   case cryptoDeleteLiveHash // = 5
 
   ///*
-  /// Smart Contract Call
+  /// Execute a smart contract call.
   case contractCall // = 6
 
   ///*
-  /// Smart Contract Create Contract
+  /// Create a smart contract.
   case contractCreate // = 7
 
   ///*
-  /// Smart Contract update contract
+  /// Update a smart contract.
   case contractUpdate // = 8
 
   ///*
-  /// File Operation create file
+  /// Create a "file" stored in the ledger.
   case fileCreate // = 9
 
   ///*
-  /// File Operation append file
+  /// Append data to a "file" stored in the ledger.
   case fileAppend // = 10
 
   ///*
-  /// File Operation update file
+  /// Update a "file" stored in the ledger.
   case fileUpdate // = 11
 
   ///*
-  /// File Operation delete file
+  /// Delete a "file" stored in the ledger.
   case fileDelete // = 12
 
   ///*
-  /// crypto get account balance
+  /// Get the balance for an account.
   case cryptoGetAccountBalance // = 13
 
   ///*
-  /// crypto get account record
+  /// Get a full account record.
   case cryptoGetAccountRecords // = 14
 
   ///*
-  /// Crypto get info
+  /// Get information about a token.
   case cryptoGetInfo // = 15
 
   ///*
-  /// Smart Contract Call
+  /// Execute a local smart contract call.<br/>
+  /// Used by contracts to call other contracts.
   case contractCallLocal // = 16
 
   ///*
-  /// Smart Contract get info
+  /// Get information about a smart contract.
   case contractGetInfo // = 17
 
   ///*
-  /// Smart Contract, get the runtime code
+  /// Get the compiled bytecode that implements a smart contract.
   case contractGetBytecode // = 18
 
   ///*
-  /// Smart Contract, get by solidity ID
+  /// Get a smart contract record by reference to the solidity ID.
   case getBySolidityID // = 19
 
   ///*
-  /// Smart Contract, get by key
+  /// Get a smart contract by reference to the contract key.
   case getByKey // = 20
 
   ///*
-  /// Get a live hash from a crypto account
+  /// Get the live hash for an account
+  ///
+  /// NOTE: This enum value was marked as deprecated in the .proto file
   case cryptoGetLiveHash // = 21
 
   ///*
-  /// Crypto, get the stakers for the node
+  /// Get the accounts proxy staking to a given account.
+  ///
+  /// NOTE: This enum value was marked as deprecated in the .proto file
   case cryptoGetStakers // = 22
 
   ///*
-  /// File Operations get file contents
+  /// Get the contents of a "file" stored in the ledger.
   case fileGetContents // = 23
 
   ///*
-  /// File Operations get the info of the file
+  /// Get the metadata for a "file" stored in the ledger.
   case fileGetInfo // = 24
 
   ///*
-  /// Crypto get the transaction records
+  /// Get transaction record(s) for a specified transaction ID.
   case transactionGetRecord // = 25
 
   ///*
-  /// Contract get the transaction records
+  /// Get all transaction records for a specified contract ID in
+  /// the past 24 hours.<br/>
+  /// deprecated since version 0.9.0
+  ///
+  /// NOTE: This enum value was marked as deprecated in the .proto file
   case contractGetRecords // = 26
 
   ///*
-  /// crypto create account
+  /// Create a new account
   case cryptoCreate // = 27
 
   ///*
-  /// system delete file
+  /// Delete a "system" "file" stored in the ledger.<br/>
+  /// "System" files are files with special purpose and ID values within a
+  /// specific range.<br/>
+  /// These files require additional controls and can only be deleted when
+  /// authorized by accounts with elevated privilege.
   case systemDelete // = 28
 
   ///*
-  /// system undelete file
+  /// Undo the delete of a "system" "file" stored in the ledger.<br/>
+  /// "System" files are files with special purpose and ID values within a
+  /// specific range.<br/>
+  /// These files require additional controls and can only be deleted when
+  /// authorized by accounts with elevated privilege. This operation allows
+  /// such files to be restored, within a reasonable timeframe, if
+  /// deleted improperly.
   case systemUndelete // = 29
 
   ///*
-  /// delete contract
+  /// Delete a smart contract
   case contractDelete // = 30
 
   ///*
-  /// freeze
+  /// Stop all processing and "freeze" the entire network.<br/>
+  /// This is generally sent immediately prior to upgrading the network.<br/>
+  /// After processing this transactions all nodes enter a quiescent state.
   case freeze // = 31
 
   ///*
-  /// Create Tx Record
+  /// Create a Transaction Record.<br/>
+  /// This appears to be purely internal and unused.
   case createTransactionRecord // = 32
 
   ///*
-  /// Crypto Auto Renew
+  /// Auto-renew an account.<br/>
+  /// This is used for internal fee calculations.
   case cryptoAccountAutoRenew // = 33
 
   ///*
-  /// Contract Auto Renew
+  /// Auto-renew a smart contract.<br/>
+  /// This is used for internal fee calculations.
   case contractAutoRenew // = 34
 
   ///*
-  /// Get Version
+  /// Get version information for the ledger.<br/>
+  /// This returns a the version of the software currently running the network
+  /// for both the protocol buffers and the network services (node).
   case getVersionInfo // = 35
 
   ///*
-  /// Transaction Get Receipt
+  /// Get a receipt for a specified transaction ID.
   case transactionGetReceipt // = 36
 
   ///*
-  /// Create Topic
+  /// Create a topic for the Hedera Consensus Service (HCS).
   case consensusCreateTopic // = 50
 
   ///*
-  /// Update Topic
+  /// Update an HCS topic.
   case consensusUpdateTopic // = 51
 
   ///*
-  /// Delete Topic
+  /// Delete an HCS topic.
   case consensusDeleteTopic // = 52
 
   ///*
-  /// Get Topic information
+  /// Get metadata (information) for an HCS topic.
   case consensusGetTopicInfo // = 53
 
   ///*
-  /// Submit message to topic
+  /// Publish a message to an HCS topic.
   case consensusSubmitMessage // = 54
+
+  ///*
+  /// Submit a transaction, bypassing intake checking.
+  /// Only enabled in local-mode.
   case uncheckedSubmit // = 55
 
   ///*
-  /// Create Token
+  /// Create a token for the Hedera Token Service (HTS).
   case tokenCreate // = 56
 
   ///*
-  /// Get Token information
+  /// Get metadata (information) for an HTS token.
   case tokenGetInfo // = 58
 
   ///*
-  /// Freeze Account
+  /// Freeze a specific account with respect to a specific HTS token.
+  /// <p>
+  /// Once this transaction completes that account CANNOT send or receive
+  /// the specified token.
   case tokenFreezeAccount // = 59
 
   ///*
-  /// Unfreeze Account
+  /// Remove a "freeze" from an account with respect to a specific HTS token.
   case tokenUnfreezeAccount // = 60
 
   ///*
-  /// Grant KYC to Account
+  /// Grant KYC status to an account for a specific HTS token.
   case tokenGrantKycToAccount // = 61
 
   ///*
-  /// Revoke KYC from Account
+  /// Revoke KYC status from an account for a specific HTS token.
   case tokenRevokeKycFromAccount // = 62
 
   ///*
-  /// Delete Token
+  /// Delete a specific HTS token.
   case tokenDelete // = 63
 
   ///*
-  /// Update Token
+  /// Update a specific HTS token.
   case tokenUpdate // = 64
 
   ///*
-  /// Mint tokens to treasury
+  /// Mint HTS token amounts to the treasury account for that token.
   case tokenMint // = 65
 
   ///*
-  /// Burn tokens from treasury
+  /// Burn HTS token amounts from the treasury account for that token.
   case tokenBurn // = 66
 
   ///*
-  /// Wipe token amount from Account holder
+  /// Wipe all amounts for a specific HTS token from a specified account.
   case tokenAccountWipe // = 67
 
   ///*
-  /// Associate tokens to an account
+  /// Associate a specific HTS token to an account.
   case tokenAssociateToAccount // = 68
 
   ///*
-  /// Dissociate tokens from an account
+  /// Dissociate a specific HTS token from an account.
   case tokenDissociateFromAccount // = 69
 
   ///*
-  /// Create Scheduled Transaction
+  /// Create a scheduled transaction
   case scheduleCreate // = 70
 
   ///*
-  /// Delete Scheduled Transaction
+  /// Delete a scheduled transaction
   case scheduleDelete // = 71
 
   ///*
-  /// Sign Scheduled Transaction
+  /// Sign a scheduled transaction
   case scheduleSign // = 72
 
   ///*
-  /// Get Scheduled Transaction Information
+  /// Get metadata (information) for a scheduled transaction
   case scheduleGetInfo // = 73
 
   ///*
-  /// Get Token Account Nft Information
+  /// Get NFT metadata (information) for a range of NFTs associated to a
+  /// specific non-fungible/unique HTS token and owned by a specific account.
+  ///
+  /// NOTE: This enum value was marked as deprecated in the .proto file
   case tokenGetAccountNftInfos // = 74
 
   ///*
-  /// Get Token Nft Information
+  /// Get metadata (information) for a specific NFT identified by token and
+  /// serial number.
+  ///
+  /// NOTE: This enum value was marked as deprecated in the .proto file
   case tokenGetNftInfo // = 75
 
   ///*
-  /// Get Token Nft List Information
+  /// Get NFT metadata (information) for a range of NFTs associated to a
+  /// specific non-fungible/unique HTS token.
   case tokenGetNftInfos // = 76
 
   ///*
-  /// Update a token's custom fee schedule, if permissible
+  /// Update a token's custom fee schedule.
+  /// <p>
+  /// If a transaction of this type is not signed by the token
+  /// `fee_schedule_key` it SHALL fail with INVALID_SIGNATURE, or
+  /// TOKEN_HAS_NO_FEE_SCHEDULE_KEY if there is no `fee_schedule_key` set.
   case tokenFeeScheduleUpdate // = 77
 
   ///*
-  /// Get execution time(s) by TransactionID, if available
+  /// Get execution time(s) for one or more "recent" TransactionIDs.
+  ///
+  /// NOTE: This enum value was marked as deprecated in the .proto file
   case networkGetExecutionTime // = 78
 
   ///*
-  /// Pause the Token
+  /// Pause a specific HTS token
   case tokenPause // = 79
 
   ///*
-  /// Unpause the Token
+  /// Unpause a paused HTS token.
   case tokenUnpause // = 80
 
   ///*
-  /// Approve allowance for a spender relative to the owner account
+  /// Approve an allowance for a spender relative to the owner account, which
+  /// MUST sign the transaction.
   case cryptoApproveAllowance // = 81
 
   ///*
-  /// Deletes granted allowances on owner account
+  /// Delete (unapprove) an allowance previously approved
+  /// for the owner account.
   case cryptoDeleteAllowance // = 82
 
   ///*
-  /// Gets all the information about an account, including balance and allowances. This does not get the list of
-  /// account records.
+  /// Get all the information about an account, including balance
+  /// and allowances.<br/>
+  /// This does not get a list of account records.
   case getAccountDetails // = 83
 
   ///*
-  /// Ethereum Transaction
+  /// Perform an Ethereum (EVM) transaction.<br/>
+  /// CallData may be inline if small, or in a "file" if large.
   case ethereumTransaction // = 84
 
   ///*
-  /// Updates the staking info at the end of staking period to indicate new staking period has started.
+  /// Used to indicate when the network has updated the staking information
+  /// at the end of a staking period and to indicate a new staking period
+  /// has started.
   case nodeStakeUpdate // = 85
 
   ///*
-  /// Generates a pseudorandom number.
+  /// Generate and return a pseudorandom number based on network state.
   case utilPrng // = 86
 
   ///*
-  /// Get a record for a transaction.
+  /// Get a record for a "recent" transaction.
+  ///
+  /// NOTE: This enum value was marked as deprecated in the .proto file
   case transactionGetFastRecord // = 87
 
   ///*
@@ -749,7 +914,8 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
   case nodeDelete // = 91
 
   ///*
-  /// Transfer one or more token balances held by the requesting account to the treasury for each token type.
+  /// Transfer one or more token balances held by the requesting account
+  /// to the treasury for each token type.
   case tokenReject // = 92
 
   ///*
@@ -757,7 +923,8 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
   case tokenAirdrop // = 93
 
   ///*
-  /// Remove one or more pending airdrops from state on behalf of the sender(s) for each airdrop.
+  /// Remove one or more pending airdrops from state on behalf of
+  /// the sender(s) for each airdrop.
   case tokenCancelAirdrop // = 94
 
   ///*
@@ -765,16 +932,20 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
   case tokenClaimAirdrop // = 95
 
   ///*
-  /// A message produced as part of Threshold Signature Scheme (TSS) processing.
-  case tssMessage // = 96
+  /// Submit a signature of a state root hash gossiped to other nodes
+  case stateSignatureTransaction // = 100
 
   ///*
-  /// Submit a vote as part of the Threshold Signature Scheme (TSS) processing.
-  case tssVote // = 97
+  /// Sign a particular history assembly.
+  case historyAssemblySignature // = 104
 
   ///*
-  /// Submit a node signature as part of the Threshold Signature Scheme (TSS) processing.
-  case tssShareSignature // = 98
+  /// Publish a roster history proof key to the network.
+  case historyProofKeyPublication // = 105
+
+  ///*
+  /// Vote for a particular history proof.
+  case historyProofVote // = 106
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -865,9 +1036,10 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 93: self = .tokenAirdrop
     case 94: self = .tokenCancelAirdrop
     case 95: self = .tokenClaimAirdrop
-    case 96: self = .tssMessage
-    case 97: self = .tssVote
-    case 98: self = .tssShareSignature
+    case 100: self = .stateSignatureTransaction
+    case 104: self = .historyAssemblySignature
+    case 105: self = .historyProofKeyPublication
+    case 106: self = .historyProofVote
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -956,9 +1128,10 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .tokenAirdrop: return 93
     case .tokenCancelAirdrop: return 94
     case .tokenClaimAirdrop: return 95
-    case .tssMessage: return 96
-    case .tssVote: return 97
-    case .tssShareSignature: return 98
+    case .stateSignatureTransaction: return 100
+    case .historyAssemblySignature: return 104
+    case .historyProofKeyPublication: return 105
+    case .historyProofVote: return 106
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -1047,33 +1220,28 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
     .tokenAirdrop,
     .tokenCancelAirdrop,
     .tokenClaimAirdrop,
-    .tssMessage,
-    .tssVote,
-    .tssShareSignature,
+    .stateSignatureTransaction,
+    .historyAssemblySignature,
+    .historyProofKeyPublication,
+    .historyProofVote,
   ]
 
 }
 
 ///*
-/// Each shard has a nonnegative shard number. Each realm within a given shard has a nonnegative
-/// realm number (that number might be reused in other shards). And each account, file, and smart
-/// contract instance within a given realm has a nonnegative number (which might be reused in other
-/// realms).  Every account, file, and smart contract instance is within exactly one realm. So a
-/// FileID is a triplet of numbers, like 0.1.2 for entity number 2 within realm 1  within shard 0.
-/// Each realm maintains a single counter for assigning numbers,  so if there is a file with ID
-/// 0.1.2, then there won't be an account or smart  contract instance with ID 0.1.2.
-///
-/// Everything is partitioned into realms so that each Solidity smart contract can  access everything
-/// in just a single realm, locking all those entities while it's  running, but other smart contracts
-/// could potentially run in other realms in  parallel. So realms allow Solidity to be parallelized
-/// somewhat, even though the  language itself assumes everything is serial.
+/// A shard identifier.<br/>
+/// A shard is a partition of nodes running the network that processes
+/// transactions separately from other shards. Each shard is effectively an
+/// independent instance of the overall network that shares the same virtual
+/// distributed ledger, and may gossip cross-shard transactions with other
+/// shards to maintain overall correct processing of the ledger.
 public struct Proto_ShardID: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// the shard number (nonnegative)
+  /// A whole number shard identifier.
   public var shardNum: Int64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1082,19 +1250,20 @@ public struct Proto_ShardID: Sendable {
 }
 
 ///*
-/// The ID for a realm. Within a given shard, every realm has a unique ID. Each account, file, and
-/// contract instance belongs to exactly one realm.
+/// A realm identifier.<br/>
+/// Within a given shard, every realm has a unique numeric identifier.
+/// Each account, file, and contract instance belongs to exactly one realm.
 public struct Proto_RealmID: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The shard number (nonnegative)
+  /// A whole number shard identifier.
   public var shardNum: Int64 = 0
 
   ///*
-  /// The realm number (nonnegative)
+  /// A whole number realm identifier.
   public var realmNum: Int64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1103,28 +1272,125 @@ public struct Proto_RealmID: Sendable {
 }
 
 ///*
-/// The ID for an a cryptocurrency account
+/// Unique identifier for a token.<br/>
+/// As with all entity identifiers within the network, a token identifier
+/// consists of a combination of shard number, realm number, and entity number.
+/// Each of these numbers is unique within its scope (shard > realm > entity).
+public struct Proto_TokenID: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  ///*
+  /// A whole number shard identifier.
+  public var shardNum: Int64 = 0
+
+  ///*
+  /// A whole number realm identifier.
+  public var realmNum: Int64 = 0
+
+  ///*
+  /// A whole number token identifier.
+  public var tokenNum: Int64 = 0
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+///*
+/// A unique identifier for an Hedera account.
+///
+/// An account identifier is of the form `shard.realm.[number|alias]`.<br/>
+/// The identifier MAY use the alias form when transferring HBAR to a public key
+/// before the account for that key is created, when only the alias value is
+/// known, or in some smart contracts that use the EVM address style alias to
+/// refer to Accounts.<br/>
+/// When the account entry is completed, the alias SHALL be stored separately in
+/// the Account record, and the identifier in the Account SHALL use the
+/// `accountNum` form.
+///
+/// ---
+/// ### Additional Notes
+///
+/// #### Alias
+/// There is considerable complexity with `alias` (aka `evm_address`) for
+/// Accounts. Much of this comes from the existence of a "hidden" alias for
+/// almost all accounts, and the reuse of the alias field for both EVM reference
+/// and "automatic" account creation.<br/>
+/// For the purposes of this specification, we will use the following terms for
+/// clarity.
+///   - `key_alias`<br/>
+///      The account public key as a protobuf serialized message and used for
+///      auto-creation and subsequent lookup. This is only valid if the account
+///      key is a single `primitive` key, either Ed25519 or ECDSA_SECP256K1.
+///   - `evm_address`<br/>
+///     Exists for every account and is one of
+///      - `contract_address`<br/>
+///        The 20 byte EVM address prescribed by `CREATE` or `CREATE2`
+///      - `evm_key_address`<br/>
+///        An arbitrary 20 byte EVM address that, for a usable externally owned
+///        account (EOA) SHALL be the rightmost 20 bytes of the Keccak-256 hash
+///        of a ECDSA_SECP256K1 key.<br/>
+///        Such accounts may be created in one of three ways:
+///        - Sending hbar or fungible tokens to an unused
+///          ECDSA_SECP256K1 key alias.
+///        - Sending hbar or fungible tokens to an unassigned 20-byte
+///          EVM address.
+///        - Submitting a `CryptoCreate` signed with the corresponding
+///          private key.
+///      - `long_zero`<br/>
+///        A synthetic 20 byte address inferred for "normally" created accounts.
+///        It is constructed from the "standard" AccountID as follows.
+///         1. 4 byte big-endian shard number
+///         1. 8 byte big-endian realm number
+///         1. 8 byte big-endian entity number<br/>
+///
+/// The `alias` field in the `Account` message SHALL contain one of four values
+/// for any given account.
+///   - The `key_alias`, if the account was created by transferring HBAR to the
+///     `key_alias` public key value.
+///   - The `evm_key_address` if the account was created from an EVM public key
+///   - The `contract_address` if the account belongs to an EVM contract
+///   - Not-Set/null/Bytes.EMPTY (collectively `null`) if the account was
+///     created normally
+///
+/// If the `alias` field of an `Account` is any form of `null`, then the account
+/// MAY be referred to by `alias` in an `AccountID` by using the `long_zero`
+/// address for the account.<br/>
+/// This "hidden default" alias SHALL NOT be stored, but is synthesized by the
+/// node software as needed, and may be synthesized by an EVM contract or client
+/// software as well.
+///
+/// ---
+///
+/// #### Alias forms
+/// An `AccountID` in a transaction MAY reference an `Account` with
+/// `shard.realm.alias`.<br/>
+/// If the account `alias` field is set for an Account, that value SHALL be the
+/// account alias.<br/>
+/// If the account `alias` field is not set for an Account, the `long_zero` alias
+/// SHALL be the account alias.
 public struct Proto_AccountID: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The shard number (nonnegative)
+  /// A whole number shard identifier.
   public var shardNum: Int64 = 0
 
   ///*
-  /// The realm number (nonnegative)
+  /// A whole number realm identifier.
   public var realmNum: Int64 = 0
 
-  ///*
-  /// The account number unique within its realm which can be a non-negative integer, an alias public key or an EVM address.
-  /// For any AccountID fields in the query response, transaction record or transaction receipt only accountNum will
-  /// be populated.
   public var account: Proto_AccountID.OneOf_Account? = nil
 
   ///*
-  /// A non-negative account number unique within its realm
+  /// A whole number account number, unique within its realm and shard.
+  /// <p>
+  /// For any AccountID fields in the query response, transaction records,
+  /// transaction receipts, or block stream `accountNum` MUST be used.
   public var accountNum: Int64 {
     get {
       if case .accountNum(let v)? = account {return v}
@@ -1134,22 +1400,10 @@ public struct Proto_AccountID: @unchecked Sendable {
   }
 
   ///*
-  /// The public key bytes to be used as the account's alias. The public key bytes are the result of serializing
-  /// a protobuf Key message for any primitive key type. Currently only primitive key bytes are supported as an alias
-  /// (ThresholdKey, KeyList, ContractID, and delegatable_contract_id are not supported)
-  ///
-  /// May also be the ethereum account 20-byte EVM address to be used initially in place of the public key bytes. This EVM
-  /// address may be either the encoded form of the shard.realm.num or the keccak-256 hash of a ECDSA_SECP256K1 primitive key.
-  ///
-  /// At most one account can ever have a given alias and it is used for account creation if it
-  /// was automatically created using a crypto transfer. It will be null if an account is created normally.
-  /// It is immutable once it is set for an account.
-  ///
-  /// If a transaction auto-creates the account, any further transfers to that alias will simply be deposited
-  /// in that account, without creating anything, and with no creation fee being charged.
-  ///
-  /// If a transaction lazily-creates this account, a subsequent transaction will be required containing the public key bytes
-  /// that map to the EVM address bytes. The provided public key bytes will then serve as the final alias bytes.
+  /// An alias value.<br/>
+  /// Alias is a value used in some contexts to refer to an account when
+  /// account number is not available, and may be an alias public key, or
+  /// an EVM address.
   public var alias: Data {
     get {
       if case .alias(let v)? = account {return v}
@@ -1160,31 +1414,18 @@ public struct Proto_AccountID: @unchecked Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  ///*
-  /// The account number unique within its realm which can be a non-negative integer, an alias public key or an EVM address.
-  /// For any AccountID fields in the query response, transaction record or transaction receipt only accountNum will
-  /// be populated.
   public enum OneOf_Account: Equatable, @unchecked Sendable {
     ///*
-    /// A non-negative account number unique within its realm
+    /// A whole number account number, unique within its realm and shard.
+    /// <p>
+    /// For any AccountID fields in the query response, transaction records,
+    /// transaction receipts, or block stream `accountNum` MUST be used.
     case accountNum(Int64)
     ///*
-    /// The public key bytes to be used as the account's alias. The public key bytes are the result of serializing
-    /// a protobuf Key message for any primitive key type. Currently only primitive key bytes are supported as an alias
-    /// (ThresholdKey, KeyList, ContractID, and delegatable_contract_id are not supported)
-    ///
-    /// May also be the ethereum account 20-byte EVM address to be used initially in place of the public key bytes. This EVM
-    /// address may be either the encoded form of the shard.realm.num or the keccak-256 hash of a ECDSA_SECP256K1 primitive key.
-    ///
-    /// At most one account can ever have a given alias and it is used for account creation if it
-    /// was automatically created using a crypto transfer. It will be null if an account is created normally.
-    /// It is immutable once it is set for an account.
-    ///
-    /// If a transaction auto-creates the account, any further transfers to that alias will simply be deposited
-    /// in that account, without creating anything, and with no creation fee being charged.
-    ///
-    /// If a transaction lazily-creates this account, a subsequent transaction will be required containing the public key bytes
-    /// that map to the EVM address bytes. The provided public key bytes will then serve as the final alias bytes.
+    /// An alias value.<br/>
+    /// Alias is a value used in some contexts to refer to an account when
+    /// account number is not available, and may be an alias public key, or
+    /// an EVM address.
     case alias(Data)
 
   }
@@ -1193,15 +1434,16 @@ public struct Proto_AccountID: @unchecked Sendable {
 }
 
 ///*
-/// Identifier for a unique token (or "NFT"), used by both contract and token services.
+/// An identifier for a unique token (or "NFT"), used by both contract
+/// and token services.
 public struct Proto_NftID: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The (non-fungible) token of which this NFT is an instance; uppercase for "ID"
-  /// for backward compatibility with original definition of this field.
+  /// A token identifier.<br/>
+  /// This token represents the collection containing this NFT.
   public var tokenID: Proto_TokenID {
     get {return _tokenID ?? Proto_TokenID()}
     set {_tokenID = newValue}
@@ -1212,7 +1454,8 @@ public struct Proto_NftID: Sendable {
   public mutating func clearTokenID() {self._tokenID = nil}
 
   ///*
-  /// The serial number of this NFT within its token type
+  /// A unique serial number.<br/>
+  /// This serial number is unique within its token type.
   public var serialNumber: Int64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1223,22 +1466,22 @@ public struct Proto_NftID: Sendable {
 }
 
 ///*
-/// The ID for a file
+/// An identifier for a File within the network.
 public struct Proto_FileID: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The shard number (nonnegative)
+  /// A whole number shard identifier.
   public var shardNum: Int64 = 0
 
   ///*
-  /// The realm number (nonnegative)
+  /// A whole number realm identifier.
   public var realmNum: Int64 = 0
 
   ///*
-  /// A nonnegative File number unique within its realm
+  /// A whole number file identifier, unique within its realm and shard.
   public var fileNum: Int64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1247,24 +1490,24 @@ public struct Proto_FileID: Sendable {
 }
 
 ///*
-/// The ID for a smart contract instance
+/// An identifier for a smart contract within the network.
 public struct Proto_ContractID: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The shard number (nonnegative)
+  /// A whole number shard identifier.
   public var shardNum: Int64 = 0
 
   ///*
-  /// The realm number (nonnegative)
+  /// A whole number realm identifier.
   public var realmNum: Int64 = 0
 
   public var contract: Proto_ContractID.OneOf_Contract? = nil
 
   ///*
-  /// A nonnegative number unique within a given shard and realm
+  /// A whole number contract identifier, unique within its realm and shard.
   public var contractNum: Int64 {
     get {
       if case .contractNum(let v)? = contract {return v}
@@ -1274,22 +1517,22 @@ public struct Proto_ContractID: @unchecked Sendable {
   }
 
   ///*
-  /// The 20-byte EVM address of the contract to call.
-  ///
-  /// Every contract has an EVM address determined by its <tt>shard.realm.num</tt> id.
-  /// This address is as follows:
-  ///   <ol>
-  ///     <li>The first 4 bytes are the big-endian representation of the shard.</li>
-  ///     <li>The next 8 bytes are the big-endian representation of the realm.</li>
-  ///     <li>The final 8 bytes are the big-endian representation of the number.</li>
-  ///   </ol>
-  ///
-  /// Contracts created via CREATE2 have an <b>additional, primary address</b> that is
-  /// derived from the <a href="https://eips.ethereum.org/EIPS/eip-1014">EIP-1014</a>
-  /// specification, and does not have a simple relation to a <tt>shard.realm.num</tt> id.
-  ///
-  /// (Please do note that CREATE2 contracts can also be referenced by the three-part
-  /// EVM address described above.)
+  /// A 20-byte EVM address of the contract to call.
+  /// <p>
+  /// A contract created via a HAPI `ContractCreate` call SHALL have
+  /// an EVM address determined by its `shard.realm.num` identifier.<br/>
+  /// This address is as follows
+  /// <ol>
+  ///     <li>4 byte big-endian shard number</li>
+  ///     <li>8 byte big-endian realm number</li>
+  ///     <li>8 byte big-endian contract number</li>
+  /// </ol>
+  /// This address is not stored in state, but is computed when needed.
+  /// <p>
+  /// Contracts created by any other means, including a HAPI
+  /// `EthereumTransaction` whose `to` address is the zero address,
+  /// SHALL have the EVM address prescribed by the `CREATE` or
+  /// `CREATE2` opcode, as applicable.
   public var evmAddress: Data {
     get {
       if case .evmAddress(let v)? = contract {return v}
@@ -1302,25 +1545,25 @@ public struct Proto_ContractID: @unchecked Sendable {
 
   public enum OneOf_Contract: Equatable, @unchecked Sendable {
     ///*
-    /// A nonnegative number unique within a given shard and realm
+    /// A whole number contract identifier, unique within its realm and shard.
     case contractNum(Int64)
     ///*
-    /// The 20-byte EVM address of the contract to call.
-    ///
-    /// Every contract has an EVM address determined by its <tt>shard.realm.num</tt> id.
-    /// This address is as follows:
-    ///   <ol>
-    ///     <li>The first 4 bytes are the big-endian representation of the shard.</li>
-    ///     <li>The next 8 bytes are the big-endian representation of the realm.</li>
-    ///     <li>The final 8 bytes are the big-endian representation of the number.</li>
-    ///   </ol>
-    ///
-    /// Contracts created via CREATE2 have an <b>additional, primary address</b> that is
-    /// derived from the <a href="https://eips.ethereum.org/EIPS/eip-1014">EIP-1014</a>
-    /// specification, and does not have a simple relation to a <tt>shard.realm.num</tt> id.
-    ///
-    /// (Please do note that CREATE2 contracts can also be referenced by the three-part
-    /// EVM address described above.)
+    /// A 20-byte EVM address of the contract to call.
+    /// <p>
+    /// A contract created via a HAPI `ContractCreate` call SHALL have
+    /// an EVM address determined by its `shard.realm.num` identifier.<br/>
+    /// This address is as follows
+    /// <ol>
+    ///     <li>4 byte big-endian shard number</li>
+    ///     <li>8 byte big-endian realm number</li>
+    ///     <li>8 byte big-endian contract number</li>
+    /// </ol>
+    /// This address is not stored in state, but is computed when needed.
+    /// <p>
+    /// Contracts created by any other means, including a HAPI
+    /// `EthereumTransaction` whose `to` address is the zero address,
+    /// SHALL have the EVM address prescribed by the `CREATE` or
+    /// `CREATE2` opcode, as applicable.
     case evmAddress(Data)
 
   }
@@ -1329,28 +1572,108 @@ public struct Proto_ContractID: @unchecked Sendable {
 }
 
 ///*
-/// The ID for a transaction. This is used for retrieving receipts and records for a transaction, for
-/// appending to a file right after creating it, for instantiating a smart contract with bytecode in
-/// a file just created, and internally by the network for detecting when duplicate transactions are
-/// submitted. A user might get a transaction processed faster by submitting it to N nodes, each with
-/// a different node account, but all with the same TransactionID. Then, the transaction will take
-/// effect when the first of all those nodes submits the transaction and it reaches consensus. The
-/// other transactions will not take effect. So this could make the transaction take effect faster,
-/// if any given node might be slow. However, the full transaction fee is charged for each
-/// transaction, so the total fee is N times as much if the transaction is sent to N nodes.
+/// An unique identifier for a topic.<br/>
+/// Topics are part of the consensus service, messages are published to a topic.
+public struct Proto_TopicID: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  ///*
+  /// A whole number shard identifier.
+  public var shardNum: Int64 = 0
+
+  ///*
+  /// A whole number realm identifier.
+  public var realmNum: Int64 = 0
+
+  ///*
+  /// A whole number topic identifier, unique within its realm and shard.
+  public var topicNum: Int64 = 0
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+///*
+/// An unique identifier for a Schedule
+public struct Proto_ScheduleID: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  ///*
+  /// A whole number shard
+  public var shardNum: Int64 = 0
+
+  ///*
+  /// A whole number realm
+  public var realmNum: Int64 = 0
+
+  ///*
+  /// A whole number schedule, unique within its realm and shard
+  public var scheduleNum: Int64 = 0
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+///*
+/// A transaction identifier.<br/>
+/// This is used for retrieving receipts and records for a transaction
+/// and internally by the network for detecting when duplicate transactions are
+/// submitted.
 ///
-/// Applicable to Scheduled Transactions:
-///  - The ID of a Scheduled Transaction has transactionValidStart and accountIDs inherited from the
-///    ScheduleCreate transaction that created it. That is to say that they are equal
-///  - The scheduled property is true for Scheduled Transactions
-///  - transactionValidStart, accountID and scheduled properties should be omitted
+/// A transaction may be processed more reliably by submitting it to
+/// several nodes, each with a different node account, but all with the same
+/// TransactionID. Then, the transaction will take effect when the first of all
+/// those nodes submits the transaction and it reaches consensus. The other
+/// transactions SHALL NOT be executed (and SHALL result in a
+/// `DUPLICATE_TRANSACTION` response).<br/>
+/// Multiple submission increase reliability on the assumption that an error in,
+/// for example, network connectivity will not affect all nodes equally. Latency
+/// might be slightly lower, if one node is handling intake significantly slower
+/// than others, for example. The base transaction fee is required for each
+/// submission, however, so the total fees charged are significantly higher when
+/// using this approach.
+///
+/// ### Requirements
+/// Each transaction identifier MUST be unique.<br/>
+/// Multiple transactions MAY be submitted with the same transaction
+/// identifier, but all except the first SHALL be rejected as duplicate
+/// transactions.<br/>
+/// An identifier MUST specify a `payer` account to be charged all fees
+/// associated with the transaction.<br/>
+/// The `payer` account MUST exist and MUST have sufficient HBAR to pay all
+/// transaction fees.<br/>
+/// An identifier MUST specify a "valid start time".<br/>
+/// The "valid start time" MUST be strictly _earlier_ than the current
+/// network consensus time when submitted.<br/>
+/// The "valid start time" MUST NOT be more than `transaction.maxValidDuration`
+/// seconds before the current network consensus time when submitted.<br/>
+/// A client-submitted transaction MUST NOT set the `scheduled` flag.
+///
+/// ### Additional Notes
+///
+/// Additional items applicable to Scheduled Transactions:
+///
+///  - The ID of a Scheduled Transaction, once executed, SHALL inherit both
+///    `transactionValidStart` and `accountID` from the `ScheduleCreate`
+///    transaction that created the schedule.
+///  - The `scheduled` property SHALL be set for Scheduled Transactions.
 public struct Proto_TransactionID: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The transaction is invalid if consensusTimestamp < transactionID.transactionStartValid
+  /// A timestamp for the transaction start time.<br/>
+  /// This is the earliest expected start time for this transaction.
+  /// <p>
+  /// This value MUST be strictly less than `consensusTimestamp` when the
+  /// transaction is submitted.
   public var transactionValidStart: Proto_Timestamp {
     get {return _transactionValidStart ?? Proto_Timestamp()}
     set {_transactionValidStart = newValue}
@@ -1361,7 +1684,9 @@ public struct Proto_TransactionID: Sendable {
   public mutating func clearTransactionValidStart() {self._transactionValidStart = nil}
 
   ///*
-  /// The Account ID that paid for this transaction
+  /// An Account identifier.
+  /// <p>
+  /// The identified account SHALL pay transaction fees for this transaction.
   public var accountID: Proto_AccountID {
     get {return _accountID ?? Proto_AccountID()}
     set {_accountID = newValue}
@@ -1372,18 +1697,26 @@ public struct Proto_TransactionID: Sendable {
   public mutating func clearAccountID() {self._accountID = nil}
 
   ///*
-  /// Whether the Transaction is of type Scheduled or no
+  /// A scheduled transaction flag.<br/>
+  /// If set, this transaction represents the execution of a Schedule after
+  /// all necessary signatures are gathered.
+  /// <p>
+  /// This flag MUST NOT be set in a user-submitted transaction.
   public var scheduled: Bool = false
 
   ///*
-  /// The identifier for an internal transaction that was spawned as part
-  /// of handling a user transaction. (These internal transactions share the
-  /// transactionValidStart and accountID of the user transaction, so a
-  /// nonce is necessary to give them a unique TransactionID.)
-  ///
+  /// An identifier for an internal transaction.<br/>
+  /// An internal transaction is one that was spawned as part of handling a
+  /// user transaction. These internal transactions share the
+  /// transactionValidStart and accountID of the user transaction, so a nonce
+  /// is necessary to give them a unique TransactionID.
+  /// <p>
   /// An example is when a "parent" ContractCreate or ContractCall transaction
   /// calls one or more HTS precompiled contracts; each of the "child"
-  /// transactions spawned for a precompile has a id with a different nonce.
+  /// transactions spawned for a precompile has a transaction id with a
+  /// different nonce.
+  /// <p>
+  /// This value MUST be unset for user-submitted transactions.
   public var nonce: Int32 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1395,14 +1728,17 @@ public struct Proto_TransactionID: Sendable {
 }
 
 ///*
-/// An account, and the amount that it sends or receives during a cryptocurrency or token transfer.
+/// An account, and the amount that it sends or receives during a token transfer.
+///
+/// This message is only relevant to fungible/common token transfers.
+/// Non-fungible/unique (NFT) token transfers MUST use the NftTransfer message.
 public struct Proto_AccountAmount: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The Account ID that sends/receives cryptocurrency or tokens
+  /// An account identifier that will send or receive token(s).
   public var accountID: Proto_AccountID {
     get {return _accountID ?? Proto_AccountID()}
     set {_accountID = newValue}
@@ -1413,14 +1749,22 @@ public struct Proto_AccountAmount: Sendable {
   public mutating func clearAccountID() {self._accountID = nil}
 
   ///*
-  /// The amount of tinybars (for Crypto transfers) or in the lowest
-  /// denomination (for Token transfers) that the account sends(negative) or
-  /// receives(positive)
+  /// An amount to send (negative) or receive (positive).
+  /// <p>
+  /// This amount MUST be denominated in the smallest unit of the relevant
+  /// token.<br/>
+  /// For HBAR this SHALL be tinybar (10<sup>-8</sup> HBAR).<br/>
+  /// For other fungible/common tokens this SHALL depend on the value of
+  /// `decimals` for that token.
   public var amount: Int64 = 0
 
   ///*
-  /// If true then the transfer is expected to be an approved allowance and the
-  /// accountID is expected to be the owner. The default is false (omitted).
+  /// An approved allowance flag.<br/>
+  /// If true then the transfer is expected to be an approved allowance.
+  /// <p>
+  /// If set, `accountID` SHALL be the owner that previously approved
+  /// the allowance.<br/>
+  /// The default value SHALL be false (unset).
   public var isApproval: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1431,15 +1775,24 @@ public struct Proto_AccountAmount: Sendable {
 }
 
 ///*
-/// A list of accounts and amounts to transfer out of each account (negative) or into it (positive).
+/// A list of accounts and amounts to transfer.
+///
+/// Each `AccountAmount` SHALL specify the account and the amount to
+/// send(negative) or receive(positive).<br/>
+/// Each `TransferList` SHALL be contained in another message that contains
+/// other details required to complete a transfer. This is typically a
+/// `CryptoTransferTransactionBody` or `TransactionRecord`.<br/>
+/// The `TransferList` SHALL only be used for HBAR transfers. Other token types
+/// MUST use the `TokenTransferList` message.
 public struct Proto_TransferList: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Multiple list of AccountAmount pairs, each of which has an account and
-  /// an amount to transfer into it (positive) or out of it (negative)
+  /// A list of AccountAmount pairs.<br/>
+  /// Each entry in this list is an account and an amount to transfer
+  /// into it (positive) or out of it (negative)
   public var accountAmounts: [Proto_AccountAmount] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1448,16 +1801,20 @@ public struct Proto_TransferList: Sendable {
 }
 
 ///*
-/// A sender account, a receiver account, and the serial number of an NFT of a Token with
-/// NON_FUNGIBLE_UNIQUE type. When minting NFTs the sender will be the default AccountID instance
-/// (0.0.0) and when burning NFTs, the receiver will be the default AccountID instance.
+/// A NFT transfer.<br/>
+/// This refers to a sender account, a receiver account, and the serial number
+/// of an NFT to transfer from sender to receiver.
+///
+/// Each `NftTransfer` SHALL be contained in another message (typically
+/// `TokenTransferList`) that details which `Token` type applies to this NFT
+/// transfer.
 public struct Proto_NftTransfer: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The accountID of the sender
+  /// An Account identifier for the sender.
   public var senderAccountID: Proto_AccountID {
     get {return _senderAccountID ?? Proto_AccountID()}
     set {_senderAccountID = newValue}
@@ -1468,7 +1825,7 @@ public struct Proto_NftTransfer: Sendable {
   public mutating func clearSenderAccountID() {self._senderAccountID = nil}
 
   ///*
-  /// The accountID of the receiver
+  /// An Account identifier for the receiver.
   public var receiverAccountID: Proto_AccountID {
     get {return _receiverAccountID ?? Proto_AccountID()}
     set {_receiverAccountID = newValue}
@@ -1479,12 +1836,18 @@ public struct Proto_NftTransfer: Sendable {
   public mutating func clearReceiverAccountID() {self._receiverAccountID = nil}
 
   ///*
-  /// The serial number of the NFT
+  /// A serial number for the NFT to transfer.
   public var serialNumber: Int64 = 0
 
   ///*
-  /// If true then the transfer is expected to be an approved allowance and the
-  /// senderAccountID is expected to be the owner. The default is false (omitted).
+  /// An approved allowance flag.<br/>
+  /// If true then the transfer is expected to be an approved allowance.
+  /// <p>
+  /// If set, `senderAccountID` SHALL be the owner that previously approved
+  /// the allowance.<br/>
+  /// If set, the `senderAccountID` MUST be the "payer" account for
+  /// the transaction <br/>
+  /// The default value SHALL be false (unset).
   public var isApproval: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1496,15 +1859,28 @@ public struct Proto_NftTransfer: Sendable {
 }
 
 ///*
-/// A list of token IDs and amounts representing the transferred out (negative) or into (positive)
-/// amounts, represented in the lowest denomination of the token
+/// A list of transfers for a particular (non-HBAR) token type.
+///
+/// A `TokenTransferList` applies to a single token type, but may contain many
+/// individual transfers.<br/>
+/// Each transfer of a fungible/common token MUST specify an `accountID` and
+/// `amount`. Amount SHALL be positive when the account receives tokens, and
+/// SHALL be negative when the account sends tokens. The amount SHOULD NOT be
+/// `0`.<br/>
+/// In a transfer list containing fungible/common tokens in the `transfers`
+/// list, the sum of all such transfers MUST be zero (`0`).
+/// Each transfer of a unique token SHALL specify both sender and receiver, as
+/// well as the serial number transferred.<br/>
+/// A single `TokenTransferList` MUST contain `transfers` or `nftTransfers`,
+/// but MUST NOT contain both.
 public struct Proto_TokenTransferList: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The ID of the token
+  /// A token identifier.<br/>
+  /// This is the token to be transferred.
   public var token: Proto_TokenID {
     get {return _token ?? Proto_TokenID()}
     set {_token = newValue}
@@ -1515,18 +1891,34 @@ public struct Proto_TokenTransferList: Sendable {
   public mutating func clearToken() {self._token = nil}
 
   ///*
-  /// Applicable to tokens of type FUNGIBLE_COMMON. Multiple list of AccountAmounts, each of which
-  /// has an account and amount
+  /// A list of account amounts.
+  /// <p>
+  /// Each entry SHALL have an account and amount.<br/>
+  /// These transfers SHALL be "double-entry" style; the credits (positive
+  /// amount) and debits (negative amount) MUST sum to 0, unless this
+  /// transfer list is part of a `mint` or `burn` operation.<br/>
+  /// This SHALL be be set for fungible/common tokens and MUST be
+  /// empty otherwise.
   public var transfers: [Proto_AccountAmount] = []
 
   ///*
-  /// Applicable to tokens of type NON_FUNGIBLE_UNIQUE. Multiple list of NftTransfers, each of
-  /// which has a sender and receiver account, including the serial number of the NFT
+  /// A list of NftTransfers.
+  /// <p>
+  /// Each entry SHALL have a sender and receiver account, and the
+  /// serial number of the unique token to transfer.<br/>
+  /// This SHALL be be set for non-fungible/unique tokens and SHALL be
+  /// empty otherwise.
   public var nftTransfers: [Proto_NftTransfer] = []
 
   ///*
-  /// If present, the number of decimals this fungible token type is expected to have. The transfer
-  /// will fail with UNEXPECTED_TOKEN_DECIMALS if the actual decimals differ.
+  /// An expected decimal precision.<br/>
+  /// This is the number of decimals a fungible/common token type is
+  /// _expected_ to have.
+  /// <p>
+  /// The transfer SHALL fail with response code `UNEXPECTED_TOKEN_DECIMALS`
+  /// if this is set and the actual decimals specified for the `Token` differ
+  /// from this value.<br/>
+  /// If `nftTransfers` is set, then this value SHOULD NOT be set.
   public var expectedDecimals: SwiftProtobuf.Google_Protobuf_UInt32Value {
     get {return _expectedDecimals ?? SwiftProtobuf.Google_Protobuf_UInt32Value()}
     set {_expectedDecimals = newValue}
@@ -1545,18 +1937,27 @@ public struct Proto_TokenTransferList: Sendable {
 }
 
 ///*
-/// A rational number, used to set the amount of a value transfer to collect as a custom fee
+/// A rational number.<br/>
+/// A common use is to set the amount of a value transfer to collect as a
+/// custom fee.
+///
+/// It is RECOMMENDED that both numerator and denominator be no larger than
+/// necessary to express the required fraction. A very large numerator, in
+/// particular, may not be reliable.
+/// Both fields are REQUIRED and SHOULD be positive integers.
 public struct Proto_Fraction: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The rational's numerator
+  /// A fractional number's numerator.
   public var numerator: Int64 = 0
 
   ///*
-  /// The rational's denominator; a zero value will result in FRACTION_DIVIDES_BY_ZERO
+  /// A fractional number's denominator.
+  /// <p>
+  /// A zero value SHALL fail with response code `FRACTION_DIVIDES_BY_ZERO`.
   public var denominator: Int64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1565,114 +1966,57 @@ public struct Proto_Fraction: Sendable {
 }
 
 ///*
-/// Unique identifier for a topic (used by the consensus service)
-public struct Proto_TopicID: Sendable {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  ///*
-  /// The shard number (nonnegative)
-  public var shardNum: Int64 = 0
-
-  ///*
-  /// The realm number (nonnegative)
-  public var realmNum: Int64 = 0
-
-  ///*
-  /// Unique topic identifier within a realm (nonnegative).
-  public var topicNum: Int64 = 0
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  public init() {}
-}
-
-///*
-/// Unique identifier for a token
-public struct Proto_TokenID: Sendable {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  ///*
-  /// A nonnegative shard number
-  public var shardNum: Int64 = 0
-
-  ///*
-  /// A nonnegative realm number
-  public var realmNum: Int64 = 0
-
-  ///*
-  /// A nonnegative token number
-  public var tokenNum: Int64 = 0
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  public init() {}
-}
-
-///*
-/// Unique identifier for a Schedule
-public struct Proto_ScheduleID: Sendable {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  ///*
-  /// A nonnegative shard number
-  public var shardNum: Int64 = 0
-
-  ///*
-  /// A nonnegative realm number
-  public var realmNum: Int64 = 0
-
-  ///*
-  /// A nonnegative schedule number
-  public var scheduleNum: Int64 = 0
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  public init() {}
-}
-
-///*
-/// A Key can be a public key from either the Ed25519 or ECDSA(secp256k1) signature schemes, where
-/// in the ECDSA(secp256k1) case we require the 33-byte compressed form of the public key. We call
-/// these public keys <b>primitive keys</b>.
+/// A Key is an entity representing one or more cryptographic public/private key
+/// pairs and, optionally, the structure for how multiple signatures may be
+/// composed to meet complex multiple-signature authorization requirements.
 ///
-/// If an account has primitive key associated to it, then the corresponding private key must sign
-/// any transaction to transfer cryptocurrency out of it.
+/// A Key can be a public key from either the Ed25519 or ECDSA(secp256k1)
+/// signature schemes. In the ECDSA(secp256k1) case we require the 33-byte
+/// compressed form of the public key. For simplicity, we call these
+/// cryptographic public keys `primitive` keys.<br/>
+/// If an entity has a primitive key associated to it, then the corresponding
+/// private key must sign any transaction to send tokens or perform other
+/// actions requiring authorization.
 ///
-/// A Key can also be the ID of a smart contract instance, which is then authorized to perform any
-/// precompiled contract action that requires this key to sign.
+/// A Key can also be the ID of a smart contract, which SHALL authorize that
+/// contract to execute any system contract with signing requirements that are
+/// met by the key.<br/>
+/// > Example
+/// >> If account `0.0.A` has a threshold key whose threshold is satisfied
+/// >> by a contract ID key for contract `0.0.C`, then when `0.0.C` is called,
+/// >> it is authorized to use system contracts to manage any asset owned by
+/// >> `0.0.A`. If the contract ID key is "delegatable", then `0.0.C` can even
+/// >> perform these actions when running code accessed via `DELEGATECALL`.
 ///
-/// Note that when a Key is a smart contract ID, it <i>doesn't</i> mean the contract with that ID
-/// will actually create a cryptographic signature. It only means that when the contract calls a
-/// precompiled contract, the resulting "child transaction" will be authorized to perform any action
-/// controlled by the Key.
+/// A Key can be a "threshold key", which is a list of N keys, any M of which
+/// may sign in order for the signature to be considered valid. The value of
+/// M for a given threshold key MUST be less than or equal to N. A threshold
+/// key is sometimes called a "M-of-N" key.
 ///
-/// A Key can be a "threshold key", which means a list of M keys, any N of which must sign in order
-/// for the threshold signature to be considered valid. The keys within a threshold signature may
-/// themselves be threshold signatures, to allow complex signature requirements.
+/// A Key can be a "key list" where all keys in the list must sign unless
+/// specified otherwise in the documentation for a specific transaction
+/// type (e.g. FileDeleteTransactionBody).<br/>
+/// This implies that the use of a key list is dependent on context. For
+/// example, an Hedera file that is created with a list of keys, SHALL require
+/// that all of those keys must sign a transaction to create or modify the file,
+/// but only one key from that list MUST sign a transaction to delete the file.
+/// So it is a single list that sometimes acts as a N-of-N threshold key, and
+/// sometimes acts as a 1-of-N threshold key.<br/>
+/// To reduce confusion this may cause, a key list SHALL always be considered
+/// N-of-N, unless specified otherwise in official documentation.<br/>
+/// A key list MAY have repeated primitive public keys, but the signature
+/// requirement for all keys in a repeated set SHALL be satisfied by a single
+/// valid signature. There is no mechanism to require a single key to sign a
+/// single transaction more than once.
 ///
-/// A Key can be a "key list" where all keys in the list must sign unless specified otherwise in the
-/// documentation for a specific transaction type (e.g.  FileDeleteTransactionBody).  Their use is
-/// dependent on context. For example, a Hedera file is created with a list of keys, where all of
-/// them must sign a transaction to create or modify the file, but only one of them is needed to sign
-/// a transaction to delete the file. So it's a single list that sometimes acts as a 1-of-M threshold
-/// key, and sometimes acts as an M-of-M threshold key.  A key list is always an M-of-M, unless
-/// specified otherwise in documentation. A key list can have nested key lists or threshold keys.
-/// Nested key lists are always M-of-M. A key list can have repeated primitive public keys, but all
-/// repeated keys are only required to sign once.
+/// Any list or threshold key MAY have nested key lists or threshold keys.
+/// This allows, for example, the keys within a threshold signature to
+/// themselves be threshold, list, contract, or primitive keys. This nesting
+/// structure enables complex asymmetric multi-party signature requirements to
+/// be met.
 ///
-/// A Key can contain a ThresholdKey or KeyList, which in turn contain a Key, so this mutual
-/// recursion would allow nesting arbitrarily deep. A ThresholdKey which contains a list of primitive
-/// keys has 3 levels: ThresholdKey -> KeyList -> Key. A KeyList which contains several primitive
-/// keys has 2 levels: KeyList -> Key. A Key with 2 levels of nested ThresholdKeys has 7 levels:
-/// Key -> ThresholdKey -> KeyList -> Key -> ThresholdKey -> KeyList -> Key.
-///
-/// Each Key should not have more than 46 levels, which implies 15 levels of nested ThresholdKeys.
+/// To ensure adequate performance and transaction security, key nesting is
+/// limited to at most fifteen(15) levels.
 public struct Proto_Key: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -1681,7 +2025,10 @@ public struct Proto_Key: @unchecked Sendable {
   public var key: Proto_Key.OneOf_Key? = nil
 
   ///*
-  /// smart contract instance that is authorized as if it had signed with a key
+  /// A smart contract instance that is authorized implicitly.
+  /// <p>
+  /// This key type SHALL require that the code in the active message frame
+  /// belong to the contract with the given id.
   public var contractID: Proto_ContractID {
     get {
       if case .contractID(let v)? = key {return v}
@@ -1691,7 +2038,7 @@ public struct Proto_Key: @unchecked Sendable {
   }
 
   ///*
-  /// Ed25519 public key bytes
+  /// An array of Ed25519 public key bytes.
   public var ed25519: Data {
     get {
       if case .ed25519(let v)? = key {return v}
@@ -1701,7 +2048,10 @@ public struct Proto_Key: @unchecked Sendable {
   }
 
   ///*
-  /// (NOT SUPPORTED) RSA-3072 public key bytes
+  /// This option is not currently supported.<br/>
+  /// An array of RSA-3072 public key bytes.
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
   public var rsa3072: Data {
     get {
       if case .rsa3072(let v)? = key {return v}
@@ -1711,7 +2061,10 @@ public struct Proto_Key: @unchecked Sendable {
   }
 
   ///*
-  /// (NOT SUPPORTED) ECDSA with the p-384 curve public key bytes
+  /// This option is not currently supported.<br/>
+  /// An array of ECDSA, using the p-384 curve, public key bytes.
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
   public var ecdsa384: Data {
     get {
       if case .ecdsa384(let v)? = key {return v}
@@ -1721,8 +2074,8 @@ public struct Proto_Key: @unchecked Sendable {
   }
 
   ///*
-  /// a threshold N followed by a list of M keys, any N of which are required to form a valid
-  /// signature
+  /// A threshold, M, combined with a list of N keys, any M of which are
+  /// sufficient to form a valid signature.
   public var thresholdKey: Proto_ThresholdKey {
     get {
       if case .thresholdKey(let v)? = key {return v}
@@ -1732,7 +2085,8 @@ public struct Proto_Key: @unchecked Sendable {
   }
 
   ///*
-  /// A list of Keys of the Key type.
+  /// A list of keys. This may be treated like a "N-of-N" threshold key,
+  /// as a component of another key, or in some other manner as documented.
   public var keyList: Proto_KeyList {
     get {
       if case .keyList(let v)? = key {return v}
@@ -1742,7 +2096,8 @@ public struct Proto_Key: @unchecked Sendable {
   }
 
   ///*
-  /// Compressed ECDSA(secp256k1) public key bytes
+  /// A set of compressed ECDSA(secp256k1) public key bytes.<br/>
+  /// This is an EVM compatibility format.
   public var ecdsaSecp256K1: Data {
     get {
       if case .ecdsaSecp256K1(let v)? = key {return v}
@@ -1752,12 +2107,14 @@ public struct Proto_Key: @unchecked Sendable {
   }
 
   ///*
-  /// A smart contract that, if the recipient of the active message frame, should be treated
-  /// as having signed. (Note this does not mean the <i>code being executed in the frame</i>
-  /// will belong to the given contract, since it could be running another contract's code via
-  /// <tt>delegatecall</tt>. So setting this key is a more permissive version of setting the
-  /// contractID key, which also requires the code in the active message frame belong to the
-  /// the contract with the given id.)
+  /// A smart contract that, if the recipient of the active message frame,
+  /// SHALL be imputed authorization.<br/>
+  /// Setting this key type is a more permissive version of setting a
+  /// contractID key.
+  /// <p>
+  /// This key form SHALL NOT strictly require that the code being executed
+  /// in the frame belong to the given contract. The code in frame MAY be
+  /// running another contract via a `delegatecall`.
   public var delegatableContractID: Proto_ContractID {
     get {
       if case .delegatableContractID(let v)? = key {return v}
@@ -1770,34 +2127,47 @@ public struct Proto_Key: @unchecked Sendable {
 
   public enum OneOf_Key: Equatable, @unchecked Sendable {
     ///*
-    /// smart contract instance that is authorized as if it had signed with a key
+    /// A smart contract instance that is authorized implicitly.
+    /// <p>
+    /// This key type SHALL require that the code in the active message frame
+    /// belong to the contract with the given id.
     case contractID(Proto_ContractID)
     ///*
-    /// Ed25519 public key bytes
+    /// An array of Ed25519 public key bytes.
     case ed25519(Data)
     ///*
-    /// (NOT SUPPORTED) RSA-3072 public key bytes
+    /// This option is not currently supported.<br/>
+    /// An array of RSA-3072 public key bytes.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     case rsa3072(Data)
     ///*
-    /// (NOT SUPPORTED) ECDSA with the p-384 curve public key bytes
+    /// This option is not currently supported.<br/>
+    /// An array of ECDSA, using the p-384 curve, public key bytes.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     case ecdsa384(Data)
     ///*
-    /// a threshold N followed by a list of M keys, any N of which are required to form a valid
-    /// signature
+    /// A threshold, M, combined with a list of N keys, any M of which are
+    /// sufficient to form a valid signature.
     case thresholdKey(Proto_ThresholdKey)
     ///*
-    /// A list of Keys of the Key type.
+    /// A list of keys. This may be treated like a "N-of-N" threshold key,
+    /// as a component of another key, or in some other manner as documented.
     case keyList(Proto_KeyList)
     ///*
-    /// Compressed ECDSA(secp256k1) public key bytes
+    /// A set of compressed ECDSA(secp256k1) public key bytes.<br/>
+    /// This is an EVM compatibility format.
     case ecdsaSecp256K1(Data)
     ///*
-    /// A smart contract that, if the recipient of the active message frame, should be treated
-    /// as having signed. (Note this does not mean the <i>code being executed in the frame</i>
-    /// will belong to the given contract, since it could be running another contract's code via
-    /// <tt>delegatecall</tt>. So setting this key is a more permissive version of setting the
-    /// contractID key, which also requires the code in the active message frame belong to the
-    /// the contract with the given id.)
+    /// A smart contract that, if the recipient of the active message frame,
+    /// SHALL be imputed authorization.<br/>
+    /// Setting this key type is a more permissive version of setting a
+    /// contractID key.
+    /// <p>
+    /// This key form SHALL NOT strictly require that the code being executed
+    /// in the frame belong to the given contract. The code in frame MAY be
+    /// running another contract via a `delegatecall`.
     case delegatableContractID(Proto_ContractID)
 
   }
@@ -1806,22 +2176,34 @@ public struct Proto_Key: @unchecked Sendable {
 }
 
 ///*
-/// A set of public keys that are used together to form a threshold signature.  If the threshold is N
-/// and there are M keys, then this is an N of M threshold signature. If an account is associated
-/// with ThresholdKeys, then a transaction to move cryptocurrency out of it must be signed by a list
-/// of M signatures, where at most M-N of them are blank, and the other at least N of them are valid
-/// signatures corresponding to at least N of the public keys listed here.
+/// A threshold value and a list of public keys that, together, form a threshold
+/// signature requirement. Any subset of the keys in the list may satisfy the
+/// signature requirements of this type of key, provided the number of keys meets
+/// or exceeds the threshold. For example, if a particular key has a threshold of
+/// three(3) and eight(8) keys in the list, then any three(3) signatures, from
+/// the list of eight(8), is sufficient to authorize that key.
+///
+/// For threshold purposes, all signatures from a single `primitive` key are
+/// considered a single signature, so that signature(s) from a single key SHALL
+/// NOT _directly_ meet a threshold greater than one(1).
+///
+/// #### Note
+/// > It is possible to construct a complex key structure that _would_ enable a
+/// > single primitive key to successfully meet a threshold requirement. All
+/// > threshold keys SHOULD be carefully audited to ensure no one `primitive`
+/// > key, or smart contract, has disproportionate capability.
 public struct Proto_ThresholdKey: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// A valid signature set must have at least this many signatures
+  /// A transaction MUST have valid signatures from at least this number of
+  /// separate keys, from the `keys` list to be authorized by this key.
   public var threshold: UInt32 = 0
 
   ///*
-  /// List of all the keys that can sign
+  /// A list of the keys that MAY satisfy signature requirements of this key.
   public var keys: Proto_KeyList {
     get {return _keys ?? Proto_KeyList()}
     set {_keys = newValue}
@@ -1839,16 +2221,26 @@ public struct Proto_ThresholdKey: Sendable {
 }
 
 ///*
-/// A list of keys that requires all keys (M-of-M) to sign unless otherwise specified in
-/// documentation. A KeyList may contain repeated keys, but all repeated keys are only required to
-/// sign once.
+/// A list of keys.<br/>
+/// A `KeyList` requires all keys (N-of-N) to sign, unless otherwise
+/// specified in official documentation. A KeyList may contain repeated keys,
+/// but all such repeated keys are considered a single key when determining
+/// signature authorization.
+///
+/// ### Additional Notes
+/// 1. An empty key list is the "standard" mechanism to represent an
+///    unassigned key. For example, if the `admin_key` of a token is set
+///    to the empty key list, then that token has no admin key, and
+///    functionality that requires an admin key to sign the
+///    transaction is disabled.
 public struct Proto_KeyList: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// list of keys
+  /// A list of keys. All values in this list SHALL be non-null.
+  /// <p>
   public var keys: [Proto_Key] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1857,10 +2249,14 @@ public struct Proto_KeyList: Sendable {
 }
 
 ///*
-/// This message is <b>DEPRECATED</b> and <b>UNUSABLE</b> with network nodes. It is retained
-/// here only for historical reasons.
+/// This message is deprecated and MUST NOT be used to communicate with
+/// network nodes. It is retained here only for historical reasons.
 ///
-/// Please use the SignaturePair and SignatureMap messages.
+/// Client software MUST NOT include this message in any request. <br/>
+/// Compliant nodes SHALL NOT accept any request containing this message.
+///
+/// Please use the `SignaturePair` and `SignatureMap` messages instead of
+/// this message.
 ///
 /// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_Signature: @unchecked Sendable {
@@ -1871,7 +2267,7 @@ public struct Proto_Signature: @unchecked Sendable {
   public var signature: Proto_Signature.OneOf_Signature? = nil
 
   ///*
-  /// smart contract virtual signature (always length zero)
+  /// Smart contract virtual signature (always length zero).
   public var contract: Data {
     get {
       if case .contract(let v)? = signature {return v}
@@ -1881,7 +2277,7 @@ public struct Proto_Signature: @unchecked Sendable {
   }
 
   ///*
-  /// ed25519 signature bytes
+  /// Ed25519 signature bytes.
   public var ed25519: Data {
     get {
       if case .ed25519(let v)? = signature {return v}
@@ -1891,7 +2287,7 @@ public struct Proto_Signature: @unchecked Sendable {
   }
 
   ///*
-  /// RSA-3072 signature bytes
+  /// RSA-3072 signature bytes.
   public var rsa3072: Data {
     get {
       if case .rsa3072(let v)? = signature {return v}
@@ -1901,7 +2297,7 @@ public struct Proto_Signature: @unchecked Sendable {
   }
 
   ///*
-  /// ECDSA p-384 signature bytes
+  /// ECDSA p-384 signature bytes.
   public var ecdsa384: Data {
     get {
       if case .ecdsa384(let v)? = signature {return v}
@@ -1911,8 +2307,8 @@ public struct Proto_Signature: @unchecked Sendable {
   }
 
   ///*
-  /// A list of signatures for a single N-of-M threshold Key. This must be a list of exactly M
-  /// signatures, at least N of which are non-null.
+  /// A list of signatures for a single N-of-M threshold Key. This must be
+  /// a list of exactly M signatures, at least N of which are non-null.
   public var thresholdSignature: Proto_ThresholdSignature {
     get {
       if case .thresholdSignature(let v)? = signature {return v}
@@ -1922,7 +2318,8 @@ public struct Proto_Signature: @unchecked Sendable {
   }
 
   ///*
-  /// A list of M signatures, each corresponding to a Key in a KeyList of the same length.
+  /// A list of M signatures, each corresponding to a Key in a KeyList
+  /// of the same length.
   public var signatureList: Proto_SignatureList {
     get {
       if case .signatureList(let v)? = signature {return v}
@@ -1935,23 +2332,24 @@ public struct Proto_Signature: @unchecked Sendable {
 
   public enum OneOf_Signature: Equatable, @unchecked Sendable {
     ///*
-    /// smart contract virtual signature (always length zero)
+    /// Smart contract virtual signature (always length zero).
     case contract(Data)
     ///*
-    /// ed25519 signature bytes
+    /// Ed25519 signature bytes.
     case ed25519(Data)
     ///*
-    /// RSA-3072 signature bytes
+    /// RSA-3072 signature bytes.
     case rsa3072(Data)
     ///*
-    /// ECDSA p-384 signature bytes
+    /// ECDSA p-384 signature bytes.
     case ecdsa384(Data)
     ///*
-    /// A list of signatures for a single N-of-M threshold Key. This must be a list of exactly M
-    /// signatures, at least N of which are non-null.
+    /// A list of signatures for a single N-of-M threshold Key. This must be
+    /// a list of exactly M signatures, at least N of which are non-null.
     case thresholdSignature(Proto_ThresholdSignature)
     ///*
-    /// A list of M signatures, each corresponding to a Key in a KeyList of the same length.
+    /// A list of M signatures, each corresponding to a Key in a KeyList
+    /// of the same length.
     case signatureList(Proto_SignatureList)
 
   }
@@ -1960,10 +2358,14 @@ public struct Proto_Signature: @unchecked Sendable {
 }
 
 ///*
-/// This message is <b>DEPRECATED</b> and <b>UNUSABLE</b> with network nodes. It is retained
-/// here only for historical reasons.
+/// This message is deprecated and MUST NOT be used to communicate with network
+/// nodes. It is retained here only for historical reasons.
 ///
-/// Please use the SignaturePair and SignatureMap messages.
+/// Client software MUST NOT include this message in any request. <br/>
+/// Compliant nodes SHALL NOT accept any request containing this message.
+///
+/// Please use the `SignaturePair` and `SignatureMap` messages, in combination
+/// with `ThresholdKey` keys, instead of this message.
 ///
 /// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_ThresholdSignature: Sendable {
@@ -1972,8 +2374,8 @@ public struct Proto_ThresholdSignature: Sendable {
   // methods supported on all messages.
 
   ///*
-  /// for an N-of-M threshold key, this is a list of M signatures, at least N of which must be
-  /// non-null
+  /// For an N-of-M threshold key, this is a list of M signatures, at least N
+  /// of which must be non-null.
   public var sigs: Proto_SignatureList {
     get {return _sigs ?? Proto_SignatureList()}
     set {_sigs = newValue}
@@ -1991,10 +2393,14 @@ public struct Proto_ThresholdSignature: Sendable {
 }
 
 ///*
-/// This message is <b>DEPRECATED</b> and <b>UNUSABLE</b> with network nodes. It is retained
-/// here only for historical reasons.
+/// This message is deprecated and MUST NOT be used to communicate with network
+/// nodes. It is retained here only for historical reasons.
 ///
-/// Please use the SignaturePair and SignatureMap messages.
+/// Client software MUST NOT include this message in any request. <br/>
+/// Compliant nodes SHALL NOT accept any request containing this message.
+///
+/// Please use the `SignaturePair` and `SignatureMap` messages instead of
+/// this message.
 ///
 /// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_SignatureList: Sendable {
@@ -2003,7 +2409,7 @@ public struct Proto_SignatureList: Sendable {
   // methods supported on all messages.
 
   ///*
-  /// each signature corresponds to a Key in the KeyList
+  /// Each signature corresponds to a Key in the KeyList.
   public var sigs: [Proto_Signature] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2012,30 +2418,52 @@ public struct Proto_SignatureList: Sendable {
 }
 
 ///*
-/// The client may use any number of bytes from zero to the whole length of the public key for
-/// pubKeyPrefix. If zero bytes are used, then it must be that only one primitive key is required
-/// to sign the linked transaction; it will surely resolve to <tt>INVALID_SIGNATURE</tt> otherwise.
-///
-/// <b>IMPORTANT:</b> In the special case that a signature is being provided for a key used to
-/// authorize a precompiled contract, the <tt>pubKeyPrefix</tt> must contain the <b>entire public
-/// key</b>! That is, if the key is a Ed25519 key, the <tt>pubKeyPrefix</tt> should be 32 bytes
-/// long. If the key is a ECDSA(secp256k1) key, the <tt>pubKeyPrefix</tt> should be 33 bytes long,
-/// since we require the compressed form of the public key.
-///
-/// Only Ed25519 and ECDSA(secp256k1) keys and hence signatures are currently supported.
+/// A public key and signature pair.<br/>
+/// Only Ed25519 and ECDSA(secp256k1) keys and signatures are currently supported
+/// as cryptographic (non-implied) signatures.
 public struct Proto_SignaturePair: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// First few bytes of the public key
+  /// Prefix bytes of the public key.
+  /// <p>
+  /// The client may use any number of bytes from zero to the whole length of
+  /// the public key for pubKeyPrefix. If zero bytes are used, then it MUST be
+  /// true that only one cryptographic key is required to sign the associated
+  /// transaction.<br/>
+  /// If the `pubKeyPrefix` is 0 bytes and more than a single cryptographic
+  /// key is required to sign the transaction, the request SHALL resolve to
+  /// `INVALID_SIGNATURE`.
+  /// <blockquote>Important Note<blockquote>
+  /// In the special case that a signature is provided to authorize a
+  /// precompiled contract, the `pubKeyPrefix` MUST contain the _entire public
+  /// key_.<br/>
+  /// That is, if the key is an Ed25519 key, the `pubKeyPrefix` MUST be
+  /// 32 bytes long and contain the full public key bytes.<br/>
+  /// If the key is an ECDSA(secp256k1) key, the `pubKeyPrefix` MUST be
+  /// 33 bytes long and contain the full _compressed_ form of the public key.
+  /// </blockquote></blockquote>
+  /// <p>
+  /// <dl><dt>Purpose</dt>
+  /// <dd>The `pubKeyPrefix` exists to save cost. A signed transaction with
+  /// shorter prefixes will have fewer bytes, and so will have a lower
+  /// transaction fee.
+  /// The prefixes, however, MUST be long enough to distinguish between all
+  /// of the public keys that might be signing the transaction. Therefore,
+  /// software signing a transaction SHOULD evaluate which keys might possibly
+  /// be required to sign a transaction, and ensure that the shortest prefix
+  /// that is sufficient to unambiguously identify the correct key is used.
+  /// </dd></dl>
   public var pubKeyPrefix: Data = Data()
 
   public var signature: Proto_SignaturePair.OneOf_Signature? = nil
 
   ///*
-  /// smart contract virtual signature (always length zero)
+  /// A smart contract virtual signature.
+  /// <p>
+  /// This value MUST be length zero, if set.
   public var contract: Data {
     get {
       if case .contract(let v)? = signature {return v}
@@ -2045,7 +2473,7 @@ public struct Proto_SignaturePair: @unchecked Sendable {
   }
 
   ///*
-  /// ed25519 signature
+  /// An Ed25519 signature.
   public var ed25519: Data {
     get {
       if case .ed25519(let v)? = signature {return v}
@@ -2055,7 +2483,10 @@ public struct Proto_SignaturePair: @unchecked Sendable {
   }
 
   ///*
-  /// RSA-3072 signature
+  /// This option is not supported.<br/>
+  /// A RSA-3072 signature.
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
   public var rsa3072: Data {
     get {
       if case .rsa3072(let v)? = signature {return v}
@@ -2065,7 +2496,10 @@ public struct Proto_SignaturePair: @unchecked Sendable {
   }
 
   ///*
-  /// ECDSA p-384 signature
+  /// This option is not supported.<br/>
+  /// ECDSA p-384 signature.
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
   public var ecdsa384: Data {
     get {
       if case .ecdsa384(let v)? = signature {return v}
@@ -2075,7 +2509,7 @@ public struct Proto_SignaturePair: @unchecked Sendable {
   }
 
   ///*
-  /// ECDSA(secp256k1) signature
+  /// An ECDSA(secp256k1) signature.
   public var ecdsaSecp256K1: Data {
     get {
       if case .ecdsaSecp256K1(let v)? = signature {return v}
@@ -2088,19 +2522,27 @@ public struct Proto_SignaturePair: @unchecked Sendable {
 
   public enum OneOf_Signature: Equatable, @unchecked Sendable {
     ///*
-    /// smart contract virtual signature (always length zero)
+    /// A smart contract virtual signature.
+    /// <p>
+    /// This value MUST be length zero, if set.
     case contract(Data)
     ///*
-    /// ed25519 signature
+    /// An Ed25519 signature.
     case ed25519(Data)
     ///*
-    /// RSA-3072 signature
+    /// This option is not supported.<br/>
+    /// A RSA-3072 signature.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     case rsa3072(Data)
     ///*
-    /// ECDSA p-384 signature
+    /// This option is not supported.<br/>
+    /// ECDSA p-384 signature.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     case ecdsa384(Data)
     ///*
-    /// ECDSA(secp256k1) signature
+    /// An ECDSA(secp256k1) signature.
     case ecdsaSecp256K1(Data)
 
   }
@@ -2109,16 +2551,22 @@ public struct Proto_SignaturePair: @unchecked Sendable {
 }
 
 ///*
-/// A set of signatures corresponding to every unique public key used to sign a given transaction. If
-/// one public key matches more than one prefixes on the signature map, the transaction containing
-/// the map will fail immediately with the response code KEY_PREFIX_MISMATCH.
+/// A set of signatures corresponding to every unique public key that
+/// signed a given transaction.
+///
+/// If any public key matches more than one prefix in the signature map,
+/// the transaction containing that map SHALL fail immediately with the
+/// response code `KEY_PREFIX_MISMATCH`.
 public struct Proto_SignatureMap: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Each signature pair corresponds to a unique Key required to sign the transaction.
+  /// A list of signature pairs for a specific transaction.<br/>
+  /// Each signature pair represents a single cryptographic (`primitive`)
+  /// public key identified by a "prefix" value and the cryptographic
+  /// signature produced for that key.
   public var sigPair: [Proto_SignaturePair] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2127,57 +2575,85 @@ public struct Proto_SignatureMap: Sendable {
 }
 
 ///*
-/// A set of prices the nodes use in determining transaction and query fees, and constants involved
-/// in fee calculations.  Nodes multiply the amount of resources consumed by a transaction or query
-/// by the corresponding price to calculate the appropriate fee. Units are one-thousandth of a
-/// tinyCent.
+/// A set of values the nodes use in determining transaction and query fees, and
+/// constants involved in fee calculations.
+///
+/// Nodes SHALL multiply the amount of "resources" allocated to a transaction or
+/// query by the corresponding price to calculate the appropriate fee. Units are
+/// one-thousandth of a `tinyCent`. The "resource" allocations SHALL be estimated
+/// based on transaction characteristics and current network state, and MAY be
+/// further adjusted based on network load and congestion.
+///
+/// This SHALL be used, in different contexts, for the cost _factors_ used to
+/// calculate charged amounts, for the resource accumulation, and for actual
+/// amounts to be charged.<br/>
+/// Amounts recorded here MUST be converted to tinybar according to the
+/// current active `ExchangeRate` for the network.
 public struct Proto_FeeComponents: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// A minimum, the calculated fee must be greater than this value
+  /// Base: "minimum total fee".
+  /// <p>
+  /// The calculated fee MUST be greater than this value.
   public var min: Int64 = 0
 
   ///*
-  /// A maximum, the calculated fee must be less than this value
+  /// Base: "maximum total fee".
+  /// <p>
+  /// The calculated fee MUST be less than this value.
   public var max: Int64 = 0
 
   ///*
-  /// A constant contribution to the fee
+  /// Base: "constant fee".<br/>
+  /// A baseline constant contribution to total fee.
   public var constant: Int64 = 0
 
   ///*
-  /// The price of bandwidth consumed by a transaction, measured in bytes
+  /// Bandwidth: "bytes per transaction".<br/>
+  /// The fee for bandwidth consumed by a transaction, measured in bytes
   public var bpt: Int64 = 0
 
   ///*
-  /// The price per signature verification for a transaction
+  /// Signatures: "validations per transaction".<br/>
+  /// The fee for signature verifications required by a transaction
   public var vpt: Int64 = 0
 
   ///*
-  /// The price of RAM consumed by a transaction, measured in byte-hours
+  /// Memory: "RAM byte-hours".<br/>
+  /// The fee for RAM required to process a transaction,
+  /// measured in byte-hours
   public var rbh: Int64 = 0
 
   ///*
-  /// The price of storage consumed by a transaction, measured in byte-hours
+  /// Disk: "storage byte-hours".<br/>
+  /// The fee for storage required by a transaction, measured in byte-hours
   public var sbh: Int64 = 0
 
   ///*
-  /// The price of computation for a smart contract transaction, measured in gas
+  /// Compute: Ethereum term for a derivative EVM compute resource.<br/>
+  /// The fee of computation for a smart contract transaction. The value of
+  /// gas is set by a conversion rate, and is regularly updated to reflect
+  /// reasonable and customary costs.
   public var gas: Int64 = 0
 
   ///*
-  /// The price per hbar transferred for a transfer
+  /// Ad valorem: "transferred value".<br/>
+  /// The fee for HBAR transferred by a transaction.
   public var tv: Int64 = 0
 
   ///*
-  /// The price of bandwidth for data retrieved from memory for a response, measured in bytes
+  /// Response memory: "bytes per response".<br/>
+  /// The fee for data retrieved from memory to deliver a response,
+  /// measured in bytes
   public var bpr: Int64 = 0
 
   ///*
-  /// The price of bandwidth for data retrieved from disk for a response, measured in bytes
+  /// Response disk: "storage bytes per response".<br/>
+  /// The fee for data retrieved from disk to deliver a response,
+  /// measured in bytes
   public var sbpr: Int64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2186,18 +2662,20 @@ public struct Proto_FeeComponents: Sendable {
 }
 
 ///*
-/// The fees for a specific transaction or query based on the fee data.
+/// The fee schedule for a specific transaction or query based on the fee data.
 public struct Proto_TransactionFeeSchedule: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// A particular transaction or query
+  /// An enumeration for a particular transaction or query.<br/>
+  /// The functionality type determines the base cost parameters.
   public var hederaFunctionality: Proto_HederaFunctionality = .none
 
   ///*
-  /// Resource price coefficients
+  /// Use `fees` instead of this field.<br/>
+  /// Resource price coefficients.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var feeData: Proto_FeeData {
@@ -2210,7 +2688,9 @@ public struct Proto_TransactionFeeSchedule: Sendable {
   public mutating func clearFeeData() {self._feeData = nil}
 
   ///*
-  /// Resource price coefficients. Supports subtype price definition.
+  /// The resource price coefficients for transaction type and any applicable
+  /// subtypes.<br/>
+  /// The multiple entries enable support for subtype price definitions.
   public var fees: [Proto_FeeData] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2221,17 +2701,27 @@ public struct Proto_TransactionFeeSchedule: Sendable {
 }
 
 ///*
-/// The total fee charged for a transaction. It is composed of three components - a node fee that
-/// compensates the specific node that submitted the transaction, a network fee that compensates the
-/// network for assigning the transaction a consensus timestamp, and a service fee that compensates
-/// the network for the ongoing maintenance of the consequences of the transaction.
+/// A total fee, in component amounts charged for a transaction.
+///
+/// Total fees are composed of three sets of components.
+/// - Node data, components that compensate the specific node that submitted
+///   the transaction.
+/// - Network data, components that compensate the Hedera network for gossiping
+///   the transaction and determining the consensus timestamp.
+/// - Service data, components that compensate the Hedera network for the ongoing
+///   maintenance and operation of the network, as well as ongoing development
+///   of network services.
+///
+/// Fee components are recorded in thousandths of a tiny cent, and the network
+/// exchange rate converts these to tinybar amounts, which are what the network
+/// charges for transactions and what the network reports in the record stream.
 public struct Proto_FeeData: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Fee paid to the submitting node
+  /// Fee components to be paid to the submitting node.
   public var nodedata: Proto_FeeComponents {
     get {return _storage._nodedata ?? Proto_FeeComponents()}
     set {_uniqueStorage()._nodedata = newValue}
@@ -2242,7 +2732,8 @@ public struct Proto_FeeData: @unchecked Sendable {
   public mutating func clearNodedata() {_uniqueStorage()._nodedata = nil}
 
   ///*
-  /// Fee paid to the network for processing a transaction into consensus
+  /// Fee components to be paid to the network for bringing a
+  /// transaction to consensus.
   public var networkdata: Proto_FeeComponents {
     get {return _storage._networkdata ?? Proto_FeeComponents()}
     set {_uniqueStorage()._networkdata = newValue}
@@ -2253,8 +2744,9 @@ public struct Proto_FeeData: @unchecked Sendable {
   public mutating func clearNetworkdata() {_uniqueStorage()._networkdata = nil}
 
   ///*
-  /// Fee paid to the network for providing the service associated with the
-  /// transaction; for instance, storing a file
+  /// Fee components to be paid to the network for providing the immediate and
+  /// ongoing services associated with executing the transaction, maintaining
+  /// the network, and developing the network software.
   public var servicedata: Proto_FeeComponents {
     get {return _storage._servicedata ?? Proto_FeeComponents()}
     set {_uniqueStorage()._servicedata = newValue}
@@ -2265,8 +2757,9 @@ public struct Proto_FeeData: @unchecked Sendable {
   public mutating func clearServicedata() {_uniqueStorage()._servicedata = nil}
 
   ///*
-  /// SubType distinguishing between different types of FeeData, correlating
-  /// to the same HederaFunctionality
+  /// A sub-type distinguishing between different types of `FeeData` that may
+  /// apply to the same base transaction type (associated with
+  /// an `HederaFunctionality`).
   public var subType: Proto_SubType {
     get {return _storage._subType}
     set {_uniqueStorage()._subType = newValue}
@@ -2280,20 +2773,27 @@ public struct Proto_FeeData: @unchecked Sendable {
 }
 
 ///*
-/// A list of resource prices fee for different transactions and queries and the time period at which
-/// this fee schedule will expire. Nodes use the prices to determine the fees for all transactions
-/// based on how much of those resources each transaction uses.
+/// A set of fee schedules covering all transaction types and query types, along
+/// with a specific time at which this fee schedule will expire.
+///
+/// Nodes SHALL use the most recent unexpired fee schedule to determine the fees
+/// for all transactions based on various resource components imputed to each
+/// transaction.
 public struct Proto_FeeSchedule: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// List of price coefficients for network resources
+  /// Sets of fee coefficients for various transaction or query types.
   public var transactionFeeSchedule: [Proto_TransactionFeeSchedule] = []
 
   ///*
-  /// FeeSchedule expiry time
+  /// A time, in seconds since the `epoch`, when this fee schedule
+  /// will expire.
+  /// <p>
+  /// For this purpose, `epoch` SHALL be the UNIX epoch
+  /// with 0 at `1970-01-01T00:00:00.000Z`.
   public var expiryTime: Proto_TimestampSeconds {
     get {return _expiryTime ?? Proto_TimestampSeconds()}
     set {_expiryTime = newValue}
@@ -2311,14 +2811,24 @@ public struct Proto_FeeSchedule: Sendable {
 }
 
 ///*
-/// This contains two Fee Schedules with expiry timestamp.
+/// The "current" fee schedule and the "next" fee schedule.
+///
+/// The current fee schedule is the schedule that SHALL apply to the current
+/// transaction.<br/>
+/// The next fee schedule is the schedule that SHALL apply after the current
+/// schedule expires.<br/>
+/// We store both to avoid a condition where transactions are processed very
+/// near the time when a fee schedule expires and it might be indeterminate
+/// which fees to apply. With both current and next fee schedule the network
+/// can deterministically apply the correct fee schedule based on consensus
+/// timestamp for each transaction.
 public struct Proto_CurrentAndNextFeeSchedule: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Contains current Fee Schedule
+  /// A current, unexpired, fee schedule.
   public var currentFeeSchedule: Proto_FeeSchedule {
     get {return _currentFeeSchedule ?? Proto_FeeSchedule()}
     set {_currentFeeSchedule = newValue}
@@ -2329,7 +2839,7 @@ public struct Proto_CurrentAndNextFeeSchedule: Sendable {
   public mutating func clearCurrentFeeSchedule() {self._currentFeeSchedule = nil}
 
   ///*
-  /// Contains next Fee Schedule
+  /// A future fee schedule to use when the current schedule expires.
   public var nextFeeSchedule: Proto_FeeSchedule {
     get {return _nextFeeSchedule ?? Proto_FeeSchedule()}
     set {_nextFeeSchedule = newValue}
@@ -2348,9 +2858,14 @@ public struct Proto_CurrentAndNextFeeSchedule: Sendable {
 }
 
 ///*
-/// Contains the IP address and the port representing a service endpoint of
-/// a Node in a network. Used to reach the Hedera API and submit transactions
-/// to the network.
+/// A network node endpoint.<br/>
+/// Each network node in the global address book publishes one or more endpoints
+/// which enable the nodes to communicate both with other nodes, for gossip, and
+/// with clients to receive transaction requests.
+///
+/// This message supports IPv4 with address and TCP port,
+/// and MAY include a FQDN instead of an IP address.<br/>
+/// IPv6 is not currently supported.
 ///
 /// When the `domain_name` field is set, the `ipAddressV4` field
 /// MUST NOT be set.<br/>
@@ -2362,21 +2877,27 @@ public struct Proto_ServiceEndpoint: @unchecked Sendable {
   // methods supported on all messages.
 
   ///*
-  /// The 4-byte IPv4 address of the endpoint encoded in left to right order
-  /// (e.g. 127.0.0.1 has bytes [127, 0, 0, 1])
+  /// A 32-bit IPv4 address.<br/>
+  /// This is the address of the endpoint, encoded in pure "big-endian"
+  /// (i.e. left to right) order (e.g. `127.0.0.1` has hex bytes in the
+  /// order `7F`, `00`, `00`, `01`).
   public var ipAddressV4: Data = Data()
 
   ///*
-  /// The port of the service endpoint
+  /// A TCP port to use.
+  /// <p>
+  /// This value MUST be between 0 and 65535, inclusive.
   public var port: Int32 = 0
 
   ///*
-  /// A node domain name.<br/>
-  /// This MUST be the fully qualified domain(DNS) name of the node.<br/>
-  /// This value MUST NOT be more than 253 characters.
-  /// domain_name and ipAddressV4 are mutually exclusive.
-  /// When the `domain_name` field is set, the `ipAddressV4` field MUST NOT be set.<br/>
-  /// When the `ipAddressV4` field is set, the `domain_name` field MUST NOT be set.
+  /// A node domain name.
+  /// <p>
+  /// This MUST be the fully qualified domain name of the node.<br/>
+  /// This value MUST NOT exceed 253 characters.<br/>
+  /// When the `domain_name` field is set, the `ipAddressV4`
+  /// field MUST NOT be set.<br/>
+  /// When the `ipAddressV4` field is set, the `domain_name`
+  /// field MUST NOT be set.
   public var domainName: String = String()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2385,51 +2906,70 @@ public struct Proto_ServiceEndpoint: @unchecked Sendable {
 }
 
 ///*
-/// The data about a node, including its service endpoints and the Hedera account to be paid for
-/// services provided by the node (that is, queries answered and transactions submitted.)
+/// The data about a node, including its service endpoints and the Hedera account
+/// to be paid for services provided by the node (that is, queries answered and
+/// transactions submitted).
 ///
-/// If the `serviceEndpoint` list is not set, or empty, then the endpoint given by the
-/// (deprecated) `ipAddress` and `portno` fields should be used.
+/// All active fields are populated in the `0.0.102` address book file.<br/>
+/// Only fields documented with "`0.0.101` field" are populated in the 0.0.101
+/// address book file.
 ///
-/// All fields are populated in the 0.0.102 address book file while only fields that start with # are
-/// populated in the 0.0.101 address book file.
+/// This message MAY be superseded by messages in state/addressbook/node.proto
+/// and node_get_info.proto.
 public struct Proto_NodeAddress: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The IP address of the Node with separator & octets encoded in UTF-8.  Usage is deprecated,
-  /// ServiceEndpoint is preferred to retrieve a node's list of IP addresses and ports
+  /// ServiceEndpoint is now used to retrieve a node's list of IP
+  /// addresses and ports.<br/>
+  /// The IP address of the Node, as a string, encoded in UTF-8.<br/>
+  /// This value SHALL NOT be populated.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var ipAddress: Data = Data()
 
   ///*
-  /// The port number of the grpc server for the node.  Usage is deprecated, ServiceEndpoint is
-  /// preferred to retrieve a node's list of IP addresses and ports
+  /// ServiceEndpoint is now used to retrieve a node's list of IP
+  /// addresses and ports.<br/>
+  /// The port number of the grpc server for the node.<br/>
+  /// This value SHALL NOT be populated.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var portno: Int32 = 0
 
   ///*
-  /// Usage is deprecated, nodeAccountId is preferred to retrieve a node's account ID
+  /// Description provides short text functionality.<br/>
+  /// A short description of the node.
+  /// <p>
+  /// This field SHALL NOT be populated.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var memo: Data = Data()
 
   ///*
-  /// The node's X509 RSA public key used to sign stream files (e.g., record stream
-  /// files). Precisely, this field is a string of hexadecimal characters which,
-  /// translated to binary, are the public key's DER encoding.
+  /// A hexadecimal String encoding of an X509 public key.
+  /// <p>
+  /// This X509 RSA _public_ key SHALL be used to verify record stream files
+  /// (e.g., record stream files).<br/>
+  /// This field SHALL be a string of hexadecimal characters, encoded UTF-8,
+  /// which, translated to binary, form the public key DER encoding.
   public var rsaPubKey: String = String()
 
   ///*
-  /// # A non-sequential identifier for the node
+  /// A numeric identifier for the node.
+  /// <p>
+  /// This value SHALL NOT be sequential.
+  /// <p>
+  /// A `0.0.101` field
   public var nodeID: Int64 = 0
 
   ///*
-  /// # The account to be paid for queries and transactions sent to this node
+  /// An account to be paid the "node" portion of transaction fees.<br/>
+  /// The "node" fees are paid to the node that submitted the transaction.
+  /// <p>
+  /// A `0.0.101` field
   public var nodeAccountID: Proto_AccountID {
     get {return _nodeAccountID ?? Proto_AccountID()}
     set {_nodeAccountID = newValue}
@@ -2440,22 +2980,40 @@ public struct Proto_NodeAddress: @unchecked Sendable {
   public mutating func clearNodeAccountID() {self._nodeAccountID = nil}
 
   ///*
-  /// # Hash of the node's TLS certificate. Precisely, this field is a string of
-  /// hexadecimal characters which, translated to binary, are the SHA-384 hash of
-  /// the UTF-8 NFKD encoding of the node's TLS cert in PEM format. Its value can be
-  /// used to verify the node's certificate it presents during TLS negotiations.
+  /// A hash of the node's TLS certificate.
+  /// <p>
+  /// This field SHALL be a string of hexadecimal characters, encoded UTF-8,
+  /// which, translated to binary, form a SHA-384 hash of the node's TLS
+  /// certificate in PEM format.
+  /// This TLS certificate MUST be encoded UTF-8 and normalized according to
+  /// the NFKD form prior to computing the hash value.<br/>
+  /// The value of this field SHALL be used to verify the node TLS
+  /// certificate when presented during protocol negotiation.
+  /// <p>
+  /// A `0.0.101` field
   public var nodeCertHash: Data = Data()
 
   ///*
-  /// # A node's service IP addresses and ports
+  /// A node's service IP addresses and TCP ports.<br/>
+  /// Nodes require multiple endpoints to ensure that inter-node communication
+  /// (e.g. gossip) is properly separated from client communication to
+  /// API endpoints.
+  /// <p>
+  /// A `0.0.101` field
   public var serviceEndpoint: [Proto_ServiceEndpoint] = []
 
   ///*
-  /// A description of the node, with UTF-8 encoding up to 100 bytes
+  /// A short description of the node.
+  /// <p>
+  /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+  /// (default 100) bytes when encoded as UTF-8.
   public var description_p: String = String()
 
   ///*
-  /// [Deprecated] The amount of tinybars staked to the node
+  /// This is replaced by per-account stake tracking and dynamic
+  /// calculation.<br/>
+  /// The amount of tinybar staked to the node.<br/>
+  /// This value SHOULD NOT be populated, and SHALL be ignored.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var stake: Int64 = 0
@@ -2468,15 +3026,17 @@ public struct Proto_NodeAddress: @unchecked Sendable {
 }
 
 ///*
-/// A list of nodes and their metadata that contains all details of the nodes for the network.  Used
-/// to parse the contents of system files <tt>0.0.101</tt> and <tt>0.0.102</tt>.
+/// A list of nodes and their metadata that contains details of the nodes
+/// running the network.
+///
+/// Used to parse the contents of system files `0.0.101` and `0.0.102`.
 public struct Proto_NodeAddressBook: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Metadata of all nodes in the network
+  /// Published data for all nodes in the network
   public var nodeAddress: [Proto_NodeAddress] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2485,37 +3045,57 @@ public struct Proto_NodeAddressBook: Sendable {
 }
 
 ///*
-/// Hedera follows semantic versioning (https://semver.org/) for both the HAPI protobufs and the
-/// Services software.  This type allows the <tt>getVersionInfo</tt> query in the
-/// <tt>NetworkService</tt> to return the deployed versions of both protobufs and software on the
-/// node answering the query.
+/// A software version according to "[semantic versioning](https://semver.org/)"
+/// or "date versioning".
+///
+/// Hedera currently modifies the "typical" semantic versioning somewhat, the
+/// `major` version is always `0`, and each release increments the `minor`
+/// version. The `patch` and `pre` components are used in the typical manner.
+/// The `build` component is not generally used.
 public struct Proto_SemanticVersion: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Increases with incompatible API changes
+  /// A major version.<br/>
+  /// Hedera does not increment this value and retains a `0` value to
+  /// indicate that API may change for any release.
+  /// <p>
+  /// This value SHALL increment for an incompatible API change.<br/>
   public var major: Int32 = 0
 
   ///*
-  /// Increases with backwards-compatible new functionality
+  /// A minor version.<br/>
+  /// Hedera increments this value with each release.<br/>
+  /// There may be incompatible API changes in any Hedera Services release.
+  /// <p>
+  /// This value SHALL increment for backwards-compatible new
+  /// functionality.
   public var minor: Int32 = 0
 
   ///*
-  /// Increases with backwards-compatible bug fixes
+  /// A patch version.
+  /// <p>
+  /// This value SHALL increment for backwards-compatible bug fixes.
   public var patch: Int32 = 0
 
   ///*
-  /// A pre-release version MAY be denoted by appending a hyphen and a series of dot separated
-  /// identifiers (https://semver.org/#spec-item-9); so given a semver 0.14.0-alpha.1+21AF26D3,
-  /// this field would contain 'alpha.1'
+  /// A pre-release version.
+  /// <p>
+  /// This MAY be denoted by appending a hyphen and a series of dot separated
+  /// identifiers per [Semver Specification](https://semver.org/#spec-item-9);
+  /// given a string `0.14.0-alpha.1+21AF26D3`, this field would contain
+  /// 'alpha.1'
   public var pre: String = String()
 
   ///*
-  /// Build metadata MAY be denoted by appending a plus sign and a series of dot separated
-  /// identifiers immediately following the patch or pre-release version
-  /// (https://semver.org/#spec-item-10); so given a semver 0.14.0-alpha.1+21AF26D3, this field
+  /// A build version.
+  /// <p>
+  /// Build version MAY be denoted by appending a plus sign and a series of
+  /// dot separated identifiers immediately following the patch or pre-release
+  /// version per [Semver Specification](https://semver.org/#spec-item-10); so
+  /// given a string `0.14.0-alpha.1+21AF26D3`, this field
   /// would contain '21AF26D3'
   public var build: String = String()
 
@@ -2525,22 +3105,28 @@ public struct Proto_SemanticVersion: Sendable {
 }
 
 ///*
-/// UNDOCUMENTED
+/// A single runtime configuration setting.
+///
+/// Typically a name-value pair, this may also contain a small amount of
+/// associated data.
 public struct Proto_Setting: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// name of the property
+  /// A name for this setting property.
   public var name: String = String()
 
   ///*
-  /// value of the property
+  /// A value for this setting property.
   public var value: String = String()
 
   ///*
-  /// any data associated with property
+  /// A small quantity of data associated with this setting.
+  /// <p>
+  /// This SHOULD be less than 100 bytes.<br/>
+  /// If the value is a string, it MUST be encoded UTF-8.
   public var data: Data = Data()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2549,14 +3135,14 @@ public struct Proto_Setting: @unchecked Sendable {
 }
 
 ///*
-/// UNDOCUMENTED
+/// Setting values representing a source of runtime configuration information.
 public struct Proto_ServicesConfigurationList: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// list of name value pairs of the application properties
+  /// A List of `Setting` values, typically read from application properties.
   public var nameValue: [Proto_Setting] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2565,14 +3151,27 @@ public struct Proto_ServicesConfigurationList: Sendable {
 }
 
 ///*
-/// Token's information related to the given Account
+/// An Hedera Token Service token relationship. A token relationship describes
+/// the connection between an Account and a Token type, including the current
+/// account balance in that token.
+///
+/// A `TokenRelationship` SHALL contain, for the designated token and enclosing
+/// account, The account's current balance, whether the account has KYC granted,
+/// whether the assets are frozen and whether the association was automatic.<br/>
+/// A `TokenRelationship` MAY also contain the `symbol` and `decimals` values
+/// copied from the token.<br/>
+/// `TokenRelationship` entries SHALL be valid only within the context of a
+/// `GetAccountDetails` query response, or other enclosing message, which
+/// specifies the account side of the relationship.
 public struct Proto_TokenRelationship: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The ID of the token
+  /// A token identifier.
+  /// <p>
+  /// This MUST match an existing token that is not deleted.
   public var tokenID: Proto_TokenID {
     get {return _tokenID ?? Proto_TokenID()}
     set {_tokenID = newValue}
@@ -2583,31 +3182,56 @@ public struct Proto_TokenRelationship: Sendable {
   public mutating func clearTokenID() {self._tokenID = nil}
 
   ///*
-  /// The Symbol of the token
+  /// A token symbol.
+  /// <p>
+  /// This MUST match an existing token that is not deleted.<br/>
+  /// This MUST match the value for the token identified in `tokenId`.
   public var symbol: String = String()
 
   ///*
-  /// For token of type FUNGIBLE_COMMON - the balance that the Account holds in the smallest
-  /// denomination. For token of type NON_FUNGIBLE_UNIQUE - the number of NFTs held by the account
+  /// An account balance for this token.
+  /// <p>
+  /// For fungible/common tokens this SHALL be the balance that the
+  /// account holds of that token. The value is provided as an integer amount
+  /// of the smallest unit of the token (i.e. 10<sup>`-decimals`</sup> whole
+  /// tokens).<br/>
+  /// For non-fungible/unique tokens this SHALL be the whole number of
+  /// unique tokens held by the account for this token type.
   public var balance: UInt64 = 0
 
   ///*
-  /// The KYC status of the account (KycNotApplicable, Granted or Revoked). If the token does not
-  /// have KYC key, KycNotApplicable is returned
+  /// A KYC status for the account with respect to this token.
+  /// <p>
+  /// This may be `KycNotApplicable`, `Granted` or `Revoked` and, if KYC is
+  /// not supported for this token (e.g. the `kyc_key` of the token is not
+  /// set), this SHALL be `KycNotApplicable`.
   public var kycStatus: Proto_TokenKycStatus = .kycNotApplicable
 
   ///*
-  /// The Freeze status of the account (FreezeNotApplicable, Frozen or Unfrozen). If the token does
-  /// not have Freeze key, FreezeNotApplicable is returned
+  /// A Freeze status for the account with respect to this token.
+  /// <p>
+  /// This value SHALL be one of `FreezeNotApplicable`, `Frozen`
+  /// or `Unfrozen`.<br/>
+  /// If the token cannot freeze account assets (e.g. the `freeze_key` of the
+  /// token is not set), this SHALL be `FreezeNotApplicable`.
   public var freezeStatus: Proto_TokenFreezeStatus = .freezeNotApplicable
 
   ///*
-  /// Tokens divide into <tt>10<sup>decimals</sup></tt> pieces
+  /// A maximum "precision" for this token.
+  /// <p>
+  /// This value MUST match the `decimals` field of the token identified in
+  /// the `tokenId` field.<br/>
+  /// A single whole token SHALL be divided into at most
+  /// 10<sup>`decimals`</sup> sub-units.
   public var decimals: UInt32 = 0
 
   ///*
-  /// Specifies if the relationship is created implicitly. False : explicitly associated, True :
-  /// implicitly associated.
+  /// An automatic association flag.
+  /// <p>
+  /// This SHALL be set if the relationship was created implicitly
+  /// (automatically).<br/>
+  /// This SHALL be unset if the relationship was created explicitly
+  /// (manually) via a `TokenAssociate` transaction.
   public var automaticAssociation: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2618,13 +3242,13 @@ public struct Proto_TokenRelationship: Sendable {
 }
 
 ///*
-/// A number of <i>transferable units</i> of a certain token.
+/// A number of _transferable units_ of a specified token.
 ///
-/// The transferable unit of a token is its smallest denomination, as given by the token's
-/// <tt>decimals</tt> property---each minted token contains <tt>10<sup>decimals</sup></tt>
-/// transferable units. For example, we could think of the cent as the transferable unit of the US
-/// dollar (<tt>decimals=2</tt>); and the tinybar as the transferable unit of hbar
-/// (<tt>decimals=8</tt>).
+/// The transferable unit of a token is its smallest denomination, as given by
+/// the token's `decimals` property. Each minted token contains
+/// 10<sup>`decimals`</sup> transferable units. For example, we could think of
+/// the cent as the transferable unit of the US dollar (`decimals=2`); and the
+/// tinybar as the transferable unit of HBAR (`decimals=8`).
 ///
 /// Transferable units are not directly comparable across different tokens.
 public struct Proto_TokenBalance: Sendable {
@@ -2633,7 +3257,7 @@ public struct Proto_TokenBalance: Sendable {
   // methods supported on all messages.
 
   ///*
-  /// A unique token id
+  /// A token identifier.
   public var tokenID: Proto_TokenID {
     get {return _tokenID ?? Proto_TokenID()}
     set {_tokenID = newValue}
@@ -2644,13 +3268,19 @@ public struct Proto_TokenBalance: Sendable {
   public mutating func clearTokenID() {self._tokenID = nil}
 
   ///*
-  /// Number of transferable units of the identified token. For token of type FUNGIBLE_COMMON -
-  /// balance in the smallest denomination. For token of type NON_FUNGIBLE_UNIQUE - the number of
-  /// NFTs held by the account
+  /// A number of transferable units of the identified token.
+  /// <p>
+  /// For fungible/common tokens this SHALL be the balance, in units of
+  /// 10<sup>`-decimals`</sup> whole tokens.<br/>
+  /// For non-fungible/unique tokens, this SHALL be the number of
+  /// individual unique tokens in this balance.
   public var balance: UInt64 = 0
 
   ///*
-  /// Tokens divide into <tt>10<sup>decimals</sup></tt> pieces
+  /// A number of "decimals" precision.
+  /// <p>
+  /// This MUST match the `decimals` value for the token identified by the
+  /// `tokenId` field.
   public var decimals: UInt32 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2661,12 +3291,19 @@ public struct Proto_TokenBalance: Sendable {
 }
 
 ///*
-/// A sequence of token balances
+/// A set of token balance values.
+///
+/// Each entry describes the balance the enclosing account holds for a specific
+/// token. The balance is an amount for a fungible/common token or a count for
+/// a non-fungible/unique token.
 public struct Proto_TokenBalances: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  ///*
+  /// A list of token balance values.<br/>
+  /// Each entry represents a single account balance for a single token.
   public var tokenBalances: [Proto_TokenBalance] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2674,13 +3311,18 @@ public struct Proto_TokenBalances: Sendable {
   public init() {}
 }
 
-/// A token - account association 
+///*
+/// An association between a token and an account.
+///
+/// An account must be associated with a token before that account can transact
+/// in (send or receive) that token.
 public struct Proto_TokenAssociation: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// The token involved in the association
+  ///*
+  /// A token identifier for the associated token.
   public var tokenID: Proto_TokenID {
     get {return _tokenID ?? Proto_TokenID()}
     set {_tokenID = newValue}
@@ -2690,7 +3332,8 @@ public struct Proto_TokenAssociation: Sendable {
   /// Clears the value of `tokenID`. Subsequent reads from it will return its default value.
   public mutating func clearTokenID() {self._tokenID = nil}
 
-  /// The account involved in the association
+  ///*
+  /// An account identifier for the associated account.
   public var accountID: Proto_AccountID {
     get {return _accountID ?? Proto_AccountID()}
     set {_accountID = newValue}
@@ -2709,20 +3352,29 @@ public struct Proto_TokenAssociation: Sendable {
 }
 
 ///*
-/// Staking metadata for an account or a contract returned in CryptoGetInfo or ContractGetInfo queries
+/// Staking information for an account or a contract.
+///
+/// This is used for responses returned from `CryptoGetInfo` or
+/// `ContractGetInfo` queries.
 public struct Proto_StakingInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// If true, this account or contract declined to receive a staking reward.
+  /// A flag indicating that the holder of this account has chosen to decline
+  /// staking rewards.
   public var declineReward: Bool = false
 
   ///*
-  /// The staking period during which either the staking settings for this account or contract changed (such as starting
-  /// staking or changing staked_node_id) or the most recent reward was earned, whichever is later. If this account or contract
-  /// is not currently staked to a node, then this field is not set.
+  /// A `Timestamp` of the start time for the latest active staking period.
+  /// <p>
+  /// This MUST be a period during which either the staking settings for this
+  /// account or contract changed or the account or contract received staking
+  /// rewards, whichever is later. Examples of a change in staking settings
+  /// include starting staking or changing the staked_node_id.<br/>
+  /// If this account or contract is not currently staked to a node, then this
+  /// field SHALL NOT be set.
   public var stakePeriodStart: Proto_Timestamp {
     get {return _stakePeriodStart ?? Proto_Timestamp()}
     set {_stakePeriodStart = newValue}
@@ -2733,19 +3385,23 @@ public struct Proto_StakingInfo: Sendable {
   public mutating func clearStakePeriodStart() {self._stakePeriodStart = nil}
 
   ///*
-  /// The amount in tinybars that will be received in the next reward situation.
+  /// An amount, in tinybar, to be received in the next reward payout.<br/>
+  /// Rewards are not paid out immediately; for efficiency reasons rewards are
+  /// only paid out as part of another transaction involving that account.
   public var pendingReward: Int64 = 0
 
   ///*
-  /// The total of balance of all accounts staked to this account or contract.
+  /// A proxy-staked balance.<br/>
+  /// The total HBAR balance of all accounts that delegate staking to this
+  /// account or contract.
   public var stakedToMe: Int64 = 0
 
-  ///*
-  /// ID of the account or node to which this account or contract is staking.
   public var stakedID: Proto_StakingInfo.OneOf_StakedID? = nil
 
   ///*
-  /// The account to which this account or contract is staking.
+  /// A delegated stake.
+  /// <p>
+  /// This account delegates to the indicated account for staking purposes.
   public var stakedAccountID: Proto_AccountID {
     get {
       if case .stakedAccountID(let v)? = stakedID {return v}
@@ -2755,7 +3411,9 @@ public struct Proto_StakingInfo: Sendable {
   }
 
   ///*
-  /// The ID of the node this account or contract is staked to.
+  /// A direct stake.
+  /// <p>
+  /// This accounts stakes its balance to the designated node.
   public var stakedNodeID: Int64 {
     get {
       if case .stakedNodeID(let v)? = stakedID {return v}
@@ -2766,14 +3424,16 @@ public struct Proto_StakingInfo: Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  ///*
-  /// ID of the account or node to which this account or contract is staking.
   public enum OneOf_StakedID: Equatable, Sendable {
     ///*
-    /// The account to which this account or contract is staking.
+    /// A delegated stake.
+    /// <p>
+    /// This account delegates to the indicated account for staking purposes.
     case stakedAccountID(Proto_AccountID)
     ///*
-    /// The ID of the node this account or contract is staked to.
+    /// A direct stake.
+    /// <p>
+    /// This accounts stakes its balance to the designated node.
     case stakedNodeID(Int64)
 
   }
@@ -2786,17 +3446,21 @@ public struct Proto_StakingInfo: Sendable {
 ///*
 /// A unique, composite, identifier for a pending airdrop.
 ///
-/// Each pending airdrop SHALL be uniquely identified by a PendingAirdropId.
-/// A PendingAirdropId SHALL be recorded when created and MUST be provided in any transaction
-/// that would modify that pending airdrop (such as a `claimAirdrop` or `cancelAirdrop`).
+/// Each pending airdrop SHALL be uniquely identified by
+/// a `PendingAirdropId`.<br/>
+/// A `PendingAirdropId` SHALL be recorded when created and MUST be provided in
+/// any transaction that would modify that pending airdrop
+/// (such as a `claimAirdrop` or `cancelAirdrop`).
 public struct Proto_PendingAirdropId: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// A sending account.<br/>
-  /// This is the account that initiated, and SHALL fund, this pending airdrop.<br/>
+  /// A sending account.
+  /// <p>
+  /// This is the account that initiated, and SHALL fund,
+  /// this pending airdrop.<br/>
   /// This field is REQUIRED.
   public var senderID: Proto_AccountID {
     get {return _senderID ?? Proto_AccountID()}
@@ -2808,7 +3472,8 @@ public struct Proto_PendingAirdropId: Sendable {
   public mutating func clearSenderID() {self._senderID = nil}
 
   ///*
-  /// A receiving account.<br/>
+  /// A receiving account.
+  /// <p>
   /// This is the ID of the account that SHALL receive the airdrop.<br/>
   /// This field is REQUIRED.
   public var receiverID: Proto_AccountID {
@@ -2823,10 +3488,11 @@ public struct Proto_PendingAirdropId: Sendable {
   public var tokenReference: Proto_PendingAirdropId.OneOf_TokenReference? = nil
 
   ///*
-  /// A token ID.<br/>
-  /// This is the type of token for a fungible/common token airdrop.<br/>
-  /// This field is REQUIRED for a fungible/common token and MUST NOT be used for a
-  /// non-fungible/unique token.
+  /// A token identifier.<br/>
+  /// This is the type of token for a fungible/common token airdrop.
+  /// <p>
+  /// This field is REQUIRED for a fungible/common token and MUST NOT
+  /// be used for a non-fungible/unique token.
   public var fungibleTokenType: Proto_TokenID {
     get {
       if case .fungibleTokenType(let v)? = tokenReference {return v}
@@ -2836,10 +3502,12 @@ public struct Proto_PendingAirdropId: Sendable {
   }
 
   ///*
-  /// The id of a single NFT, consisting of a Token ID and serial number.<br/>
-  /// This is the type of token for a non-fungible/unique token airdrop.<br/>
-  /// This field is REQUIRED for a non-fungible/unique token and MUST NOT be used for a
-  /// fungible/common token.
+  /// The id of a single NFT<br/>
+  /// This is the type of token for a non-fungible/unique token airdrop
+  /// and consists of a Token ID and serial number.
+  /// <p>
+  /// This field is REQUIRED for a non-fungible/unique token and
+  /// MUST NOT be used for a fungible/common token.
   public var nonFungibleToken: Proto_NftID {
     get {
       if case .nonFungibleToken(let v)? = tokenReference {return v}
@@ -2852,16 +3520,19 @@ public struct Proto_PendingAirdropId: Sendable {
 
   public enum OneOf_TokenReference: Equatable, Sendable {
     ///*
-    /// A token ID.<br/>
-    /// This is the type of token for a fungible/common token airdrop.<br/>
-    /// This field is REQUIRED for a fungible/common token and MUST NOT be used for a
-    /// non-fungible/unique token.
+    /// A token identifier.<br/>
+    /// This is the type of token for a fungible/common token airdrop.
+    /// <p>
+    /// This field is REQUIRED for a fungible/common token and MUST NOT
+    /// be used for a non-fungible/unique token.
     case fungibleTokenType(Proto_TokenID)
     ///*
-    /// The id of a single NFT, consisting of a Token ID and serial number.<br/>
-    /// This is the type of token for a non-fungible/unique token airdrop.<br/>
-    /// This field is REQUIRED for a non-fungible/unique token and MUST NOT be used for a
-    /// fungible/common token.
+    /// The id of a single NFT<br/>
+    /// This is the type of token for a non-fungible/unique token airdrop
+    /// and consists of a Token ID and serial number.
+    /// <p>
+    /// This field is REQUIRED for a non-fungible/unique token and
+    /// MUST NOT be used for a fungible/common token.
     case nonFungibleToken(Proto_NftID)
 
   }
@@ -2875,14 +3546,15 @@ public struct Proto_PendingAirdropId: Sendable {
 ///*
 /// A single pending airdrop value.
 ///
-/// This message SHALL record the airdrop amount for a fungible/common token.<br/>
+/// This message SHALL record the airdrop amount for a
+/// fungible/common token.<br/>
 /// This message SHOULD be null for a non-fungible/unique token.<br/>
-/// If a non-null `PendingAirdropValue` is set for a non-fungible/unique token, the amount
-/// field MUST be `0`.
+/// If a non-null `PendingAirdropValue` is set for a non-fungible/unique
+/// token, the amount field MUST be `0`.
 ///
-/// It is RECOMMENDED that implementations store pending airdrop information as a key-value map
-/// from `PendingAirdropId` to `PendingAirdropValue`, with a `null` value used for non-fungible
-/// pending airdrops.
+/// It is RECOMMENDED that implementations store pending airdrop information
+/// as a key-value map from `PendingAirdropId` to `PendingAirdropValue`, with
+/// a `null` value used for non-fungible pending airdrops.
 public struct Proto_PendingAirdropValue: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -2891,11 +3563,14 @@ public struct Proto_PendingAirdropValue: Sendable {
   ///*
   /// An amount to transfer for fungible/common tokens.<br/>
   /// This is expressed in the smallest available units for that token
-  /// (i.e. 10<sup>-`decimals`</sup> whole tokens).<br/>
-  /// This amount SHALL be transferred from the sender to the receiver, if claimed.<br/>
-  /// If the token is a fungible/common token, this value MUST be strictly greater than `0`.
-  /// If the token is a non-fungible/unique token, this message SHOULD NOT be set, and if
-  /// set, this field MUST be `0`.
+  /// (i.e. 10<sup>-`decimals`</sup> whole tokens).
+  /// <p>
+  /// This amount SHALL be transferred from the sender to the receiver,
+  /// if claimed.<br/>
+  /// If the token is a fungible/common token, this value MUST be strictly
+  /// greater than `0`.<br/>
+  /// If the token is a non-fungible/unique token, this message SHOULD NOT
+  /// be set, and if set, this field MUST be `0`.
   public var amount: UInt64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2928,6 +3603,7 @@ extension Proto_SubType: SwiftProtobuf._ProtoNameProviding {
     3: .same(proto: "TOKEN_FUNGIBLE_COMMON_WITH_CUSTOM_FEES"),
     4: .same(proto: "TOKEN_NON_FUNGIBLE_UNIQUE_WITH_CUSTOM_FEES"),
     5: .same(proto: "SCHEDULE_CREATE_CONTRACT_CALL"),
+    6: .same(proto: "TOPIC_CREATE_WITH_CUSTOM_FEES"),
   ]
 }
 
@@ -3053,9 +3729,10 @@ extension Proto_HederaFunctionality: SwiftProtobuf._ProtoNameProviding {
     93: .same(proto: "TokenAirdrop"),
     94: .same(proto: "TokenCancelAirdrop"),
     95: .same(proto: "TokenClaimAirdrop"),
-    96: .same(proto: "TssMessage"),
-    97: .same(proto: "TssVote"),
-    98: .same(proto: "TssShareSignature"),
+    100: .same(proto: "StateSignatureTransaction"),
+    104: .same(proto: "HistoryAssemblySignature"),
+    105: .same(proto: "HistoryProofKeyPublication"),
+    106: .same(proto: "HistoryProofVote"),
   ]
 }
 
@@ -3124,6 +3801,50 @@ extension Proto_RealmID: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
   public static func ==(lhs: Proto_RealmID, rhs: Proto_RealmID) -> Bool {
     if lhs.shardNum != rhs.shardNum {return false}
     if lhs.realmNum != rhs.realmNum {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Proto_TokenID: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".TokenID"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "shardNum"),
+    2: .same(proto: "realmNum"),
+    3: .same(proto: "tokenNum"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.shardNum) }()
+      case 2: try { try decoder.decodeSingularInt64Field(value: &self.realmNum) }()
+      case 3: try { try decoder.decodeSingularInt64Field(value: &self.tokenNum) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.shardNum != 0 {
+      try visitor.visitSingularInt64Field(value: self.shardNum, fieldNumber: 1)
+    }
+    if self.realmNum != 0 {
+      try visitor.visitSingularInt64Field(value: self.realmNum, fieldNumber: 2)
+    }
+    if self.tokenNum != 0 {
+      try visitor.visitSingularInt64Field(value: self.tokenNum, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Proto_TokenID, rhs: Proto_TokenID) -> Bool {
+    if lhs.shardNum != rhs.shardNum {return false}
+    if lhs.realmNum != rhs.realmNum {return false}
+    if lhs.tokenNum != rhs.tokenNum {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -3354,6 +4075,94 @@ extension Proto_ContractID: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     if lhs.shardNum != rhs.shardNum {return false}
     if lhs.realmNum != rhs.realmNum {return false}
     if lhs.contract != rhs.contract {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Proto_TopicID: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".TopicID"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "shardNum"),
+    2: .same(proto: "realmNum"),
+    3: .same(proto: "topicNum"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.shardNum) }()
+      case 2: try { try decoder.decodeSingularInt64Field(value: &self.realmNum) }()
+      case 3: try { try decoder.decodeSingularInt64Field(value: &self.topicNum) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.shardNum != 0 {
+      try visitor.visitSingularInt64Field(value: self.shardNum, fieldNumber: 1)
+    }
+    if self.realmNum != 0 {
+      try visitor.visitSingularInt64Field(value: self.realmNum, fieldNumber: 2)
+    }
+    if self.topicNum != 0 {
+      try visitor.visitSingularInt64Field(value: self.topicNum, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Proto_TopicID, rhs: Proto_TopicID) -> Bool {
+    if lhs.shardNum != rhs.shardNum {return false}
+    if lhs.realmNum != rhs.realmNum {return false}
+    if lhs.topicNum != rhs.topicNum {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Proto_ScheduleID: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ScheduleID"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "shardNum"),
+    2: .same(proto: "realmNum"),
+    3: .same(proto: "scheduleNum"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.shardNum) }()
+      case 2: try { try decoder.decodeSingularInt64Field(value: &self.realmNum) }()
+      case 3: try { try decoder.decodeSingularInt64Field(value: &self.scheduleNum) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.shardNum != 0 {
+      try visitor.visitSingularInt64Field(value: self.shardNum, fieldNumber: 1)
+    }
+    if self.realmNum != 0 {
+      try visitor.visitSingularInt64Field(value: self.realmNum, fieldNumber: 2)
+    }
+    if self.scheduleNum != 0 {
+      try visitor.visitSingularInt64Field(value: self.scheduleNum, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Proto_ScheduleID, rhs: Proto_ScheduleID) -> Bool {
+    if lhs.shardNum != rhs.shardNum {return false}
+    if lhs.realmNum != rhs.realmNum {return false}
+    if lhs.scheduleNum != rhs.scheduleNum {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -3634,138 +4443,6 @@ extension Proto_Fraction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
   public static func ==(lhs: Proto_Fraction, rhs: Proto_Fraction) -> Bool {
     if lhs.numerator != rhs.numerator {return false}
     if lhs.denominator != rhs.denominator {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension Proto_TopicID: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".TopicID"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "shardNum"),
-    2: .same(proto: "realmNum"),
-    3: .same(proto: "topicNum"),
-  ]
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularInt64Field(value: &self.shardNum) }()
-      case 2: try { try decoder.decodeSingularInt64Field(value: &self.realmNum) }()
-      case 3: try { try decoder.decodeSingularInt64Field(value: &self.topicNum) }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.shardNum != 0 {
-      try visitor.visitSingularInt64Field(value: self.shardNum, fieldNumber: 1)
-    }
-    if self.realmNum != 0 {
-      try visitor.visitSingularInt64Field(value: self.realmNum, fieldNumber: 2)
-    }
-    if self.topicNum != 0 {
-      try visitor.visitSingularInt64Field(value: self.topicNum, fieldNumber: 3)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: Proto_TopicID, rhs: Proto_TopicID) -> Bool {
-    if lhs.shardNum != rhs.shardNum {return false}
-    if lhs.realmNum != rhs.realmNum {return false}
-    if lhs.topicNum != rhs.topicNum {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension Proto_TokenID: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".TokenID"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "shardNum"),
-    2: .same(proto: "realmNum"),
-    3: .same(proto: "tokenNum"),
-  ]
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularInt64Field(value: &self.shardNum) }()
-      case 2: try { try decoder.decodeSingularInt64Field(value: &self.realmNum) }()
-      case 3: try { try decoder.decodeSingularInt64Field(value: &self.tokenNum) }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.shardNum != 0 {
-      try visitor.visitSingularInt64Field(value: self.shardNum, fieldNumber: 1)
-    }
-    if self.realmNum != 0 {
-      try visitor.visitSingularInt64Field(value: self.realmNum, fieldNumber: 2)
-    }
-    if self.tokenNum != 0 {
-      try visitor.visitSingularInt64Field(value: self.tokenNum, fieldNumber: 3)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: Proto_TokenID, rhs: Proto_TokenID) -> Bool {
-    if lhs.shardNum != rhs.shardNum {return false}
-    if lhs.realmNum != rhs.realmNum {return false}
-    if lhs.tokenNum != rhs.tokenNum {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension Proto_ScheduleID: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ScheduleID"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "shardNum"),
-    2: .same(proto: "realmNum"),
-    3: .same(proto: "scheduleNum"),
-  ]
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularInt64Field(value: &self.shardNum) }()
-      case 2: try { try decoder.decodeSingularInt64Field(value: &self.realmNum) }()
-      case 3: try { try decoder.decodeSingularInt64Field(value: &self.scheduleNum) }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.shardNum != 0 {
-      try visitor.visitSingularInt64Field(value: self.shardNum, fieldNumber: 1)
-    }
-    if self.realmNum != 0 {
-      try visitor.visitSingularInt64Field(value: self.realmNum, fieldNumber: 2)
-    }
-    if self.scheduleNum != 0 {
-      try visitor.visitSingularInt64Field(value: self.scheduleNum, fieldNumber: 3)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: Proto_ScheduleID, rhs: Proto_ScheduleID) -> Bool {
-    if lhs.shardNum != rhs.shardNum {return false}
-    if lhs.realmNum != rhs.realmNum {return false}
-    if lhs.scheduleNum != rhs.scheduleNum {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

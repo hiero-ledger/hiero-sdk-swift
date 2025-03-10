@@ -23,4 +23,23 @@ topicInfo {
     accountNum: 4
   }
   ledger_id: "\001"
+  fee_schedule_key {
+    ed25519: "\314\340\312\232\322K\214\272\220?Ls\307\237\325\n\251\tS\274\005\326|B\231\367/\007\033g-Z"
+  }
+  fee_exempt_key_list {
+    ed25519: "\340\310\354'X\245\207\237\372\302&\241<\fQky\236r\343QA\240\335\202\217\224\323y\210\244\267"
+  }
+  fee_exempt_key_list {
+    ed25519: "\314\340\312\232\322K\214\272\220?Ls\307\237\325\n\251\tS\274\005\326|B\231\367/\007\033g-Z"
+  }
+  custom_fees {
+    fixed_fee {
+      amount: 100
+      denominating_token_id {
+        shardNum: 4
+        realmNum: 1
+        tokenNum: 1
+      }
+    }
+  }
 }

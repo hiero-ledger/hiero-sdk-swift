@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Token Delete
+/// Delete an Hedera Token Service (HTS) token.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,19 +32,41 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Marks a token as deleted, though it will remain in the ledger.
-/// The operation must be signed by the specified Admin Key of the Token. If
-/// admin key is not set, Transaction will result in TOKEN_IS_IMMUTABlE.
-/// Once deleted update, mint, burn, wipe, freeze, unfreeze, grant kyc, revoke
-/// kyc and token transfer transactions will resolve to TOKEN_WAS_DELETED.
+/// Mark a token as deleted.<br/>
+/// A deleted token remains present in the network state, but is no longer
+/// active, cannot be held in a balance, and all operations on that token
+/// fail. A deleted token is removed from network state when it expires.
+///
+/// #### Operations on a deleted token
+/// All operations on a deleted token SHALL fail with a
+/// status code `TOKEN_WAS_DELETED`.<br/>
+/// Any attempt to transfer a deleted token between accounts SHALL fail with
+/// a status code `TOKEN_WAS_DELETED`.
+///
+/// > QUESTIONS
+/// >> What happens to existing balances/NFTs?
+/// >> Are these removed; are they stuck on the accounts?
+/// >
+/// >> If balances/NFTs remain, can a `tokenReject` remove them?
+///
+/// #### Requirements
+/// The `admin_key` for the token MUST be set, and MUST
+/// sign this transaction.<br/>
+/// If the `admin_key` for the token is not set, this transaction SHALL
+/// fail with a status code `TOKEN_IS_IMMUTABlE`.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_TokenDeleteTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The token to be deleted. If invalid token is specified, transaction will
-  /// result in INVALID_TOKEN_ID
+  /// A token identifier.
+  /// <p>
+  /// This SHALL identify the token type to delete.<br/>
+  /// The identified token MUST exist, and MUST NOT be deleted.
   public var token: Proto_TokenID {
     get {return _token ?? Proto_TokenID()}
     set {_token = newValue}

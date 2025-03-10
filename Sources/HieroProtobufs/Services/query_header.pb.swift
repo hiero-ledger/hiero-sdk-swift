@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Query Header
+/// Messages that comprise a header sent with each query request.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,29 +32,28 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// The client uses the ResponseType to indicate that it desires the node send just the answer, or
-/// both the answer and a state proof. It can also ask for just the cost and not the answer itself
-/// (allowing it to tailor the payment transaction accordingly). If the payment in the query fails
-/// the precheck, then the response may have some fields blank. The state proof is only available for
-/// some types of information. It is available for a Record, but not a receipt. It is available for
-/// the information in each kind of *GetInfo request. 
+/// The type of query response.<br/>
+///
+/// This SHALL be answer-only as a default.<br/>
+/// This value SHALL support an "estimated cost" type.<br/>
+/// This value SHOULD support a "state proof" type, when available.
 public enum Proto_ResponseType: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   ///*
-  /// Response returns answer
+  /// A response with the query answer.
   case answerOnly // = 0
 
   ///*
-  /// (NOT YET SUPPORTED) Response returns both answer and state proof
+  /// A response with both the query answer and a state proof.
   case answerStateProof // = 1
 
   ///*
-  /// Response returns the cost of answer
+  /// A response with the estimated cost to answer the query.
   case costAnswer // = 2
 
   ///*
-  /// (NOT YET SUPPORTED) Response returns the total cost of answer and state proof
+  /// A response with the estimated cost to answer and a state proof.
   case costAnswerStateProof // = 3
   case UNRECOGNIZED(Int)
 
@@ -82,16 +92,30 @@ public enum Proto_ResponseType: SwiftProtobuf.Enum, Swift.CaseIterable {
 }
 
 ///*
-/// Each query from the client to the node will contain the QueryHeader, which gives the requested
-/// response type, and includes a payment transaction that will compensate the node for responding to
-/// the query. The payment can be blank if the query is free. 
+/// A standard query header.<br/>
+/// Each query from the client to the node must contain a QueryHeader, which
+/// specifies the desired response type, and includes a payment transaction
+/// that will compensate the network for responding to the query.
+/// The payment may be blank if the query is free.
+///
+/// The payment transaction MUST be a `cryptoTransfer` from the payer account
+/// to the account of the node where the query is submitted.<br/>
+/// If the payment is sufficient, the network SHALL respond with the response
+/// type requested.<br/>
+/// If the response type is `COST_ANSWER` the payment MUST be unset.
+/// A state proof SHALL be available for some types of information.<br/>
+/// A state proof SHALL be available for a Record, but not a receipt, and the
+/// response entry for each supported "get info" query.
 public struct Proto_QueryHeader: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// A signed CryptoTransferTransaction to pay the node a fee for handling this query
+  /// A signed `CryptoTransferTransaction` to pay query fees.
+  /// <p>
+  /// This MUST transfer HBAR from the "payer" to the responding node account
+  /// sufficient to pay the query fees.
   public var payment: Proto_Transaction {
     get {return _payment ?? Proto_Transaction()}
     set {_payment = newValue}
@@ -102,7 +126,7 @@ public struct Proto_QueryHeader: Sendable {
   public mutating func clearPayment() {self._payment = nil}
 
   ///*
-  /// The requested response, asking for cost, state proof, both, or neither
+  /// A type of query response requested.
   public var responseType: Proto_ResponseType = .answerOnly
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
