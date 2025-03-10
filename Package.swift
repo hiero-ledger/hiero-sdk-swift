@@ -67,6 +67,7 @@ let exampleTargets = [
     "InitializeClientWithMirrorNetwork",
     "LongTermScheduledTransaction",
     "CreateAccountWithAlias",
+    "CreateTopicWithRevenue",
 ].map { name in
     Target.executableTarget(
         name: "\(name)Example",
