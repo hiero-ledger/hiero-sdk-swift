@@ -33,8 +33,4 @@ consensusUpdateTopic {
   autoRenewAccount {
     accountNum: 5009
   }
-  fee_exempt_key_list {
-  }
-  custom_fees {
-  }
 }
