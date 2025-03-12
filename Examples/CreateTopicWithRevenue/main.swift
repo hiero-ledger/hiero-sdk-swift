@@ -74,18 +74,11 @@ internal enum Program {
         client.setOperator(env.operatorAccountId, env.operatorKey)
 
         // Check balances
-        let aliceBalanceAfter = try await AccountBalanceQuery()
-            .accountId(aliceAccountId)
-            .execute(client)
-            .hbars
+        let aliceBalanceAfter = try await getAccountBalance(client, aliceAccountId)
+        let feeCollectorBalanceAfter = try await getAccountBalance(client, env.operatorAccountId)
 
-        let feeCollectorBalanceAfter = try await AccountBalanceQuery()
-            .accountId(env.operatorAccountId)
-            .execute(client)
-            .hbars
-
-        print("Alice's balance before: \(aliceBalanceBefore), after: \(aliceBalanceAfter)")
-        print("Fee collector's balance before: \(feeCollectorBalanceBefore), after: \(feeCollectorBalanceAfter)")
+        print("Alice's balance before: \(aliceBalanceBefore), after: \(aliceBalanceAfter.hbars)")
+        print("Fee collector's balance before: \(feeCollectorBalanceBefore), after: \(feeCollectorBalanceAfter.hbars)")
 
         // Step 5: Create a fungible token and transfer it to Alice.
         print("Creating a token and transferring it to Alice...")
@@ -129,15 +122,9 @@ internal enum Program {
         client.setOperator(env.operatorAccountId, env.operatorKey)
 
         // Step 8: Verify Alice's token balance and the fee collector's token balance after the transaction.
-        let aliceTokenBalance = try await AccountBalanceQuery()
-            .accountId(aliceAccountId)
-            .execute(client)
-            .tokenBalances[tokenId]!
-
-        let feeCollectorTokenBalance = try await AccountBalanceQuery()
-            .accountId(env.operatorAccountId)
-            .execute(client)
-            .tokenBalances[tokenId]!
+        let aliceTokenBalance = try await getAccountBalance(client, aliceAccountId).tokenBalances[tokenId]!
+        let feeCollectorTokenBalance = try await getAccountBalance(client, env.operatorAccountId).tokenBalances[
+            tokenId]!
 
         print("Alice's token balance: \(String(describing: aliceTokenBalance))")
         print("Fee collector's token balance: \(String(describing: feeCollectorTokenBalance))")
@@ -177,12 +164,16 @@ internal enum Program {
         print("Message submitted successfully by Bob without being charged.")
 
         // Step 12: Verify Bob's balance after the transaction.
-        let bobBalanceAfter = try await AccountBalanceQuery()
-            .accountId(bobAccountId)
-            .execute(client)
-            .hbars
+        let bobBalanceAfter = try await getAccountBalance(client, bobAccountId)
 
         print("Bob's final balance: \(bobBalanceAfter)")
+    }
+
+    private static func getAccountBalance(_ client: Client, _ accountId: AccountId) async throws -> AccountBalance {
+        let balance = try await AccountBalanceQuery()
+            .accountId(accountId)
+            .execute(client)
+        return balance
     }
 }
 

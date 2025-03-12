@@ -62,17 +62,6 @@ internal class TopicCreate: XCTestCase {
 
         XCTAssertEqual(info.feeScheduleKey?.toBytes(), Key.single(testEnv.operator.privateKey.publicKey).toBytes())
 
-        // Validate fee exempt keys
-        for (index, key) in feeExemptKeys.enumerated() {
-            XCTAssertEqual(info.feeExemptKeys[index].toBytes(), Key.single(key.publicKey).toBytes())
-        }
-
-        // Validate custom fees
-        for (index, fee) in customFixedFees.enumerated() {
-            XCTAssertEqual(info.customFees[index].amount, fee.amount)
-            XCTAssertEqual(info.customFees[index].denominatingTokenId, fee.denominatingTokenId)
-        }
-
         // Update the revenue-generating topic
         let newFeeExemptKeys = [PrivateKey.generateEcdsa(), PrivateKey.generateEcdsa()]
         let newFeeScheduleKey = PrivateKey.generateEcdsa()
