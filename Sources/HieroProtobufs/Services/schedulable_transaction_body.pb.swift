@@ -8,6 +8,19 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Schedulable Transaction Body
+/// A message that replicates the `TransactionBody` message, with slight
+/// changes to exclude fields that cannot be scheduled via a `scheduleCreate`
+/// transaction.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,39 +34,44 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// A schedulable transaction. Note that the global/dynamic system property
-/// <tt>scheduling.whitelist</tt> controls which transaction types may be scheduled. As of Hedera
-/// Services 0.24.0 this list includes <tt>ConsensusSubmitMessage</tt>, <tt>CryptoTransfer</tt>, <tt>TokenMint</tt>, and <tt>TokenBurn</tt>
-/// functions.
+/// A schedulable transaction.
+///
+/// The network configuration `scheduling.whitelist` limits which of these
+/// transaction types may actually be scheduled. As of version `0.50.0` of the
+/// consensus node software this list contains only `CryptoTransfer`,
+/// `ConsensusSubmitMessage`, `TokenBurn`, `TokenMint`,
+/// and `CryptoApproveAllowance`.
 public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The maximum transaction fee the client is willing to pay
+  /// A limit for the transaction fee the client is willing to pay.
+  /// <p>
+  /// The network SHALL NOT charge fees greater than this value.
   public var transactionFee: UInt64 {
     get {return _storage._transactionFee}
     set {_uniqueStorage()._transactionFee = newValue}
   }
 
   ///*
-  /// A memo to include the execution record; the UTF-8 encoding may be up to 100 bytes and must not
-  /// include the zero byte
+  /// A short description of the schedulable transaction.
+  /// <p>
+  /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+  /// (default 100) bytes when encoded as UTF-8.
   public var memo: String {
     get {return _storage._memo}
     set {_uniqueStorage()._memo = newValue}
   }
 
-  ///*
-  /// The choices here are arranged by service in roughly lexicographical order. The field ordinals are non-sequential, and a result of the historical order of implementation.
   public var data: OneOf_Data? {
     get {return _storage._data}
     set {_uniqueStorage()._data = newValue}
   }
 
   ///*
-  /// Calls a function of a contract instance
+  /// Call a function defined on a smart contract.
   public var contractCall: Proto_ContractCallTransactionBody {
     get {
       if case .contractCall(let v)? = _storage._data {return v}
@@ -63,7 +81,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Creates a contract instance
+  /// Create a smart contract.
   public var contractCreateInstance: Proto_ContractCreateTransactionBody {
     get {
       if case .contractCreateInstance(let v)? = _storage._data {return v}
@@ -73,7 +91,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Updates a contract
+  /// Update a smart contract.
   public var contractUpdateInstance: Proto_ContractUpdateTransactionBody {
     get {
       if case .contractUpdateInstance(let v)? = _storage._data {return v}
@@ -83,7 +101,8 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Delete contract and transfer remaining balance into specified account
+  /// Delete a smart contract and transfer remaining balance
+  /// to a specified account.
   public var contractDeleteInstance: Proto_ContractDeleteTransactionBody {
     get {
       if case .contractDeleteInstance(let v)? = _storage._data {return v}
@@ -93,27 +112,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Adds one or more approved allowances for spenders to transfer the paying account's hbar or tokens.
-  public var cryptoApproveAllowance: Proto_CryptoApproveAllowanceTransactionBody {
-    get {
-      if case .cryptoApproveAllowance(let v)? = _storage._data {return v}
-      return Proto_CryptoApproveAllowanceTransactionBody()
-    }
-    set {_uniqueStorage()._data = .cryptoApproveAllowance(newValue)}
-  }
-
-  ///*
-  /// Deletes one or more of the specific approved NFT serial numbers on an owner account.
-  public var cryptoDeleteAllowance: Proto_CryptoDeleteAllowanceTransactionBody {
-    get {
-      if case .cryptoDeleteAllowance(let v)? = _storage._data {return v}
-      return Proto_CryptoDeleteAllowanceTransactionBody()
-    }
-    set {_uniqueStorage()._data = .cryptoDeleteAllowance(newValue)}
-  }
-
-  ///*
-  /// Create a new cryptocurrency account
+  /// Create a new Hedera account.
   public var cryptoCreateAccount: Proto_CryptoCreateTransactionBody {
     get {
       if case .cryptoCreateAccount(let v)? = _storage._data {return v}
@@ -123,7 +122,9 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Delete a cryptocurrency account (mark as deleted, and transfer hbars out)
+  /// Delete an Hedera account.<br/>
+  /// This will mark the account as deleted, and transfer all remaining
+  /// HBAR to a receiver account.
   public var cryptoDelete: Proto_CryptoDeleteTransactionBody {
     get {
       if case .cryptoDelete(let v)? = _storage._data {return v}
@@ -133,7 +134,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Transfer amount between accounts
+  /// Transfer HBAR between accounts.
   public var cryptoTransfer: Proto_CryptoTransferTransactionBody {
     get {
       if case .cryptoTransfer(let v)? = _storage._data {return v}
@@ -143,7 +144,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Modify information such as the expiration date for an account
+  /// Modify an Hedera account.
   public var cryptoUpdateAccount: Proto_CryptoUpdateTransactionBody {
     get {
       if case .cryptoUpdateAccount(let v)? = _storage._data {return v}
@@ -153,7 +154,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Add bytes to the end of the contents of a file
+  /// Append data to the end of a file.
   public var fileAppend: Proto_FileAppendTransactionBody {
     get {
       if case .fileAppend(let v)? = _storage._data {return v}
@@ -163,7 +164,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Create a new file
+  /// Create a new file.
   public var fileCreate: Proto_FileCreateTransactionBody {
     get {
       if case .fileCreate(let v)? = _storage._data {return v}
@@ -173,7 +174,9 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Delete a file (remove contents and mark as deleted until it expires)
+  /// Delete a file.<br/>
+  /// This will remove the content of the file, and mark the file as
+  /// deleted.
   public var fileDelete: Proto_FileDeleteTransactionBody {
     get {
       if case .fileDelete(let v)? = _storage._data {return v}
@@ -183,7 +186,8 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Modify information such as the expiration date for a file
+  /// Modify a file.<br/>
+  /// This may modify any metadata, and/or _replace_ the content.
   public var fileUpdate: Proto_FileUpdateTransactionBody {
     get {
       if case .fileUpdate(let v)? = _storage._data {return v}
@@ -193,7 +197,8 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Hedera administrative deletion of a file or smart contract
+  /// Delete a file as an Hedera administrative function.<br/>
+  /// This is a privileged operation.
   public var systemDelete: Proto_SystemDeleteTransactionBody {
     get {
       if case .systemDelete(let v)? = _storage._data {return v}
@@ -203,7 +208,8 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// To undelete an entity deleted by SystemDelete
+  /// Restore a file deleted via `systemDelete`.<br/>
+  /// This is a privileged operation.
   public var systemUndelete: Proto_SystemUndeleteTransactionBody {
     get {
       if case .systemUndelete(let v)? = _storage._data {return v}
@@ -213,7 +219,10 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Freeze the nodes
+  /// Freeze the network.<br/>
+  /// This is actually several possible operations, and the caller
+  /// should examine the "freeze service" for more detail.<br/>
+  /// This is a privileged operation.
   public var freeze: Proto_FreezeTransactionBody {
     get {
       if case .freeze(let v)? = _storage._data {return v}
@@ -223,7 +232,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Creates a topic
+  /// Create a topic.
   public var consensusCreateTopic: Proto_ConsensusCreateTopicTransactionBody {
     get {
       if case .consensusCreateTopic(let v)? = _storage._data {return v}
@@ -233,7 +242,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Updates a topic
+  /// Update a topic.
   public var consensusUpdateTopic: Proto_ConsensusUpdateTopicTransactionBody {
     get {
       if case .consensusUpdateTopic(let v)? = _storage._data {return v}
@@ -243,7 +252,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Deletes a topic
+  /// Delete a topic.
   public var consensusDeleteTopic: Proto_ConsensusDeleteTopicTransactionBody {
     get {
       if case .consensusDeleteTopic(let v)? = _storage._data {return v}
@@ -253,7 +262,9 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Submits message to a topic
+  /// Submit a message to a topic.<br/>
+  /// A message may be "chunked", and submitted in parts, if the total
+  /// message size exceeds the limit for a single transaction.
   public var consensusSubmitMessage: Proto_ConsensusSubmitMessageTransactionBody {
     get {
       if case .consensusSubmitMessage(let v)? = _storage._data {return v}
@@ -263,7 +274,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Creates a token instance
+  /// Create a new Hedera token.
   public var tokenCreation: Proto_TokenCreateTransactionBody {
     get {
       if case .tokenCreation(let v)? = _storage._data {return v}
@@ -273,7 +284,8 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Freezes account not to be able to transact with a token
+  /// Freeze an account with respect to a token.<br/>
+  /// A frozen account cannot transact in that token until unfrozen.
   public var tokenFreeze: Proto_TokenFreezeAccountTransactionBody {
     get {
       if case .tokenFreeze(let v)? = _storage._data {return v}
@@ -283,7 +295,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Unfreezes account for a token
+  /// Unfreeze an account with respect to a token.
   public var tokenUnfreeze: Proto_TokenUnfreezeAccountTransactionBody {
     get {
       if case .tokenUnfreeze(let v)? = _storage._data {return v}
@@ -293,7 +305,10 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Grants KYC to an account for a token
+  /// Grant KYC to an account with respect to a token.<br/>
+  /// KYC is generally a "know your customer" assertion that a
+  /// responsible entity has sufficient information to positively
+  /// identify the account holder to relevant authorities.
   public var tokenGrantKyc: Proto_TokenGrantKycTransactionBody {
     get {
       if case .tokenGrantKyc(let v)? = _storage._data {return v}
@@ -303,7 +318,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Revokes KYC of an account for a token
+  /// Revoke KYC from an account with respect to a token.
   public var tokenRevokeKyc: Proto_TokenRevokeKycTransactionBody {
     get {
       if case .tokenRevokeKyc(let v)? = _storage._data {return v}
@@ -313,7 +328,8 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Deletes a token instance
+  /// Deletes an Hedera token.<br/>
+  /// The token will be marked deleted.
   public var tokenDeletion: Proto_TokenDeleteTransactionBody {
     get {
       if case .tokenDeletion(let v)? = _storage._data {return v}
@@ -323,7 +339,10 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Updates a token instance
+  /// Update an Hedera token.<br/>
+  /// Depending on what fields are to be modified, the signature
+  /// requirements will vary. See `TokenUpdateTransactionBody` for
+  /// further detail.
   public var tokenUpdate: Proto_TokenUpdateTransactionBody {
     get {
       if case .tokenUpdate(let v)? = _storage._data {return v}
@@ -333,7 +352,10 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Mints new tokens to a token's treasury account
+  /// Mint new tokens.<br/>
+  /// All minted tokens will be delivered to the treasury account for
+  /// the token type. The "mint key" for the token must sign this
+  /// transaction.
   public var tokenMint: Proto_TokenMintTransactionBody {
     get {
       if case .tokenMint(let v)? = _storage._data {return v}
@@ -343,7 +365,8 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Burns tokens from a token's treasury account
+  /// Burn tokens from the treasury account.<br/>
+  /// The "burn key" for the token must sign this transaction.
   public var tokenBurn: Proto_TokenBurnTransactionBody {
     get {
       if case .tokenBurn(let v)? = _storage._data {return v}
@@ -353,7 +376,12 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Wipes amount of tokens from an account
+  /// Wipe tokens from an account.<br/>
+  /// This will remove a specified amount of fungible/common tokens or
+  /// a specified list of non-fungible/unique serial numbered tokens
+  /// of a given token type from an Hedera account. The removed tokens
+  /// are _burned_ as if by a `tokenBurn` transaction.<br/>
+  /// The "wipe key" for the token must sign this transaction.
   public var tokenWipe: Proto_TokenWipeAccountTransactionBody {
     get {
       if case .tokenWipe(let v)? = _storage._data {return v}
@@ -363,7 +391,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Associate tokens to an account
+  /// Associate tokens to an account.
   public var tokenAssociate: Proto_TokenAssociateTransactionBody {
     get {
       if case .tokenAssociate(let v)? = _storage._data {return v}
@@ -373,7 +401,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Dissociate tokens from an account
+  /// Dissociate tokens from an account.
   public var tokenDissociate: Proto_TokenDissociateTransactionBody {
     get {
       if case .tokenDissociate(let v)? = _storage._data {return v}
@@ -383,37 +411,8 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Updates a token's custom fee schedule
-  public var tokenFeeScheduleUpdate: Proto_TokenFeeScheduleUpdateTransactionBody {
-    get {
-      if case .tokenFeeScheduleUpdate(let v)? = _storage._data {return v}
-      return Proto_TokenFeeScheduleUpdateTransactionBody()
-    }
-    set {_uniqueStorage()._data = .tokenFeeScheduleUpdate(newValue)}
-  }
-
-  ///*
-  /// Pauses the Token
-  public var tokenPause: Proto_TokenPauseTransactionBody {
-    get {
-      if case .tokenPause(let v)? = _storage._data {return v}
-      return Proto_TokenPauseTransactionBody()
-    }
-    set {_uniqueStorage()._data = .tokenPause(newValue)}
-  }
-
-  ///*
-  /// Unpauses the Token
-  public var tokenUnpause: Proto_TokenUnpauseTransactionBody {
-    get {
-      if case .tokenUnpause(let v)? = _storage._data {return v}
-      return Proto_TokenUnpauseTransactionBody()
-    }
-    set {_uniqueStorage()._data = .tokenUnpause(newValue)}
-  }
-
-  ///*
-  /// Marks a schedule in the network's action queue as deleted, preventing it from executing
+  /// Delete a schedule.<br/>
+  /// The schedule will be marked as deleted.
   public var scheduleDelete: Proto_ScheduleDeleteTransactionBody {
     get {
       if case .scheduleDelete(let v)? = _storage._data {return v}
@@ -423,7 +422,63 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Generates a pseudorandom number.
+  /// Pause a Token.<br/>
+  /// This transaction must be signed by the "pause key" for the token.
+  public var tokenPause: Proto_TokenPauseTransactionBody {
+    get {
+      if case .tokenPause(let v)? = _storage._data {return v}
+      return Proto_TokenPauseTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenPause(newValue)}
+  }
+
+  ///*
+  /// Unpause a Token.<br/>
+  /// This transaction must be signed by the "pause key" for the token.
+  public var tokenUnpause: Proto_TokenUnpauseTransactionBody {
+    get {
+      if case .tokenUnpause(let v)? = _storage._data {return v}
+      return Proto_TokenUnpauseTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenUnpause(newValue)}
+  }
+
+  ///*
+  /// Add one or more approved allowances for spenders to transfer the
+  /// paying account's hbar or tokens.
+  public var cryptoApproveAllowance: Proto_CryptoApproveAllowanceTransactionBody {
+    get {
+      if case .cryptoApproveAllowance(let v)? = _storage._data {return v}
+      return Proto_CryptoApproveAllowanceTransactionBody()
+    }
+    set {_uniqueStorage()._data = .cryptoApproveAllowance(newValue)}
+  }
+
+  ///*
+  /// Delete one or more approvals for spenders to transfer the
+  /// paying account's hbar or tokens.
+  public var cryptoDeleteAllowance: Proto_CryptoDeleteAllowanceTransactionBody {
+    get {
+      if case .cryptoDeleteAllowance(let v)? = _storage._data {return v}
+      return Proto_CryptoDeleteAllowanceTransactionBody()
+    }
+    set {_uniqueStorage()._data = .cryptoDeleteAllowance(newValue)}
+  }
+
+  ///*
+  /// Update the custom fee schedule for a token.<br/>
+  /// This transaction must be signed by the "fee schedule key"
+  /// for the token.
+  public var tokenFeeScheduleUpdate: Proto_TokenFeeScheduleUpdateTransactionBody {
+    get {
+      if case .tokenFeeScheduleUpdate(let v)? = _storage._data {return v}
+      return Proto_TokenFeeScheduleUpdateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .tokenFeeScheduleUpdate(newValue)}
+  }
+
+  ///*
+  /// Provide a deterministic pseudorandom number based on network state.
   public var utilPrng: Proto_UtilPrngTransactionBody {
     get {
       if case .utilPrng(let v)? = _storage._data {return v}
@@ -433,7 +488,9 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Update the metadata of one or more NFT's of a specific token type.
+  /// Update one or more non-fungible/unique tokens.<br/>
+  /// This will update metadata for one or more serial numbers within
+  /// a collection (token type).
   public var tokenUpdateNfts: Proto_TokenUpdateNftsTransactionBody {
     get {
       if case .tokenUpdateNfts(let v)? = _storage._data {return v}
@@ -443,7 +500,8 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Transaction body for a scheduled transaction to create a new node.
+  /// Create a new node in the network address book.<br/>
+  /// This is a privileged operation.
   public var nodeCreate: Com_Hedera_Hapi_Node_Addressbook_NodeCreateTransactionBody {
     get {
       if case .nodeCreate(let v)? = _storage._data {return v}
@@ -453,7 +511,8 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Transaction body for a scheduled transaction to modify an existing node.
+  /// Update a node in the network address book.<br/>
+  /// This is a privileged operation.
   public var nodeUpdate: Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody {
     get {
       if case .nodeUpdate(let v)? = _storage._data {return v}
@@ -463,7 +522,9 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Transaction body for a scheduled transaction to remove a node.
+  /// Delete a node from the network address book.<br/>
+  /// This will mark the node as deleted.<br/>
+  /// This is a privileged operation.
   public var nodeDelete: Com_Hedera_Hapi_Node_Addressbook_NodeDeleteTransactionBody {
     get {
       if case .nodeDelete(let v)? = _storage._data {return v}
@@ -473,7 +534,7 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// A transaction body to "reject" undesired tokens.<br/>
+  /// "Reject" undesired tokens.<br/>
   /// This transaction will transfer one or more tokens or token
   /// balances held by the requesting account to the treasury
   /// for each token type.
@@ -497,7 +558,11 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Transaction body for a scheduled transaction to cancel an airdrop.
+  /// Cancel an "airdrop".<br/>
+  /// This transaction cancels a pending airdrop for one or more
+  /// recipients.
+  /// <p>
+  /// The airdrop(s) to cancel MUST be pending, and not claimed.<br/>
   public var tokenCancelAirdrop: Proto_TokenCancelAirdropTransactionBody {
     get {
       if case .tokenCancelAirdrop(let v)? = _storage._data {return v}
@@ -507,7 +572,11 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Transaction body for a scheduled transaction to claim an airdrop.
+  /// Claim an "airdrop".
+  /// This transaction "claims" one or more pending "airdrops".
+  /// <p>
+  /// The airdrop(s) to claim MUST be pending, and not
+  /// already claimed.<br/>
   public var tokenClaimAirdrop: Proto_TokenClaimAirdropTransactionBody {
     get {
       if case .tokenClaimAirdrop(let v)? = _storage._data {return v}
@@ -517,7 +586,14 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// Transaction body for a scheduled transaction to airdrop tokens.
+  /// Send an "airdrop" of tokens to one or more recipients.
+  /// <p>
+  /// This transaction unilaterally "gifts" tokens by transferring them
+  /// from a "sender" account to the "recipient" account(s). If any
+  /// recipient is not already associated to the token to airdrop, or
+  /// has set a "reciever signature required" flag, then that recipient
+  /// is recorded as a "pending" airdrop which must be "claimed".  All
+  /// other recipients receive the "airdropped" tokens immediately.
   public var tokenAirdrop: Proto_TokenAirdropTransactionBody {
     get {
       if case .tokenAirdrop(let v)? = _storage._data {return v}
@@ -528,137 +604,178 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  ///*
-  /// The choices here are arranged by service in roughly lexicographical order. The field ordinals are non-sequential, and a result of the historical order of implementation.
   public enum OneOf_Data: Equatable, Sendable {
     ///*
-    /// Calls a function of a contract instance
+    /// Call a function defined on a smart contract.
     case contractCall(Proto_ContractCallTransactionBody)
     ///*
-    /// Creates a contract instance
+    /// Create a smart contract.
     case contractCreateInstance(Proto_ContractCreateTransactionBody)
     ///*
-    /// Updates a contract
+    /// Update a smart contract.
     case contractUpdateInstance(Proto_ContractUpdateTransactionBody)
     ///*
-    /// Delete contract and transfer remaining balance into specified account
+    /// Delete a smart contract and transfer remaining balance
+    /// to a specified account.
     case contractDeleteInstance(Proto_ContractDeleteTransactionBody)
     ///*
-    /// Adds one or more approved allowances for spenders to transfer the paying account's hbar or tokens.
-    case cryptoApproveAllowance(Proto_CryptoApproveAllowanceTransactionBody)
-    ///*
-    /// Deletes one or more of the specific approved NFT serial numbers on an owner account.
-    case cryptoDeleteAllowance(Proto_CryptoDeleteAllowanceTransactionBody)
-    ///*
-    /// Create a new cryptocurrency account
+    /// Create a new Hedera account.
     case cryptoCreateAccount(Proto_CryptoCreateTransactionBody)
     ///*
-    /// Delete a cryptocurrency account (mark as deleted, and transfer hbars out)
+    /// Delete an Hedera account.<br/>
+    /// This will mark the account as deleted, and transfer all remaining
+    /// HBAR to a receiver account.
     case cryptoDelete(Proto_CryptoDeleteTransactionBody)
     ///*
-    /// Transfer amount between accounts
+    /// Transfer HBAR between accounts.
     case cryptoTransfer(Proto_CryptoTransferTransactionBody)
     ///*
-    /// Modify information such as the expiration date for an account
+    /// Modify an Hedera account.
     case cryptoUpdateAccount(Proto_CryptoUpdateTransactionBody)
     ///*
-    /// Add bytes to the end of the contents of a file
+    /// Append data to the end of a file.
     case fileAppend(Proto_FileAppendTransactionBody)
     ///*
-    /// Create a new file
+    /// Create a new file.
     case fileCreate(Proto_FileCreateTransactionBody)
     ///*
-    /// Delete a file (remove contents and mark as deleted until it expires)
+    /// Delete a file.<br/>
+    /// This will remove the content of the file, and mark the file as
+    /// deleted.
     case fileDelete(Proto_FileDeleteTransactionBody)
     ///*
-    /// Modify information such as the expiration date for a file
+    /// Modify a file.<br/>
+    /// This may modify any metadata, and/or _replace_ the content.
     case fileUpdate(Proto_FileUpdateTransactionBody)
     ///*
-    /// Hedera administrative deletion of a file or smart contract
+    /// Delete a file as an Hedera administrative function.<br/>
+    /// This is a privileged operation.
     case systemDelete(Proto_SystemDeleteTransactionBody)
     ///*
-    /// To undelete an entity deleted by SystemDelete
+    /// Restore a file deleted via `systemDelete`.<br/>
+    /// This is a privileged operation.
     case systemUndelete(Proto_SystemUndeleteTransactionBody)
     ///*
-    /// Freeze the nodes
+    /// Freeze the network.<br/>
+    /// This is actually several possible operations, and the caller
+    /// should examine the "freeze service" for more detail.<br/>
+    /// This is a privileged operation.
     case freeze(Proto_FreezeTransactionBody)
     ///*
-    /// Creates a topic
+    /// Create a topic.
     case consensusCreateTopic(Proto_ConsensusCreateTopicTransactionBody)
     ///*
-    /// Updates a topic
+    /// Update a topic.
     case consensusUpdateTopic(Proto_ConsensusUpdateTopicTransactionBody)
     ///*
-    /// Deletes a topic
+    /// Delete a topic.
     case consensusDeleteTopic(Proto_ConsensusDeleteTopicTransactionBody)
     ///*
-    /// Submits message to a topic
+    /// Submit a message to a topic.<br/>
+    /// A message may be "chunked", and submitted in parts, if the total
+    /// message size exceeds the limit for a single transaction.
     case consensusSubmitMessage(Proto_ConsensusSubmitMessageTransactionBody)
     ///*
-    /// Creates a token instance
+    /// Create a new Hedera token.
     case tokenCreation(Proto_TokenCreateTransactionBody)
     ///*
-    /// Freezes account not to be able to transact with a token
+    /// Freeze an account with respect to a token.<br/>
+    /// A frozen account cannot transact in that token until unfrozen.
     case tokenFreeze(Proto_TokenFreezeAccountTransactionBody)
     ///*
-    /// Unfreezes account for a token
+    /// Unfreeze an account with respect to a token.
     case tokenUnfreeze(Proto_TokenUnfreezeAccountTransactionBody)
     ///*
-    /// Grants KYC to an account for a token
+    /// Grant KYC to an account with respect to a token.<br/>
+    /// KYC is generally a "know your customer" assertion that a
+    /// responsible entity has sufficient information to positively
+    /// identify the account holder to relevant authorities.
     case tokenGrantKyc(Proto_TokenGrantKycTransactionBody)
     ///*
-    /// Revokes KYC of an account for a token
+    /// Revoke KYC from an account with respect to a token.
     case tokenRevokeKyc(Proto_TokenRevokeKycTransactionBody)
     ///*
-    /// Deletes a token instance
+    /// Deletes an Hedera token.<br/>
+    /// The token will be marked deleted.
     case tokenDeletion(Proto_TokenDeleteTransactionBody)
     ///*
-    /// Updates a token instance
+    /// Update an Hedera token.<br/>
+    /// Depending on what fields are to be modified, the signature
+    /// requirements will vary. See `TokenUpdateTransactionBody` for
+    /// further detail.
     case tokenUpdate(Proto_TokenUpdateTransactionBody)
     ///*
-    /// Mints new tokens to a token's treasury account
+    /// Mint new tokens.<br/>
+    /// All minted tokens will be delivered to the treasury account for
+    /// the token type. The "mint key" for the token must sign this
+    /// transaction.
     case tokenMint(Proto_TokenMintTransactionBody)
     ///*
-    /// Burns tokens from a token's treasury account
+    /// Burn tokens from the treasury account.<br/>
+    /// The "burn key" for the token must sign this transaction.
     case tokenBurn(Proto_TokenBurnTransactionBody)
     ///*
-    /// Wipes amount of tokens from an account
+    /// Wipe tokens from an account.<br/>
+    /// This will remove a specified amount of fungible/common tokens or
+    /// a specified list of non-fungible/unique serial numbered tokens
+    /// of a given token type from an Hedera account. The removed tokens
+    /// are _burned_ as if by a `tokenBurn` transaction.<br/>
+    /// The "wipe key" for the token must sign this transaction.
     case tokenWipe(Proto_TokenWipeAccountTransactionBody)
     ///*
-    /// Associate tokens to an account
+    /// Associate tokens to an account.
     case tokenAssociate(Proto_TokenAssociateTransactionBody)
     ///*
-    /// Dissociate tokens from an account
+    /// Dissociate tokens from an account.
     case tokenDissociate(Proto_TokenDissociateTransactionBody)
     ///*
-    /// Updates a token's custom fee schedule
-    case tokenFeeScheduleUpdate(Proto_TokenFeeScheduleUpdateTransactionBody)
-    ///*
-    /// Pauses the Token
-    case tokenPause(Proto_TokenPauseTransactionBody)
-    ///*
-    /// Unpauses the Token
-    case tokenUnpause(Proto_TokenUnpauseTransactionBody)
-    ///*
-    /// Marks a schedule in the network's action queue as deleted, preventing it from executing
+    /// Delete a schedule.<br/>
+    /// The schedule will be marked as deleted.
     case scheduleDelete(Proto_ScheduleDeleteTransactionBody)
     ///*
-    /// Generates a pseudorandom number.
+    /// Pause a Token.<br/>
+    /// This transaction must be signed by the "pause key" for the token.
+    case tokenPause(Proto_TokenPauseTransactionBody)
+    ///*
+    /// Unpause a Token.<br/>
+    /// This transaction must be signed by the "pause key" for the token.
+    case tokenUnpause(Proto_TokenUnpauseTransactionBody)
+    ///*
+    /// Add one or more approved allowances for spenders to transfer the
+    /// paying account's hbar or tokens.
+    case cryptoApproveAllowance(Proto_CryptoApproveAllowanceTransactionBody)
+    ///*
+    /// Delete one or more approvals for spenders to transfer the
+    /// paying account's hbar or tokens.
+    case cryptoDeleteAllowance(Proto_CryptoDeleteAllowanceTransactionBody)
+    ///*
+    /// Update the custom fee schedule for a token.<br/>
+    /// This transaction must be signed by the "fee schedule key"
+    /// for the token.
+    case tokenFeeScheduleUpdate(Proto_TokenFeeScheduleUpdateTransactionBody)
+    ///*
+    /// Provide a deterministic pseudorandom number based on network state.
     case utilPrng(Proto_UtilPrngTransactionBody)
     ///*
-    /// Update the metadata of one or more NFT's of a specific token type.
+    /// Update one or more non-fungible/unique tokens.<br/>
+    /// This will update metadata for one or more serial numbers within
+    /// a collection (token type).
     case tokenUpdateNfts(Proto_TokenUpdateNftsTransactionBody)
     ///*
-    /// Transaction body for a scheduled transaction to create a new node.
+    /// Create a new node in the network address book.<br/>
+    /// This is a privileged operation.
     case nodeCreate(Com_Hedera_Hapi_Node_Addressbook_NodeCreateTransactionBody)
     ///*
-    /// Transaction body for a scheduled transaction to modify an existing node.
+    /// Update a node in the network address book.<br/>
+    /// This is a privileged operation.
     case nodeUpdate(Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody)
     ///*
-    /// Transaction body for a scheduled transaction to remove a node.
+    /// Delete a node from the network address book.<br/>
+    /// This will mark the node as deleted.<br/>
+    /// This is a privileged operation.
     case nodeDelete(Com_Hedera_Hapi_Node_Addressbook_NodeDeleteTransactionBody)
     ///*
-    /// A transaction body to "reject" undesired tokens.<br/>
+    /// "Reject" undesired tokens.<br/>
     /// This transaction will transfer one or more tokens or token
     /// balances held by the requesting account to the treasury
     /// for each token type.
@@ -675,13 +792,28 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
     /// SHALL NOT be charged for this transaction.
     case tokenReject(Proto_TokenRejectTransactionBody)
     ///*
-    /// Transaction body for a scheduled transaction to cancel an airdrop.
+    /// Cancel an "airdrop".<br/>
+    /// This transaction cancels a pending airdrop for one or more
+    /// recipients.
+    /// <p>
+    /// The airdrop(s) to cancel MUST be pending, and not claimed.<br/>
     case tokenCancelAirdrop(Proto_TokenCancelAirdropTransactionBody)
     ///*
-    /// Transaction body for a scheduled transaction to claim an airdrop.
+    /// Claim an "airdrop".
+    /// This transaction "claims" one or more pending "airdrops".
+    /// <p>
+    /// The airdrop(s) to claim MUST be pending, and not
+    /// already claimed.<br/>
     case tokenClaimAirdrop(Proto_TokenClaimAirdropTransactionBody)
     ///*
-    /// Transaction body for a scheduled transaction to airdrop tokens.
+    /// Send an "airdrop" of tokens to one or more recipients.
+    /// <p>
+    /// This transaction unilaterally "gifts" tokens by transferring them
+    /// from a "sender" account to the "recipient" account(s). If any
+    /// recipient is not already associated to the token to airdrop, or
+    /// has set a "reciever signature required" flag, then that recipient
+    /// is recorded as a "pending" airdrop which must be "claimed".  All
+    /// other recipients receive the "airdropped" tokens immediately.
     case tokenAirdrop(Proto_TokenAirdropTransactionBody)
 
   }
@@ -704,8 +836,6 @@ extension Proto_SchedulableTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
     4: .same(proto: "contractCreateInstance"),
     5: .same(proto: "contractUpdateInstance"),
     6: .same(proto: "contractDeleteInstance"),
-    37: .same(proto: "cryptoApproveAllowance"),
-    38: .same(proto: "cryptoDeleteAllowance"),
     7: .same(proto: "cryptoCreateAccount"),
     8: .same(proto: "cryptoDelete"),
     9: .same(proto: "cryptoTransfer"),
@@ -733,10 +863,12 @@ extension Proto_SchedulableTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
     31: .same(proto: "tokenWipe"),
     32: .same(proto: "tokenAssociate"),
     33: .same(proto: "tokenDissociate"),
-    39: .standard(proto: "token_fee_schedule_update"),
+    34: .same(proto: "scheduleDelete"),
     35: .standard(proto: "token_pause"),
     36: .standard(proto: "token_unpause"),
-    34: .same(proto: "scheduleDelete"),
+    37: .same(proto: "cryptoApproveAllowance"),
+    38: .same(proto: "cryptoDeleteAllowance"),
+    39: .standard(proto: "token_fee_schedule_update"),
     40: .standard(proto: "util_prng"),
     41: .standard(proto: "token_update_nfts"),
     42: .same(proto: "nodeCreate"),

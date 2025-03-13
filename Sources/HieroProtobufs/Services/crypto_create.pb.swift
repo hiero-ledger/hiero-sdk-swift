@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Crypto Create
+/// Messages to create a new end-user account within the distributed ledger.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,44 +33,29 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///
-/// Create a new account. After the account is created, the AccountID for it is in the receipt. It
-/// can also be retrieved with a GetByKey query. Threshold values can be defined, and records are
-/// generated and stored for 25 hours for any transfer that exceeds the thresholds. This account is
-/// charged for each record generated, so the thresholds are useful for limiting record generation to
-/// happen only for large transactions.
+/// Create a new account.
 ///
-/// The Key field is the key used to sign transactions for this account. If the account has
-/// receiverSigRequired set to true, then all cryptocurrency transfers must be signed by this
-/// account's key, both for transfers in and out. If it is false, then only transfers out have to be
-/// signed by it. When the account is created, the payer account is charged enough hbars so that the
-/// new account will not expire for the next autoRenewPeriod seconds. When it reaches the expiration
-/// time, the new account will then be automatically charged to renew for another autoRenewPeriod
-/// seconds. If it does not have enough hbars to renew for that long, then the remaining hbars are
-/// used to extend its expiration as long as possible. If it is has a zero balance when it expires,
-/// then it is deleted. This transaction must be signed by the payer account. If receiverSigRequired
-/// is false, then the transaction does not have to be signed by the keys in the keys field. If it is
-/// true, then it must be signed by them, in addition to the keys of the payer account. If the 
-/// auto_renew_account field is set, the key of the referenced account must sign.
+/// If the auto_renew_account field is set, the key of the referenced account
+/// MUST sign this transaction.<br/>
+/// Current limitations REQUIRE that `shardID` and `realmID` both MUST be `0`.
+/// This is expected to change in the future.
 ///
-/// An entity (account, file, or smart contract instance) must be created in a particular realm. If
-/// the realmID is left null, then a new realm will be created with the given admin key. If a new
-/// realm has a null adminKey, then anyone can create/modify/delete entities in that realm. But if an
-/// admin key is given, then any transaction to create/modify/delete an entity in that realm must be
-/// signed by that key, though anyone can still call functions on smart contract instances that exist
-/// in that realm. A realm ceases to exist when everything within it has expired and no longer
-/// exists.
-///
-/// The current API ignores shardID, realmID, and newRealmAdminKey, and creates everything in shard 0
-/// and realm 0, with a null key. Future versions of the API will support multiple realms and
-/// multiple shards.
+/// ### Block Stream Effects
+/// The newly created account SHALL be included in State Changes.
 public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The key that must sign each transfer out of the account. If receiverSigRequired is true, then
-  /// it must also sign any transfer into the account.
+  /// The identifying key for this account.
+  /// This key represents the account owner, and is required for most actions
+  /// involving this account that do not modify the account itself. This key
+  /// may also identify the account for smart contracts.
+  /// <p>
+  /// This field is REQUIRED.
+  /// This `Key` MUST NOT be an empty `KeyList` and MUST contain at least one
+  /// "primitive" (i.e. cryptographic) key value.
   public var key: Proto_Key {
     get {return _storage._key ?? Proto_Key()}
     set {_uniqueStorage()._key = newValue}
@@ -70,18 +66,18 @@ public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
   public mutating func clearKey() {_uniqueStorage()._key = nil}
 
   ///*
-  /// The initial number of tinybars to put into the account
+  /// An amount, in tinybar, to deposit to the newly created account.
+  /// <p>
+  /// The deposited amount SHALL be debited to the "payer" account for this
+  /// transaction.
   public var initialBalance: UInt64 {
     get {return _storage._initialBalance}
     set {_uniqueStorage()._initialBalance = newValue}
   }
 
   ///*
-  /// [Deprecated] ID of the account to which this account is proxy staked. If proxyAccountID is null, or is an
-  /// invalid account, or is an account that isn't a node, then this account is automatically proxy
-  /// staked to a node chosen by the network, but without earning payments. If the proxyAccountID
-  /// account refuses to accept proxy staking , or if it is not currently running a node, then it
-  /// will behave as if proxyAccountID was null.
+  /// Use `staked_id` instead.<br/>
+  /// An account identifier for a staking proxy.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var proxyAccountID: Proto_AccountID {
@@ -94,8 +90,10 @@ public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
   public mutating func clearProxyAccountID() {_uniqueStorage()._proxyAccountID = nil}
 
   ///*
-  /// [Deprecated]. The threshold amount (in tinybars) for which an account record is created for
-  /// any send/withdraw transaction
+  /// Removed prior to the first available history, and may be related to an
+  /// early design dead-end.<br/>
+  /// An amount below which record stream records would not be created for
+  /// a transaction that reduces this account balance.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var sendRecordThreshold: UInt64 {
@@ -104,8 +102,10 @@ public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// [Deprecated]. The threshold amount (in tinybars) for which an account record is created for
-  /// any receive/deposit transaction
+  /// Removed prior to the first available history, and may be related to an
+  /// early design dead-end.<br/>
+  /// An amount below which record stream records would not be created for
+  /// a transaction that increases this account balance.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var receiveRecordThreshold: UInt64 {
@@ -114,17 +114,31 @@ public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// If true, this account's key must sign any transaction depositing into this account (in
-  /// addition to all withdrawals)
+  /// A flag indicating the account holder must authorize all incoming
+  /// token transfers.
+  /// <p>
+  /// If this flag is set then any transaction that would result in adding
+  /// hbar or other tokens to this account balance MUST be signed by the
+  /// identifying key of this account (that is, the `key` field).<br/>
+  /// If this flag is set, then the account key (`key` field) MUST sign
+  /// this create transaction, in addition to the transaction payer.
   public var receiverSigRequired: Bool {
     get {return _storage._receiverSigRequired}
     set {_uniqueStorage()._receiverSigRequired = newValue}
   }
 
   ///*
-  /// The account is charged to extend its expiration date every this many seconds. If it doesn't
-  /// have enough balance, it extends as long as possible. If it is empty when it expires, then it
-  /// is deleted.
+  /// The duration between account automatic renewals.<br/>
+  /// All entities in state may be charged "rent" occasionally (typically
+  /// every 90 days) to prevent unnecessary growth of the ledger. This value
+  /// sets the interval between such events for this account.
+  /// <p>
+  /// If the account balance (in HBAR) is insufficient to pay the full renewal
+  /// fee, the entire HBAR balance SHALL be consumed and the expiration for
+  /// the account SHALL be extended as far as the available balance can
+  /// support.<br/>
+  /// If the account HBAR balance is `0` when the account must be renewed, then
+  /// the account SHALL be deleted, and subsequently removed from state.
   public var autoRenewPeriod: Proto_Duration {
     get {return _storage._autoRenewPeriod ?? Proto_Duration()}
     set {_uniqueStorage()._autoRenewPeriod = newValue}
@@ -136,6 +150,9 @@ public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
 
   ///*
   /// The shard in which this account is created
+  /// <p>
+  /// Currently, this MUST be `0`.<br/>
+  /// If the desired shard is `0`, this SHOULD NOT be set.
   public var shardID: Proto_ShardID {
     get {return _storage._shardID ?? Proto_ShardID()}
     set {_uniqueStorage()._shardID = newValue}
@@ -146,7 +163,11 @@ public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
   public mutating func clearShardID() {_uniqueStorage()._shardID = nil}
 
   ///*
-  /// The realm in which this account is created (leave this null to create a new realm)
+  /// The realm in which this account is created.
+  /// <p>
+  /// The shard number for this realm MUST match the value in `shardID`.<br/>
+  /// Currently, this MUST be `0` for both fields.<br/>
+  /// If the desired realm is `0`, this SHOULD NOT be set.
   public var realmID: Proto_RealmID {
     get {return _storage._realmID ?? Proto_RealmID()}
     set {_uniqueStorage()._realmID = newValue}
@@ -157,7 +178,10 @@ public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
   public mutating func clearRealmID() {_uniqueStorage()._realmID = nil}
 
   ///*
-  /// If realmID is null, then this the admin key for the new realm that will be created
+  /// This field was never actually used or enabled, and is not expected to
+  /// ever be used in the future.<br/>
+  ///
+  /// NOTE: This field was marked as deprecated in the .proto file.
   public var newRealmAdminKey: Proto_Key {
     get {return _storage._newRealmAdminKey ?? Proto_Key()}
     set {_uniqueStorage()._newRealmAdminKey = newValue}
@@ -168,33 +192,40 @@ public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
   public mutating func clearNewRealmAdminKey() {_uniqueStorage()._newRealmAdminKey = nil}
 
   ///*
-  /// The memo associated with the account (UTF-8 encoding max 100 bytes)
+  /// A short description of this Account.
+  /// <p>
+  /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+  /// (default 100) bytes when encoded as UTF-8.
   public var memo: String {
     get {return _storage._memo}
     set {_uniqueStorage()._memo = newValue}
   }
 
   ///*
-  /// The maximum number of tokens that can be auto-associated with the account.<br/>
-  /// If this is less than or equal to `used_auto_associations`, or 0, then this account
-  /// MUST manually associate with a token before transacting in that token.<br/>
+  /// A maximum number of tokens that can be auto-associated
+  /// with this account.<br/>
+  /// By default this value is 0 for all accounts except for automatically
+  /// created accounts (e.g. smart contracts), which default to -1.
+  /// <p>
+  /// If this value is `0`, then this account MUST manually associate to
+  /// a token before holding or transacting in that token.<br/>
   /// This value MAY also be `-1` to indicate no limit.<br/>
-  /// This value MUST NOT be less than `-1`.<br/>
-  /// By default this value is 0 for accounts except for auto-created accounts which default -1.
+  /// This value MUST NOT be less than `-1`.
   public var maxAutomaticTokenAssociations: Int32 {
     get {return _storage._maxAutomaticTokenAssociations}
     set {_uniqueStorage()._maxAutomaticTokenAssociations = newValue}
   }
 
-  ///*
-  /// ID of the account or node to which this account is staking.
   public var stakedID: OneOf_StakedID? {
     get {return _storage._stakedID}
     set {_uniqueStorage()._stakedID = newValue}
   }
 
   ///*
-  /// ID of the account to which this account is staking.
+  /// ID of the account to which this account is staking its balances.
+  /// <p>
+  /// If this account is not currently staking its balances, then this
+  /// field, if set, MUST be the sentinel value of `0.0.0`.
   public var stakedAccountID: Proto_AccountID {
     get {
       if case .stakedAccountID(let v)? = _storage._stakedID {return v}
@@ -205,6 +236,12 @@ public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
 
   ///*
   /// ID of the node this account is staked to.
+  /// <p>
+  /// If this account is not currently staking its balances, then this
+  /// field, if set, SHALL be the sentinel value of `-1`.<br/>
+  /// Wallet software SHOULD surface staking issues to users and provide a
+  /// simple mechanism to update staking to a new node ID in the event the
+  /// prior staked node ID ceases to be valid.
   public var stakedNodeID: Int64 {
     get {
       if case .stakedNodeID(let v)? = _storage._stakedID {return v}
@@ -214,25 +251,33 @@ public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// If true, the account declines receiving a staking reward. The default value is false.
+  /// A boolean indicating that this account has chosen to decline rewards for
+  /// staking its balances.
+  /// <p>
+  /// This account MAY still stake its balances, but SHALL NOT receive reward
+  /// payments for doing so, if this value is set.
   public var declineReward: Bool {
     get {return _storage._declineReward}
     set {_uniqueStorage()._declineReward = newValue}
   }
 
   ///*
-  /// The bytes to be used as the account's alias. It will be the
-  /// serialization of a protobuf Key message for an ED25519/ECDSA_SECP256K1 primitive key type. Currently only primitive key bytes are
-  /// supported as the key for an account with an alias. ThresholdKey, KeyList, ContractID, and
-  /// delegatable_contract_id are not supported.
-  ///
-  /// May also be the EOA 20-byte address to create that is derived from the keccak-256 hash of a ECDSA_SECP256K1 primitive key.
-  ///
-  /// A given alias can map to at most one account on the network at a time. This uniqueness will be enforced
-  /// relative to aliases currently on the network at alias assignment.
-  ///
-  /// If a transaction creates an account using an alias, any further crypto transfers to that alias will 
-  /// simply be deposited in that account, without creating anything, and with no creation fee being charged.
+  /// Bytes to be used as the account's alias.
+  /// <p>
+  /// This value, if set, MUST be one of the following values<br/>
+  /// <ul>
+  ///   <li>The 32-byte serialized form of the ED25519 account key.</li>
+  ///   <li>The 33-byte _compressed_ serialized form of the ECDSA(secp256k1)
+  ///       account key.</li>
+  ///   <li>The 20-byte EVM address derived from a keccak-256 hash of the
+  ///       ECDSA(secp256k1) account key</li>
+  /// </ul>
+  /// All aliases within the network MUST be unique. If this value matches an
+  /// existing account alias, this `create` transaction SHALL fail.<br/>
+  /// If an account exists with a particular alias value, any transaction to
+  /// transfer value _to_ that alias SHALL deposit the transferred value in
+  /// the existing account, and SHALL NOT assess an account creation fee.<br/>
+  /// Once set, an account alias is immutable and MUST NOT be changed.
   public var alias: Data {
     get {return _storage._alias}
     set {_uniqueStorage()._alias = newValue}
@@ -240,14 +285,21 @@ public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  ///*
-  /// ID of the account or node to which this account is staking.
   public enum OneOf_StakedID: Equatable, Sendable {
     ///*
-    /// ID of the account to which this account is staking.
+    /// ID of the account to which this account is staking its balances.
+    /// <p>
+    /// If this account is not currently staking its balances, then this
+    /// field, if set, MUST be the sentinel value of `0.0.0`.
     case stakedAccountID(Proto_AccountID)
     ///*
     /// ID of the node this account is staked to.
+    /// <p>
+    /// If this account is not currently staking its balances, then this
+    /// field, if set, SHALL be the sentinel value of `-1`.<br/>
+    /// Wallet software SHOULD surface staking issues to users and provide a
+    /// simple mechanism to update staking to a new node ID in the event the
+    /// prior staked node ID ceases to be valid.
     case stakedNodeID(Int64)
 
   }

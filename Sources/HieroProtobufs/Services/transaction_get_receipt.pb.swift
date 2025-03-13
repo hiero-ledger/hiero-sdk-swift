@@ -8,6 +8,30 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get Transaction Receipt
+/// This query is central to client interactions. A client must query
+/// the network for the "receipt" after a transaction is submitted to know
+/// whether the transaction succeeded and the consensus result.
+///
+/// > Implementation Note
+/// >> This query is _defined_ for "Crypto" service, but is _implemented_ by
+/// >> the "Network Admin" service.
+///
+/// > Note
+/// >> The mechanism for transaction receipts and results is subject to
+/// >> considerable change in the near future. Clients heavily dependent
+/// >> on direct network queries for transaction receipts may consider
+/// >> changes needed to query a mirror node for transaction receipts
+/// >> and results instead.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,19 +45,44 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get the receipt of a transaction, given its transaction ID. Once a transaction reaches consensus,
-/// then information about whether it succeeded or failed will be available until the end of the
-/// receipt period.  Before and after the receipt period, and for a transaction that was never
-/// submitted, the receipt is unknown.  This query is free (the payment field is left empty). No
-/// State proof is available for this response
+/// A query to retrieve a transaction receipt.
+/// This query retrieves the post-consensus (final) result of a transaction.
+/// A transaction receipt may not be available if queried too early
+/// (less than 5-10 seconds), or too late (more than 3 minutes). If a receipt
+/// is available, it contains basic transaction results. A query to a mirror
+/// node (or other archival system) is required to obtain full detail for a
+/// transaction, or any result after the basic receipt time period.
+///
+/// This query is "free". The payment field in the header MUST be empty.<br/>
+/// If a receipt is not available, the response SHALL be `UNKNOWN`.<br/>
+/// A transaction receipt SHALL be available after the network reaches
+/// consensus for a transaction.<br/>
+/// A transaction receipt SHALL NOT be available after the end of the network
+/// configured "receipt period", typically three(3) minutes.
+///
+/// <dl>
+///   <dt>What is the "first" transaction?</dt>
+///   <dd>The "first" transaction SHALL be the the transaction with
+///       the earliest consensus time and a status that is neither
+///       `INVALID_NODE_ACCOUNT` nor `INVALID_PAYER_SIGNATURE`.<br/>
+///       If no transaction is found meeting this status criteria, the
+///       "first" transaction SHALL be the transaction with the earliest
+///       consensus time.</dd>
+///  <dt>What is a "child" transaction?</dt>
+///  <dd>A "child" transaction is any transaction created in the process of
+///      completing another transaction. These are most common with a smart
+///      contract call, where a call to a contract may initiate one or more
+///      additional transactions to complete a complex process.</dd>
+/// </dl>
 public struct Proto_TransactionGetReceiptQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -44,7 +93,10 @@ public struct Proto_TransactionGetReceiptQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The ID of the transaction for which the receipt is requested.
+  /// A transaction identifier.
+  /// <p>
+  /// This MUST contain the full identifier, as submitted, for the
+  /// transaction to query.
   public var transactionID: Proto_TransactionID {
     get {return _transactionID ?? Proto_TransactionID()}
     set {_transactionID = newValue}
@@ -55,16 +107,22 @@ public struct Proto_TransactionGetReceiptQuery: Sendable {
   public mutating func clearTransactionID() {self._transactionID = nil}
 
   ///*
-  /// Whether receipts of processing duplicate transactions should be returned along with the
-  /// receipt of processing the first consensus transaction with the given id whose status was
-  /// neither <tt>INVALID_NODE_ACCOUNT</tt> nor <tt>INVALID_PAYER_SIGNATURE</tt>; <b>or</b>, if no
-  /// such receipt exists, the receipt of processing the first transaction to reach consensus with
-  /// the given transaction id.
+  /// A flag to request duplicates.
+  /// <p>
+  /// If set, every transaction receipt within the receipt period that
+  /// matches the requested transaction identifier SHALL be returned.<br/>
+  /// If not set, duplicate transactions SHALL NOT be returned.<br/>
+  /// If not set, only the receipt for the first matching transaction to
+  /// reach consensus SHALL be returned.
   public var includeDuplicates: Bool = false
 
   ///*
-  /// Whether the response should include the receipts of any child transactions spawned by the 
-  /// top-level transaction with the given transactionID. 
+  /// A flag to request "child" receipts.
+  /// <p>
+  /// If set, the response SHALL include receipts for each child transaction
+  /// executed as part of the requested parent transaction.<br/>
+  /// If not set, the response SHALL NOT include any receipts for child
+  /// transactions.
   public var includeChildReceipts: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -76,19 +134,40 @@ public struct Proto_TransactionGetReceiptQuery: Sendable {
 }
 
 ///*
-/// Response when the client sends the node TransactionGetReceiptQuery. If it created a new entity
-/// (account, file, or smart contract instance) then one of the three ID fields will be filled in
-/// with the ID of the new entity. Sometimes a single transaction will create more than one new
-/// entity, such as when a new contract instance is created, and this also creates the new account
-/// that it owned by that instance. No State proof is available for this response
+/// Response message for a `getTransactionReceipts` query.
+///
+/// The `receipt` field SHALL return the receipt for the "first" transaction
+/// that matches the transaction identifier requested.<br/>
+/// If receipts for duplicate transactions are requested, those duplicate
+/// receipts SHALL be present in the `duplicateTransactionReceipts` list.<br/>
+/// If receipts for child transactions are requested, those child receipts
+/// SHALL be present in the `child_transaction_receipts` list.<br/>
+/// A state proof SHALL NOT be provided for this response; transaction receipts
+/// are not retained in network state.
+///
+/// <dl>
+///   <dt>What is the "first" transaction?</dt>
+///   <dd>The "first" transaction receipt SHALL be the receipt for the
+///       first transaction with status that is neither
+///       `INVALID_NODE_ACCOUNT` nor `INVALID_PAYER_SIGNATURE`.<br/>
+///       If no transaction is found meeting the status criteria, the
+///       "first" transaction SHALL be the first transaction by
+///       consensus time.</dd>
+///  <dt>What is a "child" transaction?</dt>
+///  <dd>A "child" transaction is any transaction created in the process of
+///      completing another transaction. These are most common with a smart
+///      contract call, where a call to a contract may initiate one or more
+///      additional transactions to complete a complex process.</dd>
+/// </dl>
 public struct Proto_TransactionGetReceiptResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -99,10 +178,15 @@ public struct Proto_TransactionGetReceiptResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// Either the receipt of processing the first consensus transaction with the given id whose
-  /// status was neither <tt>INVALID_NODE_ACCOUNT</tt> nor <tt>INVALID_PAYER_SIGNATURE</tt>;
-  /// <b>or</b>, if no such receipt exists, the receipt of processing the first transaction to
-  /// reach consensus with the given transaction id.
+  /// A transaction receipt.
+  /// <p>
+  /// This SHALL be the receipt for the "first" transaction that matches
+  /// the transaction identifier requested.<br/>
+  /// If the identified transaction has not reached consensus, this receipt
+  /// SHALL have a `status` of `UNKNOWN`.<br/>
+  /// If the identified transaction reached consensus prior to the current
+  /// configured receipt period (typically the last 180 seconds), this receipt
+  /// SHALL have a `status` of `UNKNOWN`.
   public var receipt: Proto_TransactionReceipt {
     get {return _receipt ?? Proto_TransactionReceipt()}
     set {_receipt = newValue}
@@ -113,12 +197,30 @@ public struct Proto_TransactionGetReceiptResponse: Sendable {
   public mutating func clearReceipt() {self._receipt = nil}
 
   ///*
-  /// The receipts of processing all transactions with the given id, in consensus time order.
+  /// A list of duplicate transaction receipts.
+  /// <p>
+  /// If the request set the `includeDuplicates` flat, this list SHALL
+  /// include the receipts for each duplicate transaction associated to the
+  /// requested transaction identifier.
+  /// If the request did not set the `includeDuplicates` flag, this list
+  /// SHALL be empty.<br/>
+  /// If the `receipt` status is `UNKNOWN`, this list SHALL be empty.<br/>
+  /// This list SHALL be in order by consensus timestamp.
   public var duplicateTransactionReceipts: [Proto_TransactionReceipt] = []
 
   ///*
-  /// The receipts (if any) of all child transactions spawned by the transaction with the 
-  /// given top-level id, in consensus order. Always empty if the top-level status is UNKNOWN.
+  /// A list of receipts for all child transactions spawned by the requested
+  /// transaction.
+  /// <p>
+  /// If the request set the `include_child_receipts` flag, this list SHALL
+  /// include receipts for each child transaction executed as part of the
+  /// requested parent transaction.<br/>
+  /// If the request did not set the `include_child_receipts` flag, this
+  /// list SHALL be empty. <br/>
+  /// If the parent transaction did not initiate any child transactions
+  /// this list SHALL be empty.<br/>
+  /// If the `receipt` status is `UNKNOWN`, this list SHALL be empty.<br/>
+  /// This list SHALL be in order by consensus timestamp.
   public var childTransactionReceipts: [Proto_TransactionReceipt] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

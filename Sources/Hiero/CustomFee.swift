@@ -229,7 +229,7 @@ public struct FixedFee: CustomFee, Equatable, ValidateChecksums {
         self.allCollectorsAreExempt = allCollectorsAreExempt
     }
 
-    fileprivate init(
+    public init(
         fromFee proto: Proto_FixedFee,
         feeCollectorAccountId: AccountId?,
         allCollectorsAreExempt: Bool

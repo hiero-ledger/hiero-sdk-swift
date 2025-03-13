@@ -8,6 +8,18 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Token Update NFTs
+/// Given a token identifier and a metadata block, change the metadata for
+/// one or more non-fungible/unique token instances.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,23 +33,31 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// At consensus, updates an already created Non Fungible Token to the given values.
+/// Modify the metadata field for an individual non-fungible/unique token (NFT).
 ///
-/// If no value is given for a field, that field is left unchanged.
-/// Only certain fields such as metadata can be updated.
+/// Updating the metadata of an NFT SHALL NOT affect ownership or
+/// the ability to transfer that NFT.<br/>
+/// This transaction SHALL affect only the specific serial numbered tokens
+/// identified.
+/// This transaction SHALL modify individual token metadata.<br/>
+/// This transaction MUST be signed by the token `metadata_key`.<br/>
+/// The token `metadata_key` MUST be a valid `Key`.<br/>
+/// The token `metadata_key` MUST NOT be an empty `KeyList`.
 ///
-/// Updating the metadata of an NFT does not affect its ownership or transferability.
-/// This operation is intended for updating attributes of individual NFTs in a collection.
-///
-/// --- Signing Requirements ---
-/// 1. To update metadata of an NFT, the metadata_key of the token should sign the transaction.
+/// ### Block Stream Effects
+/// None
 public struct Proto_TokenUpdateNftsTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The token for which to update NFTs.
+  /// A token identifier.<br/>
+  /// This is the token type (i.e. collection) for which to update NFTs.
+  /// <p>
+  /// This field is REQUIRED.<br/>
+  /// The identified token MUST exist, MUST NOT be paused, MUST have the type
+  /// non-fungible/unique, and MUST have a valid `metadata_key`.
   public var token: Proto_TokenID {
     get {return _token ?? Proto_TokenID()}
     set {_token = newValue}
@@ -48,11 +68,18 @@ public struct Proto_TokenUpdateNftsTransactionBody: Sendable {
   public mutating func clearToken() {self._token = nil}
 
   ///*
-  /// The list of serial numbers to be updated.
+  /// A list of serial numbers to be updated.
+  /// <p>
+  /// This field is REQUIRED.<br/>
+  /// This list MUST have at least one(1) entry.<br/>
+  /// This list MUST NOT have more than ten(10) entries.
   public var serialNumbers: [Int64] = []
 
   ///*
-  /// The new metadata of the NFT(s)
+  /// A new value for the metadata.
+  /// <p>
+  /// If this field is not set, the metadata SHALL NOT change.<br/>
+  /// This value, if set, MUST NOT exceed 100 bytes.
   public var metadata: SwiftProtobuf.Google_Protobuf_BytesValue {
     get {return _metadata ?? SwiftProtobuf.Google_Protobuf_BytesValue()}
     set {_metadata = newValue}

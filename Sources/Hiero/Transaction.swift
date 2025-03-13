@@ -1,22 +1,4 @@
-/*
- * ‌
- * Hedera Swift SDK
- * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
- * ​
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ‍
- */
+// SPDX-License-Identifier: Apache-2.0
 
 import Foundation
 import GRPC
@@ -33,6 +15,7 @@ public class Transaction: ValidateChecksums {
         maxTransactionFee = .fromTinybars(Int64(proto.transactionFee))
         transactionMemo = proto.memo
         transactionId = try .fromProtobuf(proto.transactionID)
+        customFeeLimits = try .fromProtobuf(proto.maxCustomFees)
     }
 
     internal private(set) final var signers: [Signer] = []
@@ -141,6 +124,37 @@ public class Transaction: ValidateChecksums {
     @discardableResult
     public final func regenerateTransactionId(_ regenerateTransactionId: Bool) -> Self {
         self.regenerateTransactionId = regenerateTransactionId
+
+        return self
+    }
+
+    /// The custom fees that will be applied to the transaction.
+    internal final var customFeeLimits: [CustomFeeLimit] = [] {
+        willSet {
+            ensureNotFrozen(fieldName: "customFeeLimits")
+        }
+    }
+
+    /// Sets the custom fees that will be applied to the transaction.
+    @discardableResult
+    internal func customFeeLimits(_ customFeeLimits: [CustomFeeLimit]) -> Self {
+        self.customFeeLimits = customFeeLimits
+
+        return self
+    }
+
+    /// Adds a custom fee limit to the list of custom fee limits.
+    @discardableResult
+    internal func addCustomFeeLimit(_ customFeeLimit: CustomFeeLimit) -> Self {
+        self.customFeeLimits.append(customFeeLimit)
+
+        return self
+    }
+
+    /// Clears the custom fee limit for the topic.
+    @discardableResult
+    internal func clearCustomFeeLimits() -> Self {
+        self.customFeeLimits = []
 
         return self
     }
@@ -307,7 +321,7 @@ public class Transaction: ValidateChecksums {
     }
 
     @discardableResult
-    public final func freezeWith(_ client: Client?) throws -> Self {
+    public func freezeWith(_ client: Client?) throws -> Self {
         if isFrozen {
             return self
         }
@@ -324,6 +338,7 @@ public class Transaction: ValidateChecksums {
         self.nodeAccountIds = nodeAccountIds
         self.maxTransactionFee = maxTransactionFee
         self.`operator` = `operator`
+        self.customFeeLimits = customFeeLimits
 
         isFrozen = true
 
@@ -562,6 +577,8 @@ extension Transaction {
 
         let maxTransactionFee = self.maxTransactionFee ?? self.defaultMaxTransactionFee
 
+        let customFeeLimits = self.customFeeLimits
+
         return .with { proto in
             proto.data = data
             proto.transactionID = chunkInfo.currentTransactionId.toProtobuf()
@@ -570,6 +587,9 @@ extension Transaction {
             proto.nodeAccountID = chunkInfo.nodeAccountId.toProtobuf()
             proto.generateRecord = false
             proto.transactionFee = UInt64(maxTransactionFee.toTinybars())
+            if !customFeeLimits.isEmpty {
+                proto.maxCustomFees = customFeeLimits.map { $0.toProtobuf() }
+            }
         }
     }
 }

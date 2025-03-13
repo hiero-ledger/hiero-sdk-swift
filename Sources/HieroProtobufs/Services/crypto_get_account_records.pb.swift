@@ -8,6 +8,22 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Crypto Get Account Records
+/// Messages for a query to retrieve recent transaction records involving a
+/// specified account as effective `payer`.<br/>
+/// A "recent" transaction is typically one that reached consensus within
+/// the previous three(`3`) minutes of _consensus_ time. Additionally, the
+/// network only stores records in state when
+/// `ledger.keepRecordsInState=true` was true during transaction handling.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,14 +37,17 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Requests records of all transactions for which the given account was the effective payer in the last 3 minutes of consensus time and <tt>ledger.keepRecordsInState=true</tt> was true during <tt>handleTransaction</tt>.
+/// Request records of all "recent" transactions for which the specified
+/// account is the effective payer.
 public struct Proto_CryptoGetAccountRecordsQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -39,7 +58,11 @@ public struct Proto_CryptoGetAccountRecordsQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The account ID for which the records should be retrieved
+  /// An account identifier.<br/>
+  /// This identifies the account to use when filtering the
+  /// transaction record lists.
+  /// <p>
+  /// This field is REQUIRED.
   public var accountID: Proto_AccountID {
     get {return _accountID ?? Proto_AccountID()}
     set {_accountID = newValue}
@@ -58,14 +81,17 @@ public struct Proto_CryptoGetAccountRecordsQuery: Sendable {
 }
 
 ///*
-/// Returns records of all transactions for which the given account was the effective payer in the last 3 minutes of consensus time and <tt>ledger.keepRecordsInState=true</tt> was true during <tt>handleTransaction</tt>.
+/// Return records of all "recent" transactions for which the specified
+/// account is the effective payer.
 public struct Proto_CryptoGetAccountRecordsResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof, or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -76,7 +102,11 @@ public struct Proto_CryptoGetAccountRecordsResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The account that this record is for
+  /// An account identifier.<br/>
+  /// This identifies the account used when filtering the
+  /// transaction record lists.
+  /// <p>
+  /// This field SHALL match the requested account identifier.
   public var accountID: Proto_AccountID {
     get {return _accountID ?? Proto_AccountID()}
     set {_accountID = newValue}
@@ -87,7 +117,10 @@ public struct Proto_CryptoGetAccountRecordsResponse: Sendable {
   public mutating func clearAccountID() {self._accountID = nil}
 
   ///*
-  /// List of records
+  /// A list of records.
+  /// <p>
+  /// This list SHALL contain all available and "recent" records in which
+  /// the account identified in the `accountID` field acted as effective payer.
   public var records: [Proto_TransactionRecord] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

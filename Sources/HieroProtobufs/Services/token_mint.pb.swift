@@ -8,6 +8,18 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Token Mint
+/// Mint new tokens and deliver them to the token treasury. This is akin
+/// to how a fiat treasury will mint new coinage for circulation.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,30 +34,37 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Mints tokens to the Token's treasury Account. If no Supply Key is defined, the transaction will
-/// resolve to TOKEN_HAS_NO_SUPPLY_KEY.
-/// The operation increases the Total Supply of the Token. The maximum total supply a token can have
-/// is 2^63-1.
-/// The amount provided must be in the lowest denomination possible. Example:
-/// Token A has 2 decimals. In order to mint 100 tokens, one must provide amount of 10000. In order
-/// to mint 100.55 tokens, one must provide amount of 10055.
-/// If both amount and metadata list get filled, a INVALID_TRANSACTION_BODY response code will be
-/// returned.
-/// If the metadata list contains metadata which is too large, a METADATA_TOO_LONG response code will
-/// be returned.
-/// If the metadata list is not filled for a non-fungible token type, a INVALID_TOKEN_MINT_AMOUNT response
-/// code will be returned.
-/// If a zero amount is provided for a fungible token type, it will be treated as a regular transaction.
-/// If the metadata list count is greater than the batch size limit global dynamic property, a
-/// BATCH_SIZE_LIMIT_EXCEEDED response code will be returned.
+/// Mint tokens and deliver the new tokens to the token treasury account.
+///
+/// The token MUST have a `supply_key` set and that key MUST NOT
+/// be an empty `KeyList`.<br/>
+/// The token `supply_key` MUST sign this transaction.<br/>
+/// This operation SHALL increase the total supply for the token type by
+/// the number of tokens "minted".<br/>
+/// The total supply for the token type MUST NOT be increased above the
+/// maximum supply limit (2^63-1) by this transaction.<br/>
+/// The tokens minted SHALL be credited to the token treasury account.<br/>
+/// If the token is a fungible/common type, the amount MUST be specified.<br/>
+/// If the token is a non-fungible/unique type, the metadata bytes for each
+/// unique token MUST be specified in the `metadata` list.<br/>
+/// Each unique metadata MUST not exceed the global metadata size limit defined
+/// by the network configuration value `tokens.maxMetadataBytes`.<br/>
+/// The global batch size limit (`tokens.nfts.maxBatchSizeMint`) SHALL set
+/// the maximum number of individual NFT metadata permitted in a single
+/// `tokenMint` transaction.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_TokenMintTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The token for which to mint tokens. If token does not exist, transaction results in
-  /// INVALID_TOKEN_ID
+  /// A token identifier.
+  /// <p>
+  /// This SHALL identify the token type to "mint".<br/>
+  /// The identified token MUST exist, and MUST NOT be deleted.
   public var token: Proto_TokenID {
     get {return _token ?? Proto_TokenID()}
     set {_token = newValue}
@@ -56,14 +75,29 @@ public struct Proto_TokenMintTransactionBody: @unchecked Sendable {
   public mutating func clearToken() {self._token = nil}
 
   ///*
-  /// Applicable to tokens of type FUNGIBLE_COMMON. The amount to mint to the Treasury Account.
-  /// Amount must be a positive non-zero number represented in the lowest denomination of the
-  /// token. The new supply must be lower than 2^63.
+  /// An amount to mint to the Treasury Account.
+  /// <p>
+  /// This is interpreted as an amount in the smallest possible denomination
+  /// for the token (10<sup>-decimals</sup> whole tokens).<br/>
+  /// The balance for the token treasury account SHALL receive the newly
+  /// minted tokens.<br/>
+  /// If this value is equal to zero (`0`), the token SHOULD be a
+  /// non-fungible/unique type.<br/>
+  /// If this value is non-zero, the token MUST be a fungible/common type.
   public var amount: UInt64 = 0
 
   ///*
-  /// Applicable to tokens of type NON_FUNGIBLE_UNIQUE. A list of metadata that are being created.
-  /// Maximum allowed size of each metadata is 100 bytes
+  /// A list of metadata bytes.<br/>
+  /// <p>
+  /// One non-fungible/unique token SHALL be minted for each entry
+  /// in this list.<br/>
+  /// Each entry in this list MUST NOT be larger than the limit set by the
+  /// current network configuration value `tokens.maxMetadataBytes`.<br/>
+  /// This list MUST NOT contain more entries than the current limit set by
+  /// the network configuration value `tokens.nfts.maxBatchSizeMint`.<br/>
+  /// If this list is not empty, the token MUST be a
+  /// non-fungible/unique type.<br/>
+  /// If this list is empty, the token MUST be a fungible/common type.
   public var metadata: [Data] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()

@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get Account Information
+/// A standard query to inspect the full detail of an account.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,16 +33,21 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get all the information about an account, including the balance. This does not get the list of
-/// account records.
+/// A query to read information for an account.
+///
+/// The returned information SHALL include balance.<br/>
+/// The returned information SHALL NOT include allowances.<br/>
+/// The returned information SHALL NOT include token relationships.<br/>
+/// The returned information SHALL NOT include account records.
 public struct Proto_CryptoGetInfoQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -68,8 +84,9 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -80,7 +97,9 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// Info about the account (a state proof can be generated for this)
+  /// Details of the account.
+  /// <p>
+  /// A state proof MAY be generated for this field.
   public var accountInfo: Proto_CryptoGetInfoResponse.AccountInfo {
     get {return _accountInfo ?? Proto_CryptoGetInfoResponse.AccountInfo()}
     set {_accountInfo = newValue}
@@ -92,13 +111,43 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
+  ///*
+  /// Information describing A single Account in the Hedera distributed ledger.
+  ///
+  /// #### Attributes
+  /// Each Account may have a unique three-part identifier, a Key, and one or
+  /// more token balances. Accounts also have an alias, which has multiple
+  /// forms, and may be set automatically. Several additional items are
+  /// associated with the Account to enable full functionality.
+  ///
+  /// #### Expiration
+  /// Accounts, as most items in the network, have an expiration time, recorded
+  /// as a `Timestamp`, and must be "renewed" for a small fee at expiration.
+  /// This helps to reduce the amount of inactive accounts retained in state.
+  /// Another account may be designated to pay any renewal fees and
+  /// automatically renew the account for (by default) 30-90 days at a time as
+  /// a means to optionally ensure important accounts remain active.
+  ///
+  /// ### Staking
+  /// Accounts may participate in securing the network by "staking" the account
+  /// balances to a particular network node, and receive a portion of network
+  /// fees as a reward. An account may optionally decline these rewards but
+  /// still stake its balances.
+  ///
+  /// #### Transfer Restrictions
+  /// An account may optionally require that inbound transfer transactions be
+  /// signed by that account as receiver (in addition to any other signatures
+  /// required, including sender).
   public struct AccountInfo: @unchecked Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
     ///*
-    /// The account ID for which this information applies
+    /// a unique identifier for this account.
+    /// <p>
+    /// An account identifier, when assigned to this field, SHALL be of
+    /// the form `shard.realm.number`.
     public var accountID: Proto_AccountID {
       get {return _storage._accountID ?? Proto_AccountID()}
       set {_uniqueStorage()._accountID = newValue}
@@ -109,27 +158,31 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
     public mutating func clearAccountID() {_uniqueStorage()._accountID = nil}
 
     ///*
-    /// The Contract Account ID comprising of both the contract instance and the cryptocurrency
-    /// account owned by the contract instance, in the format used by Solidity
+    /// A Solidity ID.
+    /// <p>
+    /// This SHALL be populated if this account is a smart contract, and
+    /// SHALL NOT be populated otherwise.<br/>
+    /// This SHALL be formatted as a string according to Solidity ID
+    /// standards.
     public var contractAccountID: String {
       get {return _storage._contractAccountID}
       set {_uniqueStorage()._contractAccountID = newValue}
     }
 
     ///*
-    /// If true, then this account has been deleted, it will disappear when it expires, and all
-    /// transactions for it will fail except the transaction to extend its expiration date
+    /// A boolean indicating that this account is deleted.
+    /// <p>
+    /// Any transaction involving a deleted account SHALL fail.
     public var deleted: Bool {
       get {return _storage._deleted}
       set {_uniqueStorage()._deleted = newValue}
     }
 
     ///*
-    /// [Deprecated] The Account ID of the account to which this is proxy staked. If proxyAccountID is null,
-    /// or is an invalid account, or is an account that isn't a node, then this account is
-    /// automatically proxy staked to a node chosen by the network, but without earning payments.
-    /// If the proxyAccountID account refuses to accept proxy staking , or if it is not currently
-    /// running a node, then it will behave as if proxyAccountID was null.
+    /// Replaced by StakingInfo.<br/>
+    /// ID of the account to which this account is staking its balances. If
+    /// this account is not currently staking its balances, then this field,
+    /// if set, SHALL be the sentinel value of `0.0.0`.
     ///
     /// NOTE: This field was marked as deprecated in the .proto file.
     public var proxyAccountID: Proto_AccountID {
@@ -142,15 +195,23 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
     public mutating func clearProxyAccountID() {_uniqueStorage()._proxyAccountID = nil}
 
     ///*
-    /// The total number of tinybars proxy staked to this account
+    /// Replaced by StakingInfo.<br/>
+    /// The total amount of tinybar proxy staked to this account.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     public var proxyReceived: Int64 {
       get {return _storage._proxyReceived}
       set {_uniqueStorage()._proxyReceived = newValue}
     }
 
     ///*
-    /// The key for the account, which must sign in order to transfer out, or to modify the
-    /// account in any way other than extending its expiration date.
+    /// The key to be used to sign transactions from this account, if any.
+    /// <p>
+    /// This key SHALL NOT be set for hollow accounts until the account
+    /// is finalized.<br/>
+    /// This key SHALL be set on all other accounts, except for certain
+    /// immutable accounts (0.0.800 and 0.0.801) necessary for network
+    /// function and otherwise secured by the governing council.
     public var key: Proto_Key {
       get {return _storage._key ?? Proto_Key()}
       set {_uniqueStorage()._key = newValue}
@@ -161,15 +222,18 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
     public mutating func clearKey() {_uniqueStorage()._key = nil}
 
     ///*
-    /// The current balance of account in tinybars
+    /// The HBAR balance of this account, in tinybar (10<sup>-8</sup> HBAR).
+    /// <p>
+    /// This value SHALL always be a whole number.
     public var balance: UInt64 {
       get {return _storage._balance}
       set {_uniqueStorage()._balance = newValue}
     }
 
     ///*
-    /// [Deprecated]. The threshold amount, in tinybars, at which a record is created of any
-    /// transaction that decreases the balance of this account by more than the threshold
+    /// Obsolete and unused.<br/>
+    /// The threshold amount, in tinybars, at which a record was created for
+    /// any transaction that decreased the balance of this account.
     ///
     /// NOTE: This field was marked as deprecated in the .proto file.
     public var generateSendRecordThreshold: UInt64 {
@@ -178,8 +242,9 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
     }
 
     ///*
-    /// [Deprecated]. The threshold amount, in tinybars, at which a record is created of any
-    /// transaction that increases the balance of this account by more than the threshold
+    /// Obsolete and unused.<br/>
+    /// The threshold amount, in tinybars, at which a record was created for
+    /// any transaction that increased the balance of this account.
     ///
     /// NOTE: This field was marked as deprecated in the .proto file.
     public var generateReceiveRecordThreshold: UInt64 {
@@ -188,14 +253,31 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
     }
 
     ///*
-    /// If true, no transaction can transfer to this account unless signed by this account's key
+    /// A boolean indicating that the account requires a receiver signature
+    /// for inbound token transfer transactions.
+    /// <p>
+    /// If this value is `true` then a transaction to transfer tokens to this
+    /// account SHALL NOT succeed unless this account has signed the
+    /// transfer transaction.
     public var receiverSigRequired: Bool {
       get {return _storage._receiverSigRequired}
       set {_uniqueStorage()._receiverSigRequired = newValue}
     }
 
     ///*
-    /// The TimeStamp time at which this account is set to expire
+    /// The current expiration time for this account.
+    /// <p>
+    /// This account SHALL be due standard renewal fees when the network
+    /// consensus time exceeds this time.<br/>
+    /// If rent and expiration are enabled for the network, and automatic
+    /// renewal is enabled for this account, renewal fees SHALL be charged
+    /// after this time, and, if charged, the expiration time SHALL be
+    /// extended for another renewal period.<br/>
+    /// This account MAY be expired and removed from state at any point
+    /// after this time if not renewed.<br/>
+    /// An account holder MAY extend this time by submitting an account
+    /// update transaction to modify expiration time, subject to the current
+    /// maximum expiration time for the network.
     public var expirationTime: Proto_Timestamp {
       get {return _storage._expirationTime ?? Proto_Timestamp()}
       set {_uniqueStorage()._expirationTime = newValue}
@@ -206,9 +288,16 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
     public mutating func clearExpirationTime() {_uniqueStorage()._expirationTime = nil}
 
     ///*
-    /// The duration for expiration time will extend every this many seconds. If there are
-    /// insufficient funds, then it extends as long as possible. If it is empty when it expires,
-    /// then it is deleted.
+    /// A duration to extend this account's expiration.
+    /// <p>
+    /// The network SHALL extend the account's expiration by this
+    /// duration, if funds are available, upon automatic renewal.<br/>
+    /// This SHALL NOT apply if the account is already deleted
+    /// upon expiration.<br/>
+    /// If this is not provided in an allowed range on account creation, the
+    /// transaction SHALL fail with INVALID_AUTO_RENEWAL_PERIOD. The default
+    /// values for the minimum period and maximum period are currently
+    /// 30 days and 90 days, respectively.
     public var autoRenewPeriod: Proto_Duration {
       get {return _storage._autoRenewPeriod ?? Proto_Duration()}
       set {_uniqueStorage()._autoRenewPeriod = newValue}
@@ -219,18 +308,17 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
     public mutating func clearAutoRenewPeriod() {_uniqueStorage()._autoRenewPeriod = nil}
 
     ///*
-    /// All of the livehashes attached to the account (each of which is a hash along with the
-    /// keys that authorized it and can delete it)
+    /// All of the livehashes attached to the account (each of which is a
+    /// hash along with the keys that authorized it and can delete it)
     public var liveHashes: [Proto_LiveHash] {
       get {return _storage._liveHashes}
       set {_uniqueStorage()._liveHashes = newValue}
     }
 
     ///*
-    /// [DEPRECATED] The metadata of the tokens associated to the account. This field was 
-    /// deprecated by <a href="https://hips.hedera.com/hip/hip-367">HIP-367</a>, which allowed 
-    /// an account to be associated to an unlimited number of tokens. This scale makes it more 
-    /// efficient for users to consult mirror nodes to review their token associations.
+    /// As of `HIP-367`, which enabled unlimited token associations, the
+    /// potential scale for this value requires that users consult a mirror
+    /// node for this information.
     ///
     /// NOTE: This field was marked as deprecated in the .proto file.
     public var tokenRelationships: [Proto_TokenRelationship] {
@@ -239,35 +327,54 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
     }
 
     ///*
-    /// The memo associated with the account
+    /// A short description of this account.
+    /// <p>
+    /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+    /// (default 100) bytes when encoded as UTF-8.
     public var memo: String {
       get {return _storage._memo}
       set {_uniqueStorage()._memo = newValue}
     }
 
     ///*
-    /// The number of NFTs owned by this account
+    /// The total number of non-fungible/unique tokens owned by this account.
     public var ownedNfts: Int64 {
       get {return _storage._ownedNfts}
       set {_uniqueStorage()._ownedNfts = newValue}
     }
 
     ///*
-    /// The maximum number of tokens that an Account can be implicitly associated with.
+    /// The maximum number of tokens that can be auto-associated with the
+    /// account.
+    /// <p>
+    /// If this is less than or equal to `used_auto_associations` (or 0),
+    /// then this account MUST manually associate with a token before
+    /// transacting in that token.<br/>
+    /// Following HIP-904 This value may also be `-1` to indicate no
+    /// limit.<br/>
+    /// This value MUST NOT be less than `-1`.
     public var maxAutomaticTokenAssociations: Int32 {
       get {return _storage._maxAutomaticTokenAssociations}
       set {_uniqueStorage()._maxAutomaticTokenAssociations = newValue}
     }
 
     ///*
-    /// The alias of this account
+    /// An account alias.<br/>
+    /// This is a value used in some contexts to reference an account when
+    /// the tripartite account identifier is not available.
+    /// <p>
+    /// This field, when set to a non-default value, is immutable and
+    /// SHALL NOT be changed.
     public var alias: Data {
       get {return _storage._alias}
       set {_uniqueStorage()._alias = newValue}
     }
 
     ///*
-    /// The ledger ID the response was returned from; please see <a href="https://github.com/hashgraph/hedera-improvement-proposal/blob/master/HIP/hip-198.md">HIP-198</a> for the network-specific IDs. 
+    /// The ledger ID of the network that generated this response.
+    /// <p>
+    /// This value SHALL identify the distributed ledger that responded to
+    /// this query.
     public var ledgerID: Data {
       get {return _storage._ledgerID}
       set {_uniqueStorage()._ledgerID = newValue}
@@ -281,7 +388,7 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
     }
 
     ///*
-    /// Staking metadata for this account.
+    /// Staking information for this account.
     public var stakingInfo: Proto_StakingInfo {
       get {return _storage._stakingInfo ?? Proto_StakingInfo()}
       set {_uniqueStorage()._stakingInfo = newValue}

@@ -8,6 +8,26 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get Fast Record
+/// Get a recent transaction record "fast".
+///
+/// > Important
+/// >> This query is obsolete and not supported.<br/>
+/// >> Any query of this type that is submitted SHALL fail with a `PRE_CHECK`
+/// >> result of `NOT_SUPPORTED`.
+///
+/// > Implementation Note
+/// >> This query is _defined_ for "Crypto" service, but is _implemented_ by
+/// >> the "Network Admin" service.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,18 +41,24 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get the tx record of a transaction, given its transaction ID. Once a transaction reaches
-/// consensus, then information about whether it succeeded or failed will be available until the end
-/// of the receipt period.  Before and after the receipt period, and for a transaction that was never
-/// submitted, the receipt is unknown.  This query is free (the payment field is left empty).
+/// Get the tx record of a transaction, given its transaction ID.
+///
+/// Once a transaction reaches consensus, then information about whether it
+/// succeeded or failed will be available until the end of the receipt period.
+/// Before and after the receipt period, and for a transaction that was never
+/// submitted, the receipt is unknown.<br/>
+/// This query is free (the payment field is left empty).
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_TransactionGetFastRecordQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -62,19 +88,23 @@ public struct Proto_TransactionGetFastRecordQuery: Sendable {
 }
 
 ///*
-/// Response when the client sends the node TransactionGetFastRecordQuery. If it created a new entity
-/// (account, file, or smart contract instance) then one of the three ID fields will be filled in
-/// with the ID of the new entity. Sometimes a single transaction will create more than one new
-/// entity, such as when a new contract instance is created, and this also creates the new account
-/// that it owned by that instance.
+/// Response when the client sends the node TransactionGetFastRecordQuery.
+/// If it created a new entity (account, file, or smart contract instance) then
+/// one of the three ID fields will be filled in with the ID of the new entity.
+/// Sometimes a single transaction will create more than one new entity, such
+/// as when a new contract instance is created, and this also creates the new
+/// account that it owned by that instance.
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_TransactionGetFastRecordResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}

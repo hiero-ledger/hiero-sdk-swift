@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Submit Message
+/// Submit a message to a topic via the Hedera Consensus Service (HCS).
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,14 +33,25 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// UNDOCUMENTED
+/// Consensus message "chunk" detail.<br/>
+/// This message carries information describing the way in which a message
+/// submitted for consensus is broken into multiple fragments to fit within
+/// network transaction size limits.
+///
+/// The use of multiple message fragments is RECOMMENDED for any message
+/// greater than 4KiB in total size.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_ConsensusMessageChunkInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// TransactionID of the first chunk, gets copied to every subsequent chunk in a fragmented message.
+  /// The TransactionID of the first chunk.
+  /// <p>
+  /// This MUST be set for every chunk in a fragmented message.
   public var initialTransactionID: Proto_TransactionID {
     get {return _initialTransactionID ?? Proto_TransactionID()}
     set {_initialTransactionID = newValue}
@@ -44,7 +66,8 @@ public struct Proto_ConsensusMessageChunkInfo: Sendable {
   public var total: Int32 = 0
 
   ///*
-  /// The sequence number (from 1 to total) of the current chunk in the message.
+  /// The sequence number (from 1 to total) of the current chunk
+  /// in the message.
   public var number: Int32 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -55,7 +78,20 @@ public struct Proto_ConsensusMessageChunkInfo: Sendable {
 }
 
 ///*
-/// UNDOCUMENTED
+/// Submit a message for consensus.<br/>
+/// This transaction adds a new entry to the "end" of a topic, and provides
+/// the core function of the consensus service.
+///
+/// Valid and authorized messages on valid topics SHALL be ordered by the
+/// consensus service, published in the block stream, and available to all
+/// subscribers on this topic via the mirror nodes.<br/>
+/// If this transaction succeeds the resulting `TransactionReceipt` SHALL contain
+/// the latest `topicSequenceNumber` and `topicRunningHash` for the topic.<br/>
+/// If the topic `submitKey` is set, and not an empty `KeyList`, then that key
+/// MUST sign this transaction.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_ConsensusSubmitMessageTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -73,11 +109,20 @@ public struct Proto_ConsensusSubmitMessageTransactionBody: @unchecked Sendable {
   public mutating func clearTopicID() {self._topicID = nil}
 
   ///*
-  /// Message to be submitted. Max size of the Transaction (including signatures) is 6KiB.
+  /// A message to be submitted.
+  /// <p>
+  /// This Transaction (including signatures) MUST be less than 6KiB.<br/>
+  /// Messages SHOULD be less than 4KiB. A "chunked" message MAY be submitted
+  /// if a message larger than this is required.
   public var message: Data = Data()
 
   ///*
-  /// Optional information of the current chunk in a fragmented message.
+  /// Information for the current "chunk" in a fragmented message.
+  /// <p>
+  /// This value is REQUIRED if the full `message` is submitted in two or
+  /// more fragments due to transaction size limits.<br/>
+  /// If the message is submitted in a single transaction, then this
+  /// field SHOULD NOT be set.
   public var chunkInfo: Proto_ConsensusMessageChunkInfo {
     get {return _chunkInfo ?? Proto_ConsensusMessageChunkInfo()}
     set {_chunkInfo = newValue}

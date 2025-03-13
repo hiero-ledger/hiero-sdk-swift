@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Contract Get Info
+/// A standard query to obtain detailed information about a smart contract.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,16 +33,16 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Get information about a smart contract instance. This includes the account that it uses, the file
-/// containing its initcode (if a file was used to initialize the contract), and the time when it will expire.
+/// Request detailed information about a smart contract.
 public struct Proto_ContractGetInfoQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// standard info sent from client to node, including the signed payment, and what kind of
-  /// response is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -42,7 +53,10 @@ public struct Proto_ContractGetInfoQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// the contract for which information is requested
+  /// A smart contract ID.
+  /// <p>
+  /// The network SHALL return information for this smart contract,
+  /// if successful.
   public var contractID: Proto_ContractID {
     get {return _contractID ?? Proto_ContractID()}
     set {_contractID = newValue}
@@ -61,15 +75,16 @@ public struct Proto_ContractGetInfoQuery: Sendable {
 }
 
 ///*
-/// Response when the client sends the node ContractGetInfoQuery
+/// Information returned in response to a "get info" query for a smart contract.
 public struct Proto_ContractGetInfoResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// standard response from node to client, including the requested fields: cost, or state proof,
-  /// or both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -80,7 +95,8 @@ public struct Proto_ContractGetInfoResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// the information about this contract instance (a state proof can be generated for this)
+  /// The information, as requested, for a smart contract.
+  /// A state proof MAY be generated for this value.
   public var contractInfo: Proto_ContractGetInfoResponse.ContractInfo {
     get {return _contractInfo ?? Proto_ContractGetInfoResponse.ContractInfo()}
     set {_contractInfo = newValue}
@@ -98,7 +114,7 @@ public struct Proto_ContractGetInfoResponse: Sendable {
     // methods supported on all messages.
 
     ///*
-    /// ID of the contract instance, in the format used in transactions
+    /// The ID of the smart contract requested in the query.
     public var contractID: Proto_ContractID {
       get {return _storage._contractID ?? Proto_ContractID()}
       set {_uniqueStorage()._contractID = newValue}
@@ -109,8 +125,8 @@ public struct Proto_ContractGetInfoResponse: Sendable {
     public mutating func clearContractID() {_uniqueStorage()._contractID = nil}
 
     ///*
-    /// ID of the cryptocurrency account owned by the contract instance, in the format used in
-    /// transactions
+    /// The Account ID for the account entry associated with this
+    /// smart contract.
     public var accountID: Proto_AccountID {
       get {return _storage._accountID ?? Proto_AccountID()}
       set {_uniqueStorage()._accountID = newValue}
@@ -121,20 +137,20 @@ public struct Proto_ContractGetInfoResponse: Sendable {
     public mutating func clearAccountID() {_uniqueStorage()._accountID = nil}
 
     ///*
-    /// ID of both the contract instance and the cryptocurrency account owned by the contract
-    /// instance, in the format used by Solidity
+    /// The "Solidity" form contract ID.<br/>
+    /// This is a hexadecimal string form of the 20-byte EVM address
+    /// of the contract.
     public var contractAccountID: String {
       get {return _storage._contractAccountID}
       set {_uniqueStorage()._contractAccountID = newValue}
     }
 
     ///*
-    /// the state of the instance and its fields can be modified arbitrarily if this key signs a
-    /// transaction to modify it. If this is null, then such modifications are not possible, and
-    /// there is no administrator that can override the normal operation of this smart contract
-    /// instance. Note that if it is created with no admin keys, then there is no administrator
-    /// to authorize changing the admin keys, so there can never be any admin keys for that
-    /// instance.
+    /// The key that MUST sign any transaction to update or modify this
+    /// smart contract.
+    /// <p>
+    /// If this value is null, or is an empty `KeyList` then the contract
+    /// CANNOT be deleted, modified, or updated, but MAY still expire.
     public var adminKey: Proto_Key {
       get {return _storage._adminKey ?? Proto_Key()}
       set {_uniqueStorage()._adminKey = newValue}
@@ -145,7 +161,7 @@ public struct Proto_ContractGetInfoResponse: Sendable {
     public mutating func clearAdminKey() {_uniqueStorage()._adminKey = nil}
 
     ///*
-    /// the current time at which this contract instance (and its account) is set to expire
+    /// The point in time at which this contract will expire.
     public var expirationTime: Proto_Timestamp {
       get {return _storage._expirationTime ?? Proto_Timestamp()}
       set {_uniqueStorage()._expirationTime = newValue}
@@ -156,9 +172,10 @@ public struct Proto_ContractGetInfoResponse: Sendable {
     public mutating func clearExpirationTime() {_uniqueStorage()._expirationTime = nil}
 
     ///*
-    /// the expiration time will extend every this many seconds. If there are insufficient funds,
-    /// then it extends as long as possible. If the account is empty when it expires, then it is
-    /// deleted.
+    /// The duration, in seconds, for which the contract lifetime will be
+    /// automatically extended upon expiration, provide sufficient HBAR is
+    /// available at that time to pay the renewal fee.<br/>
+    /// See `auto_renew_account_id` for additional conditions.
     public var autoRenewPeriod: Proto_Duration {
       get {return _storage._autoRenewPeriod ?? Proto_Duration()}
       set {_uniqueStorage()._autoRenewPeriod = newValue}
@@ -169,39 +186,42 @@ public struct Proto_ContractGetInfoResponse: Sendable {
     public mutating func clearAutoRenewPeriod() {_uniqueStorage()._autoRenewPeriod = nil}
 
     ///*
-    /// number of bytes of storage being used by this instance (which affects the cost to extend
-    /// the expiration time)
+    /// The amount of storage used by this smart contract.
     public var storage: Int64 {
       get {return _storage._storage}
       set {_uniqueStorage()._storage = newValue}
     }
 
     ///*
-    /// the memo associated with the contract (max 100 bytes)
+    /// A short description of this smart contract.
+    /// <p>
+    /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+    /// (default 100) bytes when encoded as UTF-8.
     public var memo: String {
       get {return _storage._memo}
       set {_uniqueStorage()._memo = newValue}
     }
 
     ///*
-    /// The current balance, in tinybars
+    /// The current HBAR balance, in tinybar, of the smart contract account.
     public var balance: UInt64 {
       get {return _storage._balance}
       set {_uniqueStorage()._balance = newValue}
     }
 
     ///*
-    /// Whether the contract has been deleted
+    /// A flag indicating that this contract is deleted.
     public var deleted: Bool {
       get {return _storage._deleted}
       set {_uniqueStorage()._deleted = newValue}
     }
 
     ///*
-    /// [DEPRECATED] The metadata of the tokens associated to the contract. This field was 
-    /// deprecated by <a href="https://hips.hedera.com/hip/hip-367">HIP-367</a>, which allowed 
-    /// an account to be associated to an unlimited number of tokens. This scale makes it more 
-    /// efficient for users to consult mirror nodes to review their token associations.
+    /// Because <a href="https://hips.hedera.com/hip/hip-367">HIP-367</a>,
+    /// which allows an account to be associated to an unlimited number of
+    /// tokens, it became necessary to only provide this information from
+    /// a Mirror Node.<br/>
+    /// The list of tokens associated to this contract.
     ///
     /// NOTE: This field was marked as deprecated in the .proto file.
     public var tokenRelationships: [Proto_TokenRelationship] {
@@ -210,15 +230,22 @@ public struct Proto_ContractGetInfoResponse: Sendable {
     }
 
     ///*
-    /// The ledger ID the response was returned from; please see <a href="https://github.com/hashgraph/hedera-improvement-proposal/blob/master/HIP/hip-198.md">HIP-198</a> for the network-specific IDs. 
+    /// The ledger ID of the network that generated this response.
+    /// <p>
+    /// This value SHALL identify the distributed ledger that responded to
+    /// this query.
     public var ledgerID: Data {
       get {return _storage._ledgerID}
       set {_uniqueStorage()._ledgerID = newValue}
     }
 
     ///*
-    /// ID of the an account to charge for auto-renewal of this contract. If not set, or set to an account with zero hbar
-    /// balance, the contract's own hbar balance will be used to cover auto-renewal fees.
+    /// An account designated to pay the renewal fee upon automatic renewal
+    /// of this contract.
+    /// <p>
+    /// If this is not set, or is set to an account with zero HBAR
+    /// available, the HBAR balance of the contract, if available,
+    /// SHALL be used to pay the renewal fee.
     public var autoRenewAccountID: Proto_AccountID {
       get {return _storage._autoRenewAccountID ?? Proto_AccountID()}
       set {_uniqueStorage()._autoRenewAccountID = newValue}
@@ -229,14 +256,15 @@ public struct Proto_ContractGetInfoResponse: Sendable {
     public mutating func clearAutoRenewAccountID() {_uniqueStorage()._autoRenewAccountID = nil}
 
     ///*
-    /// The maximum number of tokens that a contract can be implicitly associated with.
+    /// The maximum number of tokens that the contract can be
+    /// associated to automatically.
     public var maxAutomaticTokenAssociations: Int32 {
       get {return _storage._maxAutomaticTokenAssociations}
       set {_uniqueStorage()._maxAutomaticTokenAssociations = newValue}
     }
 
     ///*
-    /// Staking metadata for this contract.
+    /// Staking information for this contract.
     public var stakingInfo: Proto_StakingInfo {
       get {return _storage._stakingInfo ?? Proto_StakingInfo()}
       set {_uniqueStorage()._stakingInfo = newValue}

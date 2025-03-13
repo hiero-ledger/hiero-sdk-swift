@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Crypto Update
+/// Modify a single account.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,20 +32,33 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Change properties for the given account. Any null field is ignored (left unchanged). This
-/// transaction must be signed by the existing key for this account. If the transaction is changing
-/// the key field, then the transaction must be signed by both the old key (from before the change)
-/// and the new key. The old key must sign for security. The new key must sign as a safeguard to
-/// avoid accidentally changing to an invalid key, and then having no way to recover. 
-/// If the update transaction sets the <tt>auto_renew_account</tt> field to anything other 
-/// than the sentinel <tt>0.0.0</tt>, the key of the referenced account must sign.
+/// Modify the current state of an account.
+///
+/// ### Requirements
+/// - The `key` for this account MUST sign all account update transactions.
+/// - If the `key` field is set for this transaction, then _both_ the current
+///   `key` and the new `key` MUST sign this transaction, for security and to
+///   prevent setting the `key` field to an invalid value.
+/// - If the `auto_renew_account` field is set for this transaction, the account
+///   identified in that field MUST sign this transaction.
+/// - Fields set to non-default values in this transaction SHALL be updated on
+///   success. Fields not set to non-default values SHALL NOT be
+///   updated on success.
+/// - All fields that may be modified in this transaction SHALL have a
+///   default value of unset (a.k.a. `null`).
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The account ID which is being updated in this transaction
+  /// An account identifier.<br/>
+  /// This identifies the account which is to be modified in this transaction.
+  /// <p>
+  /// This field is REQUIRED.
   public var accountIdtoUpdate: Proto_AccountID {
     get {return _storage._accountIdtoUpdate ?? Proto_AccountID()}
     set {_uniqueStorage()._accountIdtoUpdate = newValue}
@@ -45,7 +69,12 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearAccountIdtoUpdate() {_uniqueStorage()._accountIdtoUpdate = nil}
 
   ///*
-  /// The new key
+  /// An account key.<br/>
+  /// This may be a "primitive" key (a singly cryptographic key), or a
+  /// composite key.
+  /// <p>
+  /// If set, this key MUST be a valid key.<br/>
+  /// If set, the previous key and new key MUST both sign this transaction.
   public var key: Proto_Key {
     get {return _storage._key ?? Proto_Key()}
     set {_uniqueStorage()._key = newValue}
@@ -56,11 +85,9 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearKey() {_uniqueStorage()._key = nil}
 
   ///*
-  /// [Deprecated] ID of the account to which this account is proxy staked. If proxyAccountID is null, or is an
-  /// invalid account, or is an account that isn't a node, then this account is automatically proxy
-  /// staked to a node chosen by the network, but without earning payments. If the proxyAccountID
-  /// account refuses to accept proxy staking , or if it is not currently running a node, then it
-  /// will behave as if proxyAccountID was null.
+  /// Removed in favor of the `staked_id` oneOf.<br/>
+  /// An account identifier for a "proxy" account. This account's HBAR are
+  /// staked to a node selected by the proxy account.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var proxyAccountID: Proto_AccountID {
@@ -73,8 +100,9 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearProxyAccountID() {_uniqueStorage()._proxyAccountID = nil}
 
   ///*
-  /// [Deprecated]. Payments earned from proxy staking are shared between the node and this
-  /// account, with proxyFraction / 10000 going to this account
+  /// Removed prior to the first available history.<br/>
+  /// A fraction to split staking rewards between this account and the proxy
+  /// account.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var proxyFraction: Int32 {
@@ -82,13 +110,16 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
     set {_uniqueStorage()._proxyFraction = newValue}
   }
 
+  /// This entire oneOf is deprecated, and the concept is not implemented.
   public var sendRecordThresholdField: OneOf_SendRecordThresholdField? {
     get {return _storage._sendRecordThresholdField}
     set {_uniqueStorage()._sendRecordThresholdField = newValue}
   }
 
   ///*
-  /// [Deprecated]. The new threshold amount (in tinybars) for which an account record is
+  /// Removed prior to the first available history, and may be related
+  /// to an early design dead-end.<br/>
+  /// The new threshold amount (in tinybars) for which an account record is
   /// created for any send/withdraw transaction
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
@@ -101,7 +132,9 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// [Deprecated]. The new threshold amount (in tinybars) for which an account record is
+  /// Removed prior to the first available history, and may be related
+  /// to an early design dead-end.<br/>
+  /// The new threshold amount (in tinybars) for which an account record is
   /// created for any send/withdraw transaction
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
@@ -113,13 +146,16 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
     set {_uniqueStorage()._sendRecordThresholdField = .sendRecordThresholdWrapper(newValue)}
   }
 
+  /// This entire oneOf is deprecated, and the concept is not implemented.
   public var receiveRecordThresholdField: OneOf_ReceiveRecordThresholdField? {
     get {return _storage._receiveRecordThresholdField}
     set {_uniqueStorage()._receiveRecordThresholdField = newValue}
   }
 
   ///*
-  /// [Deprecated]. The new threshold amount (in tinybars) for which an account record is
+  /// Removed prior to the first available history, and may be related
+  /// to an early design dead-end.<br/>
+  /// The new threshold amount (in tinybars) for which an account record is
   /// created for any receive/deposit transaction.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
@@ -132,7 +168,9 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// [Deprecated]. The new threshold amount (in tinybars) for which an account record is
+  /// Removed prior to the first available history, and may be related
+  /// to an early design dead-end.<br/>
+  /// The new threshold amount (in tinybars) for which an account record is
   /// created for any receive/deposit transaction.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
@@ -145,9 +183,14 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// The duration in which it will automatically extend the expiration period. If it doesn't have
-  /// enough balance, it extends as long as possible. If it is empty when it expires, then it is
-  /// deleted.
+  /// A duration to extend account expiration.<br/>
+  /// An amount of time, in seconds, to extend the expiration date for this
+  /// account when _automatically_ renewed.
+  /// <p>
+  /// This duration MUST be between the current configured minimum and maximum
+  /// values defined for the network.<br/>
+  /// This duration SHALL be applied only when _automatically_ extending the
+  /// account expiration.
   public var autoRenewPeriod: Proto_Duration {
     get {return _storage._autoRenewPeriod ?? Proto_Duration()}
     set {_uniqueStorage()._autoRenewPeriod = newValue}
@@ -158,7 +201,14 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearAutoRenewPeriod() {_uniqueStorage()._autoRenewPeriod = nil}
 
   ///*
-  /// The new expiration time to extend to (ignored if equal to or before the current one)
+  /// A new account expiration time, in seconds since the epoch.
+  /// <p>
+  /// For this purpose, `epoch` SHALL be the UNIX epoch with 0
+  /// at `1970-01-01T00:00:00.000Z`.<br/>
+  /// If set, this value MUST be later than the current consensus time.<br/>
+  /// If set, this value MUST be earlier than the current consensus time
+  /// extended by the current maximum expiration time configured for the
+  /// network.
   public var expirationTime: Proto_Timestamp {
     get {return _storage._expirationTime ?? Proto_Timestamp()}
     set {_uniqueStorage()._expirationTime = newValue}
@@ -174,9 +224,10 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// [Deprecated] Do NOT use this field to set a false value because the server cannot
-  /// distinguish from the default value. Use receiverSigRequiredWrapper field for this
-  /// purpose.
+  /// Removed to distinguish between unset and a default value.<br/>
+  /// Do NOT use this field to set a false value because the server cannot
+  /// distinguish from the default value. Use receiverSigRequiredWrapper
+  /// field for this purpose.
   ///
   /// NOTE: This field was marked as deprecated in the .proto file.
   public var receiverSigRequired: Bool {
@@ -188,8 +239,12 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// If true, this account's key must sign any transaction depositing into this account (in
-  /// addition to all withdrawals)
+  /// A flag indicating the account holder must authorize all incoming
+  /// token transfers.
+  /// <p>
+  /// If this flag is set then any transaction that would result in adding
+  /// hbar or other tokens to this account balance MUST be signed by the
+  /// identifying key of this account (that is, the `key` field).
   public var receiverSigRequiredWrapper: SwiftProtobuf.Google_Protobuf_BoolValue {
     get {
       if case .receiverSigRequiredWrapper(let v)? = _storage._receiverSigRequiredField {return v}
@@ -199,7 +254,10 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// If set, the new memo to be associated with the account (UTF-8 encoding max 100 bytes)
+  /// A short description of this Account.
+  /// <p>
+  /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+  /// (default 100) bytes when encoded as UTF-8.
   public var memo: SwiftProtobuf.Google_Protobuf_StringValue {
     get {return _storage._memo ?? SwiftProtobuf.Google_Protobuf_StringValue()}
     set {_uniqueStorage()._memo = newValue}
@@ -210,12 +268,15 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   public mutating func clearMemo() {_uniqueStorage()._memo = nil}
 
   ///*
-  /// If set, modify the maximum number of tokens that can be auto-associated with the
-  /// account.<br/>
-  /// If this is set and less than or equal to `used_auto_associations`, or 0, then this account
-  /// MUST manually associate with a token before transacting in that token.<br/>
+  /// A maximum number of tokens that can be auto-associated
+  /// with this account.<br/>
+  /// By default this value is 0 for all accounts except for automatically
+  /// created accounts (i.e smart contracts) which default to -1.
+  /// <p>
+  /// If this value is `0`, then this account MUST manually associate to
+  /// a token before holding or transacting in that token.<br/>
   /// This value MAY also be `-1` to indicate no limit.<br/>
-  /// This value MUST NOT be less than `-1`.
+  /// If set, this value MUST NOT be less than `-1`.<br/>
   public var maxAutomaticTokenAssociations: SwiftProtobuf.Google_Protobuf_Int32Value {
     get {return _storage._maxAutomaticTokenAssociations ?? SwiftProtobuf.Google_Protobuf_Int32Value()}
     set {_uniqueStorage()._maxAutomaticTokenAssociations = newValue}
@@ -225,16 +286,16 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   /// Clears the value of `maxAutomaticTokenAssociations`. Subsequent reads from it will return its default value.
   public mutating func clearMaxAutomaticTokenAssociations() {_uniqueStorage()._maxAutomaticTokenAssociations = nil}
 
-  ///*
-  /// ID of the account or node to which this account is staking.
   public var stakedID: OneOf_StakedID? {
     get {return _storage._stakedID}
     set {_uniqueStorage()._stakedID = newValue}
   }
 
   ///*
-  /// ID of the new account to which this account is staking. If set to the sentinel <tt>0.0.0</tt> AccountID,
-  /// this field removes this account's staked account ID.
+  /// ID of the account to which this account is staking its balances.
+  /// <p>
+  /// If this account is not currently staking its balances, then this
+  /// field, if set, MUST be the sentinel value of `0.0.0`.
   public var stakedAccountID: Proto_AccountID {
     get {
       if case .stakedAccountID(let v)? = _storage._stakedID {return v}
@@ -244,8 +305,13 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// ID of the new node this account is staked to. If set to the sentinel <tt>-1</tt>, this field
-  /// removes this account's staked node ID.
+  /// ID of the node this account is staked to.
+  /// <p>
+  /// If this account is not currently staking its balances, then this
+  /// field, if set, SHALL be the sentinel value of `-1`.<br/>
+  /// Wallet software SHOULD surface staking issues to users and provide a
+  /// simple mechanism to update staking to a new node ID in the event the
+  /// prior staked node ID ceases to be valid.
   public var stakedNodeID: Int64 {
     get {
       if case .stakedNodeID(let v)? = _storage._stakedID {return v}
@@ -255,7 +321,11 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// If true, the account declines receiving a staking reward. The default value is false.
+  /// A boolean indicating that this account has chosen to decline rewards for
+  /// staking its balances.
+  /// <p>
+  /// This account MAY still stake its balances, but SHALL NOT receive reward
+  /// payments for doing so, if this value is set, and `true`.
   public var declineReward: SwiftProtobuf.Google_Protobuf_BoolValue {
     get {return _storage._declineReward ?? SwiftProtobuf.Google_Protobuf_BoolValue()}
     set {_uniqueStorage()._declineReward = newValue}
@@ -267,15 +337,20 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
+  /// This entire oneOf is deprecated, and the concept is not implemented.
   public enum OneOf_SendRecordThresholdField: Equatable, Sendable {
     ///*
-    /// [Deprecated]. The new threshold amount (in tinybars) for which an account record is
+    /// Removed prior to the first available history, and may be related
+    /// to an early design dead-end.<br/>
+    /// The new threshold amount (in tinybars) for which an account record is
     /// created for any send/withdraw transaction
     ///
     /// NOTE: This field was marked as deprecated in the .proto file.
     case sendRecordThreshold(UInt64)
     ///*
-    /// [Deprecated]. The new threshold amount (in tinybars) for which an account record is
+    /// Removed prior to the first available history, and may be related
+    /// to an early design dead-end.<br/>
+    /// The new threshold amount (in tinybars) for which an account record is
     /// created for any send/withdraw transaction
     ///
     /// NOTE: This field was marked as deprecated in the .proto file.
@@ -283,15 +358,20 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
 
   }
 
+  /// This entire oneOf is deprecated, and the concept is not implemented.
   public enum OneOf_ReceiveRecordThresholdField: Equatable, Sendable {
     ///*
-    /// [Deprecated]. The new threshold amount (in tinybars) for which an account record is
+    /// Removed prior to the first available history, and may be related
+    /// to an early design dead-end.<br/>
+    /// The new threshold amount (in tinybars) for which an account record is
     /// created for any receive/deposit transaction.
     ///
     /// NOTE: This field was marked as deprecated in the .proto file.
     case receiveRecordThreshold(UInt64)
     ///*
-    /// [Deprecated]. The new threshold amount (in tinybars) for which an account record is
+    /// Removed prior to the first available history, and may be related
+    /// to an early design dead-end.<br/>
+    /// The new threshold amount (in tinybars) for which an account record is
     /// created for any receive/deposit transaction.
     ///
     /// NOTE: This field was marked as deprecated in the .proto file.
@@ -301,29 +381,39 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
 
   public enum OneOf_ReceiverSigRequiredField: Equatable, Sendable {
     ///*
-    /// [Deprecated] Do NOT use this field to set a false value because the server cannot
-    /// distinguish from the default value. Use receiverSigRequiredWrapper field for this
-    /// purpose.
+    /// Removed to distinguish between unset and a default value.<br/>
+    /// Do NOT use this field to set a false value because the server cannot
+    /// distinguish from the default value. Use receiverSigRequiredWrapper
+    /// field for this purpose.
     ///
     /// NOTE: This field was marked as deprecated in the .proto file.
     case receiverSigRequired(Bool)
     ///*
-    /// If true, this account's key must sign any transaction depositing into this account (in
-    /// addition to all withdrawals)
+    /// A flag indicating the account holder must authorize all incoming
+    /// token transfers.
+    /// <p>
+    /// If this flag is set then any transaction that would result in adding
+    /// hbar or other tokens to this account balance MUST be signed by the
+    /// identifying key of this account (that is, the `key` field).
     case receiverSigRequiredWrapper(SwiftProtobuf.Google_Protobuf_BoolValue)
 
   }
 
-  ///*
-  /// ID of the account or node to which this account is staking.
   public enum OneOf_StakedID: Equatable, Sendable {
     ///*
-    /// ID of the new account to which this account is staking. If set to the sentinel <tt>0.0.0</tt> AccountID,
-    /// this field removes this account's staked account ID.
+    /// ID of the account to which this account is staking its balances.
+    /// <p>
+    /// If this account is not currently staking its balances, then this
+    /// field, if set, MUST be the sentinel value of `0.0.0`.
     case stakedAccountID(Proto_AccountID)
     ///*
-    /// ID of the new node this account is staked to. If set to the sentinel <tt>-1</tt>, this field
-    /// removes this account's staked node ID.
+    /// ID of the node this account is staked to.
+    /// <p>
+    /// If this account is not currently staking its balances, then this
+    /// field, if set, SHALL be the sentinel value of `-1`.<br/>
+    /// Wallet software SHOULD surface staking issues to users and provide a
+    /// simple mechanism to update staking to a new node ID in the event the
+    /// prior staked node ID ceases to be valid.
     case stakedNodeID(Int64)
 
   }

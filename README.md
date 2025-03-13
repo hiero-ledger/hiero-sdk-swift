@@ -69,10 +69,10 @@ task submodule:install
 ### Generate services
 ```bash
 # cwd: `$REPO`
-protoc --swift_opt=Visibility=Public --swift_opt=FileNaming=PathToUnderscores --swift_out=./Sources/HederaProtobufs/Services --proto_path=./Sources/HederaProtobufs/Protos/services Sources/HederaProtobufs/Protos/services/*.proto
+protoc --swift_opt=Visibility=Public --swift_opt=FileNaming=PathToUnderscores --swift_out=./Sources/HieroProtobufs/Services --proto_path=./Sources/HieroProtobufs/Protos/services Sources/HieroProtobufs/Protos/services/*.proto
 
 # generate GRPC (if needed)
-protoc --grpc-swift_opt=Visibility=Public,Server=false --grpc-swift_out=./Sources/HederaProtobufs/Services --proto_path=./Sources/HederaProtobufs/Protos/services Sources/HederaProtobufs/Protos/services/*.proto
+protoc --grpc-swift_opt=Visibility=Public,Server=false --grpc-swift_out=./Sources/HieroProtobufs/Services --proto_path=./Sources/HieroProtobufs/Protos/services Sources/HieroProtobufs/Protos/services/*.proto
 ```
 
 ###  Integration Tests

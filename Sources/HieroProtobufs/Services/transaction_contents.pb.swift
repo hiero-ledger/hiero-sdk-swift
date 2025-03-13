@@ -8,6 +8,19 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Transaction Contents
+/// The Signed Transaction message which forms the content of a transaction
+/// `signedTransactionBytes`. This message is the result of several changes
+/// to transaction message structure over time.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -21,17 +34,31 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
+///*
+/// A combination transaction bytes and a map of signatures.<br/>
+/// This message contains a serialized `TransactionBody` in a byte array
+/// and a `SignatureMap` that contains all of the signatures offered to
+/// authenticate the transaction.
+///
+/// ### Block Stream Effects
+/// This content is recorded in the record stream exactly as received.
 public struct Proto_SignedTransaction: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// TransactionBody serialized into bytes, which needs to be signed
+  /// A byte array containing a serialized `TransactionBody`.
+  /// <p>
+  /// This content is what the signatures in `sigMap` MUST sign.
   public var bodyBytes: Data = Data()
 
   ///*
-  /// The signatures on the body with the new format, to authorize the transaction
+  /// A set of cryptographic signatures.
+  /// <p>
+  /// This set MUST contain all signatures required to authenticate
+  /// and authorize the transaction.<br/>
+  /// This set MAY contain additional signatures.
   public var sigMap: Proto_SignatureMap {
     get {return _sigMap ?? Proto_SignatureMap()}
     set {_sigMap = newValue}

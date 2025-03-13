@@ -1,22 +1,4 @@
-/*
- * ‌
- * Hedera Swift SDK
- * ​
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
- * ​
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ‍
- */
+// SPDX-License-Identifier: Apache-2.0
 
 import HieroProtobufs
 import SnapshotTesting
@@ -133,5 +115,81 @@ internal final class TopicUpdateTransactionTests: XCTestCase {
 
         tx.clearAutoRenewAccountId()
         XCTAssertEqual(tx.autoRenewAccountId, 0)
+    }
+
+    internal func testGetSetFeeScheduleKey() {
+        let tx = TopicUpdateTransaction()
+        tx.feeScheduleKey(.single(Resources.publicKey))
+
+        XCTAssertEqual(tx.feeScheduleKey, .single(Resources.publicKey))
+    }
+
+    internal func testGetSetFeeExemptKeys() {
+        let feeExemptKeys: [Key] = [
+            .single(PrivateKey.generateEcdsa().publicKey), .single(PrivateKey.generateEcdsa().publicKey),
+        ]
+        let tx = TopicUpdateTransaction()
+        tx.feeExemptKeys(feeExemptKeys)
+
+        XCTAssertEqual(tx.feeExemptKeys, feeExemptKeys)
+    }
+
+    internal func testAddFeeExemptKeyToEmptyList() {
+        let tx = TopicUpdateTransaction()
+
+        let feeExemptKey: Key = .single(PrivateKey.generateEcdsa().publicKey)
+        tx.feeExemptKeys([])
+        tx.addFeeExemptKey(feeExemptKey)
+
+        XCTAssertEqual(tx.feeExemptKeys, [feeExemptKey])
+    }
+
+    internal func testAddFeeExemptKeyToList() {
+        let tx = TopicUpdateTransaction()
+
+        let feeExemptKey: Key = .single(PrivateKey.generateEcdsa().publicKey)
+        tx.feeExemptKeys([])
+        tx.addFeeExemptKey(feeExemptKey)
+
+        XCTAssertEqual(tx.feeExemptKeys, [feeExemptKey])
+    }
+
+    internal func testSetCustomFees() {
+        let customFees: [CustomFixedFee] = [
+            CustomFixedFee(1, nil, TokenId("0.0.1")),
+            CustomFixedFee(2, nil, TokenId("0.0.2")),
+            CustomFixedFee(3, nil, TokenId("0.0.3")),
+        ]
+
+        let tx = TopicUpdateTransaction()
+        tx.customFees(customFees)
+
+        XCTAssertEqual(tx.customFees, customFees)
+    }
+
+    internal func testAddCustomFeeToList() {
+        var customFees: [CustomFixedFee] = [
+            CustomFixedFee(1, nil, TokenId("0.0.1")),
+            CustomFixedFee(2, nil, TokenId("0.0.2")),
+            CustomFixedFee(3, nil, TokenId("0.0.3")),
+        ]
+
+        let customFeeToAdd = CustomFixedFee(1, nil, TokenId("0.0.1"))
+
+        let tx = TopicUpdateTransaction()
+        tx.customFees(customFees)
+        tx.addCustomFee(customFeeToAdd)
+
+        customFees.append(customFeeToAdd)
+
+        XCTAssertEqual(tx.customFees, customFees)
+    }
+
+    internal func testClearCustomFees() {
+        let tx = TopicUpdateTransaction()
+        tx.customFees([CustomFixedFee(1, nil, TokenId("0.0.1"))])
+        tx.clearCustomFees()
+
+        XCTAssertEqual(tx.customFees, [])
     }
 }

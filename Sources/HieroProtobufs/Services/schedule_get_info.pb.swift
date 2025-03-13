@@ -8,6 +8,18 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Schedule Get Information
+/// Query body and response to retrieve information about a scheduled
+/// transaction.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,17 +34,19 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Gets information about a schedule in the network's action queue.
-/// 
-/// Responds with <tt>INVALID_SCHEDULE_ID</tt> if the requested schedule doesn't exist.
+/// Request for information about a scheduled transaction.
+///
+/// If the requested schedule does not exist, the network SHALL respond
+/// with `INVALID_SCHEDULE_ID`.
 public struct Proto_ScheduleGetInfoQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// standard info sent from client to node including the signed payment, and what kind of response
-  /// is requested (cost, state proof, both, or neither).
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
+  /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
     set {_header = newValue}
@@ -43,7 +57,10 @@ public struct Proto_ScheduleGetInfoQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The id of the schedule to interrogate
+  /// A schedule identifier.
+  /// <p>
+  /// This SHALL identify the schedule to retrieve.<br/>
+  /// This field is REQUIRED.
   public var scheduleID: Proto_ScheduleID {
     get {return _scheduleID ?? Proto_ScheduleID()}
     set {_scheduleID = newValue}
@@ -69,7 +86,9 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
   // methods supported on all messages.
 
   ///*
-  /// The id of the schedule
+  /// A schedule identifier.
+  /// <p>
+  /// This SHALL identify the schedule retrieved.
   public var scheduleID: Proto_ScheduleID {
     get {return _storage._scheduleID ?? Proto_ScheduleID()}
     set {_uniqueStorage()._scheduleID = newValue}
@@ -85,7 +104,11 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
   }
 
   ///*
-  /// If the schedule has been deleted, the consensus time when this occurred
+  /// A deletion timestamp.
+  /// <p>
+  /// If the schedule was deleted, this SHALL be set to the consensus
+  /// timestamp of the `deleteSchedule` transaction.<br/>
+  /// If the schedule is _not_ deleted, this field SHALL NOT be set.
   public var deletionTime: Proto_Timestamp {
     get {
       if case .deletionTime(let v)? = _storage._data {return v}
@@ -95,7 +118,12 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
   }
 
   ///*
-  /// If the schedule has been executed, the consensus time when this occurred
+  /// An execution timestamp.
+  /// <p>
+  /// If the schedule was completed, and the _scheduled_ transaction
+  /// executed, this SHALL be set to the consensus timestamp of the
+  /// transaction that initiated that execution.<br/>
+  /// If the schedule is _not_ complete, this field SHALL NOT be set.
   public var executionTime: Proto_Timestamp {
     get {
       if case .executionTime(let v)? = _storage._data {return v}
@@ -105,11 +133,22 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
   }
 
   ///*
-  /// The time at which the schedule will be evaluated for execution and then expire.
-  ///
-  /// Note: Before Long Term Scheduled Transactions are enabled, Scheduled Transactions will _never_ execute at expiration - they
-  ///       will _only_ execute during the initial ScheduleCreate transaction or via ScheduleSign transactions and will _always_
-  ///       expire at expirationTime.
+  /// An expiration timestamp.<br/>
+  /// This represents the time at which the schedule will expire. For a
+  /// long-term schedule (if enabled) this is when the schedule will be
+  /// executed, assuming it meets signature requirements at that time.
+  /// For a short-term schedule, this is the deadline to complete the
+  /// signature requirements for the scheduled transaction to execute.
+  /// Regardless of schedule type, the schedule will be removed from
+  /// state when it expires.
+  /// <p>
+  /// A schedule SHALL be removed from state when it expires.<br/>
+  /// A short-term schedule MUST meet signature requirements strictly
+  /// before expiration or it SHALL NOT be executed.<br/>
+  /// A long-term schedule SHALL be executed if, and only if, all signature
+  /// requirements for the scheduled transaction are met at expiration.<br/>
+  /// A long-term schedule SHALL NOT be executed if any signature requirement
+  /// for the scheduled transaction are not met at expiration.<br/>
   public var expirationTime: Proto_Timestamp {
     get {return _storage._expirationTime ?? Proto_Timestamp()}
     set {_uniqueStorage()._expirationTime = newValue}
@@ -120,7 +159,17 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
   public mutating func clearExpirationTime() {_uniqueStorage()._expirationTime = nil}
 
   ///*
-  /// The scheduled transaction
+  /// A scheduled transaction.
+  /// <p>
+  /// This SHALL be a transaction type enabled in the network property
+  /// `scheduling.whitelist`, and SHALL NOT be any other
+  /// transaction type.<br/>
+  /// This transaction SHALL be executed if the schedule meets all signature
+  /// and execution time requirements for this transaction.<br/>
+  /// The signature requirements for this transaction SHALL be evaluated
+  /// at schedule creation, SHALL be reevaluated with each `signSchedule`
+  /// transaction, and, for long-term schedules, SHALL be reevaluated when
+  /// the schedule expires.<br/>
   public var scheduledTransactionBody: Proto_SchedulableTransactionBody {
     get {return _storage._scheduledTransactionBody ?? Proto_SchedulableTransactionBody()}
     set {_uniqueStorage()._scheduledTransactionBody = newValue}
@@ -131,7 +180,10 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
   public mutating func clearScheduledTransactionBody() {_uniqueStorage()._scheduledTransactionBody = nil}
 
   ///*
-  /// The publicly visible memo of the schedule
+  /// A short description for this schedule.
+  /// <p>
+  /// This value, if set, MUST NOT exceed `transaction.maxMemoUtf8Bytes`
+  /// (default 100) bytes when encoded as UTF-8.
   public var memo: String {
     get {return _storage._memo}
     set {_uniqueStorage()._memo = newValue}
@@ -149,7 +201,19 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
   public mutating func clearAdminKey() {_uniqueStorage()._adminKey = nil}
 
   ///*
-  /// The Ed25519 keys the network deems to have signed the scheduled transaction
+  /// A list of "valid" signatures for this schedule.<br/>
+  /// This list contains only "primitive" (i.e. cryptographic or contract)
+  /// signatures. The full signature requirements for the scheduled
+  /// transaction are evaluated as if this list of keys had signed the
+  /// scheduled transaction directly.
+  /// <p>
+  /// This list SHALL contain every "primitive" key that has signed the
+  /// original `createSchedule`, or any subsequent
+  /// `signSchedule` transaction.<br/>
+  /// This list MAY elide any signature not likely to be required by the
+  /// scheduled transaction. Such requirement SHOULD be evaluated when the
+  /// signature is presented (i.e. during evaluation of a `createSchedule` or
+  /// `signSchedule` transaction).
   public var signers: Proto_KeyList {
     get {return _storage._signers ?? Proto_KeyList()}
     set {_uniqueStorage()._signers = newValue}
@@ -160,7 +224,9 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
   public mutating func clearSigners() {_uniqueStorage()._signers = nil}
 
   ///*
-  /// The id of the account that created the schedule
+  /// An account identifier.
+  /// <p>
+  /// This SHALL identify the account that created this schedule.
   public var creatorAccountID: Proto_AccountID {
     get {return _storage._creatorAccountID ?? Proto_AccountID()}
     set {_uniqueStorage()._creatorAccountID = newValue}
@@ -171,7 +237,10 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
   public mutating func clearCreatorAccountID() {_uniqueStorage()._creatorAccountID = nil}
 
   ///*
-  /// The id of the account responsible for the service fee of the scheduled transaction
+  /// An account identifier.
+  /// <p>
+  /// The identified account SHALL pay the full transaction fee for the
+  /// scheduled transaction _when it executes_.
   public var payerAccountID: Proto_AccountID {
     get {return _storage._payerAccountID ?? Proto_AccountID()}
     set {_uniqueStorage()._payerAccountID = newValue}
@@ -182,8 +251,10 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
   public mutating func clearPayerAccountID() {_uniqueStorage()._payerAccountID = nil}
 
   ///*
-  /// The transaction id that will be used in the record of the scheduled transaction (if it
-  /// executes)
+  /// A transaction identifier.
+  /// <p>
+  /// This SHALL be recorded as the transaction identifier for the
+  /// _scheduled_ transaction, if (and when) it is executed.
   public var scheduledTransactionID: Proto_TransactionID {
     get {return _storage._scheduledTransactionID ?? Proto_TransactionID()}
     set {_uniqueStorage()._scheduledTransactionID = newValue}
@@ -194,19 +265,39 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
   public mutating func clearScheduledTransactionID() {_uniqueStorage()._scheduledTransactionID = nil}
 
   ///*
-  /// The ledger ID the response was returned from; please see <a href="https://github.com/hashgraph/hedera-improvement-proposal/blob/master/HIP/hip-198.md">HIP-198</a> for the network-specific IDs. 
+  /// The ledger ID of the network that generated this response.
+  /// <p>
+  /// This value SHALL identify the distributed ledger that responded to
+  /// this query.
   public var ledgerID: Data {
     get {return _storage._ledgerID}
     set {_uniqueStorage()._ledgerID = newValue}
   }
 
   ///*
-  /// When set to true, the transaction will be evaluated for execution at expiration_time instead
-  /// of when all required signatures are received.
-  /// When set to false, the transaction will execute immediately after sufficient signatures are received
-  /// to sign the contained transaction. During the initial ScheduleCreate transaction or via ScheduleSign transactions.
-  ///
-  /// Note: this field is unused until Long Term Scheduled Transactions are enabled.
+  /// A flag indicating this schedule will execute when it expires.
+  /// <p>
+  /// If this field is set
+  /// <ul>
+  ///   <li>This schedule SHALL be considered a "long-term" schedule.</li>
+  ///   <li>This schedule SHALL be evaluated when the network consensus time
+  ///       reaches the `expirationTime`, and if the signature requirements
+  ///       for the scheduled transaction are met at that time, the
+  ///       scheduled transaction SHALL be executed.</li>
+  ///   <li>This schedule SHALL NOT be executed before the network consensus
+  ///       time reaches the `expirationTime`.</li>
+  /// </ul>
+  /// If this field is not set
+  /// <ul>
+  ///   <li>This schedule SHALL be considered a "short-term" schedule.</li>
+  ///   <li>This schedule SHALL be evaluated when created, and reevaluated
+  ///       with each `signSchedule` transaction, and if the signature
+  ///       requirements for the scheduled transaction are met at that time,
+  ///       the scheduled transaction SHALL be executed immediately.</li>
+  ///   <li>This schedule SHALL be executed as soon as the signature
+  ///       requirements are met, and MUST be executed before the network
+  ///       consensus time reaches the `expirationTime`, if at all.</li>
+  /// </ul>
   public var waitForExpiry: Bool {
     get {return _storage._waitForExpiry}
     set {_uniqueStorage()._waitForExpiry = newValue}
@@ -216,10 +307,19 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
 
   public enum OneOf_Data: Equatable, Sendable {
     ///*
-    /// If the schedule has been deleted, the consensus time when this occurred
+    /// A deletion timestamp.
+    /// <p>
+    /// If the schedule was deleted, this SHALL be set to the consensus
+    /// timestamp of the `deleteSchedule` transaction.<br/>
+    /// If the schedule is _not_ deleted, this field SHALL NOT be set.
     case deletionTime(Proto_Timestamp)
     ///*
-    /// If the schedule has been executed, the consensus time when this occurred
+    /// An execution timestamp.
+    /// <p>
+    /// If the schedule was completed, and the _scheduled_ transaction
+    /// executed, this SHALL be set to the consensus timestamp of the
+    /// transaction that initiated that execution.<br/>
+    /// If the schedule is _not_ complete, this field SHALL NOT be set.
     case executionTime(Proto_Timestamp)
 
   }
@@ -230,15 +330,16 @@ public struct Proto_ScheduleInfo: @unchecked Sendable {
 }
 
 ///*
-/// Response wrapper for the <tt>ScheduleInfo</tt>
+/// A response message for a `getScheduleInfo` query.
 public struct Proto_ScheduleGetInfoResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof, or
-  /// both, or neither
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
     get {return _header ?? Proto_ResponseHeader()}
     set {_header = newValue}
@@ -249,7 +350,9 @@ public struct Proto_ScheduleGetInfoResponse: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The information requested about this schedule instance
+  /// Detail information for a schedule.
+  /// <p>
+  /// This field SHALL contain all available schedule detail.
   public var scheduleInfo: Proto_ScheduleInfo {
     get {return _scheduleInfo ?? Proto_ScheduleInfo()}
     set {_scheduleInfo = newValue}

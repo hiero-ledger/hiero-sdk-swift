@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Get Topic
+/// Query a topic in the Hedera Consensus Service (HCS).
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,14 +32,21 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// See [ConsensusService.getTopicInfo()](#proto.ConsensusService)
+/// Retrieve the latest state of a topic.
+///
+/// This method is unrestricted and allowed on any topic by any payer
+/// account.<br/>
+/// A query for a deleted topic MAY succeed if the topic is within the
+/// "autorenew grace period".<br/>
+/// A query for a topic removed from state SHALL NOT succeed.
 public struct Proto_ConsensusGetTopicInfoQuery: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard info sent from client to node, including the signed payment, and what kind of response is requested
+  /// Standard information sent with every query operation.<br/>
+  /// This includes the signed payment and what kind of response is requested
   /// (cost, state proof, both, or neither).
   public var header: Proto_QueryHeader {
     get {return _header ?? Proto_QueryHeader()}
@@ -40,7 +58,9 @@ public struct Proto_ConsensusGetTopicInfoQuery: Sendable {
   public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// The Topic for which information is being requested
+  /// A topic ID.
+  /// <p>
+  /// The network SHALL return information for this topic, if successful.
   public var topicID: Proto_TopicID {
     get {return _topicID ?? Proto_TopicID()}
     set {_topicID = newValue}
@@ -59,50 +79,55 @@ public struct Proto_ConsensusGetTopicInfoQuery: Sendable {
 }
 
 ///*
-/// Retrieve the parameters of and state of a consensus topic.
-public struct Proto_ConsensusGetTopicInfoResponse: @unchecked Sendable {
+/// Query response to describe the current state of a topic in the Hedera
+/// Consensus Service(HCS).
+public struct Proto_ConsensusGetTopicInfoResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// Standard response from node to client, including the requested fields: cost, or state proof, or both, or neither.
+  /// The standard response information for queries.<br/>
+  /// This includes the values requested in the `QueryHeader`
+  /// (cost, state proof, both, or neither).
   public var header: Proto_ResponseHeader {
-    get {return _storage._header ?? Proto_ResponseHeader()}
-    set {_uniqueStorage()._header = newValue}
+    get {return _header ?? Proto_ResponseHeader()}
+    set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  public var hasHeader: Bool {return _storage._header != nil}
+  public var hasHeader: Bool {return self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
-  public mutating func clearHeader() {_uniqueStorage()._header = nil}
+  public mutating func clearHeader() {self._header = nil}
 
   ///*
-  /// Topic identifier.
+  /// The ID of the topic requested in the query.
   public var topicID: Proto_TopicID {
-    get {return _storage._topicID ?? Proto_TopicID()}
-    set {_uniqueStorage()._topicID = newValue}
+    get {return _topicID ?? Proto_TopicID()}
+    set {_topicID = newValue}
   }
   /// Returns true if `topicID` has been explicitly set.
-  public var hasTopicID: Bool {return _storage._topicID != nil}
+  public var hasTopicID: Bool {return self._topicID != nil}
   /// Clears the value of `topicID`. Subsequent reads from it will return its default value.
-  public mutating func clearTopicID() {_uniqueStorage()._topicID = nil}
+  public mutating func clearTopicID() {self._topicID = nil}
 
   ///*
-  /// Current state of the topic
+  /// Information describing the current state of the topic.
   public var topicInfo: Proto_ConsensusTopicInfo {
-    get {return _storage._topicInfo ?? Proto_ConsensusTopicInfo()}
-    set {_uniqueStorage()._topicInfo = newValue}
+    get {return _topicInfo ?? Proto_ConsensusTopicInfo()}
+    set {_topicInfo = newValue}
   }
   /// Returns true if `topicInfo` has been explicitly set.
-  public var hasTopicInfo: Bool {return _storage._topicInfo != nil}
+  public var hasTopicInfo: Bool {return self._topicInfo != nil}
   /// Clears the value of `topicInfo`. Subsequent reads from it will return its default value.
-  public mutating func clearTopicInfo() {_uniqueStorage()._topicInfo = nil}
+  public mutating func clearTopicInfo() {self._topicInfo = nil}
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
 
-  fileprivate var _storage = _StorageClass.defaultInstance
+  fileprivate var _header: Proto_ResponseHeader? = nil
+  fileprivate var _topicID: Proto_TopicID? = nil
+  fileprivate var _topicInfo: Proto_ConsensusTopicInfo? = nil
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -159,85 +184,41 @@ extension Proto_ConsensusGetTopicInfoResponse: SwiftProtobuf.Message, SwiftProto
     5: .same(proto: "topicInfo"),
   ]
 
-  fileprivate class _StorageClass {
-    var _header: Proto_ResponseHeader? = nil
-    var _topicID: Proto_TopicID? = nil
-    var _topicInfo: Proto_ConsensusTopicInfo? = nil
-
-    #if swift(>=5.10)
-      // This property is used as the initial default value for new instances of the type.
-      // The type itself is protecting the reference to its storage via CoW semantics.
-      // This will force a copy to be made of this reference when the first mutation occurs;
-      // hence, it is safe to mark this as `nonisolated(unsafe)`.
-      static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
-
-    private init() {}
-
-    init(copying source: _StorageClass) {
-      _header = source._header
-      _topicID = source._topicID
-      _topicInfo = source._topicInfo
-    }
-  }
-
-  fileprivate mutating func _uniqueStorage() -> _StorageClass {
-    if !isKnownUniquelyReferenced(&_storage) {
-      _storage = _StorageClass(copying: _storage)
-    }
-    return _storage
-  }
-
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    _ = _uniqueStorage()
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      while let fieldNumber = try decoder.nextFieldNumber() {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every case branch when no optimizations are
-        // enabled. https://github.com/apple/swift-protobuf/issues/1034
-        switch fieldNumber {
-        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._header) }()
-        case 2: try { try decoder.decodeSingularMessageField(value: &_storage._topicID) }()
-        case 5: try { try decoder.decodeSingularMessageField(value: &_storage._topicInfo) }()
-        default: break
-        }
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._header) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._topicID) }()
+      case 5: try { try decoder.decodeSingularMessageField(value: &self._topicInfo) }()
+      default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every if/case branch local when no optimizations
-      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-      // https://github.com/apple/swift-protobuf/issues/1182
-      try { if let v = _storage._header {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-      } }()
-      try { if let v = _storage._topicID {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-      } }()
-      try { if let v = _storage._topicInfo {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
-      } }()
-    }
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._header {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._topicID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._topicInfo {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Proto_ConsensusGetTopicInfoResponse, rhs: Proto_ConsensusGetTopicInfoResponse) -> Bool {
-    if lhs._storage !== rhs._storage {
-      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
-        let _storage = _args.0
-        let rhs_storage = _args.1
-        if _storage._header != rhs_storage._header {return false}
-        if _storage._topicID != rhs_storage._topicID {return false}
-        if _storage._topicInfo != rhs_storage._topicInfo {return false}
-        return true
-      }
-      if !storagesAreEqual {return false}
-    }
+    if lhs._header != rhs._header {return false}
+    if lhs._topicID != rhs._topicID {return false}
+    if lhs._topicInfo != rhs._topicInfo {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

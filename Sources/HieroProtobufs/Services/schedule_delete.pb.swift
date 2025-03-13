@@ -8,6 +8,17 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Schedule Delete
+/// A transaction body for a `scheduleDelete` transaction.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -21,21 +32,27 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Marks a schedule in the network's action queue as deleted. Must be signed by the admin key of the
-/// target schedule.  A deleted schedule cannot receive any additional signing keys, nor will it be
-/// executed.
+/// Mark a schedule in the network state as deleted.
 ///
-/// Other notable response codes include, <tt>INVALID_SCHEDULE_ID</tt>, <tt>SCHEDULE_PENDING_EXPIRATION</tt>,
-/// <tt>SCHEDULE_ALREADY_DELETED</tt>, <tt>SCHEDULE_ALREADY_EXECUTED</tt>, <tt>SCHEDULE_IS_IMMUTABLE</tt>.
-/// For more information please see the section of this documentation on the <tt>ResponseCode</tt>
-/// enum. 
+/// This transaction MUST be signed by the `adminKey` for the
+/// identified schedule.<br/>
+/// If a schedule does not have `adminKey` set or if `adminKey` is an empty
+/// `KeyList`, that schedule SHALL be immutable and MUST NOT be deleted.<br/>
+/// A deleted schedule SHALL not be executed.<br/>
+/// A deleted schedule MUST NOT be the subject of a subsequent
+/// `scheduleSign` transaction.
+///
+/// ### Block Stream Effects
+/// None
 public struct Proto_ScheduleDeleteTransactionBody: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The ID of the Scheduled Entity
+  /// A schedule identifier.
+  /// <p>
+  /// This MUST identify the schedule which SHALL be deleted.
   public var scheduleID: Proto_ScheduleID {
     get {return _scheduleID ?? Proto_ScheduleID()}
     set {_scheduleID = newValue}

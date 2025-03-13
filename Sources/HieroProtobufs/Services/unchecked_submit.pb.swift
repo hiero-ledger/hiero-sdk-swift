@@ -8,6 +8,23 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+///*
+/// # Unchecked Submit
+/// Submit a transaction to the network, bypassing all but the most minimal
+/// validation.
+///
+/// > Important
+/// >> This transaction is obsolete and not supported.<br/>
+/// >> Any transaction of this type that is submitted SHALL fail with a
+/// >> `PRE_CHECK` result of `NOT_SUPPORTED`.
+///
+/// ### Keywords
+/// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+/// "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+/// document are to be interpreted as described in
+/// [RFC2119](https://www.ietf.org/rfc/rfc2119) and clarified in
+/// [RFC8174](https://www.ietf.org/rfc/rfc8174).
+
 import Foundation
 import SwiftProtobuf
 
@@ -22,15 +39,26 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// Submit an arbitrary (serialized) Transaction to the network without prechecks. Requires superuser
-/// privileges. 
+/// Submit an arbitrary (serialized) Transaction to the network
+/// without pre-check.
+///
+/// This transaction SHALL require `superuser` privileges
+/// (e.g. the `treasury` or `systemAdmin` accounts).
+///
+/// NOTE: This message was marked as deprecated in the .proto file.
 public struct Proto_UncheckedSubmitBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   ///*
-  /// The serialized bytes of the Transaction to be submitted without prechecks
+  /// The serialized bytes of a `Transaction`.
+  /// <p>
+  /// This transaction SHALL be deserialized and submitted for consensus
+  /// with no further validation.<br/>
+  /// Specifically, the transaction may violate basic limits and
+  /// constraints such as size limits, minimum or maximum values,
+  /// valid start time, fee calculations, etc...
   public var transactionBytes: Data = Data()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
