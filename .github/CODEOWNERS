@@ -16,14 +16,14 @@
 /.github/dependabot.yml                         @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
 
 # Swift project files and inline plugins
-**/.swift-format.json                            @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
-**/.swiftlint.yml                                @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
-**/Package.swift                                 @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
-**/Package.resolved                              @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
+**/.swift-format.json                           @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
+**/.swiftlint.yml                               @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
+**/Package.swift                                @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
+**/Package.resolved                             @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
 
 # Codacy Tool Configurations
-/config/                                         @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
-.remarkrc                                        @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
+/config/                                        @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
+.remarkrc                                       @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
 
 # Self-protection for root CODEOWNERS files (this file should not exist and should definitely require approval)
 /CODEOWNERS                                     @hiero-ledger/github-maintainers
@@ -33,8 +33,8 @@
 **/LICENSE                                      @hiero-ledger/github-maintainers
 
 # CodeCov configuration
-**/codecov.yml                                   @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
+**/codecov.yml                                  @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
 
 # Git Ignore definitions
-**/.gitignore                                    @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
-**/.gitignore.*                                  @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
+**/.gitignore                                   @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
+**/.gitignore.*                                 @hiero-ledger/github-maintainers @hiero-ledger/hiero-sdk-swift-maintainers @hiero-ledger/hiero-sdk-swift-committers
