@@ -19,7 +19,7 @@ internal class TCKServer {
         let app = Application(env)
         defer { app.shutdown() }
 
-        app.http.server.configuration.port = 80
+        app.http.server.configuration.port = 8544
         app.post { req -> Response in
             var jsonRpcRequest: JSONRequest
             do {
