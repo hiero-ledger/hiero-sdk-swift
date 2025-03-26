@@ -16,7 +16,7 @@ internal final class AccountIdTests: XCTestCase {
 
     internal func testFromEvmAddressString() {
         XCTAssertEqual(
-            AccountId(evmAddress: "0x302a300506032b6570032100114e6abc371b82da"),
+            AccountId(evmAddress: "0x302a300506032b6570032100114e6abc371b82da", shard: 0, realm: 0),
             try AccountId.fromString("0x302a300506032b6570032100114e6abc371b82da")
         )
     }
@@ -24,7 +24,7 @@ internal final class AccountIdTests: XCTestCase {
     internal func testToEvmAddressString() {
         XCTAssertEqual(
             "0x302a300506032b6570032100114e6abc371b82da",
-            AccountId(evmAddress: "0x302a300506032b6570032100114e6abc371b82da").toString()
+            AccountId(evmAddress: "0x302a300506032b6570032100114e6abc371b82da", shard: 0, realm: 0).toString()
         )
     }
 
@@ -150,8 +150,28 @@ internal final class AccountIdTests: XCTestCase {
 
     internal func testFromEvmAddress() {
         assertSnapshot(
-            matching: try AccountId(evmAddress: .fromString("0x302a300506032b6570032100114e6abc371b82da")),
+            matching: try AccountId(
+                evmAddress: .fromString("0x302a300506032b6570032100114e6abc371b82da"), shard: 0, realm: 0),
             as: .description
         )
     }
+
+    internal func testFromEvmAddressWithPrefix() throws {
+        let evmAddressString = "0x302a300506032b6570032100114e6abc371b82da"
+        let evmAddress = try EvmAddress.fromString(evmAddressString)
+        let id1 = AccountId.fromEvmAddress(evmAddress, shard: 0, realm: 0)
+        let id2 = try AccountId.fromEvmAddress(evmAddressString, shard: 0, realm: 0)
+
+        XCTAssertEqual(id1, id2)
+    }
+
+    internal func testFromEvmAddressWithShardAndRealm() throws {
+        let evmAddressString = "0x302a300506032b6570032100114e6abc371b82da"
+        let evmAddress = try EvmAddress.fromString(evmAddressString)
+        let id1 = AccountId.init(evmAddress: evmAddress, shard: 1, realm: 2)
+        let id2 = try AccountId.fromEvmAddress(evmAddressString, shard: 1, realm: 2)
+
+        XCTAssertEqual(id1, id2)
+    }
+
 }
