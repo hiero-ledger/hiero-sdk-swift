@@ -12,7 +12,7 @@ public struct AccountId: Sendable, EntityId, ValidateChecksums {
     public let alias: PublicKey?
     public let evmAddress: EvmAddress?
 
-    public init(shard: UInt64 = 0, realm: UInt64 = 0, num: UInt64, checksum: Checksum?) {
+    public init(shard: UInt64, realm: UInt64, num: UInt64, checksum: Checksum?) {
         self.shard = shard
         self.realm = realm
         self.num = num
@@ -34,6 +34,16 @@ public struct AccountId: Sendable, EntityId, ValidateChecksums {
         self.init(shard: shard, realm: realm, num: num, checksum: nil)
     }
 
+    public init(evmAddress: EvmAddress, shard: UInt64, realm: UInt64) {
+        self.shard = shard
+        self.realm = realm
+        num = 0
+        alias = nil
+        self.evmAddress = evmAddress
+        checksum = nil
+    }
+
+    @available(*, deprecated, message: "Use init(evmAddress: EvmAddress, shard: UInt64, realm: UInt64) instead")
     public init(evmAddress: EvmAddress) {
         shard = 0
         realm = 0
@@ -67,7 +77,8 @@ public struct AccountId: Sendable, EntityId, ValidateChecksums {
 
         case .other(let description):
             let evmAddress = try EvmAddress(parsing: description)
-            self.init(evmAddress: evmAddress)
+
+            self.init(evmAddress: evmAddress, shard: 0, realm: 0)
         }
     }
 
@@ -106,8 +117,25 @@ public struct AccountId: Sendable, EntityId, ValidateChecksums {
     /// Create an `AccountId` from an evm address.
     ///
     /// Accepts an Ethereum public address.
+    @available(
+        *, deprecated, message: "Use fromEvmAddress(evmAddress: EvmAddress, shard: UInt64, realm: UInt64) instead"
+    )
     public static func fromEvmAddress(_ evmAddress: EvmAddress) -> Self {
         Self(evmAddress: evmAddress)
+    }
+
+    /// Create an `AccountId` from an evm address, shard, and realm.
+    ///
+    /// Accepts an Ethereum public address with shard and realm.
+    public static func fromEvmAddress(_ evmAddress: EvmAddress, shard: UInt64, realm: UInt64) -> Self {
+        Self(evmAddress: evmAddress, shard: shard, realm: realm)
+    }
+
+    /// Create an `AccountId` from an string evm address, shard, and realm.
+    ///
+    /// Accepts a string Ethereum public address with shard and realm.
+    public static func fromEvmAddress(_ evmAddress: String, shard: UInt64, realm: UInt64) throws -> Self {
+        Self(evmAddress: try EvmAddress.fromString(evmAddress), shard: shard, realm: realm)
     }
 
     public static func fromBytes(_ bytes: Data) throws -> Self {
@@ -132,7 +160,7 @@ extension AccountId: TryProtobufCodable {
         // thanks swift.
         case .alias(let data):
             switch try? EvmAddress.fromBytes(data) {
-            case .some(let evmAddress): self.init(evmAddress: evmAddress)
+            case .some(let evmAddress): self.init(evmAddress: evmAddress, shard: shard, realm: realm)
             case nil: self.init(shard: shard, realm: realm, alias: try PublicKey(protobufBytes: data))
             }
 
