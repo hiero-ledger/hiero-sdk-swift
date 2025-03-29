@@ -76,6 +76,11 @@ internal enum ServicesTransactionDataList {
     case historyProofKeyPublication(
         [Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofKeyPublicationTransactionBody])
     case historyProofVote([Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofVoteTransactionBody])
+    case hintsPreprocessingVote([Com_Hedera_Hapi_Services_Auxiliary_Hints_HintsPreprocessingVoteTransactionBody])
+    case hintsKeyPublication([Com_Hedera_Hapi_Services_Auxiliary_Hints_HintsKeyPublicationTransactionBody])
+    case hintsPartialSignature([Com_Hedera_Hapi_Services_Auxiliary_Hints_HintsPartialSignatureTransactionBody])
+    case crsPublication([Com_Hedera_Hapi_Services_Auxiliary_Hints_CrsPublicationTransactionBody])
+    case atomicBatch([Proto_AtomicBatchTransactionBody])
 
     internal mutating func append(_ transaction: Proto_TransactionBody.OneOf_Data) throws {
         switch (self, transaction) {
@@ -275,6 +280,42 @@ internal enum ServicesTransactionDataList {
             array.append(data)
             self = .tokenCancelAirdrop(array)
 
+        case (.stateSignatureTransaction(var array), .stateSignatureTransaction(let data)):
+            array.append(data)
+            self = .stateSignatureTransaction(array)
+
+        case (.historyProofSignature(var array), .historyProofSignature(let data)):
+            array.append(data)
+            self = .historyProofSignature(array)
+
+        case (.historyProofKeyPublication(var array), .historyProofKeyPublication(let data)):
+            array.append(data)
+            self = .historyProofKeyPublication(array)
+
+        case (.historyProofVote(var array), .historyProofVote(let data)):
+            array.append(data)
+            self = .historyProofVote(array)
+
+        case (.hintsPreprocessingVote(var array), .hintsPreprocessingVote(let data)):
+            array.append(data)
+            self = .hintsPreprocessingVote(array)
+
+        case (.hintsKeyPublication(var array), .hintsKeyPublication(let data)):
+            array.append(data)
+            self = .hintsKeyPublication(array)
+
+        case (.hintsPartialSignature(var array), .hintsPartialSignature(let data)):
+            array.append(data)
+            self = .hintsPartialSignature(array)
+
+        case (.crsPublication(var array), .crsPublication(let data)):
+            array.append(data)
+            self = .crsPublication(array)
+
+        case (.atomicBatch(var array), .atomicBatch(let data)):
+            array.append(data)
+            self = .atomicBatch(array)
+
         default:
             throw HError.fromProtobuf("mismatched transaction types")
         }
@@ -348,11 +389,22 @@ extension ServicesTransactionDataList: TryFromProtobuf {
         case .tokenClaimAirdrop(let data): value = .tokenClaimAirdrop([data])
         case .stateSignatureTransaction:
             throw HError.fromProtobuf("Unsupported transaction `StateSignatureTransaction`")
+        case .hintsPreprocessingVote:
+            throw HError.fromProtobuf("Unsupported transaction `HintsPreprocessingVoteTransaction`")
+        case .hintsKeyPublication:
+            throw HError.fromProtobuf("Unsupported transaction `HintsKeyPublicationTransaction`")
+        case .hintsPartialSignature:
+            throw HError.fromProtobuf("Unsupported transaction `HintsPartialSignatureTransaction`")
         case .historyProofSignature:
-            throw HError.fromProtobuf("Unsupported transaction `HistoryAssemblySignatureTransaction`")
+            throw HError.fromProtobuf("Unsupported transaction `HistoryProofSignatureTransaction`")
         case .historyProofKeyPublication:
             throw HError.fromProtobuf("Unsupported transaction `HistoryProofKeyPublicationTransaction`")
-        case .historyProofVote: throw HError.fromProtobuf("Unsupported transaction `HistoryProofVoteTransaction`")
+        case .historyProofVote:
+            throw HError.fromProtobuf("Unsupported transaction `HistoryProofVoteTransaction`")
+        case .crsPublication:
+            throw HError.fromProtobuf("Unsupported transaction `CrsPublicationTransaction`")
+        case .atomicBatch:
+            throw HError.fromProtobuf("Unsupported transaction `AtomicBatchTransaction`")
         }
 
         for transaction in iter {

@@ -115,7 +115,8 @@ let package = Package(
                 .product(name: "GRPC", package: "grpc-swift"),
             ],
             exclude: [
-                "Protos"
+                "Protos",
+                "update_protos.py",
             ]
         ),
         // weird name, but whatever, internal targets

@@ -254,6 +254,15 @@ public enum RequestType {
     /// State signature transaction
     case stateSignatureTransaction
 
+    /// Hints preprocessing vote transaction
+    case hintsPreprocessingVote
+
+    /// Hints key publication transaction
+    case hintsKeyPublication
+
+    /// Hints partial signature transaction
+    case hintsPartialSignature
+
     /// History assembly signature
     case historyAssemblySignature
 
@@ -262,6 +271,12 @@ public enum RequestType {
 
     /// History proof vote
     case historyProofVote
+
+    /// CRS publication transaction
+    case crsPublication
+
+    /// Atomic batch transaction
+    case atomicBatch
 
     // swiftlint:disable:next function_body_length
     internal init?(protobuf proto: Proto_HederaFunctionality) throws {
@@ -349,9 +364,14 @@ public enum RequestType {
         case .tokenCancelAirdrop: self = .tokenCancelAirdrop
         case .tokenClaimAirdrop: self = .tokenClaimAirdrop
         case .stateSignatureTransaction: self = .stateSignatureTransaction
+        case .hintsPreprocessingVote: self = .hintsPreprocessingVote
+        case .hintsKeyPublication: self = .hintsKeyPublication
+        case .hintsPartialSignature: self = .hintsPartialSignature
         case .historyAssemblySignature: self = .historyAssemblySignature
         case .historyProofKeyPublication: self = .historyProofKeyPublication
         case .historyProofVote: self = .historyProofVote
+        case .crsPublication: self = .crsPublication
+        case .atomicBatch: self = .atomicBatch
         case .UNRECOGNIZED(let code):
             throw HError.fromProtobuf("unrecognized RequestType: `\(code)`")
         }
@@ -441,9 +461,14 @@ public enum RequestType {
         case .tokenCancelAirdrop: return .tokenCancelAirdrop
         case .tokenClaimAirdrop: return .tokenClaimAirdrop
         case .stateSignatureTransaction: return .stateSignatureTransaction
+        case .hintsPreprocessingVote: return .hintsPreprocessingVote
+        case .hintsKeyPublication: return .hintsKeyPublication
+        case .hintsPartialSignature: return .hintsPartialSignature
         case .historyAssemblySignature: return .historyAssemblySignature
         case .historyProofKeyPublication: return .historyProofKeyPublication
         case .historyProofVote: return .historyProofVote
+        case .crsPublication: return .crsPublication
+        case .atomicBatch: return .atomicBatch
         }
     }
 }

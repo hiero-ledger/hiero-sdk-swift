@@ -215,6 +215,15 @@ extension Transaction {
         case .stateSignatureTransaction(let code):
             throw HError.fromProtobuf("unrecognized: stateSignatureTransaction `\(code)`")
 
+        case .hintsPreprocessingVote(let code):
+            throw HError.fromProtobuf("unrecognized: hintsPreprocessingVote `\(code)`")
+
+        case .hintsKeyPublication(let code):
+            throw HError.fromProtobuf("unrecognized: hintsKeyPublication `\(code)`")
+
+        case .hintsPartialSignature(let code):
+            throw HError.fromProtobuf("unrecognized: hintsPartialSignature `\(code)`")
+
         case .historyProofSignature(let code):
             throw HError.fromProtobuf("unrecognized: historyProofSignature `\(code)`")
 
@@ -223,6 +232,12 @@ extension Transaction {
 
         case .historyProofVote(let code):
             throw HError.fromProtobuf("unrecognized: historyProofVote `\(code)`")
+
+        case .crsPublication(let code):
+            throw HError.fromProtobuf("unrecognized: crsPublication `\(code)`")
+
+        case .atomicBatch(let code):
+            throw HError.fromProtobuf("unrecognized: atomicBatch `\(code)`")
         }
     }
 }

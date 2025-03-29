@@ -6,6 +6,17 @@ from pathlib import Path
 import glob
 import shlex
 from subprocess import CompletedProcess
+from enum import Enum, auto
+
+class ProtoDirectory(Enum):
+    MIRROR: str = "Mirror"
+    PLATFORM: str = "Platform"
+    SDK: str = "Sdk"
+    SERVICES: str = "Services"
+    STREAMS: str = "Streams"
+    
+    def __str__(self):
+        return self.value
 
 def find_proto_file(filename: str, search_dir: str) -> str:
     """
@@ -26,32 +37,35 @@ def organize_proto_files(source_base: str, dest_base: str, proto_files: List[str
     # Track which files were successfully copied
     copied_files = []
     
-    for proto_file in proto_files:
-        if proto_file.startswith(("sdk/", "mirror/")):
-            continue
-            
-        # Find the file in source directory
-        found_path = find_proto_file(os.path.basename(proto_file), source_base)
-        if not found_path:
-            print(f"  Warning: {proto_file} not found")
-            continue
-            
-        # Find destination path
-        if "/" in proto_file:
-            dest_path = os.path.join(dest_base, proto_file)
-        else:
-            dest_path = os.path.join(dest_base, proto_file)
-            
-        # Create destination directory if needed
-        dest_dir = os.path.dirname(dest_path)
-        ensure_directory_exists(dest_dir)
+    try:
+        # Create destination directory if it doesn't exist
+        os.makedirs(dest_base, exist_ok=True)
         
-        try:
-            shutil.copy2(found_path, dest_path)
-            copied_files.append(proto_file)
-        except Exception as e:
-            print(f"  Error copying {proto_file}: {e}")
+        # Process each file in the files_to_generate list
+        for proto_file in proto_files:
+            # Construct source and destination paths
+            source_file = os.path.join(source_base, proto_file)
+            dest_file = os.path.join(dest_base, proto_file)
             
+            # Skip if source file doesn't exist
+            if not os.path.exists(source_file):
+                print(f"Warning: Source file not found: {source_file}")
+                continue
+                
+            # Create subdirectories if needed
+            os.makedirs(os.path.dirname(dest_file), exist_ok=True)
+            
+            # Copy the file
+            try:
+                shutil.copy2(source_file, dest_file)
+                copied_files.append(proto_file)
+                print(f"Copied: {proto_file}")
+            except Exception as e:
+                print(f"Error copying {proto_file}: {e}")
+                    
+    except Exception as e:
+        print(f"Error during organization: {e}")
+    
     return copied_files
 
 def run_protoc_protobuf(proto_files: List[str]) -> Optional[CompletedProcess]:
@@ -59,14 +73,17 @@ def run_protoc_protobuf(proto_files: List[str]) -> Optional[CompletedProcess]:
     if not all(proto_file.endswith('.proto') for proto_file in proto_files):
         print("Error: Invalid proto file detected")
         return None
+
+    # Create output directory if it doesn't exist
+    os.makedirs(f"./Generated", exist_ok=True)
         
     cmd = [
         "protoc",
         "--swift_opt=Visibility=Public",
         "--swift_opt=FileNaming=FullPath",
-        "--swift_out=./Sources/HieroProtobufs/Services",
-        "--proto_path=./Sources/HieroProtobufs/Protos"
-    ] + [shlex.quote(f) for f in proto_files]
+        f"--swift_out=./Generated",
+        "--proto_path=./Protos"
+    ] + proto_files  # Remove shlex.quote as it's causing issues with the file paths
     
     print(f"\nGenerating Swift protobuf code for {len(proto_files)} files:")
     for file in proto_files:
@@ -76,155 +93,167 @@ def run_protoc_protobuf(proto_files: List[str]) -> Optional[CompletedProcess]:
         return subprocess.run(cmd, check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
         print(f"\nError during protobuf generation: {e}")
+        if e.stderr:
+            print(f"Stderr: {e.stderr}")
         return None
 
 def run_protoc_grpc(proto_files: List[str]):
+    # Create output directory if it doesn't exist
+    os.makedirs(f"./Generated", exist_ok=True)
+
     cmd = [
         "protoc",
         "--grpc-swift_opt=Visibility=Public",
-        "--grpc-swift_out=./Sources/HieroProtobufs/Services",
-        "--proto_path=./Sources/HieroProtobufs/Protos"
-    ] + proto_files
+        f"--grpc-swift_out=./Generated",
+        "--proto_path=./Protos"
+    ] + proto_files  # Remove the quotes here as well
     
+    print(f"\nGenerating gRPC code for {len(proto_files)} files:")
     for file in proto_files:
         print(f"  - {file}")
     
     try:
-        subprocess.run(cmd, check=True)
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
         print("\ngRPC services generated successfully.")
+        return result
     except subprocess.CalledProcessError as e:
         print(f"\nError during gRPC generation: {e}")
+        if e.stderr:
+            print(f"Stderr: {e.stderr}")
+        return None
 
 if __name__ == "__main__":
     # Source and destination directories
-    SOURCE_DIR = "protobufs/hapi/hedera-protobufs"
-    DEST_DIR = "Sources/HieroProtobufs/Protos"
+    SOURCE_DIR = "../../protobufs/hapi/hedera-protobuf-java-api/src/main/proto"
+    DEST_DIR = "Protos"
     
     files_to_generate = [
-        "address_book_service.proto",
-        "basic_types.proto",
-        "consensus_create_topic.proto",
-        "consensus_delete_topic.proto",
-        "consensus_get_topic_info.proto",
-        "consensus_service.proto",
-        "consensus_submit_message.proto",
-        "consensus_topic_info.proto",
-        "consensus_update_topic.proto",
-        "contract_call.proto",
-        "contract_call_local.proto",
-        "contract_create.proto",
-        "contract_delete.proto",
-        "contract_get_bytecode.proto",
-        "contract_get_info.proto",
-        "contract_get_records.proto",
-        "contract_update.proto",
-        "contract_types.proto",
-        "crypto_add_live_hash.proto",
-        "crypto_approve_allowance.proto",
-        "crypto_create.proto",
-        "crypto_delete.proto",
-        "crypto_delete_allowance.proto",
-        "crypto_delete_live_hash.proto",
-        "crypto_get_account_balance.proto",
-        "crypto_get_account_records.proto",
-        "crypto_get_info.proto",
-        "crypto_get_live_hash.proto",
-        "crypto_get_stakers.proto",
-        "crypto_service.proto",
-        "crypto_transfer.proto",
-        "crypto_update.proto",
-        "custom_fees.proto",
-        "duration.proto",
-        "ethereum_transaction.proto",
-        "exchange_rate.proto",
-        "file_append.proto",
-        "file_create.proto",
-        "file_delete.proto",
-        "file_get_contents.proto",
-        "file_get_info.proto",
-        "file_service.proto",
-        "file_update.proto",
-        "freeze.proto",
-        "freeze_service.proto",
-        "freeze_type.proto",
-        "get_account_details.proto",
-        "get_by_key.proto",
-        "get_by_solidity_id.proto",
-        "network_get_execution_time.proto",
-        "network_get_version_info.proto",
-        "network_service.proto",
-        "node_create.proto",
-        "node_delete.proto",
-        "node_stake_update.proto",
-        "node_update.proto",
-        "query.proto",
-        "query_header.proto",
-        "response.proto",
-        "response_code.proto",
-        "response_header.proto",
-        "schedulable_transaction_body.proto",
-        "schedule_create.proto",
-        "schedule_delete.proto",
-        "schedule_get_info.proto",
-        "schedule_service.proto",
-        "schedule_sign.proto",
-        "smart_contract_service.proto",
-        "system_delete.proto",
-        "system_undelete.proto",
-        "throttle_definitions.proto",
-        "timestamp.proto",
-        "token_airdrop.proto",
-        "token_associate.proto",
-        "token_burn.proto",
-        "token_cancel_airdrop.proto",
-        "token_claim_airdrop.proto",
-        "token_create.proto",
-        "token_delete.proto",
-        "token_dissociate.proto",
-        "token_fee_schedule_update.proto",
-        "token_freeze_account.proto",
-        "token_get_account_nft_infos.proto",
-        "token_get_info.proto",
-        "token_get_nft_info.proto",
-        "token_get_nft_infos.proto",
-        "token_grant_kyc.proto",
-        "token_mint.proto",
-        "token_pause.proto",
-        "token_reject.proto",
-        "token_revoke_kyc.proto",
-        "token_service.proto",
-        "token_unfreeze_account.proto",
-        "token_unpause.proto",
-        "token_update.proto",
-        "token_update_nfts.proto",
-        "token_wipe_account.proto",
-        "transaction.proto",
-        "transaction_contents.proto",
-        "transaction_get_fast_record.proto",
-        "transaction_get_receipt.proto",
-        "transaction_get_record.proto",
-        "transaction_receipt.proto",
-        "transaction_record.proto",
-        "transaction_response.proto",
-        "unchecked_submit.proto",
-        "util_prng.proto",
-        "util_service.proto",
+        "services/address_book_service.proto",
+        "services/basic_types.proto",
+        "services/consensus_create_topic.proto",
+        "services/consensus_delete_topic.proto",
+        "services/consensus_get_topic_info.proto",
+        "services/consensus_service.proto",
+        "services/consensus_submit_message.proto",
+        "services/consensus_topic_info.proto",
+        "services/consensus_update_topic.proto",
+        "services/contract_call.proto",
+        "services/contract_call_local.proto",
+        "services/contract_create.proto",
+        "services/contract_delete.proto",
+        "services/contract_get_bytecode.proto",
+        "services/contract_get_info.proto",
+        "services/contract_get_records.proto",
+        "services/contract_update.proto",
+        "services/contract_types.proto",
+        "services/crypto_add_live_hash.proto",
+        "services/crypto_approve_allowance.proto",
+        "services/crypto_create.proto",
+        "services/crypto_delete.proto",
+        "services/crypto_delete_allowance.proto",
+        "services/crypto_delete_live_hash.proto",
+        "services/crypto_get_account_balance.proto",
+        "services/crypto_get_account_records.proto",
+        "services/crypto_get_info.proto",
+        "services/crypto_get_live_hash.proto",
+        "services/crypto_get_stakers.proto",
+        "services/crypto_service.proto",
+        "services/crypto_transfer.proto",
+        "services/crypto_update.proto",
+        "services/custom_fees.proto",
+        "services/duration.proto",
+        "services/ethereum_transaction.proto",
+        "services/exchange_rate.proto",
+        "services/file_append.proto",
+        "services/file_create.proto",
+        "services/file_delete.proto",
+        "services/file_get_contents.proto",
+        "services/file_get_info.proto",
+        "services/file_service.proto",
+        "services/file_update.proto",
+        "services/freeze.proto",
+        "services/freeze_service.proto",
+        "services/freeze_type.proto",
+        "services/get_account_details.proto",
+        "services/get_by_key.proto",
+        "services/get_by_solidity_id.proto",
+        "services/network_get_execution_time.proto",
+        "services/network_get_version_info.proto",
+        "services/network_service.proto",
+        "services/node_create.proto",
+        "services/node_delete.proto",
+        "services/node_stake_update.proto",
+        "services/node_update.proto",
+        "services/query.proto",
+        "services/query_header.proto",
+        "services/response.proto",
+        "services/response_code.proto",
+        "services/response_header.proto",
+        "services/schedulable_transaction_body.proto",
+        "services/schedule_create.proto",
+        "services/schedule_delete.proto",
+        "services/schedule_get_info.proto",
+        "services/schedule_service.proto",
+        "services/schedule_sign.proto",
+        "services/smart_contract_service.proto",
+        "services/system_delete.proto",
+        "services/system_undelete.proto",
+        "services/throttle_definitions.proto",
+        "services/timestamp.proto",
+        "services/token_airdrop.proto",
+        "services/token_associate.proto",
+        "services/token_burn.proto",
+        "services/token_cancel_airdrop.proto",
+        "services/token_claim_airdrop.proto",
+        "services/token_create.proto",
+        "services/token_delete.proto",
+        "services/token_dissociate.proto",
+        "services/token_fee_schedule_update.proto",
+        "services/token_freeze_account.proto",
+        "services/token_get_account_nft_infos.proto",
+        "services/token_get_info.proto",
+        "services/token_get_nft_info.proto",
+        "services/token_get_nft_infos.proto",
+        "services/token_grant_kyc.proto",
+        "services/token_mint.proto",
+        "services/token_pause.proto",
+        "services/token_reject.proto",
+        "services/token_revoke_kyc.proto",
+        "services/token_service.proto",
+        "services/token_unfreeze_account.proto",
+        "services/token_unpause.proto",
+        "services/token_update.proto",
+        "services/token_update_nfts.proto",
+        "services/token_wipe_account.proto",
+        "services/transaction.proto",
+        "services/transaction_contents.proto",
+        "services/transaction_get_fast_record.proto",
+        "services/transaction_get_receipt.proto",
+        "services/transaction_get_record.proto",
+        "services/transaction_receipt.proto",
+        "services/transaction_record.proto",
+        "services/transaction_response.proto",
+        "services/unchecked_submit.proto",
+        "services/util_prng.proto",
+        "services/util_service.proto",
 
         "sdk/transaction_list.proto",
 
         # Auxiliary files
-        "auxiliary/history/history_proof_signature.proto",
-        "auxiliary/history/history_proof_key_publication.proto",
-        "auxiliary/history/history_proof_vote.proto",
-        "auxiliary/history/history_assembly_signature.proto",
-        "auxiliary/tss/tss_message.proto",
-        "auxiliary/tss/tss_vote.proto",
+        "services/auxiliary/history/history_proof_signature.proto",
+        "services/auxiliary/history/history_proof_key_publication.proto",
+        "services/auxiliary/history/history_proof_vote.proto",
+        "services/auxiliary/tss/tss_message.proto",
+        "services/auxiliary/tss/tss_vote.proto",
+        "services/auxiliary/hints/hints_preprocessing_vote.proto",
+        "services/auxiliary/hints/hints_partial_signature.proto",
+        "services/auxiliary/hints/crs_publication.proto",
+        "services/auxiliary/hints/hints_key_publication.proto",
+        "services/state/hints/hints_types.proto",
+        "services/state/history/history_types.proto",
+        
+        "platform/event/state_signature_transaction.proto",
 
-        "event/state_signature_transaction.proto",
-
-        "state/history/history_types.proto",
-
-        "mirror/consensus_service.proto",
         "mirror/mirror_network_service.proto"
     ]
     
@@ -232,9 +261,9 @@ if __name__ == "__main__":
     
     if successfully_copied:
         # Generate protobuf code
-        result = run_protoc_protobuf(successfully_copied)
+        services_result = run_protoc_protobuf(successfully_copied)
         
-        if result:
+        if services_result:
             print("\nProtobufs generated successfully.")
         else:
             print("\nNo files were copied successfully. Cannot generate code.")
@@ -243,3 +272,4 @@ if __name__ == "__main__":
         run_protoc_grpc(successfully_copied)
     else:
         print("\nNo files were copied successfully. Cannot generate code.")
+
