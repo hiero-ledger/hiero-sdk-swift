@@ -25,7 +25,7 @@ tasks:
     example:
         desc: "Run example"
         cmds:
-            - swift run {{.CLI_ARGS}}Example
+            - swift run {{.name}}Example
 
     submodule:fetch:
         desc: "Fetch a specific version of the submodule, or else the latest version. E.g. task submodule:fetch proto=vX.Y.Z"
@@ -59,3 +59,4 @@ tasks:
         dir: Sources/HieroProtobufs
         cmds:
             - cmd: python3 update_protos.py
+
