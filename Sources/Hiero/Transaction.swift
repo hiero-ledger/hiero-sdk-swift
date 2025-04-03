@@ -159,6 +159,21 @@ public class Transaction: ValidateChecksums {
         return self
     }
 
+    /// The public key of the trusted batch assembler.
+    internal final var batchKey: Key? {
+        willSet {
+            ensureNotFrozen(fieldName: "batchKey")
+        }
+    }
+
+    /// Sets the public key of the trusted batch assembler.
+    @discardableResult
+    internal func batchKey(_ batchKey: Key) -> Self {
+        self.batchKey = batchKey
+
+        return self
+    }
+
     /// Adds a signature directly to `self`.
     ///
     /// Only use this as a last resort.
@@ -713,4 +728,40 @@ private func protoTransactionBodyEqual(_ lhs: Proto_TransactionBody, _ rhs: Prot
     }
 
     return true
+}
+
+extension Transaction {
+    /// Converts an array of transactions to their protobuf representation.
+    /// - Parameter transactions: The array of transactions to convert
+    /// - Returns: An array of protobuf transactions
+    /// - Throws: If any transaction fails to convert
+    internal static func toProtoTransactions(_ transactions: [Transaction]) throws -> [Proto_Transaction] {
+        var protoTransactions: [Proto_Transaction] = []
+
+        for transaction in transactions {
+            guard let nodeAccountIds = transaction.nodeAccountIds else {
+                throw HError(
+                    kind: .freezeUnsetNodeAccountIds, description: "Transaction must have node account IDs set")
+            }
+
+            for nodeAccountId in nodeAccountIds {
+                guard let transactionId = transaction.transactionId ?? transaction.operator?.generateTransactionId()
+                else {
+                    throw HError.noPayerAccountOrTransactionId
+                }
+
+                let chunkInfo = ChunkInfo(
+                    current: 0,
+                    total: 1,
+                    initialTransactionId: transactionId,
+                    currentTransactionId: transactionId,
+                    nodeAccountId: nodeAccountId
+                )
+
+                protoTransactions.append(transaction.makeRequestInner(chunkInfo: chunkInfo).0)
+            }
+        }
+
+        return protoTransactions
+    }
 }
