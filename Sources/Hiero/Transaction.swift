@@ -28,6 +28,8 @@ public class Transaction: ValidateChecksums {
         2
     }
 
+    internal var atomicBatchNodeAccountId = "0.0.0"
+
     internal func toTransactionDataProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody.OneOf_Data {
         fatalError("Method `Transaction.toTransactionDataProtobuf` must be overridden by `\(type(of: self))`")
     }
@@ -155,6 +157,25 @@ public class Transaction: ValidateChecksums {
     @discardableResult
     internal func clearCustomFeeLimits() -> Self {
         self.customFeeLimits = []
+
+        return self
+    }
+
+    /// Explicit batch key for this batch transactions.
+    public final var batchKey: Key? {
+        willSet {
+            ensureNotFrozen(fieldName: "batchKey")
+        }
+    }
+
+    /// Batchify the transaction with the given batch key.
+    ///
+    /// The transaction will be frozen and signed by the operator of the client.
+    @discardableResult
+    internal func batchify(client: Client, _ batchKey: Key) throws -> Self {
+        self.batchKey = batchKey
+
+        try self.signWithOperator(client)
 
         return self
     }
@@ -326,10 +347,7 @@ public class Transaction: ValidateChecksums {
             return self
         }
 
-        guard let nodeAccountIds = self.nodeAccountIds ?? client?.net.randomNodeIds() else {
-            throw HError(
-                kind: .freezeUnsetNodeAccountIds, description: "transaction frozen without client or explicit node IDs")
-        }
+        let nodeAccountIds = self.nodeAccountIds ?? client?.net.randomNodeIds()
 
         let maxTransactionFee = self.maxTransactionFee ?? client?.maxTransactionFee
 
@@ -339,6 +357,7 @@ public class Transaction: ValidateChecksums {
         self.maxTransactionFee = maxTransactionFee
         self.`operator` = `operator`
         self.customFeeLimits = customFeeLimits
+        self.batchKey = batchKey
 
         isFrozen = true
 
@@ -582,6 +601,11 @@ extension Transaction {
         return .with { proto in
             proto.data = data
             proto.transactionID = chunkInfo.currentTransactionId.toProtobuf()
+
+            if let batchKey = batchKey {
+                proto.batchKey = batchKey.toProtobuf()
+            }
+
             proto.transactionValidDuration = (self.transactionValidDuration ?? .minutes(2)).toProtobuf()
             proto.memo = self.transactionMemo
             proto.nodeAccountID = chunkInfo.nodeAccountId.toProtobuf()
@@ -713,4 +737,40 @@ private func protoTransactionBodyEqual(_ lhs: Proto_TransactionBody, _ rhs: Prot
     }
 
     return true
+}
+
+extension Transaction {
+    /// Converts an array of transactions to their protobuf representation.
+    /// - Parameter transactions: The array of transactions to convert
+    /// - Returns: An array of protobuf transactions
+    /// - Throws: If any transaction fails to convert
+    internal static func toProtoTransactions(_ transactions: [Transaction]) throws -> [Proto_Transaction] {
+        var protoTransactions: [Proto_Transaction] = []
+
+        for transaction in transactions {
+            guard let nodeAccountIds = transaction.nodeAccountIds else {
+                throw HError(
+                    kind: .freezeUnsetNodeAccountIds, description: "Transaction must have node account IDs set")
+            }
+
+            for nodeAccountId in nodeAccountIds {
+                guard let transactionId = transaction.transactionId ?? transaction.operator?.generateTransactionId()
+                else {
+                    throw HError.noPayerAccountOrTransactionId
+                }
+
+                let chunkInfo = ChunkInfo(
+                    current: 0,
+                    total: 1,
+                    initialTransactionId: transactionId,
+                    currentTransactionId: transactionId,
+                    nodeAccountId: nodeAccountId
+                )
+
+                protoTransactions.append(transaction.makeRequestInner(chunkInfo: chunkInfo).0)
+            }
+        }
+
+        return protoTransactions
+    }
 }
