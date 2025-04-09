@@ -2,12 +2,12 @@
 
 import Foundation
 import Hiero
-import SwiftDotenv
+import HieroExampleUtilities
 
 @main
 internal enum Program {
     internal static func main() async throws {
-        let env = try Dotenv.load()
+        let env = try Environment.load()
         let client = try Client.forName(env.networkName)
 
         // Defaults the operator account ID and key such that all generated transactions will be paid for
@@ -76,9 +76,12 @@ internal enum Program {
 
         print("Schedule Info = \(info)")
 
-        let scheduledTransfer = try info.scheduledTransaction as! TransferTransaction
+        let scheduledTransfer = try info.scheduledTransaction
+        guard let transferTransaction = scheduledTransfer as? TransferTransaction else {
+            fatalError("Expected TransferTransaction")
+        }
 
-        let transfers = scheduledTransfer.hbarTransfers
+        let transfers = transferTransaction.hbarTransfers
 
         // Make sure the transfer transaction is what we expect
         precondition(transfers.count == 2, "more transfers than expected")
@@ -103,24 +106,5 @@ internal enum Program {
             .nodeAccountIds([response.nodeAccountId])
             .scheduleId(scheduleId)
             .execute(client)
-    }
-}
-
-extension Environment {
-    /// Account ID for the operator to use in this example.
-    internal var operatorAccountId: AccountId {
-        AccountId(self["OPERATOR_ID"]!.stringValue)!
-    }
-
-    /// Private key for the operator to use in this example.
-    internal var operatorKey: PrivateKey {
-        PrivateKey(self["OPERATOR_KEY"]!.stringValue)!
-    }
-
-    /// The name of the hedera network this example should be ran against.
-    ///
-    /// Testnet by default.
-    internal var networkName: String {
-        self["HEDERA_NETWORK"]?.stringValue ?? "testnet"
     }
 }

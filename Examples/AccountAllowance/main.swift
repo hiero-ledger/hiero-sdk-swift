@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Hiero
-import SwiftDotenv
+import HieroExampleUtilities
 
 private struct Account {
     internal let key: PrivateKey
@@ -183,7 +183,7 @@ private func cleanUp(
 @main
 internal enum Program {
     internal static func main() async throws {
-        let env = try Dotenv.load()
+        let env = try Environment.load()
         let client = try Client.forName(env.networkName)
 
         client.setOperator(env.operatorAccountId, env.operatorKey)
@@ -191,24 +191,5 @@ internal enum Program {
         let accounts = try await createAccounts(client)
         try await demonstrateAllowances(client, accounts)
         try await cleanUp(client, env.operatorAccountId, accounts)
-    }
-}
-
-extension Environment {
-    /// Account ID for the operator to use in this example.
-    internal var operatorAccountId: AccountId {
-        AccountId(self["OPERATOR_ID"]!.stringValue)!
-    }
-
-    /// Private key for the operator to use in this example.
-    internal var operatorKey: PrivateKey {
-        PrivateKey(self["OPERATOR_KEY"]!.stringValue)!
-    }
-
-    /// The name of the hedera network this example should be ran against.
-    ///
-    /// Testnet by default.
-    internal var networkName: String {
-        self["HEDERA_NETWORK"]?.stringValue ?? "testnet"
     }
 }

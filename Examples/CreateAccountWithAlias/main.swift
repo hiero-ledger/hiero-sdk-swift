@@ -20,13 +20,13 @@
 
 import Foundation
 import Hiero
-import SwiftDotenv
+import HieroExampleUtilities
 
 @main
 internal enum Program {
     internal static func main() async throws {
         print("Starting Example")
-        let env = try Dotenv.load()
+        let env = try Environment.load()
         let client = try Client.forName(env.networkName)
 
         client.setOperator(env.operatorAccountId, env.operatorKey)
@@ -143,24 +143,5 @@ internal enum Program {
             return false
         }
         return true
-    }
-}
-
-extension Environment {
-    /// Account ID for the operator to use in this example.
-    internal var operatorAccountId: AccountId {
-        AccountId(self["OPERATOR_ID"]!.stringValue)!
-    }
-
-    /// Private key for the operator to use in this example.
-    internal var operatorKey: PrivateKey {
-        PrivateKey(self["OPERATOR_KEY"]!.stringValue)!
-    }
-
-    /// The name of the hedera network this example should be ran against.
-    ///
-    /// Testnet by default.
-    internal var networkName: String {
-        self["HEDERA_NETWORK"]?.stringValue ?? "testnet"
     }
 }

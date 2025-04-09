@@ -1,31 +1,13 @@
-/*
- * ‌
- * Hedera Swift SDK
- *
- * Copyright (C) 2022 - 2024 Hedera Hashgraph, LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
+// SPDX-License-Identifier: Apache-2.0
 
 import Foundation
 import Hiero
-import SwiftDotenv
+import HieroExampleUtilities
 
 @main
 internal enum Program {
     internal static func main() async throws {
-        let env = try Dotenv.load()
+        let env = try Environment.load()
         let client = try Client.forName(env.networkName)
 
         // Defaults the operator account ID and key such that all generated transactions will be paid for
@@ -143,24 +125,5 @@ internal enum Program {
             .execute(client)
 
         print("Supply Key (after removal): \(String(describing: tokenInfoAfterSupplyKeyRemoval.supplyKey))")
-    }
-}
-
-extension Environment {
-    /// Account ID for the operator to use in this example.
-    internal var operatorAccountId: AccountId {
-        AccountId(self["OPERATOR_ID"]!.stringValue)!
-    }
-
-    /// Private key for the operator to use in this example.
-    internal var operatorKey: PrivateKey {
-        PrivateKey(self["OPERATOR_KEY"]!.stringValue)!
-    }
-
-    /// The name of the hedera network this example should be ran against.
-    ///
-    /// Testnet by default.
-    internal var networkName: String {
-        self["HEDERA_NETWORK"]?.stringValue ?? "testnet"
     }
 }
