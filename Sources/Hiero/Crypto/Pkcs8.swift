@@ -112,8 +112,7 @@ extension Pkcs8.Version: DERImplicitlyTaggable {
         let raw = try Int(derEncoded: derEncoded, withIdentifier: identifier)
 
         guard let value = Self(rawValue: raw) else {
-            throw ASN1Error.invalidASN1Object
-            // throw ASN1Error.invalidASN1Object(reason: "invalid Pkcs8.Version")
+            throw ASN1Error.invalidASN1Object(reason: "invalid Pkcs8.Version")
         }
 
         self = value
@@ -149,8 +148,7 @@ extension Pkcs8.PrivateKeyInfo: DERImplicitlyTaggable {
             switch (version, publicKey != nil) {
             case (.v1, false), (.v2, true): break
             case (.v1, true), (.v2, false):
-                throw ASN1Error.invalidASN1Object
-            // throw ASN1Error.invalidASN1Object(reason: "invalid version, public key combo")
+                throw ASN1Error.invalidASN1Object(reason: "invalid version, public key combo")
             }
 
             return Self(algorithm: algorithmIdentifier, privateKey: privateKey, publicKey: publicKey)

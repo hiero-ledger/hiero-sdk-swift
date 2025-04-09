@@ -42,14 +42,14 @@ extension Pkcs5.Pbes2Kdf: DERImplicitlyTaggable {
         let algId = try Pkcs5.AlgorithmIdentifier(derEncoded: derEncoded, withIdentifier: identifier)
 
         guard let params = algId.parameters else {
-            throw ASN1Error.invalidASN1Object
+            throw ASN1Error.invalidASN1Object(reason: "PBES2 requires key derivation and encryption parameters")
         }
 
         switch algId.oid {
         case .AlgorithmIdentifier.pbkdf2:
             self = .pbkdf2(try Pkcs5.Pbkdf2Parameters(asn1Any: params))
         default:
-            throw ASN1Error.invalidASN1Object
+            throw ASN1Error.invalidASN1Object(reason: "unsupported algorithm identifier: \(algId.oid)")
         }
     }
 
@@ -82,19 +82,19 @@ extension Pkcs5.Pbes2EncryptionScheme: DERImplicitlyTaggable {
         let algId = try Pkcs5.AlgorithmIdentifier(derEncoded: derEncoded, withIdentifier: identifier)
 
         guard let params = algId.parameters else {
-            throw ASN1Error.invalidASN1Object
+            throw ASN1Error.invalidASN1Object(reason: "PBES2 requires key derivation and encryption parameters")
         }
 
         switch algId.oid {
         case .AlgorithmIdentifier.aes128CbcPad:
             let params = try ASN1OctetString(asn1Any: params)
             guard params.bytes.count == 16 else {
-                throw ASN1Error.invalidASN1Object
+                throw ASN1Error.invalidASN1Object(reason: "AES-128-CBC requires a 16-byte initialization vector")
             }
 
             self = .aes128Cbc(Data(params.bytes))
         default:
-            throw ASN1Error.invalidASN1Object
+            throw ASN1Error.invalidASN1Object(reason: "unsupported algorithm identifier: \(algId.oid)")
         }
     }
 

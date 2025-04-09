@@ -61,14 +61,14 @@ extension Pkcs5.EncryptionScheme: DERImplicitlyTaggable {
         let algId = try Pkcs5.AlgorithmIdentifier(derEncoded: derEncoded, withIdentifier: identifier)
 
         guard let parameters = algId.parameters else {
-            throw ASN1Error.invalidASN1Object
+            throw ASN1Error.invalidASN1Object(reason: "HMAC algorithm requires NULL parameters")
         }
 
         switch algId.oid {
         case .AlgorithmIdentifier.pbes2:
             self = .pbes2(try Pkcs5.Pbes2Parameters(asn1Any: parameters))
         default:
-            throw ASN1Error.invalidASN1Object
+            throw ASN1Error.invalidASN1Object(reason: "unsupported algorithm identifier: \(algId.oid)")
         }
     }
 
