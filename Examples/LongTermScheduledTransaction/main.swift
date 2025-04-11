@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Hiero
-import SwiftDotenv
+import HieroExampleUtilities
 
 @main
 internal enum Program {
     internal static func main() async throws {
-        let env = try Dotenv.load()
+        let env = try Environment.load()
 
         print("Long Term Scheduled Transaction Example Start!")
 
@@ -159,23 +159,5 @@ internal enum Program {
         print("Alice's account balance after schedule transfer: \(accountBalance.balance)")
 
         print("Successfully executed scheduled transaction")
-    }
-}
-extension Environment {
-    /// Account ID for the operator to use in this example.
-    internal var operatorAccountId: AccountId {
-        AccountId(self["OPERATOR_ID"]!.stringValue)!
-    }
-
-    /// Private key for the operator to use in this example.
-    internal var operatorKey: PrivateKey {
-        PrivateKey(self["OPERATOR_KEY"]!.stringValue)!
-    }
-
-    /// The name of the hedera network this example should be ran against.
-    ///
-    /// Testnet by default.
-    internal var networkName: String {
-        self["HEDERA_NETWORK"]?.stringValue ?? "testnet"
     }
 }

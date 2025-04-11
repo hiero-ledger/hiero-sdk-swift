@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Hiero
-import SwiftDotenv
+import HieroExampleUtilities
 
 @main
 internal enum Program {
     internal static func main() async throws {
-        let env = try Dotenv.load()
+        let env = try Environment.load()
         let client = try Client.forName(env.networkName)
 
         print(try await AccountBalanceQuery().accountId(1001).getCost(client))
@@ -16,14 +16,5 @@ internal enum Program {
             .execute(client)
 
         print("balance = \(balance.hbars)")
-    }
-}
-
-extension Environment {
-    /// The name of the hedera network this example should be ran against.
-    ///
-    /// Testnet by default.
-    internal var networkName: String {
-        self["HEDERA_NETWORK"]?.stringValue ?? "testnet"
     }
 }

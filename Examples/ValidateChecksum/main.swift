@@ -2,12 +2,12 @@
 
 import Foundation
 import Hiero
-import SwiftDotenv
+import HieroExampleUtilities
 
 @main
 internal enum Program {
     internal static func main() async throws {
-        let env = try Dotenv.load()
+        let env = try Environment.load()
         let client = try Client.forName(env.networkName)
 
         // we need to return _something_ to say if stdin has been EOFed on us.
@@ -95,14 +95,5 @@ internal enum Program {
 
             return accountId
         }
-    }
-}
-
-extension Environment {
-    /// The name of the hedera network this example should be ran against.
-    ///
-    /// Testnet by default.
-    internal var networkName: String {
-        self["HEDERA_NETWORK"]?.stringValue ?? "testnet"
     }
 }

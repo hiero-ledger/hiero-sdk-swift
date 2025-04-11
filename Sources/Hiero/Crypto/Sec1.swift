@@ -53,8 +53,7 @@ extension Sec1.Version: DERImplicitlyTaggable {
         let raw = try Int(derEncoded: derEncoded, withIdentifier: identifier)
 
         guard let value = Self(rawValue: raw) else {
-            throw ASN1Error.invalidASN1Object
-            // throw ASN1Error.invalidASN1Object(reason: "invalid Pkcs8.Version")
+            throw ASN1Error.invalidASN1Object(reason: "invalid Sec1.Version: \(raw)")
         }
 
         self = value

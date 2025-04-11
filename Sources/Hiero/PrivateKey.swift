@@ -24,8 +24,11 @@ internal struct Keccak256Digest: Crypto.SecpDigest {
     }
 }
 
+/// A chain code used in hierarchical deterministic (HD) key derivation.
+/// This is used to derive child keys from a parent key in a deterministic way.
 public struct ChainCode {
-    let data: Data
+    /// The data representing the chain code.
+    public let data: Data
 }
 
 #if compiler(>=5.7)
