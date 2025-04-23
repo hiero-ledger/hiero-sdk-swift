@@ -8,7 +8,7 @@ import XCTest
 
 internal final class MirrorNodeContractQueryTests: XCTestCase {
     private static let contractId: ContractId = ContractId(shard: 1, realm: 2, num: 3)
-    private static let evmAddress: String = "0x1234567890abcdef1234567890abcdef12345"
+    private static let evmAddress: String = "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"
     private static let sender: AccountId = AccountId(shard: 4, realm: 5, num: 6)
     private static let functionName: String = "transfer"
     private static let value: Int64 = 7
