@@ -8,23 +8,23 @@ import HieroProtobufs
 /// contract queries, gas estimation, and transient simulations of read-write operations.
 public class MirrorNodeContractQuery: ValidateChecksums {
     /// The ID of the contract of which to get information.
-    public var contractId: ContractId?
+    public var contractId: ContractId? = nil
     /// The EVM address of the contract of which to get information.
-    public var evmAddress: EvmAddress?
+    public var contractEvmAddress: EvmAddress? = nil
     /// The ID of the sender account.
-    public var sender: AccountId?
+    public var sender: AccountId? = nil
     /// The EVM address of the sender account.
-    public var senderEvmAddress: EvmAddress?
+    public var senderEvmAddress: EvmAddress? = nil
     /// The getter for the call data.
     public var callData: Data? { _callData }
     /// The value.
-    public var value: Int64?
+    public var value: Int64? = nil
     /// The gas limit.
-    public var gasLimit: Int64?
+    public var gasLimit: Int64? = nil
     /// The gas price.
-    public var gasPrice: Int64?
+    public var gasPrice: Int64? = nil
     /// The block number.
-    public var blockNumber: UInt64?
+    public var blockNumber: UInt64? = nil
 
     /// Set the ID of the contract.
     @discardableResult
@@ -35,8 +35,8 @@ public class MirrorNodeContractQuery: ValidateChecksums {
 
     /// Set the EVM address of the contract.
     @discardableResult
-    public func evmAddress(_ evmAddress: EvmAddress?) -> Self {
-        self.evmAddress = evmAddress
+    public func contractEvmAddress(_ contractEvmAddress: EvmAddress?) -> Self {
+        self.contractEvmAddress = contractEvmAddress
         return self
     }
 
@@ -133,9 +133,9 @@ public class MirrorNodeContractQuery: ValidateChecksums {
     /// Convert the contents of this MirrorNodeContractQuery into a JSON format.
     public func toJson() throws -> [String: Any] {
         var json = [String: Any]()
-        json["data"] = self.callData?.map { String(format: "%02x", $0) }.joined()
+        json["data"] = self.callData.map { String(format: "%02x", $0) }.joined()
         json["from"] = try self.sender?.toSolidityAddress() ?? self.senderEvmAddress?.toString()
-        json["to"] = try self.contractId?.toSolidityAddress()
+        json["to"] = try self.contractId?.toSolidityAddress() ?? self.contractEvmAddress?.toString()
         json["estimate"] = getEstimate()
         json["gasPrice"] = self.gasPrice
         json["gas"] = self.gasLimit
@@ -164,5 +164,5 @@ public class MirrorNodeContractQuery: ValidateChecksums {
     ///////////////
 
     /// The call data.
-    private var _callData: Data?
+    private var _callData: Data? = nil
 }

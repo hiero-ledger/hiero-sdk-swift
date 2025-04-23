@@ -7,19 +7,21 @@ import XCTest
 @testable import Hiero
 
 internal final class MirrorNodeContractQueryTests: XCTestCase {
-    private static let contractId: ContractID = ContractId(1,2,3)
+    private static let contractId: ContractID = ContractId(1, 2, 3)
     private static let evmAddress: String = EvmAddress.fromString("0x1234567890abcdef1234567890abcdef12345")
-    private static let sender: AccountId = AccountId(1,2,3)
-    private static let expirationTime = Timestamp(seconds: 1_554_158_728, subSecondNanos: 0)
-    private static let keys: KeyList = [.single(Resources.publicKey)]
-    private static let fileMemo = "Hello memo"
+    private static let sender: AccountId = AccountId(4, 5, 6)
+    private static let functionName: String = "transfer"
+    private static let value: Int64 = 7
+    private static let gasLimit: Int64 = 8
+    private static let gasPrice: Int64 = 9
+    private static let blockNumber: UInt64 = 10
 
     internal func testGetSetContractId() {
         let query = MirrorNodeContractEstimateGasQuery()
 
-        XCTAssertEqual(query.contractId, ContractId())
+        XCTAssertEqual(query.contractId, nil)
 
-        query.contents(Self.contractId)
+        query.contractId(Self.contractId)
 
         XCTAssertEqual(query.contractId, Self.contractId)
     }
@@ -27,9 +29,9 @@ internal final class MirrorNodeContractQueryTests: XCTestCase {
     internal func testGetSetContractEvmAddress() {
         let query = MirrorNodeContractEstimateGasQuery()
 
-        XCTAssertEqual(query.contractEvmAddress, EvmAddress())
+        XCTAssertEqual(query.contractEvmAddress, nil)
 
-        query.contents(Self.evmAddress)
+        query.contractEvmAddress(Self.evmAddress)
 
         XCTAssertEqual(query.contractEvmAddress, Self.evmAddress)
     }
@@ -37,20 +39,73 @@ internal final class MirrorNodeContractQueryTests: XCTestCase {
     internal func testGetSetSender() {
         let query = MirrorNodeContractEstimateGasQuery()
 
-        XCTAssertEqual(query.sender, AccountId())
+        XCTAssertEqual(query.sender, nil)
 
-        query.contents(Self.sender)
+        query.sender(Self.sender)
 
         XCTAssertEqual(query.sender, Self.sender)
+    }
+
+    internal func testGetSetSenderEvmAddress() {
+        let query = MirrorNodeContractEstimateGasQuery()
+
+        XCTAssertEqual(query.senderEvmAddress, nil)
+
+        query.senderEvmAddress(Self.evmAddress)
+
+        XCTAssertEqual(query.senderEvmAddress, Self.evmAddress)
     }
 
     internal func testSetFunction() {
         let query = MirrorNodeContractEstimateGasQuery()
 
-        XCTAssertEqual(query.senderEvmAddress, EvmAddress())
+        XCTAssertEqual(query.callData, Data())
 
-        query.contents(Self.evmAddress)
+        let params: ContractFunctionParameters = ContractFunctionParameters()
+        params.addAddress(Self.evmAddress)
+        params.addUInt64(100)
+        query.function(Self.functionName, params)
 
-        XCTAssertEqual(query.senderEvmAddress, Self.evmAddress)
+        XCTAssertEqual(query.callData, params.toBytes(Self.functionName))
+    }
+
+    internal func testGetSetValue() {
+        let query = MirrorNodeContractEstimateGasQuery()
+
+        XCTAssertEqual(query.value, nil)
+
+        query.value(Self.value)
+
+        XCTAssertEqual(query.value, Self.value)
+    }
+
+    internal func testGetSetGasLimit() {
+        let query = MirrorNodeContractEstimateGasQuery()
+
+        XCTAssertEqual(query.gasLimit, nil)
+
+        query.gasLimit(Self.gasLimit)
+
+        XCTAssertEqual(query.gasLimit, Self.gasLimit)
+    }
+
+    internal func testGetSetGasPrice() {
+        let query = MirrorNodeContractEstimateGasQuery()
+
+        XCTAssertEqual(query.gasPrice, nil)
+
+        query.gasPrice(Self.gasPrice)
+
+        XCTAssertEqual(query.gasPrice, Self.gasPrice)
+    }
+
+    internal func testGetSetBlockNumber() {
+        let query = MirrorNodeContractEstimateGasQuery()
+
+        XCTAssertEqual(query.blockNumber, nil)
+
+        query.blockNumber(Self.blockNumber)
+
+        XCTAssertEqual(query.blockNumber, Self.blockNumber)
     }
 }
