@@ -5,7 +5,7 @@ import XCTest
 
 internal final class MirrorNodeContract: XCTestCase {
     internal func testCanEstimateAndCall() async throws {
-        let testEnv = try TestEnvironment.global
+        let testEnv = try TestEnvironment.nonFree
 
         let fileCreateReceipt = try await FileCreateTransaction()
             .keys([.single(testEnv.operator.privateKey.publicKey)])
@@ -31,11 +31,11 @@ internal final class MirrorNodeContract: XCTestCase {
 
         let estimateResponse = try await MirrorNodeContractEstimateGasQuery()
             .contractId(contractId)
-            .sender(testenv.operator.accountId)
+            .sender(testEnv.operator.accountId)
             .gasLimit(50_000)
             .gasPrice(1234)
             .function("getMessage")
-            .execute(client)
+            .execute(testEnv.client)
 
         let estimatedGas = try XCTUnwrap(UInt64(estimateResponse, radix: 16))
 
@@ -44,12 +44,12 @@ internal final class MirrorNodeContract: XCTestCase {
             .gas(estimatedGas)
             .maxPaymentAmount(Hbar(1))
             .function("getMessage")
-            .execute(client)
+            .execute(testEnv.client)
 
         let mirrorNodeResponse = try await MirrorNodeContractCallQuery()
             .contractId(contractId)
             .function("getMessage")
-            .execute(client)
+            .execute(testEnv.client)
 
         XCTAssertEqual(consensusNodeResponse.bytes.map { String(format: "%02x", $0) }.joined(), mirrorNodeResponse)
 
@@ -66,23 +66,21 @@ internal final class MirrorNodeContract: XCTestCase {
     }
 
     internal func testBadContractId() async throws {
-        let testEnv = try TestEnvironment.global
+        let testEnv = try TestEnvironment.nonFree
 
-        let contractId = ContractId(999999)
+        let estimateResponse = try await MirrorNodeContractEstimateGasQuery()
+            .contractId(ContractId(999999))
+            .sender(testEnv.operator.accountId)
+            .function("getMessage")
+            .execute(testEnv.client)
+        let estimatedGas = try XCTUnwrap(UInt64(estimateResponse, radix: 16))
 
-        await assertThrowsHErrorAsync(
-            try await MirrorNodeContractEstimateGasQuery()
-                .contractId(contractId)
-                .function("getMessage")
-                .execute(testEnv.client),
-            "expected error querying gas estimate"
-        ) { error in
-            XCTAssertEqual(error.kind, .basicParse)
-        }
+        /// Undeployed contract should return default gas value.
+        XCTAssertEqual(estimatedGas, 22892)
     }
 
     internal func testLowGasLimit() async throws {
-        let testEnv = try TestEnvironment.global
+        let testEnv = try TestEnvironment.nonFree
 
         let fileCreateReceipt = try await FileCreateTransaction()
             .keys([.single(testEnv.operator.privateKey.publicKey)])
@@ -109,7 +107,7 @@ internal final class MirrorNodeContract: XCTestCase {
         await assertThrowsHErrorAsync(
             try await MirrorNodeContractEstimateGasQuery()
                 .contractId(contractId)
-                .sender(testEnv.operator?.accountId)
+                .sender(testEnv.operator.accountId)
                 .gasLimit(10)
                 .gasPrice(1234)
                 .function("getMessage")

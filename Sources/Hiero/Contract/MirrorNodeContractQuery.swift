@@ -8,23 +8,23 @@ import HieroProtobufs
 /// contract queries, gas estimation, and transient simulations of read-write operations.
 public class MirrorNodeContractQuery: ValidateChecksums {
     /// The ID of the contract of which to get information.
-    public var contractId: ContractId? = nil
+    public var contractId: ContractId?
     /// The EVM address of the contract of which to get information.
-    public var contractEvmAddress: EvmAddress? = nil
+    public var contractEvmAddress: EvmAddress?
     /// The ID of the sender account.
-    public var sender: AccountId? = nil
+    public var sender: AccountId?
     /// The EVM address of the sender account.
-    public var senderEvmAddress: EvmAddress? = nil
+    public var senderEvmAddress: EvmAddress?
     /// The getter for the call data.
     public var callData: Data? { _callData }
     /// The value.
-    public var value: Int64? = nil
+    public var value: Int64?
     /// The gas limit.
-    public var gasLimit: Int64? = nil
+    public var gasLimit: Int64?
     /// The gas price.
-    public var gasPrice: Int64? = nil
+    public var gasPrice: Int64?
     /// The block number.
-    public var blockNumber: UInt64? = nil
+    public var blockNumber: UInt64?
 
     /// Set the ID of the contract.
     @discardableResult
@@ -133,7 +133,7 @@ public class MirrorNodeContractQuery: ValidateChecksums {
     /// Convert the contents of this MirrorNodeContractQuery into a JSON format.
     public func toJson() throws -> [String: Any] {
         var json = [String: Any]()
-        json["data"] = self.callData.map { String(format: "%02x", $0) }.joined()
+        json["data"] = self.callData?.map { String(format: "%02x", $0) }.joined()
         json["from"] = try self.sender?.toSolidityAddress() ?? self.senderEvmAddress?.toString()
         json["to"] = try self.contractId?.toSolidityAddress() ?? self.contractEvmAddress?.toString()
         json["estimate"] = getEstimate()
@@ -164,5 +164,5 @@ public class MirrorNodeContractQuery: ValidateChecksums {
     ///////////////
 
     /// The call data.
-    private var _callData: Data? = nil
+    private var _callData: Data?
 }

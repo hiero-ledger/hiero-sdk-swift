@@ -7,9 +7,9 @@ import XCTest
 @testable import Hiero
 
 internal final class MirrorNodeContractQueryTests: XCTestCase {
-    private static let contractId: ContractID = ContractId(1, 2, 3)
-    private static let evmAddress: String = EvmAddress.fromString("0x1234567890abcdef1234567890abcdef12345")
-    private static let sender: AccountId = AccountId(4, 5, 6)
+    private static let contractId: ContractId = ContractId(shard: 1, realm: 2, num: 3)
+    private static let evmAddress: String = "0x1234567890abcdef1234567890abcdef12345"
+    private static let sender: AccountId = AccountId(shard: 4, realm: 5, num: 6)
     private static let functionName: String = "transfer"
     private static let value: Int64 = 7
     private static let gasLimit: Int64 = 8
@@ -26,14 +26,14 @@ internal final class MirrorNodeContractQueryTests: XCTestCase {
         XCTAssertEqual(query.contractId, Self.contractId)
     }
 
-    internal func testGetSetContractEvmAddress() {
+    internal func testGetSetContractEvmAddress() throws {
         let query = MirrorNodeContractEstimateGasQuery()
 
         XCTAssertEqual(query.contractEvmAddress, nil)
 
-        query.contractEvmAddress(Self.evmAddress)
+        query.contractEvmAddress(try EvmAddress.fromString(Self.evmAddress))
 
-        XCTAssertEqual(query.contractEvmAddress, Self.evmAddress)
+        XCTAssertEqual(query.contractEvmAddress?.toString(), Self.evmAddress)
     }
 
     internal func testGetSetSender() {
@@ -46,14 +46,14 @@ internal final class MirrorNodeContractQueryTests: XCTestCase {
         XCTAssertEqual(query.sender, Self.sender)
     }
 
-    internal func testGetSetSenderEvmAddress() {
+    internal func testGetSetSenderEvmAddress() throws {
         let query = MirrorNodeContractEstimateGasQuery()
 
         XCTAssertEqual(query.senderEvmAddress, nil)
 
-        query.senderEvmAddress(Self.evmAddress)
+        query.senderEvmAddress(try EvmAddress.fromString(Self.evmAddress))
 
-        XCTAssertEqual(query.senderEvmAddress, Self.evmAddress)
+        XCTAssertEqual(query.senderEvmAddress?.toString(), Self.evmAddress)
     }
 
     internal func testSetFunction() {
@@ -63,7 +63,7 @@ internal final class MirrorNodeContractQueryTests: XCTestCase {
 
         let params: ContractFunctionParameters = ContractFunctionParameters()
         params.addAddress(Self.evmAddress)
-        params.addUInt64(100)
+        params.addUint64(100)
         query.function(Self.functionName, params)
 
         XCTAssertEqual(query.callData, params.toBytes(Self.functionName))
