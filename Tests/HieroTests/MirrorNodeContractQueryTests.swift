@@ -59,7 +59,7 @@ internal final class MirrorNodeContractQueryTests: XCTestCase {
     internal func testSetFunction() {
         let query = MirrorNodeContractEstimateGasQuery()
 
-        XCTAssertEqual(query.callData, Data())
+        XCTAssertEqual(query.callData, nil)
 
         let params: ContractFunctionParameters = ContractFunctionParameters()
         params.addAddress(Self.evmAddress)
