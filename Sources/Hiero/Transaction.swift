@@ -168,6 +168,14 @@ public class Transaction: ValidateChecksums {
         }
     }
 
+    /// Set the batch key.
+    @discardableResult
+    public func batchKey(_ key: Key) -> Self {
+        self.batchKey = key
+
+        return self
+    }
+
     /// Batchify the transaction with the given batch key.
     ///
     /// The transaction will be frozen and signed by the operator of the client.

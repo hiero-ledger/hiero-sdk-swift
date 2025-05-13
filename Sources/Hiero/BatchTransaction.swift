@@ -11,6 +11,14 @@ public final class BatchTransaction: Transaction {
         try super.init(protobuf: proto)
     }
 
+    public init(
+        transactions: [Transaction] = []
+    ) {
+        self.transactions = transactions
+
+        super.init()
+    }
+
     /*
      * Set the list of transactions to be executed as part of this BatchTransaction.
      */

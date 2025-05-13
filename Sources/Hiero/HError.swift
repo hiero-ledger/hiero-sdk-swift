@@ -2,7 +2,7 @@
 
 import Foundation
 
-/// Represents any possible error from a fallible function in the Hedera SDK.
+/// Represents any possible error from a fallible function in the Hiero SDK.
 public struct HError: Error, CustomStringConvertible {
     // https://developer.apple.com/documentation/swift/error#2845903
     public enum ErrorKind: Equatable {

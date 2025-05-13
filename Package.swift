@@ -26,6 +26,7 @@ let exampleTargets = [
     "AccountAlias",
     "AccountAllowance",
     "AddNftAllowance",
+    "BatchTransaction",
     "ConsensusPubSub",
     "ConsensusPubSubChunked",
     "ConsensusPubSubWithSubmitKey",
