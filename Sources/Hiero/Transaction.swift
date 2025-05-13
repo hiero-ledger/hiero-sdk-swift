@@ -180,7 +180,7 @@ public class Transaction: ValidateChecksums {
     ///
     /// The transaction will be frozen and signed by the operator of the client.
     @discardableResult
-    internal func batchify(client: Client, _ batchKey: Key) throws -> Self {
+    public func batchify(client: Client, _ batchKey: Key) throws -> Self {
         self.batchKey = batchKey
 
         try self.signWithOperator(client)

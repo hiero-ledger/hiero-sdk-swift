@@ -14,13 +14,14 @@ internal class BatchTransactionTests: XCTestCase {
     private static func makeMockTx() throws -> TransferTransaction {
         return try TransferTransaction()
             .transactionId(transactionId)
-            .batchKey(batchKey)
+            .batchKey(.single(batchKey.publicKey))
             .freeze()
             .sign(batchKey)
     }
 
     private static func makeTransaction() throws -> BatchTransaction {
-        return BatchTransaction().addInnerTransaction(makeMockTx()).addInnerTransaction(makeMockTx())
+        return try BatchTransaction().addInnerTransaction(try makeMockTx()).addInnerTransaction(try makeMockTx())
+            .freeze()
     }
 
     internal func testSerialize() throws {
@@ -44,21 +45,21 @@ internal class BatchTransactionTests: XCTestCase {
 
     internal func testGetSetTransactions() throws {
         let tx = BatchTransaction()
-        tx.transactions = [makeMockTx()]
+        tx.transactions = [try BatchTransactionTests.makeMockTx()]
 
         XCTAssertEqual(tx.transactions.count, 1)
     }
 
     internal func testGetSetInnerTransactions() throws {
         let tx = BatchTransaction()
-        tx.innerTransactions([makeMockTx()])
+        tx.innerTransactions([try BatchTransactionTests.makeMockTx()])
 
         XCTAssertEqual(tx.transactions.count, 1)
     }
 
     internal func testGetSetAddInnerTransactions() throws {
         let tx = BatchTransaction()
-        tx.addInnerTransaction(makeMockTx())
+        tx.addInnerTransaction(try BatchTransactionTests.makeMockTx())
 
         XCTAssertEqual(tx.transactions.count, 1)
     }

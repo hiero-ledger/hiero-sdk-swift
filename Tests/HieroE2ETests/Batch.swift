@@ -3,7 +3,7 @@
 import Hiero
 import XCTest
 
-internal final class BatchTransaction: XCTestCase {
+internal final class Batch: XCTestCase {
     internal func testBatchOneTransaction() async throws {
         let testEnv = try TestEnvironment.nonFree
 
@@ -12,21 +12,18 @@ internal final class BatchTransaction: XCTestCase {
         let accountCreateTx = try AccountCreateTransaction()
             .keyWithoutAlias(.single(key.publicKey))
             .initialBalance(Hbar(1))
-            .batchify(testEnv.client, .single(batchKey.publicKey))
+            .batchify(client: testEnv.client, .single(batchKey.publicKey))
             .freezeWith(testEnv.client)
 
         let batchTx = try BatchTransaction()
-            .addInnerTransaction(accontCreateTx)
+            .addInnerTransaction(accountCreateTx)
             .freezeWith(testEnv.client)
             .sign(batchKey)
-        let batchTxReceipt =
-            try await batchTx
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
+        _ = try await batchTx.execute(testEnv.client).getReceipt(testEnv.client)
 
-        let transactionIds = batchTx.transactionIds
+        let transactionIds = batchTx.innerTransactionIds
         let accountCreateReceipt = try await TransactionReceiptQuery()
-            .transactionId(transactionIds[0]).execute(client)
+            .transactionId(transactionIds[0]).execute(testEnv.client)
         let accountId = try XCTUnwrap(accountCreateReceipt.accountId)
 
         addTeardownBlock { try await Account(id: accountId, key: key).delete(testEnv) }
@@ -44,46 +41,43 @@ internal final class BatchTransaction: XCTestCase {
         let accountCreateTx = try AccountCreateTransaction()
             .keyWithoutAlias(.single(key.publicKey))
             .initialBalance(Hbar(1))
-            .batchify(testEnv.client, .single(batchKey.publicKey))
+            .batchify(client: testEnv.client, .single(batchKey.publicKey))
             .freezeWith(testEnv.client)
 
         let batchTx = try BatchTransaction()
             /// 25 account create transactions
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
-            .addInnerTransaction(accontCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
+            .addInnerTransaction(accountCreateTx)
             .freezeWith(testEnv.client)
             .sign(batchKey)
-        let batchTxReceipt =
-            try await batchTx
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
+        _ = try await batchTx.execute(testEnv.client).getReceipt(testEnv.client)
 
-        let transactionIds = batchTx.transactionIds
+        let transactionIds = batchTx.innerTransactionIds
         let accountCreateReceipt = try await TransactionReceiptQuery()
-            .transactionId(transactionIds[0]).execute(client)
+            .transactionId(transactionIds[0]).execute(testEnv.client)
         let accountId = try XCTUnwrap(accountCreateReceipt.accountId)
 
         addTeardownBlock { try await Account(id: accountId, key: key).delete(testEnv) }
@@ -132,23 +126,18 @@ internal final class BatchTransaction: XCTestCase {
 
         let key = PrivateKey.generateEd25519()
         let batchKey = PrivateKey.generateEcdsa()
-        let topicId = try await TopicCreateTransaction().execute(client).getReceipt(client).topicId!
+        let topicId = try await TopicCreateTransaction().execute(testEnv.client).getReceipt(testEnv.client).topicId!
 
         let topicMsgSubmitTx = try TopicMessageSubmitTransaction()
             .topicId(topicId)
-            .message("Hello from HCS!")
-            .batchify(testEnv.client, .single(batchKey.publicKey))
+            .message("Hello from HCS!".data(using: .utf8) ?? Data())
+            .batchify(client: testEnv.client, .single(batchKey.publicKey))
 
         let batchTx = try BatchTransaction()
             .addInnerTransaction(topicMsgSubmitTx)
             .freezeWith(testEnv.client)
             .sign(batchKey)
-        let batchTxReceipt =
-            try await batchTx
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
-
-        let transactionIds = batchTx.transactionIds
+        _ = try await batchTx.execute(testEnv.client).getReceipt(testEnv.client)
 
         let info = try await TopicInfoQuery(topicId: topicId).execute(testEnv.client)
 
@@ -189,21 +178,21 @@ internal final class BatchTransaction: XCTestCase {
         let accountTx1 = try TransferTransaction()
             .hbarTransfer(testEnv.operator.accountId, Hbar(-1))
             .hbarTransfer(accountId1, Hbar(1))
-            .freezeWith(client)
+            .freezeWith(testEnv.client)
             .sign(accountKey1)
-            .batchify(client, batchKey1)
+            .batchify(client: testEnv.client, .single(batchKey1.publicKey))
         let accountTx2 = try TransferTransaction()
             .hbarTransfer(testEnv.operator.accountId, Hbar(-1))
             .hbarTransfer(accountId2, Hbar(1))
-            .freezeWith(client)
+            .freezeWith(testEnv.client)
             .sign(accountKey2)
-            .batchify(client, batchKey2)
+            .batchify(client: testEnv.client, .single(batchKey2.publicKey))
         let accountTx3 = try TransferTransaction()
             .hbarTransfer(testEnv.operator.accountId, Hbar(-1))
             .hbarTransfer(accountId3, Hbar(1))
-            .freezeWith(client)
+            .freezeWith(testEnv.client)
             .sign(accountKey3)
-            .batchify(client, batchKey3)
+            .batchify(client: testEnv.client, .single(batchKey3.publicKey))
 
         let batchTxReceipt = try await BatchTransaction()
             .addInnerTransaction(accountTx1)
@@ -223,26 +212,26 @@ internal final class BatchTransaction: XCTestCase {
         let testEnv = try TestEnvironment.nonFree
 
         let initialOperatorBalance = try await AccountBalanceQuery().accountId(testEnv.operator.accountId).execute(
-            client
+            testEnv.client
         ).hbars
 
         let accountKey1 = PrivateKey.generateEcdsa()
         let accountKey2 = PrivateKey.generateEcdsa()
         let accountKey3 = PrivateKey.generateEcdsa()
 
-        let accountTx1 = try await AccountCreateTransaction()
+        let accountTx1 = try AccountCreateTransaction()
             .keyWithoutAlias(.single(accountKey1.publicKey))
             .initialBalance(Hbar(1))
-            .batchify(client, testEnv.operator.privateKey)
-        let accountTx2 = try await AccountCreateTransaction()
+            .batchify(client: testEnv.client, .single(testEnv.operator.privateKey.publicKey))
+        let accountTx2 = try AccountCreateTransaction()
             .keyWithoutAlias(.single(accountKey2.publicKey))
             .initialBalance(Hbar(1))
-            .batchify(client, testEnv.operator.privateKey)
-        let accountTx3 = try await AccountCreateTransaction()
+            .batchify(client: testEnv.client, .single(testEnv.operator.privateKey.publicKey))
+        let accountTx3 = try AccountCreateTransaction()
             .keyWithoutAlias(.single(accountKey3.publicKey))
             .initialBalance(Hbar(1))
             .receiverSignatureRequired(true)
-            .batchify(client, testEnv.operator.privateKey)
+            .batchify(client: testEnv.client, .single(testEnv.operator.privateKey.publicKey))
 
         await assertThrowsHErrorAsync(
             try await BatchTransaction()
@@ -260,8 +249,10 @@ internal final class BatchTransaction: XCTestCase {
             XCTAssertEqual(status, .innerTransactionFailed)
         }
 
-        let finalOperatorBalance = try await AccountBalanceQuery().accountId(testEnv.operator.accountId).execute(client)
-            .hbars
+        let finalOperatorBalance = try await AccountBalanceQuery().accountId(testEnv.operator.accountId).execute(
+            testEnv.client
+        )
+        .hbars
         XCTAssertLessThan(initialOperatorBalance, finalOperatorBalance)
     }
 
@@ -270,8 +261,8 @@ internal final class BatchTransaction: XCTestCase {
 
         await assertThrowsHErrorAsync(
             try await TopicCreateTransaction()
-                .adminKey(testEnv.operator.privateKey)
-                .batchify(client, testEnv.operator.privateKey)
+                .adminKey(.single(testEnv.operator.privateKey.publicKey))
+                .batchify(client: testEnv.client, .single(testEnv.operator.privateKey.publicKey))
                 .execute(testEnv.client),
             "expected error batchified tx not in batch"
         ) { error in
