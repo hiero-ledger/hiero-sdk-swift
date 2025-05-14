@@ -11,23 +11,30 @@ internal class BatchTransactionTests: XCTestCase {
     private static let batchKey = try! PrivateKey.fromStringEcdsa(
         "7f109a9e3b0d8ecfba9cc23a3614433ce0fa7ddcc80f2a8f10b222179a5a80d6")
 
-    private static func makeMockTx() throws -> TransferTransaction {
-        return try TransferTransaction()
-            .transactionId(transactionId)
+    private static func makeMockTx() throws -> AccountCreateTransaction {
+        return try AccountCreateTransaction()
+            .nodeAccountIds([AccountId(0)])
+            .transactionId(Resources.txId)
+            .keyWithoutAlias(.single(batchKey.publicKey))
+            .initialBalance(Hbar(1))
             .batchKey(.single(batchKey.publicKey))
             .freeze()
             .sign(batchKey)
     }
 
     private static func makeTransaction() throws -> BatchTransaction {
-        return try BatchTransaction().addInnerTransaction(try makeMockTx()).addInnerTransaction(try makeMockTx())
+        return try BatchTransaction()
+            .nodeAccountIds(Resources.nodeAccountIds)
+            .transactionId(Resources.txId)
+            .addInnerTransaction(try makeMockTx())
+            .addInnerTransaction(try makeMockTx())
             .freeze()
     }
 
     internal func testSerialize() throws {
         let tx = try Self.makeTransaction().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytes() throws {

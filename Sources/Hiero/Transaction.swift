@@ -28,8 +28,6 @@ public class Transaction: ValidateChecksums {
         2
     }
 
-    internal var atomicBatchNodeAccountId = "0.0.0"
-
     internal func toTransactionDataProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody.OneOf_Data {
         fatalError("Method `Transaction.toTransactionDataProtobuf` must be overridden by `\(type(of: self))`")
     }
@@ -182,6 +180,7 @@ public class Transaction: ValidateChecksums {
     @discardableResult
     public func batchify(client: Client, _ batchKey: Key) throws -> Self {
         self.batchKey = batchKey
+        self.nodeAccountIds = [AccountId(0)]
 
         try self.signWithOperator(client)
 
