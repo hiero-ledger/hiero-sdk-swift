@@ -25,61 +25,38 @@ tasks:
     example:
         desc: "Run example"
         cmds:
-            - swift run {{.CLI_ARGS}}Example
-            
-    submodule:install:
-        desc: "Install the submodule into the parent directory"
-        cmds:
-            - git submodule update --init --recursive
-            - task submodule:move
-            - echo "Submodule Successfully Installed"
+            - swift run {{.name}}Example
 
-    submodule:move:
-        desc: "Copy all contents from protobufs/hapi/hedera-protobufs to Sources/HieroProtobufs/Protos"
-        cmds:
-            # Create required directories if they don't exist
-            - mkdir -p Sources/HieroProtobufs/Protos/mirror
-            - mkdir -p Sources/HieroProtobufs/Protos/sdk
-
-            # Remove all contents except mirror and sdk directories
-            - find Sources/HieroProtobufs/Protos -mindepth 1 ! -path 'Sources/HieroProtobufs/Protos/mirror*' ! -path 'Sources/HieroProtobufs/Protos/sdk*' -delete
-
-            # Copy all .proto files from specified directories (flattened)
-            - |
-              for dir in block platform services streams; do
-                find "protobufs/hapi/hedera-protobufs/$dir" -name "*.proto" -exec cp {} Sources/HieroProtobufs/Protos/ \;
-              done
-
-    submodule:clean:
-        desc: "Clean content within the submodule"
-        deps: 
-            - submodule:install
-        cmds:
-            - find src/services -mindepth 1 -delete
-            - echo "Submodule Successfully Cleaned"
-    
     submodule:fetch:
-        desc: "Fetch a specific version of the submodule, or else the latest version"
+        desc: "Fetch a specific version of the submodule, or else the latest version. E.g. task submodule:fetch proto=vX.Y.Z"
         dir: protobufs
         vars:
             latest_tag:
-                sh: git -c versionsort.suffix=-alpha \
-                        -c versionsort.suffix=-beta \
-                        -c versionsort.suffix=-rc \
-                        tag -l --sort=version:refname | tail -1
+                sh: >
+                    git tag -l --sort=version:refname | 
+                    grep -v 'alpha\|beta\|rc' |
+                    tail -1
             proto: "{{.proto | default .latest_tag}}"
+            current_version:
+                sh: git describe --tags
         cmds:
             - echo "Protobuf version set to {{.proto}}"
+            - |
+                if [ "{{.current_version}}" = "{{.proto}}" ]; then
+                    echo "Warning: Already at version {{.proto}}, skipping update"
+                    exit 0
+                fi
             - git fetch origin
             - git checkout {{.proto}}
             - git show-ref --verify -q refs/heads/{{.proto}} && git pull origin || exit 0
             - cd ..
-            - |
-                if [ "$(git diff --cached --name-only | grep protobufs)" ]; then
-                    git add protobufs
-                    git commit -m "Update submodule to {{.proto}}"
-                else
-                    echo "No changes to submodule. Skipping commit."
-                fi
+            - task: submodule:generate
             - task: build
             - echo "Successfully updated protobufs to {{.proto}}"
+
+    submodule:generate:
+        desc: "Generate the swift files from the protobufs"
+        dir: Sources/HieroProtobufs
+        cmds:
+            - cmd: python3 update_protos.py
+

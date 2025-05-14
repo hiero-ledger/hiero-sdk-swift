@@ -31,10 +31,12 @@ let exampleTargets = [
     "ConsensusPubSubWithSubmitKey",
     "CreateAccount",
     "CreateAccountThresholdKey",
+    "CreateAccountWithAlias",
     "CreateFile",
     "CreateSimpleContract",
     "CreateStatefulContract",
     "CreateTopic",
+    "CreateTopicWithRevenue",
     "DeleteAccount",
     "DeleteFile",
     "FileAppendChunked",
@@ -45,6 +47,9 @@ let exampleTargets = [
     "GetAddressBook",
     "GetExchangeRates",
     "GetFileContents",
+    "InitializeClientWithMirrorNetwork",
+    "LongTermScheduledTransaction",
+    "MirrorNodeContractQuery",
     "ModifyTokenKeys",
     "MultiAppTransfer",
     "MultiSigOffline",
@@ -64,10 +69,6 @@ let exampleTargets = [
     "TokenUpdateMetadata",
     "NftUpdateMetadata",
     "TokenAirdrop",
-    "InitializeClientWithMirrorNetwork",
-    "LongTermScheduledTransaction",
-    "CreateAccountWithAlias",
-    "CreateTopicWithRevenue",
 ].map { name in
     Target.executableTarget(
         name: "\(name)Example",
@@ -115,7 +116,8 @@ let package = Package(
                 .product(name: "GRPC", package: "grpc-swift"),
             ],
             exclude: [
-                "Protos"
+                "Protos",
+                "update_protos.py",
             ]
         ),
         // weird name, but whatever, internal targets
