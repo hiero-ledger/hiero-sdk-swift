@@ -2,12 +2,12 @@
 
 import Foundation
 import Hiero
-import SwiftDotenv
+import HieroExampleUtilities
 
 @main
 internal enum Program {
     internal static func main() async throws {
-        let env = try Dotenv.load()
+        let env = try Environment.load()
         let client = try Client.forName(env.networkName)
 
         client.setOperator(env.operatorAccountId, env.operatorKey)
@@ -57,16 +57,19 @@ internal enum Program {
         let signedTxnBytes = try exchangeSignsTransaction(exchangeKey, transferTxn.toBytes())
 
         // parse the transaction bytes returned from the exchange
-        let signedTransferTxn = try Transaction.fromBytes(signedTxnBytes) as! TransferTransaction
+        let signedTransferTxn = try Transaction.fromBytes(signedTxnBytes)
+        guard let transferTransaction = signedTransferTxn as? TransferTransaction else {
+            fatalError("Expected TransferTransaction")
+        }
 
         // get the amount we are about to transfer
         // we built this with +2, -2 (which we might see in any order)
-        let transferAmount = signedTransferTxn.hbarTransfers.values.first.map { $0 < 0 ? -$0 : $0 }
+        let transferAmount = transferTransaction.hbarTransfers.values.first.map { $0 < 0 ? -$0 : $0 }
 
         print("about to transfer \(String(describing: transferAmount))...")
 
         // we now execute the signed transaction and wait for it to be accepted
-        let transactionResponse = try await signedTransferTxn.execute(client)
+        let transactionResponse = try await transferTransaction.execute(client)
 
         // (important!) wait for consensus by querying for the receipt
         _ = try await transactionResponse.getReceipt(client)
@@ -92,24 +95,5 @@ internal enum Program {
         try Transaction.fromBytes(transactionData)
             .sign(exchangeKey)
             .toBytes()
-    }
-}
-
-extension Environment {
-    /// Account ID for the operator to use in this example.
-    internal var operatorAccountId: AccountId {
-        AccountId(self["OPERATOR_ID"]!.stringValue)!
-    }
-
-    /// Private key for the operator to use in this example.
-    internal var operatorKey: PrivateKey {
-        PrivateKey(self["OPERATOR_KEY"]!.stringValue)!
-    }
-
-    /// The name of the hedera network this example should be ran against.
-    ///
-    /// Testnet by default.
-    internal var networkName: String {
-        self["HEDERA_NETWORK"]?.stringValue ?? "testnet"
     }
 }

@@ -18,12 +18,12 @@
 
 import Foundation
 import Hiero
-import SwiftDotenv
+import HieroExampleUtilities
 
 @main
 internal enum Program {
     internal static func main() async throws {
-        let env = try Dotenv.load()
+        let env = try Environment.load()
         let client = try Client.forName(env.networkName)
 
         client.setOperator(env.operatorAccountId, env.operatorKey)
@@ -123,8 +123,8 @@ internal enum Program {
         // Step 6: Transfer NFT using approved allowance
         let transferReceipt = try await TransferTransaction()
             .approvedNftTransfer(NftId(tokenId: nftTokenId, serial: 1), env.operatorAccountId, receiverAccountId)
-            .freezeWith(client)
             .transactionId(TransactionId.generateFrom(spenderAccountId))
+            .freezeWith(client)
             .sign(spenderKey)
             .execute(client)
             .getReceipt(client)
@@ -153,22 +153,5 @@ internal enum Program {
 
         // Cleanup resources by deleting tokens, accounts, etc.
         // Implement cleanup steps...
-    }
-}
-
-extension Environment {
-    /// Account ID for the operator to use in this example.
-    internal var operatorAccountId: AccountId {
-        AccountId(self["OPERATOR_ID"]!.stringValue)!
-    }
-
-    /// Private key for the operator to use in this example.
-    internal var operatorKey: PrivateKey {
-        PrivateKey(self["OPERATOR_KEY"]!.stringValue)!
-    }
-
-    /// The name of the Hiero network this example should run against.
-    internal var networkName: String {
-        self["HEDERA_NETWORK"]?.stringValue ?? "testnet"
     }
 }

@@ -46,11 +46,11 @@ HieroProtobufs are entirely generated.
 
 ### Required Tooling
 
-protoc
-protoc-gen-swift (from https://github.com/apple/swift-protobuf)
-protoc-gen-grpc-swift (from https://github.com/grpc/grpc-swift)
-task (from https://github.com/go-task/task)
-openSSL 3.4 (from https://openssl-library.org/source/)
+- protoc
+- protoc-gen-swift (from https://github.com/apple/swift-protobuf)
+- protoc-gen-grpc-swift (from https://github.com/grpc/grpc-swift)
+- task (from https://github.com/go-task/task)
+- openSSL 3.4 (from https://openssl-library.org/source/)
 
 ### Fetch Submodule and Generate Swift Protobufs (HieroProtobufs)
 

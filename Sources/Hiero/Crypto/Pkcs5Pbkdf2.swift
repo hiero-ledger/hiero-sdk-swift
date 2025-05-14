@@ -172,7 +172,7 @@ extension Pkcs5.Pbkdf2Prf: DERImplicitlyTaggable {
 
         // these specifically want `null` as in, not missing.
         guard let params = algId.parameters else {
-            throw ASN1Error.invalidASN1Object
+            throw ASN1Error.invalidASN1Object(reason: "HMAC algorithm requires NULL parameters")
         }
 
         _ = try ASN1Null(asn1Any: params)
@@ -183,7 +183,7 @@ extension Pkcs5.Pbkdf2Prf: DERImplicitlyTaggable {
         case .DigestAlgorithm.hmacWithSha256: self = .hmacWithSha256
         case .DigestAlgorithm.hmacWithSha384: self = .hmacWithSha384
         case .DigestAlgorithm.hmacWithSha512: self = .hmacWithSha512
-        default: throw ASN1Error.invalidASN1Object
+        default: throw ASN1Error.invalidASN1Object(reason: "unsupported algorithm identifier: \(algId.oid)")
         }
     }
 
@@ -210,7 +210,10 @@ extension Pkcs5.Pbkdf2Parameters: DERImplicitlyTaggable {
             guard
                 let value = Self(salt: Data(salt.bytes), iterationCount: iterationCount, keyLength: keyLength, prf: prf)
             else {
-                throw ASN1Error.invalidASN1Object
+                throw ASN1Error.invalidASN1Object(
+                    reason:
+                        "Invalid PBKDF2 parameters: iteration count must be between 1 and 10,000,000, and key length must be at least 1 if specified"
+                )
             }
 
             return value
