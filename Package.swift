@@ -100,7 +100,7 @@ let package = Package(
         .package(url: "https://github.com/vsanthanam/AnyAsyncSequence.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
         // swift-asn1 wants swift 5.7+ past 0.4
-        .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMinor(from: "0.3.0")),
+        .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMinor(from: "1.3.1")),
         .package(url: "https://github.com/GigaBitcoin/secp256k1.swift.git", .upToNextMinor(from: "0.12.0")),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.0.0"),
