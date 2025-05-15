@@ -212,6 +212,10 @@ extension Transaction {
             let value = try intoOnlyValue(value)
             return try TokenCancelAirdropTransaction(protobuf: firstBody, value)
 
+        case .atomicBatch(let value):
+            let value = try intoOnlyValue(value)
+            return try BatchTransaction(protobuf: firstBody, value)
+
         case .stateSignatureTransaction(let code):
             throw HError.fromProtobuf("unrecognized: stateSignatureTransaction `\(code)`")
 
@@ -235,9 +239,6 @@ extension Transaction {
 
         case .crsPublication(let code):
             throw HError.fromProtobuf("unrecognized: crsPublication `\(code)`")
-
-        case .atomicBatch(let code):
-            throw HError.fromProtobuf("unrecognized: atomicBatch `\(code)`")
         }
     }
 }

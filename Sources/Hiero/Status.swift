@@ -1124,6 +1124,27 @@ public enum Status: Equatable {
     /// Max custom fees list is not supported for this operation.
     case maxCustomFeesIsNotSupported  // = 387
 
+    /// The list of batch transactions is empty.
+    case batchListEmpty  // = 388
+
+    /// The list of batch transactions contains duplicated transactions.
+    case batchListContainsDuplicates  // = 389
+
+    /// The list of batch transactions contains a transaction type that is in the AtomicBatch blacklist as configured in the network.
+    case batchTransactionInBlacklist  // = 390
+
+    /// The inner transaction of a batch transaction failed.
+    case innerTransactionFailed  // = 391
+
+    /// The inner transaction of a batch transaction is missing a batch key.
+    case missingBatchKey  // = 392
+
+    /// The batch key is set for a non batch transaction.
+    case batchKeySetOnNonInnerTransaction  // = 393
+
+    /// The batch key is not valid.
+    case invalidBatchKey  // = 394
+
     /// swift-format-ignore: AlwaysUseLowerCamelCase
     case unrecognized(Int32)
 
@@ -1474,6 +1495,13 @@ public enum Status: Equatable {
         case 385: self = .duplicateDenominationInMaxCustomFeeList
         case 386: self = .duplicateAccountIDInMaxCustomFeeList
         case 387: self = .maxCustomFeesIsNotSupported
+        case 388: self = .batchListEmpty
+        case 389: self = .batchListContainsDuplicates
+        case 390: self = .batchTransactionInBlacklist
+        case 391: self = .innerTransactionFailed
+        case 392: self = .missingBatchKey
+        case 393: self = .batchKeySetOnNonInnerTransaction
+        case 394: self = .invalidBatchKey
         default: self = .unrecognized(rawValue)
         }
     }
@@ -1826,6 +1854,13 @@ public enum Status: Equatable {
         case .duplicateDenominationInMaxCustomFeeList: return 385
         case .duplicateAccountIDInMaxCustomFeeList: return 386
         case .maxCustomFeesIsNotSupported: return 387
+        case .batchListEmpty: return 388
+        case .batchListContainsDuplicates: return 389
+        case .batchTransactionInBlacklist: return 390
+        case .innerTransactionFailed: return 391
+        case .missingBatchKey: return 392
+        case .batchKeySetOnNonInnerTransaction: return 393
+        case .invalidBatchKey: return 394
         case .unrecognized(let i): return i
         }
     }
@@ -2181,6 +2216,13 @@ extension Status: CaseIterable {
         .duplicateDenominationInMaxCustomFeeList,
         .duplicateAccountIDInMaxCustomFeeList,
         .maxCustomFeesIsNotSupported,
+        .batchListEmpty,
+        .batchListContainsDuplicates,
+        .batchTransactionInBlacklist,
+        .innerTransactionFailed,
+        .missingBatchKey,
+        .batchKeySetOnNonInnerTransaction,
+        .invalidBatchKey,
     ]
 }
 
@@ -2534,6 +2576,13 @@ extension Status {
             385: "DUPLICATE_DENOMINATION_IN_MAX_CUSTOM_FEE_LIST",
             386: "DUPLICATE_ACCOUNT_ID_IN_MAX_CUSTOM_FEE_LIST",
             387: "MAX_CUSTOM_FEES_IS_NOT_SUPPORTED",
+            388: "BATCH_LIST_EMPTY",
+            389: "BATCH_LIST_CONTAINS_DUPLICATES",
+            390: "BATCH_TRANSACTION_IN_BLACKLIST",
+            391: "INNER_TRANSACTION_FAILED",
+            392: "MISSING_BATCH_KEY",
+            393: "BATCH_KEY_SET_ON_NON_INNER_TRANSACTION",
+            394: "INVALID_BATCH_KEY",
         ]
 }
 
