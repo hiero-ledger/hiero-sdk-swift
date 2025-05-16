@@ -14,10 +14,10 @@ Maintainers are assigned the following scopes in this repository:
 
 <!-- Please keep this sorted alphabetically by github -->
 
-| Name | GitHub ID | Scope | LFID | Discord ID | Email | Company Affiliation |
-|----- | --------- | ----- | ---- | ---------- | ----- | ------------------- |
-|      |           |       |      |            |       |                     |
-
+|      Name      |  GitHub ID  | Scope | LFID | Discord ID | Email | Company Affiliation |
+|--------------- | ----------- | ----- | ---- | ---------- | ----- | ------------------- |
+| Ricky Saechao  | RickyLB     |       |      |            |       |  Launchbadge        |
+| Tim Schmidt    | Sheng-Long  |       |      |            |       |                     |
 
 ## Emeritus Maintainers
 
