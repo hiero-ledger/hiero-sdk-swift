@@ -103,7 +103,9 @@ public final class Client: Sendable {
     }
 
     /// Set up the client from selected mirror network.
-    public static func forMirrorNetwork(_ mirrorNetworks: [String], shard: UInt64 = 0, realm: UInt64 = 0) async throws -> Self {
+    public static func forMirrorNetwork(_ mirrorNetworks: [String], shard: UInt64 = 0, realm: UInt64 = 0) async throws
+        -> Self
+    {
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
         let client = Self(
             network: .init(
