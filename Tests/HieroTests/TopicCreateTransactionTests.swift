@@ -84,4 +84,12 @@ internal final class TopicCreateTransactionTests: XCTestCase {
 
         XCTAssertEqual(tx.autoRenewPeriod, Self.testAutoRenewPeriod)
     }
+
+    internal func testAutomaticallySetAutoRenewAccountId() throws {
+        let tx = TopicCreateTransaction()
+        tx.transactionId(Resources.txId)
+        try tx.freezeWith(nil)
+
+        XCTAssertEqual(tx.autoRenewAccountId, Resources.txId.accountId)
+    }
 }
