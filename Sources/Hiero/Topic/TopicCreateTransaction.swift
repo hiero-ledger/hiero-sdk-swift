@@ -30,16 +30,18 @@ public final class TopicCreateTransaction: Transaction {
         try super.init(protobuf: proto)
     }
 
+    @discardableResult
     public override func freezeWith(_ client: Client?) throws -> Self {
-        if let client = client {
-            if self.autoRenewAccountId == nil {
-                self.autoRenewAccountId = transactionId?.accountId ?? client.operator?.accountId
+        if self.autoRenewAccountId == nil {
+            if let feePayerAccountId = transactionId?.accountId {
+                self.autoRenewAccountId = feePayerAccountId
+            }
+            if let client = client, let clientOperatorAccountId = client.operator?.accountId {
+                self.autoRenewAccountId = clientOperatorAccountId
             }
         }
 
-        try super.freezeWith(client)
-
-        return self
+        return try super.freezeWith(client)
     }
 
     /// Short publicly visible memo about the topic. No guarantee of uniqueness.
