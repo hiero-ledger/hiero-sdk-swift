@@ -36,7 +36,8 @@ internal final class PaymentTransaction: Transaction {
     internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction) async throws
         -> Proto_TransactionResponse
     {
-        try await Proto_CryptoServiceAsyncClient(channel: channel).cryptoTransfer(request)
+        try await Proto_CryptoServiceAsyncClient(channel: channel).cryptoTransfer(
+            request, callOptions: applyGrpcHeader())
     }
 
     internal override func validateChecksums(on ledgerId: LedgerId) throws {

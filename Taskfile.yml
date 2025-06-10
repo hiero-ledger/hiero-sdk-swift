@@ -5,6 +5,11 @@ silent: true
 tasks:
     build:
         cmds:
+            - |
+                echo "// SPDX-License-Identifier: Apache-2.0
+                public enum VersionInfo {
+                    public static let version = \"$(git describe --tags)\"
+                }" > Sources/Hiero/Version.swift
             - swift build
 
     format:
@@ -20,6 +25,11 @@ tasks:
     package:
         desc: "Build package"
         cmds:
+            - |
+                echo "// SPDX-License-Identifier: Apache-2.0
+                public enum VersionInfo {
+                    public static let version = \"$(git describe --tags)\"
+                }" > Sources/Hiero/Version.swift
             - swift build -c release
 
     example:
