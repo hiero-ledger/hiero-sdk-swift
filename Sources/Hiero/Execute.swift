@@ -71,7 +71,7 @@ extension Execute {
     }
 
     internal func applyGrpcHeader() -> CallOptions {
-        return CallOptions(customMetadata: ["x-user-agent": "hiero-sdk-swift/v0.39.0"])
+        return CallOptions(customMetadata: ["x-user-agent": "hiero-sdk-swift/" + VersionInfo.version])
     }
 }
 
