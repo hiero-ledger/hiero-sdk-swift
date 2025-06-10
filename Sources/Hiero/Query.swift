@@ -3,8 +3,6 @@
 import Foundation
 import GRPC
 import HieroProtobufs
-import NIO
-import NIOHPACK
 
 /// A query that can be executed on the Hedera network.
 public class Query<Response>: ValidateChecksums {
