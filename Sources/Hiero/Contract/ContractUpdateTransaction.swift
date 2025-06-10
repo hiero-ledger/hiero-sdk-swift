@@ -292,7 +292,8 @@ public final class ContractUpdateTransaction: Transaction {
     internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction) async throws
         -> Proto_TransactionResponse
     {
-        try await Proto_SmartContractServiceAsyncClient(channel: channel).updateContract(request)
+        try await Proto_SmartContractServiceAsyncClient(channel: channel).updateContract(
+            request, callOptions: applyGrpcHeader())
     }
 
     internal override func validateChecksums(on ledgerId: LedgerId) throws {

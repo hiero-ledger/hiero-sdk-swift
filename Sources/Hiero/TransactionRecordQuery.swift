@@ -66,7 +66,8 @@ public final class TransactionRecordQuery: Query<TransactionRecord> {
     }
 
     internal override func queryExecute(_ channel: GRPCChannel, _ request: Proto_Query) async throws -> Proto_Response {
-        try await Proto_CryptoServiceAsyncClient(channel: channel).getTxRecordByTxID(request)
+        try await Proto_CryptoServiceAsyncClient(channel: channel).getTxRecordByTxID(
+            request, callOptions: applyGrpcHeader())
     }
 
     internal override func makeQueryResponse(_ response: Proto_Response.OneOf_Response) throws -> Response {

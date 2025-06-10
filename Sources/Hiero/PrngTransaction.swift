@@ -41,7 +41,7 @@ public final class PrngTransaction: Transaction {
     internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction) async throws
         -> Proto_TransactionResponse
     {
-        try await Proto_UtilServiceAsyncClient(channel: channel).prng(request)
+        try await Proto_UtilServiceAsyncClient(channel: channel).prng(request, callOptions: applyGrpcHeader())
     }
 }
 

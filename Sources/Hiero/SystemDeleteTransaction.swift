@@ -92,7 +92,8 @@ public final class SystemDeleteTransaction: Transaction {
         -> Proto_TransactionResponse
     {
         if fileId != nil {
-            return try await Proto_FileServiceAsyncClient(channel: channel).systemDelete(request)
+            return try await Proto_FileServiceAsyncClient(channel: channel).systemDelete(
+                request, callOptions: applyGrpcHeader())
         }
 
         if contractId != nil {

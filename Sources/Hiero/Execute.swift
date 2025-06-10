@@ -69,6 +69,10 @@ extension Execute {
     internal func shouldRetry(forResponse response: GrpcResponse) -> Bool {
         false
     }
+
+    internal func applyGrpcHeader() -> CallOptions {
+        return CallOptions(customMetadata: ["x-user-agent": "hiero-sdk-swift/v0.39.0"])
+    }
 }
 
 private struct ExecuteContext {

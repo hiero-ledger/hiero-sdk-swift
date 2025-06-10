@@ -55,7 +55,8 @@ public final class BatchTransaction: Transaction {
     internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction) async throws
         -> Proto_TransactionResponse
     {
-        try await Proto_UtilServiceNIOClient(channel: channel).atomicBatch(request).response.get()
+        try await Proto_UtilServiceNIOClient(channel: channel).atomicBatch(request, callOptions: applyGrpcHeader())
+            .response.get()
     }
 
     internal override func toTransactionDataProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody.OneOf_Data {
