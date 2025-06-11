@@ -93,21 +93,21 @@ let package = Package(
         .library(name: "Hiero", targets: ["Hiero"])
     ],
     dependencies: [
-        .package(url: "https://github.com/objecthub/swift-numberkit.git", from: "2.5.1"),
-        .package(url: "https://github.com/thebarndog/swift-dotenv.git", from: "1.0.0"),
-        .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.23.0"),
-        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.29.0"),
-        .package(url: "https://github.com/vsanthanam/AnyAsyncSequence.git", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
+        .package(url: "https://github.com/objecthub/swift-numberkit.git", .upToNextMajor(from: "2.5.1")),
+        .package(url: "https://github.com/thebarndog/swift-dotenv.git", .upToNextMajor(from: "1.0.0")),
+        .package(url: "https://github.com/grpc/grpc-swift.git", .upToNextMajor(from: "1.23.0")),
+        .package(url: "https://github.com/apple/swift-protobuf.git", .upToNextMajor(from: "1.29.0")),
+        .package(url: "https://github.com/vsanthanam/AnyAsyncSequence.git", .upToNextMajor(from: "1.0.0")),
+        .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMajor(from: "1.1.0")),
         // swift-asn1 wants swift 5.7+ past 0.4
         .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMinor(from: "0.3.0")),
         .package(url: "https://github.com/GigaBitcoin/secp256k1.swift.git", .upToNextMinor(from: "0.12.0")),
-        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.0.0"),
-        .package(url: "https://github.com/vapor/vapor.git", from: "4.101.3"),
-        .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.0"),
+        .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.0.0")),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", .upToNextMajor(from: "1.0.0")),
+        .package(url: "https://github.com/vapor/vapor.git", .upToNextMajor(from: "4.101.3")),
+        .package(url: "https://github.com/attaswift/BigInt.git", .upToNextMajor(from: "5.2.0")),
         // Currently, only used for keccak256
-        .package(url: "https://github.com/krzyzanowskim/OpenSSL-Package.git", from: "3.3.2000"),
+        .package(url: "https://github.com/krzyzanowskim/OpenSSL-Package.git", .upToNextMajor(from: "3.3.2000")),
     ],
     targets: [
         .target(
