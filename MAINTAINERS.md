@@ -6,18 +6,16 @@ The general handling of Maintainer rights and all groups in this GitHub org is d
 
 Maintainers are assigned the following scopes in this repository:
 
-| Scope      | Definition               | GitHub Role | GitHub Team                        |
-| ---------- | ------------------------ | ----------- | ---------------------------------- |
-| Maintainer | The GitHub Maintain role | Maintain    | `hiero-sdk-swift-maintainers`      |
+| Scope               | Definition                     | GitHub Role | GitHub Team                        |
+| ------------------- | ------------------------------ | ----------- | ---------------------------------- |
+| project-maintainers | The Maintainers of the project | Maintain    | `hiero-sdk-swift-maintainers`      |
+| tsc                 | The Hiero TSC                  | Maintain    | `tsc`                              |
+| github-maintainers  | The Maintainers of the project | Maintain    | `github-maintainers`               |
 
 ## Active Maintainers
 
-<!-- Please keep this sorted alphabetically by github -->
-
 |      Name      |  GitHub ID  | Scope      | LFID | Discord ID | Email | Company Affiliation |
 |--------------- | ----------- | ---------- | ---- | ---------- | ----- | ------------------- |
-| Ricky Saechao  | RickyLB     | Maintainer |      |            |       |  Launchbadge        |
-| Tim Schmidt    | Sheng-Long  | Maintainer |      |            |       |                     |
 | Rob Walworth   | rwalworth   | Maintainer |      |            |       | Hashgraph           |
 | Simi Hunjan    | SimiHunjan  | Maintainer |      |            |       | Hashgraph           |
 
