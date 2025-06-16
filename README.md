@@ -1,5 +1,8 @@
 # Hiero Swift SDK
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/hiero-ledger/hiero-sdk-swift/badge)](https://api.scorecard.dev/projects/github.com/hiero-ledger/hiero-sdk-swift)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/10697/badge)](https://bestpractices.coreinfrastructure.org/projects/10697)
+
 The SDK for interacting with a Hiero based network.
 
 <sub>Maintained with ❤️ by <a href="https://launchbadge.com" target="_blank">LaunchBadge</a>, <a href="https://www.hashgraph.com/" target="_blank">Hashgraph</a>, and the Hiero community</sub>
@@ -123,3 +126,19 @@ TEST_NETWORK_NAME=localhost
 ```
 
 Lastly, run the tests using `swift test`
+
+## Contribute
+
+- To contribute, please refer to the **[Hiero-Ledger's contribution guidelines](https://github.com/hiero-ledger/.github/blob/main/CONTRIBUTING.md)**
+
+## Help/Community
+
+- Join our [community discussions](https://discord.lfdecentralizedtrust.org/) on discord.
+
+## About Users and Maintainers
+
+- Users and Maintainers guidelies are located in **[Hiero-Ledger's roles and groups guidelines](https://github.com/hiero-ledger/governance/blob/main/roles-and-groups.md#maintainers).**
+
+## License
+
+- Hiero's source code is available under the **Apache License, Version 2.0 (Apache-2.0)**

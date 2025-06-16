@@ -49,7 +49,8 @@ public final class ScheduleSignTransaction: Transaction {
     internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction) async throws
         -> Proto_TransactionResponse
     {
-        try await Proto_ScheduleServiceAsyncClient(channel: channel).signSchedule(request)
+        try await Proto_ScheduleServiceAsyncClient(channel: channel).signSchedule(
+            request, callOptions: applyGrpcHeader())
     }
 
     internal override func toTransactionDataProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody.OneOf_Data {

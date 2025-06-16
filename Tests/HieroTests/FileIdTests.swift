@@ -26,4 +26,16 @@ internal final class FileIdTests: XCTestCase {
     internal func testToSolidityAddress() {
         assertSnapshot(matching: try FileId(5005).toSolidityAddress(), as: .lines)
     }
+
+    internal func testGetAddressBook() {
+        assertSnapshot(of: FileId.getAddressBookFileIdFor(shard: 1, realm: 2), as: .description)
+    }
+
+    internal func testGetFeeSchedule() {
+        assertSnapshot(of: FileId.getFeeScheduleFileIdFor(shard: 1, realm: 2), as: .description)
+    }
+
+    internal func testGetExchangeRates() {
+        assertSnapshot(of: FileId.getExchangeRatesFileIdFor(shard: 1, realm: 2), as: .description)
+    }
 }

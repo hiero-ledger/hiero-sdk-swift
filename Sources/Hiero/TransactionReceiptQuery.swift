@@ -71,7 +71,8 @@ public final class TransactionReceiptQuery: Query<TransactionReceipt> {
     }
 
     internal override func queryExecute(_ channel: GRPCChannel, _ request: Proto_Query) async throws -> Proto_Response {
-        try await Proto_CryptoServiceAsyncClient(channel: channel).getTransactionReceipts(request)
+        try await Proto_CryptoServiceAsyncClient(channel: channel).getTransactionReceipts(
+            request, callOptions: applyGrpcHeader())
     }
 
     internal override var relatedTransactionId: TransactionId? { transactionId }

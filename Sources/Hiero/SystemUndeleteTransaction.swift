@@ -70,7 +70,8 @@ public final class SystemUndeleteTransaction: Transaction {
         -> Proto_TransactionResponse
     {
         if fileId != nil {
-            return try await Proto_FileServiceAsyncClient(channel: channel).systemUndelete(request)
+            return try await Proto_FileServiceAsyncClient(channel: channel).systemUndelete(
+                request, callOptions: applyGrpcHeader())
         }
 
         if contractId != nil {

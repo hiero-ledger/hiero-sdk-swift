@@ -103,7 +103,9 @@ public final class Client: Sendable {
     }
 
     /// Set up the client from selected mirror network.
-    public static func forMirrorNetwork(_ mirrorNetworks: [String]) async throws -> Self {
+    public static func forMirrorNetwork(_ mirrorNetworks: [String], shard: UInt64 = 0, realm: UInt64 = 0) async throws
+        -> Self
+    {
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
         let client = Self(
             network: .init(
@@ -114,7 +116,9 @@ public final class Client: Sendable {
             eventLoop
         )
 
-        let addressBook = try await NodeAddressBookQuery().execute(client)
+        let addressBook = try await NodeAddressBookQuery()
+            .setFileId(FileId.getAddressBookFileIdFor(shard: shard, realm: realm))
+            .execute(client)
         client.setNetworkFromAddressBook(addressBook)
 
         return client
