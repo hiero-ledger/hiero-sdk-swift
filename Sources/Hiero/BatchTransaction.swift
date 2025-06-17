@@ -6,7 +6,7 @@ import HieroProtobufs
 
 public final class BatchTransaction: Transaction {
     internal init(protobuf proto: Proto_TransactionBody, _ data: Proto_AtomicBatchTransactionBody) throws {
-        self.transactions = try data.transactions.map { try Transaction.fromBytes($0.serializedBytes()) }
+        self.transactions = try data.transactions.map { try Transaction.fromBytes($0) }
 
         try super.init(protobuf: proto)
     }
@@ -71,7 +71,7 @@ extension BatchTransaction: ToProtobuf {
 
     internal func toProtobuf() -> Protobuf {
         return try! .with { proto in
-            proto.transactions = try Transaction.toProtoTransactions(transactions)
+            proto.transactions = try Transaction.toSerializedProtoTransactions(transactions)
         }
     }
 }

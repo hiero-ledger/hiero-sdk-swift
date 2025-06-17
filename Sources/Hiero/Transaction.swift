@@ -751,8 +751,8 @@ extension Transaction {
     /// - Parameter transactions: The array of transactions to convert
     /// - Returns: An array of protobuf transactions
     /// - Throws: If any transaction fails to convert
-    internal static func toProtoTransactions(_ transactions: [Transaction]) throws -> [Proto_Transaction] {
-        var protoTransactions: [Proto_Transaction] = []
+    internal static func toSerializedProtoTransactions(_ transactions: [Transaction]) throws -> [Data] {
+        var protoTransactions: [Data] = []
 
         for transaction in transactions {
             guard let nodeAccountIds = transaction.nodeAccountIds else {
@@ -774,7 +774,7 @@ extension Transaction {
                     nodeAccountId: nodeAccountId
                 )
 
-                protoTransactions.append(transaction.makeRequestInner(chunkInfo: chunkInfo).0)
+                protoTransactions.append(try transaction.makeRequestInner(chunkInfo: chunkInfo).0.serializedBytes())
             }
         }
 
