@@ -1276,13 +1276,14 @@ public struct Proto_TransactionBody: @unchecked Sendable {
 
 ///*
 /// A transaction body for handling a set of transactions atomically.
-public struct Proto_AtomicBatchTransactionBody: Sendable {
+public struct Proto_AtomicBatchTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// <<<pbj.java_package = "com.hedera.hapi.node.util">>> This comment is special code for setting PBJ Compiler java package
-  public var transactions: [Proto_Transaction] = []
+  ///*
+  /// A list of signed bytes that represent the batch transactions.
+  public var transactions: [Data] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -1355,78 +1356,81 @@ extension Proto_Transaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
 
 extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".TransactionBody"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "transactionID"),
-    2: .same(proto: "nodeAccountID"),
-    3: .same(proto: "transactionFee"),
-    4: .same(proto: "transactionValidDuration"),
-    5: .same(proto: "generateRecord"),
-    6: .same(proto: "memo"),
-    73: .standard(proto: "batch_key"),
-    7: .same(proto: "contractCall"),
-    8: .same(proto: "contractCreateInstance"),
-    9: .same(proto: "contractUpdateInstance"),
-    10: .same(proto: "cryptoAddLiveHash"),
-    11: .same(proto: "cryptoCreateAccount"),
-    12: .same(proto: "cryptoDelete"),
-    13: .same(proto: "cryptoDeleteLiveHash"),
-    14: .same(proto: "cryptoTransfer"),
-    15: .same(proto: "cryptoUpdateAccount"),
-    16: .same(proto: "fileAppend"),
-    17: .same(proto: "fileCreate"),
-    18: .same(proto: "fileDelete"),
-    19: .same(proto: "fileUpdate"),
-    20: .same(proto: "systemDelete"),
-    21: .same(proto: "systemUndelete"),
-    22: .same(proto: "contractDeleteInstance"),
-    23: .same(proto: "freeze"),
-    24: .same(proto: "consensusCreateTopic"),
-    25: .same(proto: "consensusUpdateTopic"),
-    26: .same(proto: "consensusDeleteTopic"),
-    27: .same(proto: "consensusSubmitMessage"),
-    28: .same(proto: "uncheckedSubmit"),
-    29: .same(proto: "tokenCreation"),
-    31: .same(proto: "tokenFreeze"),
-    32: .same(proto: "tokenUnfreeze"),
-    33: .same(proto: "tokenGrantKyc"),
-    34: .same(proto: "tokenRevokeKyc"),
-    35: .same(proto: "tokenDeletion"),
-    36: .same(proto: "tokenUpdate"),
-    37: .same(proto: "tokenMint"),
-    38: .same(proto: "tokenBurn"),
-    39: .same(proto: "tokenWipe"),
-    40: .same(proto: "tokenAssociate"),
-    41: .same(proto: "tokenDissociate"),
-    42: .same(proto: "scheduleCreate"),
-    43: .same(proto: "scheduleDelete"),
-    44: .same(proto: "scheduleSign"),
-    45: .standard(proto: "token_fee_schedule_update"),
-    46: .standard(proto: "token_pause"),
-    47: .standard(proto: "token_unpause"),
-    48: .same(proto: "cryptoApproveAllowance"),
-    49: .same(proto: "cryptoDeleteAllowance"),
-    50: .same(proto: "ethereumTransaction"),
-    51: .standard(proto: "node_stake_update"),
-    52: .standard(proto: "util_prng"),
-    53: .standard(proto: "token_update_nfts"),
-    54: .same(proto: "nodeCreate"),
-    55: .same(proto: "nodeUpdate"),
-    56: .same(proto: "nodeDelete"),
-    57: .same(proto: "tokenReject"),
-    58: .same(proto: "tokenAirdrop"),
-    59: .same(proto: "tokenCancelAirdrop"),
-    60: .same(proto: "tokenClaimAirdrop"),
-    65: .standard(proto: "state_signature_transaction"),
-    66: .standard(proto: "hints_preprocessing_vote"),
-    67: .standard(proto: "hints_key_publication"),
-    68: .standard(proto: "hints_partial_signature"),
-    69: .standard(proto: "history_proof_signature"),
-    70: .standard(proto: "history_proof_key_publication"),
-    71: .standard(proto: "history_proof_vote"),
-    72: .standard(proto: "crs_publication"),
-    74: .standard(proto: "atomic_batch"),
-    1001: .standard(proto: "max_custom_fees"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(
+      reservedNames: ["tssMessage", "tssVote", "tssShareSignature", "tssEncryptionKey"],
+      reservedRanges: [30..<31, 61..<65],
+      numberNameMappings: [
+        1: .same(proto: "transactionID"),
+        2: .same(proto: "nodeAccountID"),
+        3: .same(proto: "transactionFee"),
+        4: .same(proto: "transactionValidDuration"),
+        5: .same(proto: "generateRecord"),
+        6: .same(proto: "memo"),
+        73: .standard(proto: "batch_key"),
+        7: .same(proto: "contractCall"),
+        8: .same(proto: "contractCreateInstance"),
+        9: .same(proto: "contractUpdateInstance"),
+        10: .same(proto: "cryptoAddLiveHash"),
+        11: .same(proto: "cryptoCreateAccount"),
+        12: .same(proto: "cryptoDelete"),
+        13: .same(proto: "cryptoDeleteLiveHash"),
+        14: .same(proto: "cryptoTransfer"),
+        15: .same(proto: "cryptoUpdateAccount"),
+        16: .same(proto: "fileAppend"),
+        17: .same(proto: "fileCreate"),
+        18: .same(proto: "fileDelete"),
+        19: .same(proto: "fileUpdate"),
+        20: .same(proto: "systemDelete"),
+        21: .same(proto: "systemUndelete"),
+        22: .same(proto: "contractDeleteInstance"),
+        23: .same(proto: "freeze"),
+        24: .same(proto: "consensusCreateTopic"),
+        25: .same(proto: "consensusUpdateTopic"),
+        26: .same(proto: "consensusDeleteTopic"),
+        27: .same(proto: "consensusSubmitMessage"),
+        28: .same(proto: "uncheckedSubmit"),
+        29: .same(proto: "tokenCreation"),
+        31: .same(proto: "tokenFreeze"),
+        32: .same(proto: "tokenUnfreeze"),
+        33: .same(proto: "tokenGrantKyc"),
+        34: .same(proto: "tokenRevokeKyc"),
+        35: .same(proto: "tokenDeletion"),
+        36: .same(proto: "tokenUpdate"),
+        37: .same(proto: "tokenMint"),
+        38: .same(proto: "tokenBurn"),
+        39: .same(proto: "tokenWipe"),
+        40: .same(proto: "tokenAssociate"),
+        41: .same(proto: "tokenDissociate"),
+        42: .same(proto: "scheduleCreate"),
+        43: .same(proto: "scheduleDelete"),
+        44: .same(proto: "scheduleSign"),
+        45: .standard(proto: "token_fee_schedule_update"),
+        46: .standard(proto: "token_pause"),
+        47: .standard(proto: "token_unpause"),
+        48: .same(proto: "cryptoApproveAllowance"),
+        49: .same(proto: "cryptoDeleteAllowance"),
+        50: .same(proto: "ethereumTransaction"),
+        51: .standard(proto: "node_stake_update"),
+        52: .standard(proto: "util_prng"),
+        53: .standard(proto: "token_update_nfts"),
+        54: .same(proto: "nodeCreate"),
+        55: .same(proto: "nodeUpdate"),
+        56: .same(proto: "nodeDelete"),
+        57: .same(proto: "tokenReject"),
+        58: .same(proto: "tokenAirdrop"),
+        59: .same(proto: "tokenCancelAirdrop"),
+        60: .same(proto: "tokenClaimAirdrop"),
+        65: .standard(proto: "state_signature_transaction"),
+        66: .standard(proto: "hints_preprocessing_vote"),
+        67: .standard(proto: "hints_key_publication"),
+        68: .standard(proto: "hints_partial_signature"),
+        69: .standard(proto: "history_proof_signature"),
+        70: .standard(proto: "history_proof_key_publication"),
+        71: .standard(proto: "history_proof_vote"),
+        72: .standard(proto: "crs_publication"),
+        74: .standard(proto: "atomic_batch"),
+        1001: .standard(proto: "max_custom_fees"),
+  ])
 
   fileprivate class _StorageClass {
     var _transactionID: Proto_TransactionID? = nil
@@ -1439,15 +1443,11 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     var _data: Proto_TransactionBody.OneOf_Data?
     var _maxCustomFees: [Proto_CustomFeeLimit] = []
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 
@@ -2618,7 +2618,7 @@ extension Proto_AtomicBatchTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.transactions) }()
+      case 1: try { try decoder.decodeRepeatedBytesField(value: &self.transactions) }()
       default: break
       }
     }
@@ -2626,7 +2626,7 @@ extension Proto_AtomicBatchTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.transactions.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.transactions, fieldNumber: 1)
+      try visitor.visitRepeatedBytesField(value: self.transactions, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }

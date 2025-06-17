@@ -43,8 +43,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 /// If the `treasury` is set to a new account, the new account MUST sign this
 /// transaction.<br/>
 /// If the `treasury` is set to a new account for a _non-fungible/unique_ token,
-/// The current treasury MUST NOT hold any tokens, or the network configuration
-/// property `tokens.nfts.useTreasuryWildcards` MUST be set.
+/// The current treasury MAY hold some tokens.
 ///
 /// #### Requirements for Keys
 /// Any of the key values may be changed, even without an admin key, but the
@@ -463,15 +462,11 @@ extension Proto_TokenUpdateTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
     var _metadataKey: Proto_Key? = nil
     var _keyVerificationMode: Proto_TokenKeyValidation = .fullValidation
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 

@@ -221,7 +221,7 @@ public struct Com_Hedera_Hapi_Node_State_Hints_PreprocessingVote: Sendable {
 }
 
 ///*
-/// A node's hinTS party id.
+/// A node's weighted hinTS party id.
 public struct Com_Hedera_Hapi_Node_State_Hints_NodePartyId: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -234,6 +234,10 @@ public struct Com_Hedera_Hapi_Node_State_Hints_NodePartyId: Sendable {
   ///*
   /// The party id.
   public var partyID: UInt32 = 0
+
+  ///*
+  /// The party's weight in the construction.
+  public var partyWeight: UInt64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -649,6 +653,7 @@ extension Com_Hedera_Hapi_Node_State_Hints_NodePartyId: SwiftProtobuf.Message, S
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "node_id"),
     2: .standard(proto: "party_id"),
+    3: .standard(proto: "party_weight"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -659,6 +664,7 @@ extension Com_Hedera_Hapi_Node_State_Hints_NodePartyId: SwiftProtobuf.Message, S
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularUInt64Field(value: &self.nodeID) }()
       case 2: try { try decoder.decodeSingularUInt32Field(value: &self.partyID) }()
+      case 3: try { try decoder.decodeSingularUInt64Field(value: &self.partyWeight) }()
       default: break
       }
     }
@@ -671,12 +677,16 @@ extension Com_Hedera_Hapi_Node_State_Hints_NodePartyId: SwiftProtobuf.Message, S
     if self.partyID != 0 {
       try visitor.visitSingularUInt32Field(value: self.partyID, fieldNumber: 2)
     }
+    if self.partyWeight != 0 {
+      try visitor.visitSingularUInt64Field(value: self.partyWeight, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Com_Hedera_Hapi_Node_State_Hints_NodePartyId, rhs: Com_Hedera_Hapi_Node_State_Hints_NodePartyId) -> Bool {
     if lhs.nodeID != rhs.nodeID {return false}
     if lhs.partyID != rhs.partyID {return false}
+    if lhs.partyWeight != rhs.partyWeight {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

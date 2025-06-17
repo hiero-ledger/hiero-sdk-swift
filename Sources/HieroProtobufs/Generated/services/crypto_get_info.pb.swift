@@ -501,29 +501,32 @@ extension Proto_CryptoGetInfoResponse: SwiftProtobuf.Message, SwiftProtobuf._Mes
 
 extension Proto_CryptoGetInfoResponse.AccountInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Proto_CryptoGetInfoResponse.protoMessageName + ".AccountInfo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "accountID"),
-    2: .same(proto: "contractAccountID"),
-    3: .same(proto: "deleted"),
-    4: .same(proto: "proxyAccountID"),
-    6: .same(proto: "proxyReceived"),
-    7: .same(proto: "key"),
-    8: .same(proto: "balance"),
-    9: .same(proto: "generateSendRecordThreshold"),
-    10: .same(proto: "generateReceiveRecordThreshold"),
-    11: .same(proto: "receiverSigRequired"),
-    12: .same(proto: "expirationTime"),
-    13: .same(proto: "autoRenewPeriod"),
-    14: .same(proto: "liveHashes"),
-    15: .same(proto: "tokenRelationships"),
-    16: .same(proto: "memo"),
-    17: .same(proto: "ownedNfts"),
-    18: .standard(proto: "max_automatic_token_associations"),
-    19: .same(proto: "alias"),
-    20: .standard(proto: "ledger_id"),
-    21: .standard(proto: "ethereum_nonce"),
-    22: .standard(proto: "staking_info"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(
+      reservedNames: [],
+      reservedRanges: [5..<6],
+      numberNameMappings: [
+        1: .same(proto: "accountID"),
+        2: .same(proto: "contractAccountID"),
+        3: .same(proto: "deleted"),
+        4: .same(proto: "proxyAccountID"),
+        6: .same(proto: "proxyReceived"),
+        7: .same(proto: "key"),
+        8: .same(proto: "balance"),
+        9: .same(proto: "generateSendRecordThreshold"),
+        10: .same(proto: "generateReceiveRecordThreshold"),
+        11: .same(proto: "receiverSigRequired"),
+        12: .same(proto: "expirationTime"),
+        13: .same(proto: "autoRenewPeriod"),
+        14: .same(proto: "liveHashes"),
+        15: .same(proto: "tokenRelationships"),
+        16: .same(proto: "memo"),
+        17: .same(proto: "ownedNfts"),
+        18: .standard(proto: "max_automatic_token_associations"),
+        19: .same(proto: "alias"),
+        20: .standard(proto: "ledger_id"),
+        21: .standard(proto: "ethereum_nonce"),
+        22: .standard(proto: "staking_info"),
+  ])
 
   fileprivate class _StorageClass {
     var _accountID: Proto_AccountID? = nil
@@ -548,15 +551,11 @@ extension Proto_CryptoGetInfoResponse.AccountInfo: SwiftProtobuf.Message, SwiftP
     var _ethereumNonce: Int64 = 0
     var _stakingInfo: Proto_StakingInfo? = nil
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 

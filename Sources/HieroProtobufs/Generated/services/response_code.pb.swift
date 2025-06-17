@@ -1532,6 +1532,20 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   ///*
   /// The network just started at genesis and is creating system entities.
   case creatingSystemEntities // = 396
+
+  ///*
+  /// The least common multiple of the throttle group's milliOpsPerSec is
+  /// too large and it's overflowing.
+  case throttleGroupLcmOverflow // = 397
+
+  ///*
+  /// Token airdrop transactions can not contain multiple senders for a single token.
+  case airdropContainsMultipleSendersForAToken // = 398
+
+  ///*
+  /// The GRPC proxy endpoint is set in the NodeCreate or NodeUpdate transaction,
+  /// which the network does not support.
+  case grpcWebProxyNotSupported // = 399
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -1895,6 +1909,9 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 394: self = .invalidBatchKey
     case 395: self = .scheduleExpiryNotConfigurable
     case 396: self = .creatingSystemEntities
+    case 397: self = .throttleGroupLcmOverflow
+    case 398: self = .airdropContainsMultipleSendersForAToken
+    case 399: self = .grpcWebProxyNotSupported
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -2256,6 +2273,9 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .invalidBatchKey: return 394
     case .scheduleExpiryNotConfigurable: return 395
     case .creatingSystemEntities: return 396
+    case .throttleGroupLcmOverflow: return 397
+    case .airdropContainsMultipleSendersForAToken: return 398
+    case .grpcWebProxyNotSupported: return 399
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -2617,6 +2637,9 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     .invalidBatchKey,
     .scheduleExpiryNotConfigurable,
     .creatingSystemEntities,
+    .throttleGroupLcmOverflow,
+    .airdropContainsMultipleSendersForAToken,
+    .grpcWebProxyNotSupported,
   ]
 
 }
@@ -2980,5 +3003,8 @@ extension Proto_ResponseCodeEnum: SwiftProtobuf._ProtoNameProviding {
     394: .same(proto: "INVALID_BATCH_KEY"),
     395: .same(proto: "SCHEDULE_EXPIRY_NOT_CONFIGURABLE"),
     396: .same(proto: "CREATING_SYSTEM_ENTITIES"),
+    397: .same(proto: "THROTTLE_GROUP_LCM_OVERFLOW"),
+    398: .same(proto: "AIRDROP_CONTAINS_MULTIPLE_SENDERS_FOR_A_TOKEN"),
+    399: .same(proto: "GRPC_WEB_PROXY_NOT_SUPPORTED"),
   ]
 }

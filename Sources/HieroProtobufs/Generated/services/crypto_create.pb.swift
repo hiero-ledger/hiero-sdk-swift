@@ -315,24 +315,27 @@ fileprivate let _protobuf_package = "proto"
 
 extension Proto_CryptoCreateTransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".CryptoCreateTransactionBody"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "key"),
-    2: .same(proto: "initialBalance"),
-    3: .same(proto: "proxyAccountID"),
-    6: .same(proto: "sendRecordThreshold"),
-    7: .same(proto: "receiveRecordThreshold"),
-    8: .same(proto: "receiverSigRequired"),
-    9: .same(proto: "autoRenewPeriod"),
-    10: .same(proto: "shardID"),
-    11: .same(proto: "realmID"),
-    12: .same(proto: "newRealmAdminKey"),
-    13: .same(proto: "memo"),
-    14: .standard(proto: "max_automatic_token_associations"),
-    15: .standard(proto: "staked_account_id"),
-    16: .standard(proto: "staked_node_id"),
-    17: .standard(proto: "decline_reward"),
-    18: .same(proto: "alias"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(
+      reservedNames: [],
+      reservedRanges: [4..<6],
+      numberNameMappings: [
+        1: .same(proto: "key"),
+        2: .same(proto: "initialBalance"),
+        3: .same(proto: "proxyAccountID"),
+        6: .same(proto: "sendRecordThreshold"),
+        7: .same(proto: "receiveRecordThreshold"),
+        8: .same(proto: "receiverSigRequired"),
+        9: .same(proto: "autoRenewPeriod"),
+        10: .same(proto: "shardID"),
+        11: .same(proto: "realmID"),
+        12: .same(proto: "newRealmAdminKey"),
+        13: .same(proto: "memo"),
+        14: .standard(proto: "max_automatic_token_associations"),
+        15: .standard(proto: "staked_account_id"),
+        16: .standard(proto: "staked_node_id"),
+        17: .standard(proto: "decline_reward"),
+        18: .same(proto: "alias"),
+  ])
 
   fileprivate class _StorageClass {
     var _key: Proto_Key? = nil
@@ -351,15 +354,11 @@ extension Proto_CryptoCreateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
     var _declineReward: Bool = false
     var _alias: Data = Data()
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 

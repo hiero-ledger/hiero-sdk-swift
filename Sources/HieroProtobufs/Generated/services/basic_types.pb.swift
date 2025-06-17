@@ -233,6 +233,11 @@ public enum Proto_SubType: SwiftProtobuf.Enum, Swift.CaseIterable {
   /// The resource cost for the transaction type includes a TopicCreate
   /// with custom fees.
   case topicCreateWithCustomFees // = 6
+
+  ///*
+  /// The resource cost for the transaction type includes a ConsensusSubmitMessage
+  /// for a topic with custom fees.
+  case submitMessageWithCustomFees // = 7
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -248,6 +253,7 @@ public enum Proto_SubType: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 4: self = .tokenNonFungibleUniqueWithCustomFees
     case 5: self = .scheduleCreateContractCall
     case 6: self = .topicCreateWithCustomFees
+    case 7: self = .submitMessageWithCustomFees
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -261,6 +267,7 @@ public enum Proto_SubType: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .tokenNonFungibleUniqueWithCustomFees: return 4
     case .scheduleCreateContractCall: return 5
     case .topicCreateWithCustomFees: return 6
+    case .submitMessageWithCustomFees: return 7
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -274,6 +281,7 @@ public enum Proto_SubType: SwiftProtobuf.Enum, Swift.CaseIterable {
     .tokenNonFungibleUniqueWithCustomFees,
     .scheduleCreateContractCall,
     .topicCreateWithCustomFees,
+    .submitMessageWithCustomFees,
   ]
 
 }
@@ -3639,6 +3647,7 @@ extension Proto_SubType: SwiftProtobuf._ProtoNameProviding {
     4: .same(proto: "TOKEN_NON_FUNGIBLE_UNIQUE_WITH_CUSTOM_FEES"),
     5: .same(proto: "SCHEDULE_CREATE_CONTRACT_CALL"),
     6: .same(proto: "TOPIC_CREATE_WITH_CUSTOM_FEES"),
+    7: .same(proto: "SUBMIT_MESSAGE_WITH_CUSTOM_FEES"),
   ]
 }
 
@@ -5202,15 +5211,11 @@ extension Proto_FeeData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
     var _servicedata: Proto_FeeComponents? = nil
     var _subType: Proto_SubType = .default
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 

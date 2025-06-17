@@ -185,6 +185,39 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   /// Clears the value of `adminKey`. Subsequent reads from it will return its default value.
   public mutating func clearAdminKey() {self._adminKey = nil}
 
+  ///*
+  /// A boolean indicating that this node has chosen to decline node rewards
+  /// distributed at the end of staking period.
+  /// <p>
+  /// This node SHALL NOT receive reward if this value is set, and `true`.
+  public var declineReward: SwiftProtobuf.Google_Protobuf_BoolValue {
+    get {return _declineReward ?? SwiftProtobuf.Google_Protobuf_BoolValue()}
+    set {_declineReward = newValue}
+  }
+  /// Returns true if `declineReward` has been explicitly set.
+  public var hasDeclineReward: Bool {return self._declineReward != nil}
+  /// Clears the value of `declineReward`. Subsequent reads from it will return its default value.
+  public mutating func clearDeclineReward() {self._declineReward = nil}
+
+  ///*
+  /// A web proxy for gRPC from non-gRPC clients.
+  /// <p>
+  /// This endpoint SHALL be a Fully Qualified Domain Name (FQDN) using the HTTPS
+  /// protocol, and SHALL support gRPC-Web for use by browser-based clients.<br/>
+  /// This endpoint MUST be signed by a trusted certificate authority.<br/>
+  /// This endpoint MUST use a valid port and SHALL be reachable over TLS.<br/>
+  /// This field MAY be omitted if the node does not support gRPC-Web access.<br/>
+  /// This field MUST be updated if the gRPC-Web endpoint changes.<br/>
+  /// This field SHALL enable frontend clients to avoid hard-coded proxy endpoints.
+  public var grpcProxyEndpoint: Proto_ServiceEndpoint {
+    get {return _grpcProxyEndpoint ?? Proto_ServiceEndpoint()}
+    set {_grpcProxyEndpoint = newValue}
+  }
+  /// Returns true if `grpcProxyEndpoint` has been explicitly set.
+  public var hasGrpcProxyEndpoint: Bool {return self._grpcProxyEndpoint != nil}
+  /// Clears the value of `grpcProxyEndpoint`. Subsequent reads from it will return its default value.
+  public mutating func clearGrpcProxyEndpoint() {self._grpcProxyEndpoint = nil}
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -194,6 +227,8 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   fileprivate var _gossipCaCertificate: SwiftProtobuf.Google_Protobuf_BytesValue? = nil
   fileprivate var _grpcCertificateHash: SwiftProtobuf.Google_Protobuf_BytesValue? = nil
   fileprivate var _adminKey: Proto_Key? = nil
+  fileprivate var _declineReward: SwiftProtobuf.Google_Protobuf_BoolValue? = nil
+  fileprivate var _grpcProxyEndpoint: Proto_ServiceEndpoint? = nil
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -211,6 +246,8 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: SwiftProto
     6: .standard(proto: "gossip_ca_certificate"),
     7: .standard(proto: "grpc_certificate_hash"),
     8: .standard(proto: "admin_key"),
+    9: .standard(proto: "decline_reward"),
+    10: .standard(proto: "grpc_proxy_endpoint"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -227,6 +264,8 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: SwiftProto
       case 6: try { try decoder.decodeSingularMessageField(value: &self._gossipCaCertificate) }()
       case 7: try { try decoder.decodeSingularMessageField(value: &self._grpcCertificateHash) }()
       case 8: try { try decoder.decodeSingularMessageField(value: &self._adminKey) }()
+      case 9: try { try decoder.decodeSingularMessageField(value: &self._declineReward) }()
+      case 10: try { try decoder.decodeSingularMessageField(value: &self._grpcProxyEndpoint) }()
       default: break
       }
     }
@@ -261,6 +300,12 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: SwiftProto
     try { if let v = self._adminKey {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
     } }()
+    try { if let v = self._declineReward {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
+    } }()
+    try { if let v = self._grpcProxyEndpoint {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -273,6 +318,8 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: SwiftProto
     if lhs._gossipCaCertificate != rhs._gossipCaCertificate {return false}
     if lhs._grpcCertificateHash != rhs._grpcCertificateHash {return false}
     if lhs._adminKey != rhs._adminKey {return false}
+    if lhs._declineReward != rhs._declineReward {return false}
+    if lhs._grpcProxyEndpoint != rhs._grpcProxyEndpoint {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
