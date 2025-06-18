@@ -33,15 +33,18 @@ public final class NodeCreateTransaction: Transaction {
         serviceEndpoints: [Endpoint] = [],
         gossipCaCertificate: Data? = nil,
         grpcCertificateHash: Data? = nil,
-        adminKey: Key? = nil
+        adminKey: Key? = nil,
+        grpcWebProxyEndpoint: Endpoint? = nil
     ) {
         self.accountId = accountId
         self.description = description
         self.gossipEndpoints = gossipEndpoints
         self.serviceEndpoints = serviceEndpoints
+        self.grpcWebProxyEndpoint = grpcWebProxyEndpoint
         self.gossipCaCertificate = gossipCaCertificate
         self.grpcCertificateHash = grpcCertificateHash
         self.adminKey = adminKey
+        self.grpcWebProxyEndpoint = grpcWebProxyEndpoint
 
         super.init()
     }
@@ -56,6 +59,7 @@ public final class NodeCreateTransaction: Transaction {
         self.gossipCaCertificate = data.gossipCaCertificate
         self.grpcCertificateHash = data.grpcCertificateHash
         self.adminKey = data.hasAdminKey ? try .fromProtobuf(data.adminKey) : nil
+        self.grpcWebProxyEndpoint = data.hasGrpcProxyEndpoint ? try Endpoint(protobuf: data.grpcProxyEndpoint) : nil
 
         try super.init(protobuf: proto)
     }
@@ -136,6 +140,21 @@ public final class NodeCreateTransaction: Transaction {
         return self
     }
 
+    /// Extract the gRPC web proxy endpoint.
+    public var grpcWebProxyEndpoint: Endpoint? {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// Sets the gRPC web proxy endpoint.
+    @discardableResult
+    public func grpcWebProxyEndpoint(_ grpcWebProxyEndpoint: Endpoint) -> Self {
+        self.grpcWebProxyEndpoint = grpcWebProxyEndpoint
+
+        return self
+    }
+
     /// Extract the certificate used to sign gossip events.
     public var gossipCaCertificate: Data? {
         willSet {
@@ -189,8 +208,7 @@ public final class NodeCreateTransaction: Transaction {
     internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction) async throws
         -> Proto_TransactionResponse
     {
-        try await Proto_AddressBookServiceAsyncClient(channel: channel).createNode(
-            request, callOptions: applyGrpcHeader())
+        try await Proto_AddressBookServiceAsyncClient(channel: channel).createNode(request)
     }
 
     internal override func toTransactionDataProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody.OneOf_Data {
@@ -213,6 +231,9 @@ extension NodeCreateTransaction: ToProtobuf {
             proto.grpcCertificateHash = grpcCertificateHash ?? Data()
             if let adminKey = adminKey {
                 proto.adminKey = adminKey.toProtobuf()
+            }
+            if let grpcWebProxyEndpoint = grpcWebProxyEndpoint {
+                proto.grpcProxyEndpoint = grpcWebProxyEndpoint.toProtobuf()
             }
         }
     }

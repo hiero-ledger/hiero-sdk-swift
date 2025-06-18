@@ -28,7 +28,8 @@ public final class NodeUpdateTransaction: Transaction {
         serviceEndpoints: [Endpoint] = [],
         gossipCaCertificate: Data? = nil,
         grpcCertificateHash: Data? = nil,
-        adminKey: Key? = nil
+        adminKey: Key? = nil,
+        grpcWebProxyEndpoint: Endpoint? = nil
     ) {
         self.nodeId = nodeId
         self.accountId = accountId
@@ -38,6 +39,7 @@ public final class NodeUpdateTransaction: Transaction {
         self.gossipCaCertificate = gossipCaCertificate
         self.grpcCertificateHash = grpcCertificateHash
         self.adminKey = adminKey
+        self.grpcWebProxyEndpoint = grpcWebProxyEndpoint
 
         super.init()
     }
@@ -53,6 +55,7 @@ public final class NodeUpdateTransaction: Transaction {
         self.gossipCaCertificate = data.hasGossipCaCertificate ? data.gossipCaCertificate.value : nil
         self.grpcCertificateHash = data.hasGrpcCertificateHash ? data.grpcCertificateHash.value : nil
         self.adminKey = data.hasAdminKey ? try .fromProtobuf(data.adminKey) : nil
+        self.grpcWebProxyEndpoint = data.hasGrpcProxyEndpoint ? try Endpoint(protobuf: data.grpcProxyEndpoint) : nil
 
         try super.init(protobuf: proto)
     }
@@ -148,6 +151,21 @@ public final class NodeUpdateTransaction: Transaction {
         return self
     }
 
+    /// Extract the gRPC web proxy endpoint.
+    public var grpcWebProxyEndpoint: Endpoint? {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// Sets the gRPC web proxy endpoint.
+    @discardableResult
+    public func grpcWebProxyEndpoint(_ grpcWebProxyEndpoint: Endpoint) -> Self {
+        self.grpcWebProxyEndpoint = grpcWebProxyEndpoint
+
+        return self
+    }
+
     /// Extract the certificate used to sign gossip events.
     public var gossipCaCertificate: Data? {
         willSet {
@@ -230,6 +248,10 @@ extension NodeUpdateTransaction: ToProtobuf {
 
             if let adminKey = adminKey {
                 proto.adminKey = adminKey.toProtobuf()
+            }
+
+            if let grpcWebProxyEndpoint = grpcWebProxyEndpoint {
+                proto.grpcProxyEndpoint = grpcWebProxyEndpoint.toProtobuf()
             }
         }
     }
