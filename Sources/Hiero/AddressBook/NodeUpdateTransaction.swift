@@ -29,7 +29,8 @@ public final class NodeUpdateTransaction: Transaction {
         gossipCaCertificate: Data? = nil,
         grpcCertificateHash: Data? = nil,
         adminKey: Key? = nil,
-        grpcWebProxyEndpoint: Endpoint? = nil
+        grpcWebProxyEndpoint: Endpoint? = nil,
+        declineRewards: Bool? = nil
     ) {
         self.nodeId = nodeId
         self.accountId = accountId
@@ -40,6 +41,7 @@ public final class NodeUpdateTransaction: Transaction {
         self.grpcCertificateHash = grpcCertificateHash
         self.adminKey = adminKey
         self.grpcWebProxyEndpoint = grpcWebProxyEndpoint
+        self.declineRewards = declineRewards
 
         super.init()
     }
@@ -56,6 +58,7 @@ public final class NodeUpdateTransaction: Transaction {
         self.grpcCertificateHash = data.hasGrpcCertificateHash ? data.grpcCertificateHash.value : nil
         self.adminKey = data.hasAdminKey ? try .fromProtobuf(data.adminKey) : nil
         self.grpcWebProxyEndpoint = data.hasGrpcProxyEndpoint ? try Endpoint(protobuf: data.grpcProxyEndpoint) : nil
+        self.declineRewards = data.hasDeclineReward ? data.declineReward.value : nil
 
         try super.init(protobuf: proto)
     }
@@ -211,6 +214,21 @@ public final class NodeUpdateTransaction: Transaction {
         return self
     }
 
+    /// Should this node decline staking rewards?
+    public var declineRewards: Bool? {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// Sets the staking rewards policy for the node.
+    @discardableResult
+    public func declineRewards(_ declineRewards: Bool) -> Self {
+        self.declineRewards = declineRewards
+
+        return self
+    }
+
     internal override func validateChecksums(on ledgerId: LedgerId) throws {
         try accountId?.validateChecksums(on: ledgerId)
         try super.validateChecksums(on: ledgerId)
@@ -252,6 +270,10 @@ extension NodeUpdateTransaction: ToProtobuf {
 
             if let grpcWebProxyEndpoint = grpcWebProxyEndpoint {
                 proto.grpcProxyEndpoint = grpcWebProxyEndpoint.toProtobuf()
+            }
+
+            if let declineRewards = declineRewards {
+                proto.declineReward = Google_Protobuf_BoolValue(declineRewards)
             }
         }
     }
