@@ -28,12 +28,12 @@ internal final class ManagedNetwork: Sendable {
 }
 
 internal actor NetworkUpdateTask: Sendable {
-    internal init(eventLoop: NIOCore.EventLoopGroup, managedNetwork: ManagedNetwork, updatePeriod: UInt64?) {
+    internal init(eventLoop: NIOCore.EventLoopGroup, managedNetwork: ManagedNetwork, updatePeriod: UInt64?, shard: UInt64, realm: UInt64) {
         self.managedNetwork = managedNetwork
         self.eventLoop = eventLoop
 
         if let updatePeriod {
-            task = Self.makeTask(eventLoop, managedNetwork, ManagedNetwork.networkFirstUpdateDelay, updatePeriod)
+            task = Self.makeTask(eventLoop, managedNetwork, ManagedNetwork.networkFirstUpdateDelay, updatePeriod, shard, realm)
         }
     }
 
@@ -41,7 +41,9 @@ internal actor NetworkUpdateTask: Sendable {
         _ eventLoop: NIOCore.EventLoopGroup,
         _ managedNetwork: ManagedNetwork,
         _ startDelay: Duration?,
-        _ updatePeriod: UInt64
+        _ updatePeriod: UInt64,
+        _ shard: UInt64,
+        _ realm: UInt64
     ) -> Task<(), Error> {
         return Task {
             if let startDelay {
@@ -54,7 +56,7 @@ internal actor NetworkUpdateTask: Sendable {
 
                 do {
                     let mirror = managedNetwork.mirror.load(ordering: .relaxed)
-                    let addressBook = try await NodeAddressBookQuery(FileId.addressBook).executeChannel(mirror.channel)
+                    let addressBook = try await NodeAddressBookQuery(FileId.getAddressBookFileIdFor(shard: shard, realm: realm)).executeChannel(mirror.channel)
 
                     _ = managedNetwork.primary.readCopyUpdate {
                         Network.withAddressBook($0, eventLoop.next(), addressBook)
@@ -73,11 +75,11 @@ internal actor NetworkUpdateTask: Sendable {
         }
     }
 
-    internal func setUpdatePeriod(_ duration: UInt64?) {
+    internal func setUpdatePeriod(_ duration: UInt64?, _ shard: UInt64, _ realm: UInt64) {
         self.task?.cancel()
 
         if let updatePeriod = duration {
-            self.task = Self.makeTask(eventLoop, managedNetwork, nil, updatePeriod)
+            self.task = Self.makeTask(eventLoop, managedNetwork, nil, updatePeriod, shard, realm)
         }
     }
 
