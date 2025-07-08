@@ -28,12 +28,16 @@ internal final class ManagedNetwork: Sendable {
 }
 
 internal actor NetworkUpdateTask: Sendable {
-    internal init(eventLoop: NIOCore.EventLoopGroup, managedNetwork: ManagedNetwork, updatePeriod: UInt64?, shard: UInt64, realm: UInt64) {
+    internal init(
+        eventLoop: NIOCore.EventLoopGroup, managedNetwork: ManagedNetwork, updatePeriod: UInt64?, shard: UInt64,
+        realm: UInt64
+    ) {
         self.managedNetwork = managedNetwork
         self.eventLoop = eventLoop
 
         if let updatePeriod {
-            task = Self.makeTask(eventLoop, managedNetwork, ManagedNetwork.networkFirstUpdateDelay, updatePeriod, shard, realm)
+            task = Self.makeTask(
+                eventLoop, managedNetwork, ManagedNetwork.networkFirstUpdateDelay, updatePeriod, shard, realm)
         }
     }
 
@@ -56,7 +60,9 @@ internal actor NetworkUpdateTask: Sendable {
 
                 do {
                     let mirror = managedNetwork.mirror.load(ordering: .relaxed)
-                    let addressBook = try await NodeAddressBookQuery(FileId.getAddressBookFileIdFor(shard: shard, realm: realm)).executeChannel(mirror.channel)
+                    let addressBook = try await NodeAddressBookQuery(
+                        FileId.getAddressBookFileIdFor(shard: shard, realm: realm)
+                    ).executeChannel(mirror.channel)
 
                     _ = managedNetwork.primary.readCopyUpdate {
                         Network.withAddressBook($0, eventLoop.next(), addressBook)

@@ -106,7 +106,8 @@ public final class Client: Sendable {
         self.backoffInner.withLockedValue { $0 }
     }
 
-    public static func forNetwork(_ addresses: [String: AccountId], shard: UInt64 = 0, realm: UInt64 = 0) throws -> Self {
+    public static func forNetwork(_ addresses: [String: AccountId], shard: UInt64 = 0, realm: UInt64 = 0) throws -> Self
+    {
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
         return Self(
             network: .init(
