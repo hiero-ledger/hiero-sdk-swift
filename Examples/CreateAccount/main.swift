@@ -10,6 +10,8 @@ internal enum Program {
         let client = try Client.forName(env.networkName)
 
         client.setOperator(env.operatorAccountId, env.operatorKey)
+        print(env.operatorAccountId)
+        print(env.operatorKey)
 
         let newKey = PrivateKey.generateEd25519()
 
@@ -20,7 +22,7 @@ internal enum Program {
             .keyWithoutAlias(.single(newKey.publicKey))
             .initialBalance(5)
             .execute(client)
-
+            
         let receipt = try await response.getReceipt(client)
         let newAccountId = receipt.accountId!
 
