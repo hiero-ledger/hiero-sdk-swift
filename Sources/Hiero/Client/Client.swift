@@ -18,12 +18,16 @@ public final class Client: Sendable {
     private let maxTransactionFeeInner: ManagedAtomic<Int64>
     private let networkUpdatePeriodInner: NIOLockedValueBox<UInt64?>
     private let backoffInner: NIOLockedValueBox<Backoff>
+    private let shard: UInt64
+    private let realm: UInt64
 
     private init(
         network: ManagedNetwork,
         ledgerId: LedgerId?,
         networkUpdatePeriod: UInt64? = 86400 * 1_000_000_000,
-        _ eventLoop: NIOCore.EventLoopGroup
+        _ eventLoop: NIOCore.EventLoopGroup,
+        shard: UInt64 = 0,
+        realm: UInt64 = 0
     ) {
         self.eventLoop = eventLoop
         self.networkInner = network
@@ -35,10 +39,14 @@ public final class Client: Sendable {
         self.networkUpdateTask = NetworkUpdateTask(
             eventLoop: eventLoop,
             managedNetwork: network,
-            updatePeriod: networkUpdatePeriod
+            updatePeriod: networkUpdatePeriod,
+            shard: shard,
+            realm: realm
         )
         self.networkUpdatePeriodInner = .init(networkUpdatePeriod)
         self.backoffInner = .init(Backoff())
+        self.shard = shard
+        self.realm = realm
     }
 
     /// Note: this operation is O(n)
@@ -60,6 +68,14 @@ public final class Client: Sendable {
         }
 
         return .fromTinybars(value)
+    }
+
+    public func getShard() -> UInt64 {
+        return shard
+    }
+
+    public func getRealm() -> UInt64 {
+        return realm
     }
 
     /// The maximum amount of time that will be spent on a request.
@@ -90,7 +106,8 @@ public final class Client: Sendable {
         self.backoffInner.withLockedValue { $0 }
     }
 
-    public static func forNetwork(_ addresses: [String: AccountId]) throws -> Self {
+    public static func forNetwork(_ addresses: [String: AccountId], shard: UInt64 = 0, realm: UInt64 = 0) throws -> Self
+    {
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
         return Self(
             network: .init(
@@ -98,7 +115,9 @@ public final class Client: Sendable {
                 mirror: .init(targets: [], eventLoop: eventLoop)
             ),
             ledgerId: nil,
-            eventLoop
+            eventLoop,
+            shard: shard,
+            realm: realm
         )
     }
 
@@ -113,7 +132,9 @@ public final class Client: Sendable {
                 mirror: .init(targets: mirrorNetworks, eventLoop: eventLoop)
             ),
             ledgerId: nil,
-            eventLoop
+            eventLoop,
+            shard: shard,
+            realm: realm
         )
 
         let addressBook = try await NodeAddressBookQuery()
@@ -165,12 +186,14 @@ public final class Client: Sendable {
         let `operator` = configData.operator
         let network = configData.network
         let mirrorNetwork = configData.mirrorNetwork
+        let shard = configData.shard
+        let realm = configData.realm
 
         // fixme: check to ensure net and mirror net are the same when they're a network name (no other SDK actually checks this though)
         let client: Self
         switch network {
         case .left(let network):
-            client = try Self.forNetwork(network)
+            client = try Self.forNetwork(network, shard: shard, realm: realm)
         case .right(.mainnet): client = .forMainnet()
         case .right(.testnet): client = .forTestnet()
         case .right(.previewnet): client = .forPreviewnet()
@@ -379,7 +402,7 @@ public final class Client: Sendable {
     }
 
     public func setNetworkUpdatePeriod(nanoseconds: UInt64?) async {
-        await self.networkUpdateTask.setUpdatePeriod(nanoseconds)
+        await self.networkUpdateTask.setUpdatePeriod(nanoseconds, shard, realm)
         self.networkUpdatePeriodInner.withLockedValue { $0 = nanoseconds }
     }
 
