@@ -22,7 +22,7 @@ internal enum Program {
             .keyWithoutAlias(.single(newKey.publicKey))
             .initialBalance(5)
             .execute(client)
-            
+
         let receipt = try await response.getReceipt(client)
         let newAccountId = receipt.accountId!
 

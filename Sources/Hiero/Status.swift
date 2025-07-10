@@ -1144,21 +1144,21 @@ public enum Status: Equatable {
 
     /// The batch key is not valid.
     case invalidBatchKey  // = 394
-    
+
     /// The provided schedule expiry time is not configurable.
-    case scheduleExpiryNotConfigurable // = 395
+    case scheduleExpiryNotConfigurable  // = 395
 
     /// The network just started at genesis and is creating system entities.
-    case creatingSystemEntities // = 396
+    case creatingSystemEntities  // = 396
 
     /// The least common multiple of the throttle group's milliOpsPerSec is too large and it's overflowing.
-    case throttleGroupLcmOverflow // = 397
+    case throttleGroupLcmOverflow  // = 397
 
     /// Token airdrop transactions can not contain multiple senders for a single token.
-    case airdropContainsMultipleSendersForAToken // = 398
+    case airdropContainsMultipleSendersForAToken  // = 398
 
     /// The GRPC proxy endpoint is set in the NodeCreate or NodeUpdate transaction, which the network does not support.
-    case grpcWebProxyNotSupported // = 399
+    case grpcWebProxyNotSupported  // = 399
 
     /// swift-format-ignore: AlwaysUseLowerCamelCase
     case unrecognized(Int32)
