@@ -137,6 +137,7 @@ private struct MirrorQuerySubscribeIterator<R: MirrorRequest>: AsyncIteratorProt
     mutating func next() async throws -> R.GrpcItem? {
         while true {
             try Task.checkCancellation()
+            print(state)
             switch state {
             case .start:
                 state = .running(

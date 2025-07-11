@@ -54,6 +54,13 @@ internal enum Program {
         print("Node create transaction status: \(createTransactionReceipt.status.description)")
         print("Node has been created successfully with node id: \(nodeId)")
 
+        let addressBook = try await NodeAddressBookQuery().setFileId(FileId.addressBook).execute(client)
+        for nodeAddress in addressBook.nodeAddresses {
+            print("Node ID: \(nodeAddress.nodeId)")
+            print("Node Account ID: \(nodeAddress.nodeAccountId)")
+            print("Node Description: \(nodeAddress.description)")
+        }
+
         // 2. Update the node
         print("Updating the node...")
         let updateTransaction = try NodeUpdateTransaction()
@@ -118,6 +125,13 @@ internal enum Program {
         let updateTransactionResponse = try await updateTransaction.execute(client)
         let updateTransactionReceipt = try await updateTransactionResponse.getReceipt(client)
         print("Node update transaction status: \(updateTransactionReceipt.status.description)")
+
+        let addressBook2 = try await NodeAddressBookQuery().setFileId(FileId.addressBook).execute(client)
+        for nodeAddress in addressBook2.nodeAddresses {
+            print("Node ID: \(nodeAddress.nodeId)")
+            print("Node Account ID: \(nodeAddress.nodeAccountId)")
+            print("Node Description: \(nodeAddress.description)")
+        }
 
         // 3. Delete the node
         print("Deleting the node...")
