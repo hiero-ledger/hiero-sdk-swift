@@ -88,7 +88,7 @@ internal final class AccountIdTests: XCTestCase {
 
     internal func testFromStringAliasKey() {
         assertSnapshot(
-            matching: try AccountId.fromString(
+            of: try AccountId.fromString(
                 "0.0.302a300506032b6570032100114e6abc371b82dab5c15ea149f02d34a012087b163516dd70f44acafabf7777"),
             as: .description
         )
@@ -96,28 +96,28 @@ internal final class AccountIdTests: XCTestCase {
 
     internal func testFromStringEvmAddress() {
         assertSnapshot(
-            matching: try AccountId.fromString("0x302a300506032b6570032100114e6abc371b82da"),
+            of: try AccountId.fromString("0x302a300506032b6570032100114e6abc371b82da"),
             as: .description
         )
     }
 
     internal func testFromSolidityAddress() {
         assertSnapshot(
-            matching: try AccountId.fromSolidityAddress("000000000000000000000000000000000000138D"),
+            of: try AccountId.fromSolidityAddress("000000000000000000000000000000000000138D"),
             as: .description
         )
     }
 
     internal func testFromSolidityAddress0x() {
         assertSnapshot(
-            matching: try AccountId.fromSolidityAddress("0x000000000000000000000000000000000000138D"),
+            of: try AccountId.fromSolidityAddress("0x000000000000000000000000000000000000138D"),
             as: .description
         )
     }
 
     internal func testFromBytes() {
         assertSnapshot(
-            matching: try AccountId.fromBytes(AccountId(num: 5005).toBytes()),
+            of: try AccountId.fromBytes(AccountId(num: 5005).toBytes()),
             as: .description
         )
     }
@@ -127,7 +127,7 @@ internal final class AccountIdTests: XCTestCase {
             "0.0.302a300506032b6570032100114e6abc371b82dab5c15ea149f02d34a012087b163516dd70f44acafabf7777"
         ).toBytes()
         assertSnapshot(
-            matching: try AccountId.fromBytes(bytes),
+            of: try AccountId.fromBytes(bytes),
             as: .description
         )
     }
@@ -136,21 +136,21 @@ internal final class AccountIdTests: XCTestCase {
         let bytes = try AccountId.fromString("0x302a300506032b6570032100114e6abc371b82da").toBytes()
 
         assertSnapshot(
-            matching: try AccountId.fromBytes(bytes),
+            of: try AccountId.fromBytes(bytes),
             as: .description
         )
     }
 
     internal func testToSolidityAddress() {
         assertSnapshot(
-            matching: try AccountId(num: 5005).toSolidityAddress(),
+            of: try AccountId(num: 5005).toSolidityAddress(),
             as: .lines
         )
     }
 
     internal func testFromEvmAddress() {
         assertSnapshot(
-            matching: try AccountId(
+            of: try AccountId(
                 evmAddress: .fromString("0x302a300506032b6570032100114e6abc371b82da"), shard: 0, realm: 0),
             as: .description
         )
@@ -159,7 +159,7 @@ internal final class AccountIdTests: XCTestCase {
     internal func testFromEvmAddressWithPrefix() throws {
         let evmAddressString = "0x302a300506032b6570032100114e6abc371b82da"
         let evmAddress = try EvmAddress.fromString(evmAddressString)
-        let id1 = AccountId.fromEvmAddress(evmAddress, shard: 0, realm: 0)
+        let id1 = try AccountId.fromEvmAddress(evmAddress, shard: 0, realm: 0)
         let id2 = try AccountId.fromEvmAddress(evmAddressString, shard: 0, realm: 0)
 
         XCTAssertEqual(id1, id2)
@@ -174,4 +174,12 @@ internal final class AccountIdTests: XCTestCase {
         XCTAssertEqual(id1, id2)
     }
 
+    internal func testToEvmAddressWithShardAndRealm() throws {
+        let evmAddressString = "0x00000000000000000000000000000000000004d2"
+        let id1 = AccountId.init(evmAddress: try EvmAddress.fromString(evmAddressString), shard: 1, realm: 2)
+        let id2 = try AccountId.fromEvmAddress(evmAddressString, shard: 1, realm: 2)
+
+        XCTAssertEqual(try id1.toEvmAddress().toString(), evmAddressString)
+        XCTAssertEqual(try id2.toEvmAddress().toString(), evmAddressString)
+    }
 }

@@ -29,7 +29,7 @@ public struct DelegateContractId: Sendable, EntityId {
     /// EVM address identifying the entity within the realm containing this contract instance.
     ///
     /// >Note: Exactly one of `evm_address` and `num` must exist.
-    public var evmAddress: Data? { inner.evmAddress }
+    public var evmAddress: EvmAddress? { inner.evmAddress }
 
     /// Create a DelegateContractId from the given shard/realm/num
     public init(shard: UInt64 = 0, realm: UInt64 = 0, num: UInt64, checksum: Checksum?) {

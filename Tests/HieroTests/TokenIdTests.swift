@@ -20,10 +20,37 @@ internal final class TokenIdTests: XCTestCase {
 
     internal func testFromSolidityAddress() {
         assertSnapshot(
-            matching: try TokenId.fromSolidityAddress("000000000000000000000000000000000000138d"), as: .description)
+            of: try TokenId.fromSolidityAddress("000000000000000000000000000000000000138d"), as: .description)
     }
 
     internal func testToSolidityAddress() {
-        assertSnapshot(matching: try TokenId(5005).toSolidityAddress(), as: .lines)
+        assertSnapshot(of: try TokenId(5005).toSolidityAddress(), as: .lines)
+    }
+
+    internal func testFromEvmAddressWithPrefix() throws {
+        let evmAddressString = "0x302a300506032b6570032100114e6abc371b82da"
+        let evmAddress = try EvmAddress.fromString(evmAddressString)
+        let id1 = try TokenId.fromEvmAddress(evmAddress, shard: 0, realm: 0)
+        let id2 = try TokenId.fromEvmAddress(evmAddressString, shard: 0, realm: 0)
+
+        XCTAssertEqual(id1, id2)
+    }
+
+    internal func testFromEvmAddressWithShardAndRealm() throws {
+        let evmAddressString = "0x302a300506032b6570032100114e6abc371b82da"
+        let evmAddress: EvmAddress = try EvmAddress.fromString(evmAddressString)
+        let id1 = TokenId.init(evmAddress: evmAddress, shard: 1, realm: 2)
+        let id2 = try TokenId.fromEvmAddress(evmAddressString, shard: 1, realm: 2)
+
+        XCTAssertEqual(id1, id2)
+    }
+
+    internal func testToEvmAddressWithShardAndRealm() throws {
+        let evmAddressString = "0x00000000000000000000000000000000000004d2"
+        let id1 = TokenId.init(evmAddress: try EvmAddress.fromString(evmAddressString), shard: 1, realm: 2)
+        let id2 = try TokenId.fromEvmAddress(evmAddressString, shard: 1, realm: 2)
+
+        XCTAssertEqual(try id1.toEvmAddress().toString(), evmAddressString)
+        XCTAssertEqual(try id2.toEvmAddress().toString(), evmAddressString)
     }
 }
