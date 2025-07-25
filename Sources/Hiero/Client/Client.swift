@@ -122,14 +122,21 @@ public final class Client: Sendable {
     }
 
     /// Set up the client from selected mirror network.
-    public static func forMirrorNetwork(_ mirrorNetworks: [String], shard: UInt64 = 0, realm: UInt64 = 0) async throws
-        -> Self
-    {
+    public static func forMirrorNetwork(
+        _ mirrorNetworks: [String],
+        shard: UInt64 = 0,
+        realm: UInt64 = 0
+    ) async throws -> Self {
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
+
         let client = Self(
             network: .init(
                 primary: try .init(addresses: [:], eventLoop: eventLoop.next()),
-                mirror: .init(targets: mirrorNetworks, eventLoop: eventLoop)
+                mirror: MirrorNetwork(
+                    targets: mirrorNetworks,
+                    eventLoop: eventLoop,
+                    transportSecurity: .plaintext
+                )
             ),
             ledgerId: nil,
             eventLoop,
@@ -232,7 +239,7 @@ public final class Client: Sendable {
             let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
 
             let client = try Client.forNetwork(network)
-            client.setMirrorNetwork(["127.0.0.1:5600"])
+            client.mirrorNet = MirrorNetwork.localhost(eventLoop)
 
             return Self(
                 network: client.networkInner,

@@ -137,11 +137,24 @@ internal final class Network: Sendable, AtomicReference {
         var connections: [NodeConnection] = []
 
         for (index, address) in addressBook.enumerated() {
-            let new = Set(
-                address.serviceEndpoints.compactMap {
-                    $0.port == NodeConnection.plaintextPort
-                        ? HostAndPort(host: String(describing: $0.ip), port: NodeConnection.plaintextPort) : nil
-                })
+            let new: Set<HostAndPort> = Set(
+                address.serviceEndpoints.compactMap { endpoint in
+                    guard endpoint.port == NodeConnection.plaintextPort else { return nil }
+
+                    let host: String?
+
+                    if let ip = endpoint.ip {
+                        host = String(describing: ip)
+                    } else if let domain = endpoint.domainName, !domain.isEmpty {
+                        host = domain
+                    } else {
+                        host = nil
+                    }
+
+                    guard let resolvedHost = host else { return nil }
+                    return HostAndPort(host: resolvedHost, port: endpoint.port)
+                }
+            )
 
             // if the node is the exact same we want to reuse everything (namely the connections and `healthy`).
             // if the node has different routes then we still want to reuse `healthy` but replace the channel with a new channel.
