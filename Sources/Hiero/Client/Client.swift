@@ -122,6 +122,7 @@ public final class Client: Sendable {
     }
 
     /// Set up the client from selected mirror network.
+    /// Set up the client from selected mirror network.
     public static func forMirrorNetwork(
         _ mirrorNetworks: [String],
         shard: UInt64 = 0,
@@ -129,13 +130,18 @@ public final class Client: Sendable {
     ) async throws -> Self {
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
 
+        let transportSecurity: GRPCChannelPool.Configuration.TransportSecurity =
+            mirrorNetworks.allSatisfy { $0.contains("localhost") || $0.contains("127.0.0.1") }
+            ? .plaintext
+            : .tls(.makeClientDefault(compatibleWith: eventLoop))
+
         let client = Self(
             network: .init(
                 primary: try .init(addresses: [:], eventLoop: eventLoop.next()),
                 mirror: MirrorNetwork(
                     targets: mirrorNetworks,
                     eventLoop: eventLoop,
-                    transportSecurity: .plaintext
+                    transportSecurity: transportSecurity
                 )
             ),
             ledgerId: nil,
