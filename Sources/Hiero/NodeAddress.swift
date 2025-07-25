@@ -7,13 +7,17 @@ import Network
 public struct SocketAddressV4: LosslessStringConvertible {
     // name is is to match the other SDKs.
     // swiftlint:disable:next identifier_name
-    public var ip: IPv4Address
+    public var ip: IPv4Address?
     public var port: UInt16
-    public var domainName: String
+    public var domainName: String?
 
-    fileprivate init(ipBytes: Data, port: Int32) throws {
-        guard let ipAddress = IPv4Address(ipBytes) else {
-            throw HError.basicParse("expected 4 byte ip address, got `\(ipBytes.count)` bytes")
+    fileprivate init(ipBytes: Data, port: Int32, domainName: String = "") throws {
+        let hasIP = !ipBytes.isEmpty
+        let hasDomain = !domainName.isEmpty
+
+        // Ensure exactly one of ipBytes or domainName is set
+        guard hasIP != hasDomain else {
+            throw HError.basicParse("Must specify exactly one of ip address or domain name")
         }
 
         guard let port = UInt16(exactly: port) else {
@@ -22,9 +26,18 @@ public struct SocketAddressV4: LosslessStringConvertible {
                 description: "expected 16 bit non-negative port number, but the port was actually `\(port)`")
         }
 
-        self.ip = ipAddress
+        if hasIP {
+            guard let ipAddress = IPv4Address(ipBytes) else {
+                throw HError.basicParse("expected valid 4 byte ip address, got `\(ipBytes.count)` bytes")
+            }
+            self.ip = ipAddress
+            self.domainName = nil
+        } else {
+            self.ip = nil
+            self.domainName = domainName
+        }
+
         self.port = port
-        self.domainName = ""
     }
 
     fileprivate init<S: StringProtocol>(parsing description: S) throws {
@@ -42,7 +55,7 @@ public struct SocketAddressV4: LosslessStringConvertible {
 
         self.ip = ipAddress
         self.port = port
-        self.domainName = ""
+        self.domainName = nil
     }
 
     public init?(_ description: String) {
@@ -50,10 +63,13 @@ public struct SocketAddressV4: LosslessStringConvertible {
     }
 
     public var description: String {
-        guard !domainName.isEmpty else {
+        if let domainName, !domainName.isEmpty {
+            return "\(domainName):\(port)"
+        } else if let ip {
             return "\(ip):\(port)"
+        } else {
+            return ":\(port)"
         }
-        return "\(domainName):\(port)"
     }
 }
 
@@ -61,14 +77,14 @@ extension SocketAddressV4: TryProtobufCodable {
     internal typealias Protobuf = Proto_ServiceEndpoint
 
     internal init(protobuf proto: Protobuf) throws {
-        try self.init(ipBytes: proto.ipAddressV4, port: proto.port)
+        try self.init(ipBytes: proto.ipAddressV4, port: proto.port, domainName: proto.domainName)
     }
 
     internal func toProtobuf() -> Protobuf {
         .with { proto in
-            proto.ipAddressV4 = ip.rawValue
+            proto.ipAddressV4 = ip?.rawValue ?? Data()
             proto.port = Int32(port)
-            proto.domainName = domainName
+            proto.domainName = domainName ?? ""
         }
     }
 }

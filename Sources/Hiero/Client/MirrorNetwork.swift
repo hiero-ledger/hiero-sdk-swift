@@ -22,26 +22,48 @@ internal final class MirrorNetwork: AtomicReference, Sendable {
 
     private convenience init(targets: Set<HostAndPort>, eventLoop: EventLoopGroup) {
         self.init(
+            targets: targets,
+            eventLoop: eventLoop,
+            transportSecurity: .tls(
+                .makeClientDefault(compatibleWith: eventLoop)
+            )
+        )
+    }
+
+    private convenience init(
+        targets: Set<HostAndPort>,
+        eventLoop: EventLoopGroup,
+        transportSecurity: GRPCChannelPool.Configuration.TransportSecurity
+    ) {
+        self.init(
             channel: ChannelBalancer(
                 eventLoop: eventLoop.next(),
                 targets.map { .hostAndPort($0.host, Int($0.port)) },
-                transportSecurity: .tls(
-                    .makeClientDefault(compatibleWith: eventLoop)
-                )
+                transportSecurity: transportSecurity
             ),
             targets: targets
         )
     }
 
     internal convenience init(targets: [String], eventLoop: EventLoopGroup) {
-        let targets = Set(
+        self.init(
+            targets: targets, eventLoop: eventLoop,
+            transportSecurity: .tls(.makeClientDefault(compatibleWith: eventLoop)))
+    }
+
+    internal convenience init(
+        targets: [String],
+        eventLoop: EventLoopGroup,
+        transportSecurity: GRPCChannelPool.Configuration.TransportSecurity
+    ) {
+        let hostAndPorts = Set(
             targets.lazy.map { target in
                 let (host, port) = target.splitOnce(on: ":") ?? (target[...], nil)
-
                 return HostAndPort(host: String(host), port: port.flatMap { UInt16($0) } ?? 443)
-            })
+            }
+        )
 
-        self.init(targets: targets, eventLoop: eventLoop)
+        self.init(targets: hostAndPorts, eventLoop: eventLoop, transportSecurity: transportSecurity)
     }
 
     internal static func mainnet(_ eventLoop: NIOCore.EventLoopGroup) -> Self {
@@ -57,6 +79,14 @@ internal final class MirrorNetwork: AtomicReference, Sendable {
     }
 
     internal static func localhost(_ eventLoop: NIOCore.EventLoopGroup) -> Self {
-        Self(targets: Targets.localhost, eventLoop: eventLoop)
+        return Self(
+            channel: ChannelBalancer(
+                eventLoop: eventLoop.next(),
+                Targets.localhost.map { .hostAndPort($0.host, Int($0.port)) },
+                transportSecurity: .plaintext
+            ),
+            targets: Targets.localhost
+        )
     }
+
 }
