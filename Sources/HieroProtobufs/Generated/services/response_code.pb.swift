@@ -1546,6 +1546,10 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   /// The GRPC proxy endpoint is set in the NodeCreate or NodeUpdate transaction,
   /// which the network does not support.
   case grpcWebProxyNotSupported // = 399
+
+  ///*
+  /// An NFT transfers list referenced a token type other than NON_FUNGIBLE_UNIQUE.
+  case nftTransfersOnlyAllowedForNonFungibleUnique // = 400
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -1912,6 +1916,7 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 397: self = .throttleGroupLcmOverflow
     case 398: self = .airdropContainsMultipleSendersForAToken
     case 399: self = .grpcWebProxyNotSupported
+    case 400: self = .nftTransfersOnlyAllowedForNonFungibleUnique
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -2276,6 +2281,7 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .throttleGroupLcmOverflow: return 397
     case .airdropContainsMultipleSendersForAToken: return 398
     case .grpcWebProxyNotSupported: return 399
+    case .nftTransfersOnlyAllowedForNonFungibleUnique: return 400
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -2640,6 +2646,7 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     .throttleGroupLcmOverflow,
     .airdropContainsMultipleSendersForAToken,
     .grpcWebProxyNotSupported,
+    .nftTransfersOnlyAllowedForNonFungibleUnique,
   ]
 
 }
@@ -3006,5 +3013,6 @@ extension Proto_ResponseCodeEnum: SwiftProtobuf._ProtoNameProviding {
     397: .same(proto: "THROTTLE_GROUP_LCM_OVERFLOW"),
     398: .same(proto: "AIRDROP_CONTAINS_MULTIPLE_SENDERS_FOR_A_TOKEN"),
     399: .same(proto: "GRPC_WEB_PROXY_NOT_SUPPORTED"),
+    400: .same(proto: "NFT_TRANSFERS_ONLY_ALLOWED_FOR_NON_FUNGIBLE_UNIQUE"),
   ]
 }

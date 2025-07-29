@@ -171,6 +171,7 @@ extension ScheduleCreateTransaction: ToProtobuf {
             Proto_SchedulableTransactionBody.with { proto in
                 proto.data = scheduledTransaction.toSchedulableTransactionData()
                 proto.memo = scheduledTransaction.transaction.transactionMemo
+                proto.maxCustomFees = scheduledTransaction.transaction.customFeeLimits.compactMap { $0.toProtobuf() }
 
                 let transactionFee =
                     scheduledTransaction.transaction.maxTransactionFee
