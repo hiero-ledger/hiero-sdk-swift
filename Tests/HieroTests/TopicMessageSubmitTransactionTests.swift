@@ -148,7 +148,8 @@ internal final class TopicMessageSubmitTransactionTests: XCTestCase {
         XCTAssertEqual(tx.scheduledTransactionBody.maxCustomFees[0].accountID.accountNum, Int64(payerId.num))
         XCTAssertEqual(tx.scheduledTransactionBody.maxCustomFees[0].fees.count, 1)
         XCTAssertEqual(tx.scheduledTransactionBody.maxCustomFees[0].fees[0].amount, Int64(amount))
-        XCTAssertEqual(tx.scheduledTransactionBody.maxCustomFees[0].fees[0].denominatingTokenID.tokenNum, Int64(tokenId.num))
+        XCTAssertEqual(
+            tx.scheduledTransactionBody.maxCustomFees[0].fees[0].denominatingTokenID.tokenNum, Int64(tokenId.num))
 
     }
 }
