@@ -10,4 +10,8 @@ extension Transaction {
     internal func makeProtoBody() throws -> Proto_TransactionBody {
         try Proto_TransactionBody(serializedBytes: makeSources().signedTransactions[0].bodyBytes)
     }
+
+    internal func testToBytes() throws {
+
+    }
 }

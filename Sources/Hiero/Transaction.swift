@@ -28,6 +28,10 @@ public class Transaction: ValidateChecksums {
         2
     }
 
+    internal static let dummyAccountId = AccountId(0)
+    internal static let dummyTransactionId = TransactionId.withValidStart(
+        dummyAccountId, Timestamp(fromUnixTimestampNanos: 0))
+
     internal func toTransactionDataProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody.OneOf_Data {
         fatalError("Method `Transaction.toTransactionDataProtobuf` must be overridden by `\(type(of: self))`")
     }
@@ -180,7 +184,7 @@ public class Transaction: ValidateChecksums {
     @discardableResult
     public func batchify(client: Client, _ batchKey: Key) throws -> Self {
         self.batchKey = batchKey
-        self.nodeAccountIds = [AccountId(0)]
+        self.nodeAccountIds = [Transaction.dummyAccountId]
 
         try self.signWithOperator(client)
 
@@ -354,17 +358,33 @@ public class Transaction: ValidateChecksums {
             return self
         }
 
-        let nodeAccountIds = self.nodeAccountIds ?? client?.net.randomNodeIds()
+        /// If no transaction ID, generate one.
+        if self.transactionId == nil {
+            guard let client = client else {
+                throw HError.unitialized(
+                    "If no client is provided to freeze transaction, the transaction ID must be manually set.")
+            }
 
-        let maxTransactionFee = self.maxTransactionFee ?? client?.maxTransactionFee
+            guard let `operator` = client.operator else {
+                throw HError.unitialized("Client operator has not been initialized and cannot freeze transaction.")
+            }
 
-        let `operator` = client?.operator
+            self.`operator` = `operator`
+            self.transactionId = `operator`.generateTransactionId()
+        }
 
-        self.nodeAccountIds = nodeAccountIds
-        self.maxTransactionFee = maxTransactionFee
-        self.`operator` = `operator`
-        self.customFeeLimits = customFeeLimits
-        self.batchKey = batchKey
+        /// If the node account IDs aren't provided, generate them.
+        if self.nodeAccountIds == nil {
+            guard let client = client else {
+                throw HError.unitialized(
+                    "If no client is provided to freeze transaction, the node account ID(s) must be manually set.")
+            }
+
+            self.`operator` = client.operator
+            self.nodeAccountIds = client.net.randomNodeIds()
+        }
+
+        self.maxTransactionFee = self.maxTransactionFee ?? client?.maxTransactionFee
 
         isFrozen = true
 
@@ -377,7 +397,6 @@ public class Transaction: ValidateChecksums {
 
     @discardableResult
     internal final func makeSources() throws -> TransactionSources {
-        precondition(isFrozen)
         if let sources = sources {
             return sources.signWithSigners(self.signers)
         }
@@ -466,8 +485,6 @@ public class Transaction: ValidateChecksums {
     }
 
     public final func toBytes() throws -> Data {
-        precondition(isFrozen, "Transaction must be frozen to call `toBytes`")
-
         if let sources = self.sources?.signWithSigners(self.signers) {
             return sources.toBytes()
         }
@@ -521,14 +538,12 @@ extension Transaction {
 
 extension Transaction {
     fileprivate func makeTransactionList() throws -> [Proto_Transaction] {
-        assert(self.isFrozen)
 
-        guard let initialTransactionId = self.transactionId ?? self.operator?.generateTransactionId() else {
-            throw HError.noPayerAccountOrTransactionId
-        }
+        let initialTransactionId =
+            self.transactionId ?? self.operator?.generateTransactionId() ?? Transaction.dummyTransactionId
 
         let usedChunks = (self as? ChunkedTransaction)?.usedChunks ?? 1
-        let nodeAccountIds = nodeAccountIds!
+        let nodeAccountIds = nodeAccountIds ?? [Transaction.dummyAccountId]
 
         var transactionList: [Proto_Transaction] = []
 
@@ -536,15 +551,12 @@ extension Transaction {
         // there's no documentation for it but `TransactionList` is sorted by chunk number,
         // then `node_id` (in the order they were added to the transaction)
         for chunk in 0..<usedChunks {
-            let currentTransactionId: TransactionId
-            switch chunk {
-            case 0:
-                currentTransactionId = initialTransactionId
-            default:
-                currentTransactionId = TransactionId(
+            let currentTransactionId: TransactionId =
+                (chunk == 0)
+                ? initialTransactionId
+                : TransactionId(
                     accountId: initialTransactionId.accountId,
                     validStart: initialTransactionId.validStart.adding(nanos: UInt64(chunk)))
-            }
 
             for nodeAccountId in nodeAccountIds {
                 let chunkInfo = ChunkInfo(
@@ -563,7 +575,6 @@ extension Transaction {
     }
 
     internal func makeRequestInner(chunkInfo: ChunkInfo) -> (Proto_Transaction, TransactionHash) {
-        assert(self.isFrozen)
         let body: Proto_TransactionBody = self.toTransactionBodyProtobuf(chunkInfo)
 
         // swiftlint:disable:next force_try
@@ -598,7 +609,6 @@ extension Transaction {
     }
 
     private func toTransactionBodyProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody {
-        assert(isFrozen)
         let data = toTransactionDataProtobuf(chunkInfo)
 
         let maxTransactionFee = self.maxTransactionFee ?? self.defaultMaxTransactionFee
