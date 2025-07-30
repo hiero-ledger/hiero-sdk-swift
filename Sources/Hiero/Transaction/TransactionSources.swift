@@ -172,7 +172,7 @@ extension TransactionSources {
 
             return (
                 transactionId: (try? TransactionId.fromProtobuf(transactionBody.transactionID))
-                    ?? Transaction.dummyTransactionId,
+                    ?? Transaction.dummyId,
                 nodeAccountId: (try? AccountId.fromProtobuf(transactionBody.nodeAccountID))
                     ?? Transaction.dummyAccountId
             )

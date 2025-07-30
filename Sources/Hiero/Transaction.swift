@@ -29,7 +29,7 @@ public class Transaction: ValidateChecksums {
     }
 
     internal static let dummyAccountId = AccountId(0)
-    internal static let dummyTransactionId = TransactionId.withValidStart(
+    internal static let dummyId = TransactionId.withValidStart(
         dummyAccountId, Timestamp(fromUnixTimestampNanos: 0))
 
     internal func toTransactionDataProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody.OneOf_Data {
@@ -540,7 +540,7 @@ extension Transaction {
     fileprivate func makeTransactionList() throws -> [Proto_Transaction] {
 
         let initialTransactionId =
-            self.transactionId ?? self.operator?.generateTransactionId() ?? Transaction.dummyTransactionId
+            self.transactionId ?? self.operator?.generateTransactionId() ?? Transaction.dummyId
 
         let usedChunks = (self as? ChunkedTransaction)?.usedChunks ?? 1
         let nodeAccountIds = nodeAccountIds ?? [Transaction.dummyAccountId]
@@ -618,7 +618,7 @@ extension Transaction {
         return .with { proto in
             proto.data = data
 
-            if chunkInfo.currentTransactionId != Transaction.dummyTransactionId {
+            if chunkInfo.currentTransactionId != Transaction.dummyId {
                 proto.transactionID = chunkInfo.currentTransactionId.toProtobuf()
             }
 
