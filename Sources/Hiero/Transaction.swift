@@ -14,7 +14,7 @@ public class Transaction: ValidateChecksums {
         transactionValidDuration = .fromProtobuf(proto.transactionValidDuration)
         maxTransactionFee = .fromTinybars(Int64(proto.transactionFee))
         transactionMemo = proto.memo
-        transactionId = try .fromProtobuf(proto.transactionID)
+        transactionId = (try? .fromProtobuf(proto.transactionID)) ?? nil
         customFeeLimits = try .fromProtobuf(proto.maxCustomFees)
     }
 
@@ -476,10 +476,10 @@ public class Transaction: ValidateChecksums {
         // note: this creates the transaction in a unfrozen state by pure need.
         let transaction = try Transaction.fromProtobuf(transactionBodies[0], transactionData)
 
-        transaction.nodeAccountIds = sources.nodeAccountIds
+        transaction.nodeAccountIds =
+            (sources.nodeAccountIds.count == 1 && sources.nodeAccountIds[0] == Transaction.dummyAccountId)
+            ? nil : sources.nodeAccountIds
         transaction.sources = sources
-        // explicitly avoid `freeze`.
-        transaction.isFrozen = true
 
         return transaction
     }
@@ -617,7 +617,10 @@ extension Transaction {
 
         return .with { proto in
             proto.data = data
-            proto.transactionID = chunkInfo.currentTransactionId.toProtobuf()
+
+            if chunkInfo.currentTransactionId != Transaction.dummyTransactionId {
+                proto.transactionID = chunkInfo.currentTransactionId.toProtobuf()
+            }
 
             if let batchKey = batchKey {
                 proto.batchKey = batchKey.toProtobuf()
@@ -625,7 +628,11 @@ extension Transaction {
 
             proto.transactionValidDuration = (self.transactionValidDuration ?? .minutes(2)).toProtobuf()
             proto.memo = self.transactionMemo
-            proto.nodeAccountID = chunkInfo.nodeAccountId.toProtobuf()
+
+            if chunkInfo.nodeAccountId != Transaction.dummyAccountId {
+                proto.nodeAccountID = chunkInfo.nodeAccountId.toProtobuf()
+            }
+
             proto.generateRecord = false
             proto.transactionFee = UInt64(maxTransactionFee.toTinybars())
             if !customFeeLimits.isEmpty {

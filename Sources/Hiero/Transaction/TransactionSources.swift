@@ -122,6 +122,7 @@ internal struct TransactionSources: Sendable {
         (0..<chunksCount).lazy.map { SourceChunk(map: self.guts, index: $0) }
     }
 }
+
 extension TransactionSources {
     // this is every bit as insane as the rust method I ported it from :/
     // swiftlint:disable:next function_body_length
@@ -169,10 +170,12 @@ extension TransactionSources {
                 throw HError.fromProtobuf(String(describing: error))
             }
 
-            let transactionId = try TransactionId.fromProtobuf(transactionBody.transactionID)
-            let nodeAccountId = try AccountId.fromProtobuf(transactionBody.nodeAccountID)
-
-            return (transactionId: transactionId, nodeAccountId: nodeAccountId)
+            return (
+                transactionId: (try? TransactionId.fromProtobuf(transactionBody.transactionID))
+                    ?? Transaction.dummyTransactionId,
+                nodeAccountId: (try? AccountId.fromProtobuf(transactionBody.nodeAccountID))
+                    ?? Transaction.dummyAccountId
+            )
         }
 
         // swiftlint:enable closure_parameter_position
