@@ -10,9 +10,15 @@ internal final class TransactionTests: XCTestCase {
     internal func testToFromBytes() throws {
         let new = TransferTransaction()
 
-        let bytes = try new.maxTransactionFee(10).transactionValidDuration(Duration.seconds(119))
-            .transactionMemo("Frosted flakes").hbarTransfer(AccountId(2), 2).hbarTransfer(AccountId(101), -2)
-            .transactionId(Resources.txId).nodeAccountIds(Resources.nodeAccountIds).freeze().toBytes()
+        let bytes = try new.maxTransactionFee(10)
+            .transactionValidDuration(Duration.seconds(119))
+            .transactionMemo("Frosted flakes")
+            .hbarTransfer(AccountId(2), 2)
+            .hbarTransfer(AccountId(101), -2)
+            .transactionId(Resources.txId)
+            .nodeAccountIds(Resources.nodeAccountIds)
+            .freeze()
+            .toBytes()
 
         let tx = new
 
@@ -76,5 +82,20 @@ internal final class TransactionTests: XCTestCase {
         _ = try tx.toBytes()
 
         print("tx.customFeeLimits: \(tx.customFeeLimits)")
+    }
+
+    internal func testToFromIncompleteTransactionBytes() throws {
+        let tx = TransferTransaction()
+            .maxTransactionFee(10)
+            .transactionValidDuration(Duration.seconds(119))
+            .transactionMemo("Frosted flakes")
+            .hbarTransfer(AccountId(2), 2)
+            .hbarTransfer(AccountId(101), -2)
+
+        let bytes = try tx.toBytes()
+        let tx2 = try Transaction.fromBytes(bytes)
+
+        XCTAssertEqual(tx.transactionId, tx2.transactionId)
+        XCTAssertEqual(tx.nodeAccountIds, tx2.nodeAccountIds)
     }
 }
