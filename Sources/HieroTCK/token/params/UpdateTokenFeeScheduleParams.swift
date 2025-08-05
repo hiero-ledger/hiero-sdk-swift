@@ -1,26 +1,27 @@
 // SPDX-License-Identifier: Apache-2.0
 
-/// Struct to hold the parameters of a 'updateTokenFeeSchedule' JSON-RPC method call.
+/// Represents the parameters for an `updateTokenFeeSchedule` JSON-RPC method call.
+///
+/// This struct encapsulates the optional parameters required to update the fee schedule for a token,
+/// including the `tokenId`, a list of `customFees`, and common transaction metadata.
+///
+/// - Note: All fields are optional; validation and defaulting behavior should be handled downstream.
 internal struct UpdateTokenFeeScheduleParams {
 
     internal var tokenId: String? = nil
     internal var customFees: [CustomFee]? = nil
     internal var commonTransactionParams: CommonTransactionParams? = nil
 
-    internal init(_ request: JSONRequest) throws {
-        if let params = try getOptionalParams(request) {
-            self.tokenId = try getOptionalJsonParameter("tokenId", params, JSONRPCMethod.updateTokenFeeSchedule)
-            self.customFees = try
-                (getOptionalJsonParameter("customFees", params, JSONRPCMethod.updateTokenFeeSchedule)
-                as [JSONObject]?)?.map {
-                    try CustomFee(
-                        getJson($0, "fee in custom fees list", JSONRPCMethod.updateTokenFeeSchedule),
-                        JSONRPCMethod.updateTokenFeeSchedule)
-                }
-            self.commonTransactionParams = try CommonTransactionParams(
-                try getOptionalJsonParameter(
-                    "commonTransactionParams", params, JSONRPCMethod.updateTokenFeeSchedule),
-                JSONRPCMethod.updateTokenFeeSchedule)
-        }
+    internal init(request: JSONRequest) throws {
+        let method: JSONRPCMethod = .updateTokenFeeSchedule
+        guard let params = try JSONRPCParser.getOptionalParamsIfPresent(request: request) else { return }
+
+        self.tokenId = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "tokenId", from: params, for: method)
+        self.customFees = try JSONRPCParser.getOptionalCustomObjectListIfPresent(
+            name: "customFees", from: params, for: method, decoder: CustomFee.jsonObjectDecoder(for: method))
+        self.commonTransactionParams = try CommonTransactionParams(
+            from: try JSONRPCParser.getOptionalJsonParameterIfPresent(
+                name: "commonTransactionParams", from: params, for: method),
+            for: method)
     }
 }

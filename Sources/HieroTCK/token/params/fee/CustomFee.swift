@@ -2,7 +2,14 @@
 
 import Hiero
 
-/// Struct to hold the parameters of a custom fee.
+/// Represents a custom fee configuration parsed from a JSON-RPC request.
+///
+/// Supports exactly one of the following fee types per instance:
+/// - `FixedFee`
+/// - `FractionalFee`
+/// - `RoyaltyFee`
+///
+/// Converts JSON input into typed `CustomFee` variants used for token creation or update operations.
 internal struct CustomFee {
 
     internal var feeCollectorAccountId: String
@@ -11,45 +18,85 @@ internal struct CustomFee {
     internal var fractionalFee: FractionalFee? = nil
     internal var royaltyFee: RoyaltyFee? = nil
 
-    internal init(_ params: [String: JSONObject], _ funcName: JSONRPCMethod) throws {
-        self.feeCollectorAccountId = try getRequiredJsonParameter("feeCollectorAccountId", params, funcName)
-        self.feeCollectorsExempt = try getRequiredJsonParameter("feeCollectorsExempt", params, funcName)
+    internal init(from params: [String: JSONObject], for funcName: JSONRPCMethod) throws {
+        self.feeCollectorAccountId = try JSONRPCParser.getRequiredJsonParameter(
+            name: "feeCollectorAccountId", from: params, for: funcName)
+        self.feeCollectorsExempt = try JSONRPCParser.getRequiredJsonParameter(
+            name: "feeCollectorsExempt", from: params, for: funcName)
+        self.fixedFee = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "fixedFee", from: params, for: funcName, using: FixedFee.init)
+        self.fractionalFee = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "fractionalFee", from: params, for: funcName, using: FractionalFee.init)
+        self.royaltyFee = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "royaltyFee", from: params, for: funcName, using: RoyaltyFee.init)
 
-        if let fixedFee: [String: JSONObject] = try getOptionalJsonParameter("fixedFee", params, funcName) {
-            self.fixedFee = try FixedFee(fixedFee, funcName)
-        }
-        if let fractionalFee: [String: JSONObject] = try getOptionalJsonParameter("fractionalFee", params, funcName) {
-            self.fractionalFee = try FractionalFee(fractionalFee, funcName)
-        }
-        if let royaltyFee: [String: JSONObject] = try getOptionalJsonParameter("royaltyFee", params, funcName) {
-            self.royaltyFee = try RoyaltyFee(royaltyFee, funcName)
+        // Only one fee type should be allowed.
+        let nonNilCount = [self.fixedFee as Any?, self.fractionalFee as Any?, self.royaltyFee as Any?].compactMap { $0 }
+            .count
+        if nonNilCount != 1 {
+            throw JSONError.invalidParams("invalid parameters: only one type of fee SHALL be provided.")
         }
     }
 
-    internal func toHederaCustomFee(_ funcName: JSONRPCMethod) throws -> AnyCustomFee {
+    // MARK: - Helpers
+
+    /// Converts this `CustomFee` type into a Hiero `AnyCustomFee` type.
+    ///
+    /// Ensures that exactly one fee type (`fixedFee`, `fractionalFee`, or `royaltyFee`) is provided.
+    /// Constructs the appropriate fee variant with the common `feeCollectorAccountId` and `feeCollectorsExempt` values.
+    ///
+    /// - Parameters:
+    ///   - funcName: The JSON-RPC method name, used for contextual error messages.
+    /// - Returns: A strongly-typed `AnyCustomFee` (fixed, fractional, or royalty).
+    /// - Throws: `JSONError.invalidParams` if more than one or no fee type is provided, or if parsing fails.
+    internal func toHieroCustomFee(for funcName: JSONRPCMethod) throws -> AnyCustomFee {
         let feeCollectorAccountId = try AccountId.fromString(self.feeCollectorAccountId)
         let feeCollectorsExempt = self.feeCollectorsExempt
 
-        /// Make sure only one of the three fee types is provided.
-        guard
-            (self.fixedFee != nil && self.fractionalFee == nil && self.royaltyFee == nil)
-                || (self.fixedFee == nil && self.fractionalFee != nil && self.royaltyFee == nil)
-                || (self.fixedFee == nil && self.fractionalFee == nil && self.royaltyFee != nil)
-        else {
-            throw JSONError.invalidParams("\(funcName.rawValue): one and only one fee type SHALL be provided.")
+        // Ensure exactly one fee type is present.
+        let nonNilFees = [self.fixedFee as Any?, self.fractionalFee as Any?, self.royaltyFee as Any?].compactMap { $0 }
+        guard nonNilFees.count == 1 else {
+            throw JSONError.invalidParams(
+                "\(funcName): exactly one fee type (fixedFee, fractionalFee, or royaltyFee) SHALL be provided.")
         }
 
-        if let fixedFee = self.fixedFee {
-            return AnyCustomFee.fixed(
-                try fixedFee.toHederaFixedFee(feeCollectorAccountId, feeCollectorsExempt, funcName))
-        } else if let fractionalFee = self.fractionalFee {
-            return AnyCustomFee.fractional(
-                try fractionalFee.toHederaFractionalFee(feeCollectorAccountId, feeCollectorsExempt, funcName))
+        if let fixed = self.fixedFee {
+            return .fixed(
+                try fixed.toHieroCustomFee(
+                    feeCollectorAccountId: feeCollectorAccountId,
+                    feeCollectorsExempt: feeCollectorsExempt,
+                    for: funcName))
+        } else if let fractional = self.fractionalFee {
+            return .fractional(
+                try fractional.toHieroCustomFee(
+                    feeCollectorAccountId: feeCollectorAccountId,
+                    feeCollectorsExempt: feeCollectorsExempt,
+                    for: funcName))
         } else {
-            /// Guaranteed at this point the fee is a royalty fee, just force the unpack.
-            return AnyCustomFee.royalty(
-                try self.royaltyFee!.toHederaRoyaltyFee(feeCollectorAccountId, feeCollectorsExempt, funcName))
+            // Safe to force unwrap since royalty is guaranteed to be non-nil at this point.
+            return .royalty(
+                try self.royaltyFee!.toHieroCustomFee(
+                    feeCollectorAccountId: feeCollectorAccountId,
+                    feeCollectorsExempt: feeCollectorsExempt,
+                    for: funcName))
         }
     }
 
+    /// Returns a closure that decodes a `JSONObject` into a `CustomFee`, using the given method for error context.
+    ///
+    /// This is useful when parsing arrays of custom fee objects from JSON-RPC parameters,
+    /// especially in conjunction with helper functions like `getOptionalCustomObjectListIfPresent`.
+    ///
+    /// - Parameters:
+    ///   - method: The JSON-RPC method name, used for constructing informative error messages.
+    /// - Returns: A closure that takes a `JSONObject`, validates its structure, and returns a parsed `CustomFee`.
+    /// - Throws: `JSONError.invalidParams` if the `JSONObject` is not a valid dictionary or cannot be parsed.
+    static func jsonObjectDecoder(for method: JSONRPCMethod) -> (JSONObject) throws -> CustomFee {
+        return {
+            guard let dict = $0.dictValue else {
+                throw JSONError.invalidParams("\(method.rawValue): each fee MUST be a JSON object.")
+            }
+            return try CustomFee(from: dict, for: method)
+        }
+    }
 }

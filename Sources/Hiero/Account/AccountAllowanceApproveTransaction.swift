@@ -91,26 +91,18 @@ public final class AccountAllowanceApproveTransaction: Transaction {
     public func approveTokenNftAllowance(
         _ nftId: NftId,
         _ ownerAccountId: AccountId,
-        _ spenderAccountId: AccountId
+        _ spenderAccountId: AccountId,
+        _ delegatingSpenderAccountId: AccountId? = nil
     ) -> Self {
-        ensureNotFrozen()
-
-        if var allowance = nftAllowances.first(where: { (allowance) in
-            allowance.tokenId == nftId.tokenId && allowance.spenderAccountId == spenderAccountId
-                && allowance.ownerAccountId == ownerAccountId && allowance.approvedForAll == nil
-        }) {
-            allowance.serials.append(nftId.serial)
-        } else {
-            nftAllowances.append(
-                TokenNftAllowance(
-                    tokenId: nftId.tokenId,
-                    ownerAccountId: ownerAccountId,
-                    spenderAccountId: spenderAccountId,
-                    serials: [nftId.serial],
-                    approvedForAll: nil,
-                    delegatingSpenderAccountId: nil
-                ))
-        }
+        nftAllowances.append(
+            TokenNftAllowance(
+                tokenId: nftId.tokenId,
+                ownerAccountId: ownerAccountId,
+                spenderAccountId: spenderAccountId,
+                serials: [nftId.serial],
+                approvedForAll: nil,
+                delegatingSpenderAccountId: delegatingSpenderAccountId
+            ))
 
         return self
     }
@@ -130,6 +122,27 @@ public final class AccountAllowanceApproveTransaction: Transaction {
                 spenderAccountId: spenderAccountId,
                 serials: [],
                 approvedForAll: true,
+                delegatingSpenderAccountId: nil
+            ))
+
+        return self
+    }
+
+    /// Delete the NFT allowance on all serial numbers (present and future).
+    @discardableResult
+    public func deleteTokenNftAllowanceAllSerials(
+        _ tokenId: TokenId,
+        _ ownerAccountId: AccountId,
+        _ spenderAccountId: AccountId
+    ) -> Self {
+
+        nftAllowances.append(
+            TokenNftAllowance(
+                tokenId: tokenId,
+                ownerAccountId: ownerAccountId,
+                spenderAccountId: spenderAccountId,
+                serials: [],
+                approvedForAll: false,
                 delegatingSpenderAccountId: nil
             ))
 

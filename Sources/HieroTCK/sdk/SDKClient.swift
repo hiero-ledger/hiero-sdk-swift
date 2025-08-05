@@ -2,34 +2,30 @@
 
 import Hiero
 
-/// Client class that handles the connection to the network.
+/// Manages the Hiero `Client` instance and supports lifecycle operations via JSON-RPC.
+///
+/// `SDKClient` acts as a singleton controller for the Hiero client used throughout the server.
+/// It provides methods to initialize (via `setup`) and reset (via `reset`) the network connection,
+/// supporting both testnet and custom configurations.
+///
+/// Access the singleton instance via `SDKClient.client`.
 internal class SDKClient {
+
+    // MARK: - Singleton
 
     /// Singleton instance of SDKClient.
     static let client = SDKClient()
 
-    ////////////////
-    /// INTERNAL ///
-    ////////////////
+    // MARK: - JSON-RPC Methods
 
-    internal init() {
-        /// Initialize to testnet to make compiler happy, should be set via `setup` JSON-RPC call.
-        self.client = Client.forTestnet()
-    }
-
-    /// Get the Hedera Client wrapped by this SDKClient.
-    internal func getClient() -> Client {
-        return client
-    }
-
-    /// Reset the client network. Can be called via JSON-RPC.
-    internal func reset(_ params: ResetParams) throws -> JSONObject {
+    /// Handles the `reset` JSON-RPC method.
+    internal func reset(from params: ResetParams) throws -> JSONObject {
         self.client = try Client.forNetwork([String: AccountId]())
-        return JSONObject.dictionary(["status": JSONObject.string("SUCCESS")])
+        return .dictionary(["status": .string("SUCCESS")])
     }
 
-    /// Setup the client network. Can be called via JSON-RPC.
-    internal func setup(_ params: SetupParams) throws -> JSONObject {
+    /// Handles the `setup` JSON-RPC method.
+    internal func setup(from params: SetupParams) throws -> JSONObject {
         let operatorAccountId = try AccountId.fromString(params.operatorAccountId)
         let operatorPrivateKey = try PrivateKey.fromStringDer(params.operatorPrivateKey)
 
@@ -37,7 +33,8 @@ internal class SDKClient {
         if params.nodeIp == nil, params.nodeAccountId == nil, params.mirrorNetworkIp == nil {
             self.client = Client.forTestnet()
             clientType = "testnet"
-        } else if let nodeIp = params.nodeIp, let nodeAccountId = params.nodeAccountId,
+        } else if let nodeIp = params.nodeIp,
+            let nodeAccountId = params.nodeAccountId,
             let mirrorNetworkIp = params.mirrorNetworkIp
         {
             self.client = try Client.forNetwork([nodeIp: AccountId.fromString(nodeAccountId)])
@@ -51,16 +48,28 @@ internal class SDKClient {
 
         self.client.setOperator(operatorAccountId, operatorPrivateKey)
 
-        return JSONObject.dictionary([
-            "message": JSONObject.string("Successfully setup " + clientType + " client."),
-            "success": JSONObject.string("SUCCESS"),
+        return .dictionary([
+            "message": .string("Successfully setup \(clientType) client."),
+            "success": .string("SUCCESS"),
         ])
 
     }
 
-    ///////////////
-    /// PRIVATE ///
-    ///////////////
+    // MARK: - Helpers
 
+    /// Returns the active `Hiero.Client` instance.
+    internal func getClient() -> Client {
+        return client
+    }
+
+    // MARK: - Private
+
+    /// Initializes with a default testnet client.
+    /// This placeholder is meant to be overwritten via the `setup` JSON-RPC method.
+    fileprivate init() {
+        self.client = Client.forTestnet()
+    }
+
+    /// Internal client instance wrapped by this class.
     private var client: Client
 }

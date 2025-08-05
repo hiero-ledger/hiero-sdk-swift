@@ -1,17 +1,25 @@
 // SPDX-License-Identifier: Apache-2.0
 
-/// Struct to hold the parameters of a 'deleteToken' JSON-RPC method call.
+/// Represents the parameters for a `deleteToken` JSON-RPC method call.
+///
+/// This struct handles optional input for deleting a token, including the token's identifier
+/// and any associated transaction-level configuration.
+///
+/// - Note: All fields are optional; validation and defaulting behavior should be handled downstream.
 internal struct DeleteTokenParams {
 
     internal var tokenId: String? = nil
     internal var commonTransactionParams: CommonTransactionParams? = nil
 
-    internal init(_ request: JSONRequest) throws {
-        if let params = try getOptionalParams(request) {
-            self.tokenId = try getOptionalJsonParameter("tokenId", params, JSONRPCMethod.deleteToken)
-            self.commonTransactionParams = try CommonTransactionParams(
-                try getOptionalJsonParameter("commonTransactionParams", params, JSONRPCMethod.deleteToken),
-                JSONRPCMethod.deleteToken)
-        }
+    internal init(request: JSONRequest) throws {
+        let method: JSONRPCMethod = .deleteToken
+        guard let params = try JSONRPCParser.getOptionalParamsIfPresent(request: request) else { return }
+
+        self.tokenId = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "tokenId", from: params, for: method)
+        self.commonTransactionParams = try CommonTransactionParams(
+            from: try JSONRPCParser.getOptionalJsonParameterIfPresent(
+                name: "commonTransactionParams", from: params, for: method),
+            for: method)
+
     }
 }

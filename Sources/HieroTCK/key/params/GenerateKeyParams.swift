@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
-/// Struct to hold the parameters of a 'generateKey' JSON-RPC method call.
+/// Represents the parameters for a `generateKey` JSON-RPC method call.
+///
+/// This structure supports recursive key generation strategies, including:
+/// - Simple keys (e.g. "ED25519", "ECDSA_SECP256K1")
+/// - Derived keys using `fromKey`
+/// - Threshold keys with `threshold` and nested `keys`
+///
+/// This is designed to map directly from JSON-RPC input and enforce validation
+/// on required and optional parameters through the parsing logic.
 internal struct GenerateKeyParams {
 
     internal var type: String
@@ -8,16 +16,33 @@ internal struct GenerateKeyParams {
     internal var threshold: UInt32? = nil
     internal var keys: [GenerateKeyParams]? = nil
 
-    internal init(_ request: JSONRequest) throws {
-        try self.init(getRequiredParams(request))
+    /// Initializes from a full `JSONRequest`.
+    ///
+    /// - Parameters:
+    ///   - request: The JSON-RPC request parameters.
+    /// - Throws: `JSONError.invalidParams` if required fields are missing or malformed.
+    internal init(request: JSONRequest) throws {
+        try self.init(params: JSONRPCParser.getRequiredParams(request: request))
     }
 
-    private init(_ params: [String: JSONObject]) throws {
-        self.type = try getRequiredJsonParameter("type", params, JSONRPCMethod.generateKey)
-        self.fromKey = try getOptionalJsonParameter("fromKey", params, JSONRPCMethod.generateKey)
-        self.threshold = try getOptionalJsonParameter("threshold", params, JSONRPCMethod.generateKey)
-        self.keys = try (getOptionalJsonParameter("keys", params, JSONRPCMethod.generateKey) as [JSONObject]?)?.map {
-            try GenerateKeyParams(getJson($0, "key in keys list", JSONRPCMethod.generateKey) as [String: JSONObject])
+    /// Initializes from a `[String: JSONObject]` parameter map.
+    ///
+    /// - Parameters:
+    ///   - params: The JSON-RPC parameters for this key.
+    /// - Throws: `JSONError.invalidParams` for invalid or missing fields.
+    private init(params: [String: JSONObject]) throws {
+        let method: JSONRPCMethod = .generateKey
+
+        self.type = try JSONRPCParser.getRequiredJsonParameter(
+            name: "type", from: params, for: method)
+        self.fromKey = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "fromKey", from: params, for: method)
+        self.threshold = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "threshold", from: params, for: method)
+        self.keys = try JSONRPCParser.getOptionalCustomObjectListIfPresent(
+            name: "keys", from: params, for: method
+        ) {
+            try GenerateKeyParams(params: JSONRPCParser.getJson(name: "key in keys list", from: $0, for: method))
         }
     }
 }

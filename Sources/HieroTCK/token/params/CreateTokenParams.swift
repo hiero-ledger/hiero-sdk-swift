@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-/// Struct to hold the parameters of a 'createToken' JSON-RPC method call.
+/// Represents the parameters for a `createToken` JSON-RPC method call.
+///
+/// This struct captures all supported token creation parameters,
+/// including identity, supply configuration, keys, metadata, and fee schedule.
+///
+/// - Note: All fields are optional; validation and defaulting behavior should be handled downstream.
 internal struct CreateTokenParams {
 
     internal var name: String? = nil
@@ -28,42 +33,50 @@ internal struct CreateTokenParams {
     internal var metadataKey: String? = nil
     internal var commonTransactionParams: CommonTransactionParams? = nil
 
-    internal init(_ request: JSONRequest) throws {
-        if let params = try getOptionalParams(request) {
-            self.name = try getOptionalJsonParameter("name", params, JSONRPCMethod.createToken)
-            self.symbol = try getOptionalJsonParameter("symbol", params, JSONRPCMethod.createToken)
-            self.decimals = try getOptionalJsonParameter("decimals", params, JSONRPCMethod.createToken)
-            self.initialSupply = try getOptionalJsonParameter("initialSupply", params, JSONRPCMethod.createToken)
-            self.treasuryAccountId = try getOptionalJsonParameter(
-                "treasuryAccountId", params, JSONRPCMethod.createToken)
-            self.adminKey = try getOptionalJsonParameter("adminKey", params, JSONRPCMethod.createToken)
-            self.kycKey = try getOptionalJsonParameter("kycKey", params, JSONRPCMethod.createToken)
-            self.freezeKey = try getOptionalJsonParameter("freezeKey", params, JSONRPCMethod.createToken)
-            self.wipeKey = try getOptionalJsonParameter("wipeKey", params, JSONRPCMethod.createToken)
-            self.supplyKey = try getOptionalJsonParameter("supplyKey", params, JSONRPCMethod.createToken)
-            self.freezeDefault = try getOptionalJsonParameter("freezeDefault", params, JSONRPCMethod.createToken)
-            self.expirationTime = try getOptionalJsonParameter("expirationTime", params, JSONRPCMethod.createToken)
-            self.autoRenewAccountId = try getOptionalJsonParameter(
-                "autoRenewAccountId", params, JSONRPCMethod.createToken)
-            self.autoRenewPeriod = try getOptionalJsonParameter("autoRenewPeriod", params, JSONRPCMethod.createToken)
-            self.memo = try getOptionalJsonParameter("memo", params, JSONRPCMethod.createToken)
-            self.tokenType = try getOptionalJsonParameter("tokenType", params, JSONRPCMethod.createToken)
-            self.supplyType = try getOptionalJsonParameter("supplyType", params, JSONRPCMethod.createToken)
-            self.maxSupply = try getOptionalJsonParameter("maxSupply", params, JSONRPCMethod.createToken)
-            self.feeScheduleKey = try getOptionalJsonParameter("feeScheduleKey", params, JSONRPCMethod.createToken)
-            self.customFees = try
-                (getOptionalJsonParameter("customFees", params, JSONRPCMethod.createToken) as [JSONObject]?)?
-                .map {
-                    try CustomFee(
-                        getJson($0, "fee in custom fees list", JSONRPCMethod.createToken),
-                        JSONRPCMethod.createToken)
-                }
-            self.pauseKey = try getOptionalJsonParameter("pauseKey", params, JSONRPCMethod.createToken)
-            self.metadata = try getOptionalJsonParameter("metadata", params, JSONRPCMethod.createToken)
-            self.metadataKey = try getOptionalJsonParameter("metadataKey", params, JSONRPCMethod.createToken)
-            self.commonTransactionParams = try CommonTransactionParams(
-                try getOptionalJsonParameter("commonTransactionParams", params, JSONRPCMethod.createToken),
-                JSONRPCMethod.createToken)
-        }
+    internal init(request: JSONRequest) throws {
+        let method: JSONRPCMethod = .createAccount
+        guard let params = try JSONRPCParser.getOptionalParamsIfPresent(request: request) else { return }
+
+        self.name = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "name", from: params, for: method)
+        self.symbol = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "symbol", from: params, for: method)
+        self.decimals = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "decimals", from: params, for: method)
+        self.initialSupply = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "initialSupply", from: params, for: method)
+        self.treasuryAccountId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "treasuryAccountId", from: params, for: method)
+        self.adminKey = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "adminKey", from: params, for: method)
+        self.kycKey = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "kycKey", from: params, for: method)
+        self.freezeKey = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "freezeKey", from: params, for: method)
+        self.wipeKey = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "wipeKey", from: params, for: method)
+        self.supplyKey = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "supplyKey", from: params, for: method)
+        self.freezeDefault = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "freezeDefault", from: params, for: method)
+        self.expirationTime = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "expirationTime", from: params, for: method)
+        self.autoRenewAccountId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "autoRenewAccountId", from: params, for: method)
+        self.autoRenewPeriod = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "autoRenewPeriod", from: params, for: method)
+        self.memo = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "memo", from: params, for: method)
+        self.tokenType = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "tokenType", from: params, for: method)
+        self.supplyType = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "supplyType", from: params, for: method)
+        self.maxSupply = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "maxSupply", from: params, for: method)
+        self.feeScheduleKey = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "feeScheduleKey", from: params, for: method)
+        self.customFees = try JSONRPCParser.getOptionalCustomObjectListIfPresent(
+            name: "customFees", from: params, for: method, decoder: CustomFee.jsonObjectDecoder(for: method))
+        self.pauseKey = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "pauseKey", from: params, for: method)
+        self.metadata = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "metadata", from: params, for: method)
+        self.metadataKey = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+            name: "metadataKey", from: params, for: method)
+        self.commonTransactionParams = try CommonTransactionParams(
+            from: try JSONRPCParser.getOptionalJsonParameterIfPresent(
+                name: "commonTransactionParams", from: params, for: method),
+            for: method)
     }
 }

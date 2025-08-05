@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-/// Struct to hold the parameters of a 'burnToken' JSON-RPC method call.
+/// Represents the parameters for a `burnToken` JSON-RPC method call.
+///
+/// This struct encapsulates optional fields for burning fungible or non-fungible tokens,
+/// including the token ID, burn amount (for fungible tokens), serial numbers (for NFTs),
+/// and standard transaction metadata.
+///
+/// - Note: Either `amount` or `serialNumbers` should be provided, depending on token type.
 internal struct BurnTokenParams {
 
     internal var tokenId: String? = nil
@@ -8,17 +14,17 @@ internal struct BurnTokenParams {
     internal var serialNumbers: [String]? = nil
     internal var commonTransactionParams: CommonTransactionParams? = nil
 
-    internal init(_ request: JSONRequest) throws {
-        if let params = try getOptionalParams(request) {
-            self.tokenId = try getOptionalJsonParameter("tokenId", params, JSONRPCMethod.burnToken)
-            self.amount = try getOptionalJsonParameter("amount", params, JSONRPCMethod.burnToken)
-            self.serialNumbers = try
-                (getOptionalJsonParameter("serialNumbers", params, JSONRPCMethod.burnToken) as [JSONObject]?)?.map {
-                    try getJson($0, "serial number in serialNumbers list", JSONRPCMethod.burnToken)
-                }
-            self.commonTransactionParams = try CommonTransactionParams(
-                try getOptionalJsonParameter("commonTransactionParams", params, JSONRPCMethod.burnToken),
-                JSONRPCMethod.burnToken)
-        }
+    internal init(request: JSONRequest) throws {
+        let method: JSONRPCMethod = .burnToken
+        guard let params = try JSONRPCParser.getOptionalParamsIfPresent(request: request) else { return }
+
+        self.tokenId = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "tokenId", from: params, for: method)
+        self.amount = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "amount", from: params, for: method)
+        self.serialNumbers = try JSONRPCParser.getOptionalPrimitiveListIfPresent(
+            name: "serialNumbers", from: params, for: method)
+        self.commonTransactionParams = try CommonTransactionParams(
+            from: try JSONRPCParser.getOptionalJsonParameterIfPresent(
+                name: "commonTransactionParams", from: params, for: method),
+            for: method)
     }
 }

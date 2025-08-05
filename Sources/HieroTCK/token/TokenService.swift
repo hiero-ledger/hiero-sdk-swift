@@ -4,69 +4,81 @@ import Foundation
 
 @testable import Hiero
 
-/// Service class that services token service requests.
+/// Service responsible for handling token-related JSON-RPC methods.
+///
+/// Each method corresponds to a specific JSON-RPC operation, maps input parameters into
+/// Hiero SDK requests, and returns a structured result.
 internal class TokenService {
+
+    // MARK: - Singleton
 
     /// Singleton instance of TokenService.
     static let service = TokenService()
+    fileprivate init() {}
 
-    /// Associate an account with (a) token(s). Can be called via JSON-RPC.
-    internal func associateToken(_ params: AssociateTokenParams) async throws -> JSONObject {
+    // MARK: - JSON-RPC Methods
+
+    /// Handles the `associateToken` JSON-RPC method.
+    internal func associateToken(from params: AssociateTokenParams) async throws -> JSONObject {
         var tokenAssociateTransaction = TokenAssociateTransaction()
 
-        tokenAssociateTransaction.accountId = try CommonParams.getAccountId(params.accountId)
+        tokenAssociateTransaction.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
         tokenAssociateTransaction.tokenIds =
-            try CommonParams.getTokenIdList(params.tokenIds) ?? tokenAssociateTransaction.tokenIds
-        try params.commonTransactionParams?.fillOutTransaction(&tokenAssociateTransaction)
+            try CommonParamsParser.getTokenIdsIfPresent(from: params.tokenIds) ?? tokenAssociateTransaction.tokenIds
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenAssociateTransaction)
 
         let txReceipt = try await tokenAssociateTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary(["status": JSONObject.string(txReceipt.status.description)])
+        return .dictionary(["status": .string(txReceipt.status.description)])
     }
 
-    /// Burn tokens. Can be called via JSON-RPC.
-    internal func burnToken(_ params: BurnTokenParams) async throws -> JSONObject {
+    /// Handles the `burnToken` JSON-RPC method.
+    internal func burnToken(from params: BurnTokenParams) async throws -> JSONObject {
         var tokenBurnTransaction = TokenBurnTransaction()
+        let method: JSONRPCMethod = .burnToken
 
-        tokenBurnTransaction.tokenId = try CommonParams.getTokenId(params.tokenId)
+        tokenBurnTransaction.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
         tokenBurnTransaction.amount =
-            try CommonParams.getAmount(params.amount, JSONRPCMethod.burnToken) ?? tokenBurnTransaction.amount
+            try CommonParamsParser.getAmountIfPresent(from: params.amount, for: method) ?? tokenBurnTransaction.amount
         tokenBurnTransaction.serials =
             try params.serialNumbers?.map {
-                toUint64(try toInt($0, "serial number in serialNumbers list", JSONRPCMethod.burnToken))
+                toUint64(try toInt(name: "serial number in serialNumbers list", from: $0, for: method))
             } ?? tokenBurnTransaction.serials
-        try params.commonTransactionParams?.fillOutTransaction(&tokenBurnTransaction)
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenBurnTransaction)
 
         let txReceipt = try await tokenBurnTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary([
-            "status": JSONObject.string(txReceipt.status.description),
-            "newTotalSupply": JSONObject.string(String(txReceipt.totalSupply)),
+        return .dictionary([
+            "status": .string(txReceipt.status.description),
+            "newTotalSupply": .string(String(txReceipt.totalSupply)),
         ])
     }
 
-    /// Create a token. Can be called via JSON-RPC.
-    internal func createToken(_ params: CreateTokenParams) async throws -> JSONObject {
+    /// Handles the `createToken` JSON-RPC method.
+    internal func createToken(from params: CreateTokenParams) async throws -> JSONObject {
         var tokenCreateTransaction = TokenCreateTransaction()
+        let method: JSONRPCMethod = .createToken
 
         tokenCreateTransaction.name = params.name ?? tokenCreateTransaction.name
         tokenCreateTransaction.symbol = params.symbol ?? tokenCreateTransaction.symbol
         tokenCreateTransaction.decimals = params.decimals ?? tokenCreateTransaction.decimals
         tokenCreateTransaction.initialSupply =
-            try CommonParams.getSdkUInt64(params.initialSupply, "initialSupply", JSONRPCMethod.createToken)
+            try CommonParamsParser.getSdkUInt64IfPresent(name: "initialSupply", from: params.initialSupply, for: method)
             ?? tokenCreateTransaction.initialSupply
-        tokenCreateTransaction.treasuryAccountId = try CommonParams.getAccountId(params.treasuryAccountId)
-        tokenCreateTransaction.adminKey = try CommonParams.getKey(params.adminKey)
-        tokenCreateTransaction.kycKey = try CommonParams.getKey(params.kycKey)
-        tokenCreateTransaction.freezeKey = try CommonParams.getKey(params.freezeKey)
-        tokenCreateTransaction.wipeKey = try CommonParams.getKey(params.wipeKey)
-        tokenCreateTransaction.supplyKey = try CommonParams.getKey(params.supplyKey)
+        tokenCreateTransaction.treasuryAccountId = try CommonParamsParser.getAccountIdIfPresent(
+            from: params.treasuryAccountId)
+        tokenCreateTransaction.adminKey = try CommonParamsParser.getKeyIfPresent(from: params.adminKey)
+        tokenCreateTransaction.kycKey = try CommonParamsParser.getKeyIfPresent(from: params.kycKey)
+        tokenCreateTransaction.freezeKey = try CommonParamsParser.getKeyIfPresent(from: params.freezeKey)
+        tokenCreateTransaction.wipeKey = try CommonParamsParser.getKeyIfPresent(from: params.wipeKey)
+        tokenCreateTransaction.supplyKey = try CommonParamsParser.getKeyIfPresent(from: params.supplyKey)
         tokenCreateTransaction.freezeDefault = params.freezeDefault ?? tokenCreateTransaction.freezeDefault
-        tokenCreateTransaction.expirationTime = try CommonParams.getExpirationTime(
-            params.expirationTime, JSONRPCMethod.createToken)
-        tokenCreateTransaction.autoRenewAccountId = try CommonParams.getAccountId(params.autoRenewAccountId)
-        tokenCreateTransaction.autoRenewPeriod = try CommonParams.getAutoRenewPeriod(
-            params.autoRenewPeriod, JSONRPCMethod.createToken)
+        tokenCreateTransaction.expirationTime = try CommonParamsParser.getExpirationTimeIfPresent(
+            from: params.expirationTime, for: method)
+        tokenCreateTransaction.autoRenewAccountId = try CommonParamsParser.getAccountIdIfPresent(
+            from: params.autoRenewAccountId)
+        tokenCreateTransaction.autoRenewPeriod = try CommonParamsParser.getAutoRenewPeriodIfPresent(
+            from: params.autoRenewPeriod, for: method)
         tokenCreateTransaction.tokenMemo = params.memo ?? tokenCreateTransaction.tokenMemo
         tokenCreateTransaction.tokenType =
             try params.tokenType.flatMap {
@@ -81,203 +93,208 @@ internal class TokenService {
                     : { throw JSONError.invalidParams("\(#function): supplyType MUST be 'finite' or 'infinite'.") }()
             } ?? tokenCreateTransaction.tokenSupplyType
         tokenCreateTransaction.maxSupply =
-            try CommonParams.getSdkUInt64(params.maxSupply, "maxSupply", JSONRPCMethod.createToken)
+            try CommonParamsParser.getSdkUInt64IfPresent(name: "maxSupply", from: params.maxSupply, for: method)
             ?? tokenCreateTransaction.maxSupply
-        tokenCreateTransaction.feeScheduleKey = try CommonParams.getKey(params.feeScheduleKey)
+        tokenCreateTransaction.feeScheduleKey = try CommonParamsParser.getKeyIfPresent(from: params.feeScheduleKey)
         tokenCreateTransaction.customFees =
-            try CommonParams.getCustomFees(params.customFees, JSONRPCMethod.createToken)
+            try CommonParamsParser.getCustomFeesIfPresent(from: params.customFees, for: method)
             ?? tokenCreateTransaction.customFees
-        tokenCreateTransaction.pauseKey = try CommonParams.getKey(params.pauseKey)
+        tokenCreateTransaction.pauseKey = try CommonParamsParser.getKeyIfPresent(from: params.pauseKey)
         tokenCreateTransaction.metadata =
             try params.metadata.flatMap {
                 try $0.data(using: .utf8)
                     ?? { throw JSONError.invalidParams("\(#function): metadata MUST be a UTF-8 string.") }()
             } ?? tokenCreateTransaction.metadata
-        tokenCreateTransaction.metadataKey = try CommonParams.getKey(params.metadataKey)
-        try params.commonTransactionParams?.fillOutTransaction(&tokenCreateTransaction)
+        tokenCreateTransaction.metadataKey = try CommonParamsParser.getKeyIfPresent(from: params.metadataKey)
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenCreateTransaction)
 
         let txReceipt = try await tokenCreateTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary([
-            "tokenId": JSONObject.string(txReceipt.tokenId!.toString()),
-            "status": JSONObject.string(txReceipt.status.description),
+        return .dictionary([
+            "tokenId": .string(txReceipt.tokenId!.toString()),
+            "status": .string(txReceipt.status.description),
         ])
     }
 
-    /// Delete a token. Can be called via JSON-RPC.
-    internal func deleteToken(_ params: DeleteTokenParams) async throws -> JSONObject {
+    /// Handles the `deleteToken` JSON-RPC method.
+    internal func deleteToken(from params: DeleteTokenParams) async throws -> JSONObject {
         var tokenDeleteTransaction = TokenDeleteTransaction()
 
-        tokenDeleteTransaction.tokenId = try CommonParams.getTokenId(params.tokenId)
-        try params.commonTransactionParams?.fillOutTransaction(&tokenDeleteTransaction)
+        tokenDeleteTransaction.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenDeleteTransaction)
 
         let txReceipt = try await tokenDeleteTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary(["status": JSONObject.string(txReceipt.status.description)])
+        return .dictionary(["status": .string(txReceipt.status.description)])
     }
 
-    /// Dissociate an account from (a) token(s). Can be called via JSON-RPC.
-    internal func dissociateToken(_ params: DissociateTokenParams) async throws -> JSONObject {
+    /// Handles the `dissociateToken` JSON-RPC method.
+    internal func dissociateToken(from params: DissociateTokenParams) async throws -> JSONObject {
         var tokenDissociateTransaction = TokenDissociateTransaction()
 
-        tokenDissociateTransaction.accountId = try CommonParams.getAccountId(params.accountId)
+        tokenDissociateTransaction.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
         tokenDissociateTransaction.tokenIds =
-            try CommonParams.getTokenIdList(params.tokenIds) ?? tokenDissociateTransaction.tokenIds
-        try params.commonTransactionParams?.fillOutTransaction(&tokenDissociateTransaction)
+            try CommonParamsParser.getTokenIdsIfPresent(from: params.tokenIds) ?? tokenDissociateTransaction.tokenIds
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenDissociateTransaction)
 
         let txReceipt = try await tokenDissociateTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary(["status": JSONObject.string(txReceipt.status.description)])
+        return .dictionary(["status": .string(txReceipt.status.description)])
     }
 
-    /// Freeze a token on an account. Can be called via JSON-RPC.
-    internal func freezeToken(_ params: FreezeTokenParams) async throws -> JSONObject {
+    /// Handles the `freezeToken` JSON-RPC method.
+    internal func freezeToken(from params: FreezeTokenParams) async throws -> JSONObject {
         var tokenFreezeTransaction = TokenFreezeTransaction()
 
-        tokenFreezeTransaction.accountId = try CommonParams.getAccountId(params.accountId)
-        tokenFreezeTransaction.tokenId = try CommonParams.getTokenId(params.tokenId)
-        try params.commonTransactionParams?.fillOutTransaction(&tokenFreezeTransaction)
+        tokenFreezeTransaction.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
+        tokenFreezeTransaction.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenFreezeTransaction)
 
         let txReceipt = try await tokenFreezeTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary(["status": JSONObject.string(txReceipt.status.description)])
+        return .dictionary(["status": .string(txReceipt.status.description)])
     }
 
-    /// Grant KYC of a token to an account. Can be called via JSON-RPC.
-    internal func grantTokenKyc(_ params: GrantTokenKycParams) async throws -> JSONObject {
+    /// Handles the `grantTokenKyc` JSON-RPC method.
+    internal func grantTokenKyc(from params: GrantTokenKycParams) async throws -> JSONObject {
         var tokenGrantKycTransaction = TokenGrantKycTransaction()
 
-        tokenGrantKycTransaction.accountId = try CommonParams.getAccountId(params.accountId)
-        tokenGrantKycTransaction.tokenId = try CommonParams.getTokenId(params.tokenId)
-        try params.commonTransactionParams?.fillOutTransaction(&tokenGrantKycTransaction)
+        tokenGrantKycTransaction.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
+        tokenGrantKycTransaction.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenGrantKycTransaction)
 
         let txReceipt = try await tokenGrantKycTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary(["status": JSONObject.string(txReceipt.status.description)])
+        return .dictionary(["status": .string(txReceipt.status.description)])
     }
 
-    /// Mint tokens. Can be called via JSON-RPC.
-    internal func mintToken(_ params: MintTokenParams) async throws -> JSONObject {
+    /// Handles the `mintToken` JSON-RPC method.
+    internal func mintToken(from params: MintTokenParams) async throws -> JSONObject {
         var tokenMintTransaction = TokenMintTransaction()
 
-        tokenMintTransaction.tokenId = try CommonParams.getTokenId(params.tokenId)
+        tokenMintTransaction.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
         tokenMintTransaction.amount =
-            try CommonParams.getAmount(params.amount, JSONRPCMethod.mintToken) ?? tokenMintTransaction.amount
+            try CommonParamsParser.getAmountIfPresent(from: params.amount, for: JSONRPCMethod.mintToken)
+            ?? tokenMintTransaction.amount
         tokenMintTransaction.metadata =
             try params.metadata?.map {
                 try Data(hexEncoded: $0)
                     ?? { throw JSONError.invalidParams("\(#function): metadata MUST be a hex-encoded string.") }()
             } ?? tokenMintTransaction.metadata
-        try params.commonTransactionParams?.fillOutTransaction(&tokenMintTransaction)
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenMintTransaction)
 
         let txReceipt = try await tokenMintTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary(
+        return .dictionary(
             [
-                "status": JSONObject.string(txReceipt.status.description),
-                "newTotalSupply": JSONObject.string(String(txReceipt.totalSupply)),
+                "status": .string(txReceipt.status.description),
+                "newTotalSupply": .string(String(txReceipt.totalSupply)),
             ].merging(
-                txReceipt.serials.map { ["serialNumbers": JSONObject.list($0.map { JSONObject.string(String($0)) })] }
+                txReceipt.serials.map { ["serialNumbers": .list($0.map { .string(String($0)) })] }
                     ?? [:]
             ) { _, new in new })
 
     }
 
-    /// Pause a token. Can be called via JSON-RPC.
-    internal func pauseToken(_ params: PauseTokenParams) async throws -> JSONObject {
+    /// Handles the `pauseToken` JSON-RPC method.
+    internal func pauseToken(from params: PauseTokenParams) async throws -> JSONObject {
         var tokenPauseTransaction = TokenPauseTransaction()
 
-        tokenPauseTransaction.tokenId = try CommonParams.getTokenId(params.tokenId)
-        try params.commonTransactionParams?.fillOutTransaction(&tokenPauseTransaction)
+        tokenPauseTransaction.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenPauseTransaction)
 
         let txReceipt = try await tokenPauseTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary(["status": JSONObject.string(txReceipt.status.description)])
+        return .dictionary(["status": .string(txReceipt.status.description)])
     }
 
-    /// Revoke KYC of a token from an account. Can be called via JSON-RPC.
-    internal func revokeTokenKyc(_ params: RevokeTokenKycParams) async throws -> JSONObject {
+    /// Handles the `revokeTokenKyc` JSON-RPC method.
+    internal func revokeTokenKyc(from params: RevokeTokenKycParams) async throws -> JSONObject {
         var tokenRevokeKycTransaction = TokenRevokeKycTransaction()
 
-        tokenRevokeKycTransaction.accountId = try CommonParams.getAccountId(params.accountId)
-        tokenRevokeKycTransaction.tokenId = try CommonParams.getTokenId(params.tokenId)
-        try params.commonTransactionParams?.fillOutTransaction(&tokenRevokeKycTransaction)
+        tokenRevokeKycTransaction.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
+        tokenRevokeKycTransaction.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenRevokeKycTransaction)
 
         let txReceipt = try await tokenRevokeKycTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary(["status": JSONObject.string(txReceipt.status.description)])
+        return .dictionary(["status": .string(txReceipt.status.description)])
     }
 
-    /// Unfreeze a token from an account. Can be called via JSON-RPC.
-    internal func unfreezeToken(_ params: UnfreezeTokenParams) async throws -> JSONObject {
+    /// Handles the `unfreezeToken` JSON-RPC method.
+    internal func unfreezeToken(from params: UnfreezeTokenParams) async throws -> JSONObject {
         var tokenUnfreezeTransaction = TokenUnfreezeTransaction()
 
-        tokenUnfreezeTransaction.accountId = try CommonParams.getAccountId(params.accountId)
-        tokenUnfreezeTransaction.tokenId = try CommonParams.getTokenId(params.tokenId)
-        try params.commonTransactionParams?.fillOutTransaction(&tokenUnfreezeTransaction)
+        tokenUnfreezeTransaction.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
+        tokenUnfreezeTransaction.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenUnfreezeTransaction)
 
         let txReceipt = try await tokenUnfreezeTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary(["status": JSONObject.string(txReceipt.status.description)])
+        return .dictionary(["status": .string(txReceipt.status.description)])
     }
 
-    /// Unpause a token. Can be called via JSON-RPC.
-    internal func unpauseToken(_ params: UnpauseTokenParams) async throws -> JSONObject {
+    /// Handles the `unpauseToken` JSON-RPC method.
+    internal func unpauseToken(from params: UnpauseTokenParams) async throws -> JSONObject {
         var tokenUnpauseTransaction = TokenUnpauseTransaction()
 
-        tokenUnpauseTransaction.tokenId = try CommonParams.getTokenId(params.tokenId)
-        try params.commonTransactionParams?.fillOutTransaction(&tokenUnpauseTransaction)
+        tokenUnpauseTransaction.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenUnpauseTransaction)
 
         let txReceipt = try await tokenUnpauseTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary(["status": JSONObject.string(txReceipt.status.description)])
+        return .dictionary(["status": .string(txReceipt.status.description)])
     }
 
-    /// Update a token's fee schedule. Can be called via JSON-RPC.
-    internal func updateTokenFeeSchedule(_ params: UpdateTokenFeeScheduleParams) async throws -> JSONObject {
+    /// Handles the `updateTokenFeeSchedule` JSON-RPC method.
+    internal func updateTokenFeeSchedule(from params: UpdateTokenFeeScheduleParams) async throws -> JSONObject {
         var tokenFeeScheduleUpdateTransaction = TokenFeeScheduleUpdateTransaction()
 
-        tokenFeeScheduleUpdateTransaction.tokenId = try CommonParams.getTokenId(params.tokenId)
+        tokenFeeScheduleUpdateTransaction.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
         tokenFeeScheduleUpdateTransaction.customFees =
-            try CommonParams.getCustomFees(params.customFees, JSONRPCMethod.updateTokenFeeSchedule)
+            try CommonParamsParser.getCustomFeesIfPresent(
+                from: params.customFees, for: JSONRPCMethod.updateTokenFeeSchedule)
             ?? tokenFeeScheduleUpdateTransaction.customFees
-        try params.commonTransactionParams?.fillOutTransaction(&tokenFeeScheduleUpdateTransaction)
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenFeeScheduleUpdateTransaction)
 
         let txReceipt = try await tokenFeeScheduleUpdateTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary(["status": JSONObject.string(txReceipt.status.description)])
+        return .dictionary(["status": .string(txReceipt.status.description)])
     }
 
-    /// Update a token. Can be called via JSON-RPC.
-    internal func updateToken(_ params: UpdateTokenParams) async throws -> JSONObject {
+    /// Handles the `updateToken` JSON-RPC method.
+    internal func updateToken(from params: UpdateTokenParams) async throws -> JSONObject {
         var tokenUpdateTransaction = TokenUpdateTransaction()
+        let method: JSONRPCMethod = .updateToken
 
-        tokenUpdateTransaction.tokenId = try CommonParams.getTokenId(params.tokenId)
+        tokenUpdateTransaction.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
         tokenUpdateTransaction.tokenName = params.name ?? tokenUpdateTransaction.tokenName
         tokenUpdateTransaction.tokenSymbol = params.symbol ?? tokenUpdateTransaction.tokenSymbol
-        tokenUpdateTransaction.treasuryAccountId = try CommonParams.getAccountId(params.treasuryAccountId)
-        tokenUpdateTransaction.adminKey = try CommonParams.getKey(params.adminKey)
-        tokenUpdateTransaction.kycKey = try CommonParams.getKey(params.kycKey)
-        tokenUpdateTransaction.freezeKey = try CommonParams.getKey(params.freezeKey)
-        tokenUpdateTransaction.wipeKey = try CommonParams.getKey(params.wipeKey)
-        tokenUpdateTransaction.supplyKey = try CommonParams.getKey(params.supplyKey)
-        tokenUpdateTransaction.autoRenewAccountId = try CommonParams.getAccountId(params.autoRenewAccountId)
-        tokenUpdateTransaction.autoRenewPeriod = try CommonParams.getAutoRenewPeriod(
-            params.autoRenewPeriod, JSONRPCMethod.updateToken)
-        tokenUpdateTransaction.expirationTime = try CommonParams.getExpirationTime(
-            params.expirationTime, JSONRPCMethod.updateToken)
+        tokenUpdateTransaction.treasuryAccountId = try CommonParamsParser.getAccountIdIfPresent(
+            from: params.treasuryAccountId)
+        tokenUpdateTransaction.adminKey = try CommonParamsParser.getKeyIfPresent(from: params.adminKey)
+        tokenUpdateTransaction.kycKey = try CommonParamsParser.getKeyIfPresent(from: params.kycKey)
+        tokenUpdateTransaction.freezeKey = try CommonParamsParser.getKeyIfPresent(from: params.freezeKey)
+        tokenUpdateTransaction.wipeKey = try CommonParamsParser.getKeyIfPresent(from: params.wipeKey)
+        tokenUpdateTransaction.supplyKey = try CommonParamsParser.getKeyIfPresent(from: params.supplyKey)
+        tokenUpdateTransaction.autoRenewAccountId = try CommonParamsParser.getAccountIdIfPresent(
+            from: params.autoRenewAccountId)
+        tokenUpdateTransaction.autoRenewPeriod = try CommonParamsParser.getAutoRenewPeriodIfPresent(
+            from: params.autoRenewPeriod, for: method)
+        tokenUpdateTransaction.expirationTime = try CommonParamsParser.getExpirationTimeIfPresent(
+            from: params.expirationTime, for: method)
         tokenUpdateTransaction.tokenMemo = params.memo
-        tokenUpdateTransaction.feeScheduleKey = try CommonParams.getKey(params.feeScheduleKey)
-        tokenUpdateTransaction.pauseKey = try CommonParams.getKey(params.pauseKey)
+        tokenUpdateTransaction.feeScheduleKey = try CommonParamsParser.getKeyIfPresent(from: params.feeScheduleKey)
+        tokenUpdateTransaction.pauseKey = try CommonParamsParser.getKeyIfPresent(from: params.pauseKey)
         tokenUpdateTransaction.metadata = try params.metadata.flatMap {
             try $0.data(using: .utf8)
                 ?? { throw JSONError.invalidParams("\(#function): metadata MUST be a UTF-8 string.") }()
         }
-        tokenUpdateTransaction.metadataKey = try CommonParams.getKey(params.metadataKey)
-        try params.commonTransactionParams?.fillOutTransaction(&tokenUpdateTransaction)
+        tokenUpdateTransaction.metadataKey = try CommonParamsParser.getKeyIfPresent(from: params.metadataKey)
+        try params.commonTransactionParams?.fillOutTransaction(transaction: &tokenUpdateTransaction)
 
         let txReceipt = try await tokenUpdateTransaction.execute(SDKClient.client.getClient()).getReceipt(
             SDKClient.client.getClient())
-        return JSONObject.dictionary(["status": JSONObject.string(txReceipt.status.description)])
+        return .dictionary(["status": .string(txReceipt.status.description)])
     }
 }

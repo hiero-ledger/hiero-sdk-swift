@@ -5,86 +5,122 @@ import HieroProtobufs
 
 @testable import Hiero
 
-/// Service class that services key requests.
+/// Provides key generation and parsing utilities for JSON-RPC interactions.
+///
+/// `KeyService` supports creation of various key types including:
+/// - ED25519 and ECDSA secp256k1 (public and private)
+/// - Threshold keys and key lists (with recursive generation)
+/// - EVM address keys derived from ECDSA
+///
+/// It also includes robust parsing of input key data into strongly typed `Hiero.Key` representations,
+/// with support for DER and protobuf formats. Used primarily in JSON-RPC method dispatching.
+///
+/// This is a singleton service class and should be accessed via `KeyService.service`.
 internal class KeyService {
+
+    // MARK: - Singleton
 
     /// Singleton instance of KeyService.
     static let service = KeyService()
+    fileprivate init() {}
 
-    ////////////////
-    /// INTERNAL ///
-    ////////////////
+    // MARK: - JSON-RPC Methods
 
-    /// Generate a key. Can be called via JSON-RPC.
-    internal func generateKey(_ params: GenerateKeyParams) throws -> JSONObject {
-        var privateKeys = [JSONObject]()
-        let key = try generateKeyHelper(params, &privateKeys)
+    /// Handles the `generateKey` JSON-RPC method.
+    internal func generateKey(from params: GenerateKeyParams) throws -> JSONObject {
+        var collectedPrivateKeys = [JSONObject]()
+        let key = try generateKeyHelper(from: params, collectingPrivateKeysInto: &collectedPrivateKeys)
 
-        return JSONObject.dictionary(
-            privateKeys.isEmpty
-                ? ["key": JSONObject.string(key)]
-                : ["key": JSONObject.string(key), "privateKeys": JSONObject.list(privateKeys)])
-    }
-
-    /// Get a Hiero Key object from a hex-encoded key string.
-    internal func getHieroKey(_ key: String) throws -> Key {
-        do {
-            return Key.single(try PrivateKey.fromStringDer(key).publicKey)
-        } catch {
-            do {
-                return Key.single(try PublicKey.fromStringDer(key))
-            } catch {
-                return try Key(protobuf: try Proto_Key(serializedBytes: Data(hexEncoded: key) ?? Data()))
-            }
+        var response: [String: JSONObject] = ["key": .string(key)]
+        if !collectedPrivateKeys.isEmpty {
+            response["privateKeys"] = .list(collectedPrivateKeys)
         }
+        return .dictionary(response)
     }
 
-    ///////////////
-    /// PRIVATE ///
-    ///////////////
+    // MARK: - Helpers
 
-    /// Enum of the possible key types.
-    private enum KeyType: String {
-        case ed25519PrivateKeyType = "ed25519PrivateKey"
-        case ed25519PublicKeyType = "ed25519PublicKey"
-        case ecdsaSecp256k1PrivateKeyType = "ecdsaSecp256k1PrivateKey"
-        case ecdsaSecp256k1PublicKeyType = "ecdsaSecp256k1PublicKey"
-        case listKeyType = "keyList"
-        case thresholdKeyType = "thresholdKey"
-        case evmAddressKeyType = "evmAddress"
+    /// Attempts to convert a hex-encoded key string into a `Hiero.Key` object.
+    ///
+    /// The decoding is attempted in the following order:
+    /// 1. Treat the string as a DER-encoded private key and extract the public key.
+    /// 2. Treat the string as a DER-encoded public key.
+    /// 3. Decode the string as a protobuf-encoded `Proto_Key`.
+    ///
+    /// - Parameters:
+    ///   - key: A hex-encoded DER or protobuf key string.
+    /// - Returns: A `Key` object representing the parsed key.
+    /// - Throws: `JSONError.invalidParams` if the key string is not a valid private key, public key, or Proto_Key.
+    internal func getHieroKey(from key: String) throws -> Key {
+        // Attempt to parse as DER-encoded private key, extract public key
+        if let privateKey = try? PrivateKey.fromStringDer(key) {
+            return .single(privateKey.publicKey)
+        }
+
+        // Attempt to parse as DER-encoded public key
+        if let publicKey = try? PublicKey.fromStringDer(key) {
+            return .single(publicKey)
+        }
+
+        // Attempt to parse as protobuf-encoded Key
+        guard let bytes = Data(hexEncoded: key) else {
+            throw JSONError.invalidParams("Key string is not valid hex.")
+        }
+
+        return try Key(protobuf: Proto_Key(serializedBytes: bytes))
     }
 
-    /// Helper function used to generate keys that can be called recursively (useful when generating a KeyList, for example).
+    /// Recursively generates a serialized key string based on the `GenerateKeyParams`.
+    ///
+    /// This function supports nested key structures like key lists and threshold keys, and appends any generated
+    /// private keys to the provided `collectedPrivateKeys` list for return to the client if needed.
+    ///
+    /// - Parameters:
+    ///   - params: The structured input describing what kind of key to generate.
+    ///   - privateKeys: A mutable list that accumulates any private keys generated in the process.
+    ///   - isList: Indicates whether the key is being generated as part of a parent key list (for controlling output).
+    /// - Returns: The generated key as a hex-encoded DER or protobuf string.
+    /// - Throws: `JSONError.invalidParams` if input validation fails or the key cannot be generated.
     private func generateKeyHelper(
-        _ params: GenerateKeyParams, _ privateKeys: inout [JSONObject], _ isList: Bool = false
+        from params: GenerateKeyParams,
+        collectingPrivateKeysInto privateKeys: inout [JSONObject],
+        isNestedKey: Bool = false
     ) throws -> String {
+        let method: JSONRPCMethod = .generateKey
+
         guard let type = KeyType(rawValue: params.type) else {
-            throw JSONError.invalidParams("\(JSONRPCMethod.generateKey): type is NOT a valid value.")
+            throw JSONError.invalidParams("\(method): unknown type \"\(params.type)\".")
         }
 
-        if params.fromKey != nil, type != .ed25519PublicKeyType, type != .ecdsaSecp256k1PublicKeyType,
-            type != .evmAddressKeyType
+        // Validate fromKey usage
+        if params.fromKey != nil,
+            ![.ed25519PublicKeyType, .ecdsaSecp256k1PublicKeyType, .evmAddressKeyType].contains(type)
         {
             throw JSONError.invalidParams(
-                "\(JSONRPCMethod.generateKey): fromKey MUST NOT be provided for types other than ed25519PublicKey, ecdsaSecp256k1PublicKey, or evmAddress."
+                "\(method): fromKey MUST NOT be provided for types other than ed25519PublicKey, ecdsaSecp256k1PublicKey, or evmAddress."
             )
         }
 
-        if params.threshold != nil, type != .thresholdKeyType {
+        // Validate threshold usage
+        switch (params.threshold, type) {
+        case (.some, .thresholdKeyType): break
+        case (.some, _):
             throw JSONError.invalidParams(
-                "\(JSONRPCMethod.generateKey): threshold MUST NOT be provided for types other than thresholdKey.")
-        } else if params.threshold == nil, type == .thresholdKeyType {
-            throw JSONError.invalidParams(
-                "\(JSONRPCMethod.generateKey): threshold MUST be provided for thresholdKey types.")
+                "\(method): threshold MUST NOT be provided for types other than thresholdKey.")
+        case (.none, .thresholdKeyType):
+            throw JSONError.invalidParams("\(method): threshold MUST be provided for thresholdKey types.")
+        default: break
         }
 
-        if params.keys != nil, type != .listKeyType, type != .thresholdKeyType {
+        // Validate keys usage
+        switch (params.keys, type) {
+        case (.some, .listKeyType), (.some, .thresholdKeyType): break
+        case (.some, _):
             throw JSONError.invalidParams(
-                "\(JSONRPCMethod.generateKey): keys MUST NOT be provided for types other than keyList or thresholdKey."
-            )
-        } else if params.keys == nil, type == .listKeyType || type == .thresholdKeyType {
-            throw JSONError.invalidParams(
-                "\(JSONRPCMethod.generateKey): keys MUST be provided for keyList and thresholdKey types.")
+                "\(method): keys MUST NOT be provided for types other than keyList or thresholdKey.")
+        case (.none, .listKeyType), (.none, .thresholdKeyType):
+            throw JSONError.invalidParams("\(method): keys MUST be provided for keyList and thresholdKey types.")
+        default: break
         }
 
         switch type {
@@ -92,8 +128,8 @@ internal class KeyService {
             let key = ((type == .ed25519PrivateKeyType) ? PrivateKey.generateEd25519() : PrivateKey.generateEcdsa())
                 .toStringDer()
 
-            if isList {
-                privateKeys.append(JSONObject.string(key))
+            if isNestedKey {
+                privateKeys.append(.string(key))
             }
 
             return key
@@ -105,40 +141,73 @@ internal class KeyService {
 
             let key = (type == .ed25519PublicKeyType) ? PrivateKey.generateEd25519() : PrivateKey.generateEcdsa()
 
-            if isList {
-                privateKeys.append(JSONObject.string(key.toStringDer()))
+            if isNestedKey {
+                privateKeys.append(.string(key.toStringDer()))
             }
 
             return key.publicKey.toStringDer()
 
         case .listKeyType, .thresholdKeyType:
-            /// It's guaranteed at this point that a list of keys is provided, so the unwrap can be safely forced.
-            var keyList = KeyList(
-                keys: try params.keys!.map { try getHieroKey(generateKeyHelper($0, &privateKeys, true)) })
+            // It's guaranteed at this point that a list of keys is provided, so the unwrap can be safely forced.
+            let hieroKeys = try params.keys!.map {
+                try getHieroKey(
+                    from: generateKeyHelper(from: $0, collectingPrivateKeysInto: &privateKeys, isNestedKey: true))
+            }
+
+            var keyList = KeyList(keys: hieroKeys)
 
             if type == KeyType.thresholdKeyType {
-                /// It's guaranteed at this point that a threshold is provided, so the unwrap can be safely forced.
+                // It's guaranteed at this point that a threshold is provided, so the unwrap can be safely forced.
                 keyList.threshold = Int(params.threshold!)
             }
 
             return Key.keyList(keyList).toProtobufBytes().hexStringEncoded()
 
         case .evmAddressKeyType:
+            // It's guaranteed that a private ECDSA key's public key is also ECDSA, and therefore can generate an EVM address,
+            // so unwraps can be safely forced.
             guard let fromKey = params.fromKey else {
-                return PrivateKey.generateEcdsa().publicKey.toEvmAddress()!.toString()
+                return stripHexPrefix(from: PrivateKey.generateEcdsa().publicKey.toEvmAddress()!.toString())
             }
 
-            do {
-                return try PrivateKey.fromStringEcdsa(fromKey).publicKey.toEvmAddress()!.toString()
-            } catch {
-                do {
-                    return try PublicKey.fromStringEcdsa(fromKey).toEvmAddress()!.toString()
-                } catch {
-                    throw JSONError.invalidParams(
-                        "\(JSONRPCMethod.generateKey): fromKey for evmAddress MUST be an ECDSAsecp256k1 private or public key."
-                    )
-                }
+            if let privateKey = try? PrivateKey.fromStringEcdsa(fromKey) {
+                return stripHexPrefix(from: privateKey.publicKey.toEvmAddress()!.toString())
             }
+
+            if let publicKey = try? PublicKey.fromStringEcdsa(fromKey) {
+                return stripHexPrefix(from: publicKey.toEvmAddress()!.toString())
+            }
+
+            throw JSONError.invalidParams(
+                "\(method): fromKey for evmAddress MUST be an ECDSAsecp256k1 private or public key.")
         }
+    }
+
+    /// Removes the leading `0x` from an EVM address if present.
+    ///
+    /// The Swift SDK prepends `0x` to EVM addresses, but the TCK test cases also include this prefix.
+    /// This utility strips the prefix once to avoid duplication or mismatch.
+    ///
+    /// - Parameters:
+    ///   - evmAddress: An EVM address that may or may not begin with the `0x` prefix.
+    /// - Returns: The address string without the `0x` prefix.
+    private func stripHexPrefix(from evmAddress: String) -> String {
+        let prefix = "0x"
+        return evmAddress.hasPrefix(prefix)
+            ? String(evmAddress.dropFirst(prefix.count))
+            : evmAddress
+    }
+
+    // MARK: - KeyType Enum
+
+    /// Enum of the possible key types.
+    private enum KeyType: String {
+        case ecdsaSecp256k1PrivateKeyType = "ecdsaSecp256k1PrivateKey"
+        case ecdsaSecp256k1PublicKeyType = "ecdsaSecp256k1PublicKey"
+        case ed25519PrivateKeyType = "ed25519PrivateKey"
+        case ed25519PublicKeyType = "ed25519PublicKey"
+        case evmAddressKeyType = "evmAddress"
+        case listKeyType = "keyList"
+        case thresholdKeyType = "thresholdKey"
     }
 }

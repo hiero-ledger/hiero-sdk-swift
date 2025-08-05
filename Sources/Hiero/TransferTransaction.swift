@@ -42,6 +42,12 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
         doHbarTransfer(accountId, amount.toTinybars(), false)
     }
 
+    /// Add a non-approved hbar transfer to the transaction.
+    @discardableResult
+    public func hbarTransfer(_ evmAddress: EvmAddress, _ amount: Hbar) -> Self {
+        doHbarTransfer(AccountId.fromEvmAddress(evmAddress), amount.toTinybars(), false)
+    }
+
     /// Add an approved hbar transfer to the transaction.
     @discardableResult
     public func approvedHbarTransfer(_ accountId: AccountId, _ amount: Hbar) -> Self {
@@ -53,6 +59,19 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
         _ amount: Int64,
         _ approved: Bool
     ) -> Self {
+        for (index, transfer) in transfers.enumerated() {
+            if transfer.accountId == accountId && transfer.isApproval == approved {
+                let newTinybars = transfer.amount + amount
+                if newTinybars == 0 {
+                    transfers.remove(at: index)
+                } else {
+                    transfers[index].amount = newTinybars
+                }
+
+                return self
+            }
+        }
+
         transfers.append(Transfer(accountId: accountId, amount: amount, isApproval: approved))
 
         return self
