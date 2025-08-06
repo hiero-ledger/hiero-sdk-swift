@@ -76,7 +76,8 @@ internal final class MirrorNetwork: AtomicReference, Sendable {
         let mirrorChannel = ChannelBalancer(
             eventLoop: eventLoop.next(),
             hostAndPorts.map {
-                let security: GRPCChannelPool.Configuration.TransportSecurity = isLocal
+                let security: GRPCChannelPool.Configuration.TransportSecurity =
+                    isLocal
                     ? .plaintext
                     : .tls(.makeClientDefault(compatibleWith: eventLoop))
 
@@ -86,7 +87,6 @@ internal final class MirrorNetwork: AtomicReference, Sendable {
 
         self.init(channel: mirrorChannel, targets: hostAndPorts)
     }
-
 
     internal static func mainnet(_ eventLoop: NIOCore.EventLoopGroup) -> Self {
         Self(targets: Targets.mainnet, eventLoop: eventLoop)
