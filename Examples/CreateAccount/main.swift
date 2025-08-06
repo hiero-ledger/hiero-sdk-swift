@@ -7,7 +7,7 @@ import SwiftDotenv
 internal enum Program {
     internal static func main() async throws {
         let env = try Dotenv.load()
-        let client = try Client.forName(env.networkName)
+        let client = try await Client.forMirrorNetwork(["integration-docker.mirrornode.hedera-ops.com:443"], shard: 1, realm: 1)
 
         client.setOperator(env.operatorAccountId, env.operatorKey)
 

@@ -17,15 +17,13 @@ internal final class ChannelBalancer: GRPCChannel {
     // fixme: if the request never returns (IE the host doesn't exist) we kinda just, get stuck
     internal init(
         eventLoop: EventLoop,
-        _ channelTargets: [GRPC.ConnectionTarget],
-        transportSecurity: GRPCChannelPool.Configuration.TransportSecurity
+        _ targetSecurityPairs: [(GRPC.ConnectionTarget, GRPCChannelPool.Configuration.TransportSecurity)]
     ) {
         self.eventLoop = eventLoop
-        self.targets = channelTargets
+        self.targets = targetSecurityPairs.map { $0.0 }
 
-        self.channels = channelTargets.map { target in
-            // GRPC.ClientConnection(configuration: .default(target: target, eventLoopGroup: eventLoop))
-            try! GRPCChannelPool.with(target: target, transportSecurity: transportSecurity, eventLoopGroup: eventLoop)
+        self.channels = targetSecurityPairs.map { (target, security) in
+            try! GRPCChannelPool.with(target: target, transportSecurity: security, eventLoopGroup: eventLoop)
         }
     }
 
@@ -137,24 +135,21 @@ internal final class Network: Sendable, AtomicReference {
         var connections: [NodeConnection] = []
 
         for (index, address) in addressBook.enumerated() {
-            let new: Set<HostAndPort> = Set(
-                address.serviceEndpoints.compactMap { endpoint in
-                    guard endpoint.port == NodeConnection.plaintextPort else { return nil }
+            let preferredPorts: [UInt16] = [NodeConnection.tlsPort, NodeConnection.plaintextPort]
 
-                    let host: String?
-
-                    if let ip = endpoint.ip {
-                        host = String(describing: ip)
-                    } else if let domain = endpoint.domainName, !domain.isEmpty {
-                        host = domain
-                    } else {
-                        host = nil
-                    }
-
-                    guard let resolvedHost = host else { return nil }
-                    return HostAndPort(host: resolvedHost, port: endpoint.port)
+            let endpoints = address.serviceEndpoints
+                .sorted {
+                    preferredPorts.firstIndex(of: $0.port) ?? Int.max < preferredPorts.firstIndex(of: $1.port)
+                        ?? Int.max
                 }
-            )
+
+            let selected = endpoints.first.flatMap { endpoint -> HostAndPort? in
+                let host = endpoint.ip?.debugDescription ?? endpoint.domainName
+                guard let resolvedHost = host, !resolvedHost.isEmpty else { return nil }
+                return HostAndPort(host: resolvedHost, port: endpoint.port)
+            }
+
+            let new: Set<HostAndPort> = selected.map { Set([$0]) } ?? []
 
             // if the node is the exact same we want to reuse everything (namely the connections and `healthy`).
             // if the node has different routes then we still want to reuse `healthy` but replace the channel with a new channel.
@@ -418,9 +413,14 @@ internal struct NodeConnection: Sendable {
     internal init(eventLoop: EventLoop, addresses: Set<HostAndPort>) {
         realChannel = ChannelBalancer(
             eventLoop: eventLoop,
-            addresses.map { .host($0.host, port: Int($0.port)) },
-            transportSecurity: .plaintext
+            addresses.map { address in
+                let security: GRPCChannelPool.Configuration.TransportSecurity =
+                    (address.port == NodeConnection.tlsPort)
+                    ? .tls(.makeClientDefault(compatibleWith: eventLoop)) : .plaintext
+                return (GRPC.ConnectionTarget.host(address.host, port: Int(address.port)), security)
+            }
         )
+
         self.addresses = addresses
     }
 
@@ -432,4 +432,5 @@ internal struct NodeConnection: Sendable {
     }
 
     internal static let plaintextPort: UInt16 = 50211
+    internal static let tlsPort: UInt16 = 50212
 }
