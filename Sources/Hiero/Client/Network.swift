@@ -135,7 +135,7 @@ internal final class Network: Sendable, AtomicReference {
         var connections: [NodeConnection] = []
 
         for (index, address) in addressBook.enumerated() {
-            let preferredPorts: [UInt16] = [NodeConnection.tlsPort, NodeConnection.plaintextPort]
+            let preferredPorts: [UInt16] = [NodeConnection.consensusTlsPort, NodeConnection.consensusPlaintextPort]
 
             let endpoints = address.serviceEndpoints
                 .sorted {
@@ -415,7 +415,7 @@ internal struct NodeConnection: Sendable {
             eventLoop: eventLoop,
             addresses.map { address in
                 let security: GRPCChannelPool.Configuration.TransportSecurity =
-                    (address.port == NodeConnection.tlsPort)
+                    (address.port == NodeConnection.consensusTlsPort)
                     ? .tls(.makeClientDefault(compatibleWith: eventLoop)) : .plaintext
                 return (GRPC.ConnectionTarget.host(address.host, port: Int(address.port)), security)
             }
@@ -431,6 +431,8 @@ internal struct NodeConnection: Sendable {
         realChannel
     }
 
-    internal static let plaintextPort: UInt16 = 50211
-    internal static let tlsPort: UInt16 = 50212
+    internal static let consensusPlaintextPort: UInt16 = 50211
+    internal static let consensusTlsPort: UInt16 = 50212
+    internal static let mirrorPlaintextPort: UInt16 = 5600
+    internal static let mirrorTlsPort: UInt16 = 443
 }

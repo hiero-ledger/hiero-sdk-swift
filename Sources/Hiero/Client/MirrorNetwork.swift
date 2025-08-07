@@ -37,7 +37,7 @@ internal final class MirrorNetwork: AtomicReference, Sendable {
     ) {
         let targetSecurityPairs = targets.map { hostAndPort in
             let security: GRPCChannelPool.Configuration.TransportSecurity =
-                (hostAndPort.port == NodeConnection.tlsPort)
+                (hostAndPort.port == NodeConnection.mirrorTlsPort)
                 ? .tls(.makeClientDefault(compatibleWith: eventLoop)) : .plaintext
             return (GRPC.ConnectionTarget.host(hostAndPort.host, port: Int(hostAndPort.port)), security)
         }
@@ -65,7 +65,7 @@ internal final class MirrorNetwork: AtomicReference, Sendable {
         let hostAndPorts = Set(
             targets.lazy.map { target in
                 let (host, port) = target.splitOnce(on: ":") ?? (target[...], nil)
-                return HostAndPort(host: String(host), port: port.flatMap { UInt16($0) } ?? 443)
+                return HostAndPort(host: String(host), port: port.flatMap { UInt16($0) } ?? NodeConnection.mirrorTlsPort)
             }
         )
 
@@ -103,7 +103,7 @@ internal final class MirrorNetwork: AtomicReference, Sendable {
     internal static func localhost(_ eventLoop: NIOCore.EventLoopGroup) -> Self {
         let targetSecurityPairs = Targets.localhost.map { hostAndPort in
             let security: GRPCChannelPool.Configuration.TransportSecurity =
-                (hostAndPort.port == NodeConnection.tlsPort)
+                (hostAndPort.port == NodeConnection.mirrorTlsPort)
                 ? .tls(.makeClientDefault(compatibleWith: eventLoop)) : .plaintext
             return (GRPC.ConnectionTarget.host(hostAndPort.host, port: Int(hostAndPort.port)), security)
         }
