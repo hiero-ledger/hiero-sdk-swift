@@ -65,7 +65,8 @@ internal final class MirrorNetwork: AtomicReference, Sendable {
         let hostAndPorts = Set(
             targets.lazy.map { target in
                 let (host, port) = target.splitOnce(on: ":") ?? (target[...], nil)
-                return HostAndPort(host: String(host), port: port.flatMap { UInt16($0) } ?? NodeConnection.mirrorTlsPort)
+                return HostAndPort(
+                    host: String(host), port: port.flatMap { UInt16($0) } ?? NodeConnection.mirrorTlsPort)
             }
         )
 
