@@ -122,7 +122,6 @@ public final class Client: Sendable {
     }
 
     /// Set up the client from selected mirror network.
-    /// Set up the client from selected mirror network.
     public static func forMirrorNetwork(
         _ mirrorNetworks: [String],
         shard: UInt64 = 0,
@@ -153,7 +152,25 @@ public final class Client: Sendable {
         let addressBook = try await NodeAddressBookQuery()
             .setFileId(FileId.getAddressBookFileIdFor(shard: shard, realm: realm))
             .execute(client)
-        client.setNetworkFromAddressBook(addressBook)
+
+        // Only take the plaintext nodes
+        let filtered = NodeAddressBook(
+            nodeAddresses: addressBook.nodeAddresses.map { address in
+                let plaintextEndpoints = address.serviceEndpoints.filter {
+                    $0.port == NodeConnection.consensusPlaintextPort
+                }
+
+                return NodeAddress(
+                    nodeId: address.nodeId,
+                    rsaPublicKey: address.rsaPublicKey,
+                    nodeAccountId: address.nodeAccountId,
+                    tlsCertificateHash: address.tlsCertificateHash,
+                    serviceEndpoints: plaintextEndpoints,
+                    description: address.description)
+            }
+        )
+
+        client.setNetworkFromAddressBook(filtered)
 
         return client
     }
