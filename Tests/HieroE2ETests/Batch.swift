@@ -3,7 +3,7 @@
 import Hiero
 import XCTest
 
-internal final class Batch: XCTestCase {
+internal final class BatchTests: XCTestCase {
     internal func testBatchOneTransaction() async throws {
         let testEnv = try TestEnvironment.nonFree
 
@@ -19,9 +19,13 @@ internal final class Batch: XCTestCase {
             .addInnerTransaction(accountCreateTx)
             .freezeWith(testEnv.client)
             .sign(batchKey)
-        _ = try await batchTx.execute(testEnv.client).getReceipt(testEnv.client)
+        let batchReceipt = try await batchTx.execute(testEnv.client).getReceipt(testEnv.client)
+
+        XCTAssertEqual(batchReceipt.status, .success)
 
         let transactionIds = batchTx.innerTransactionIds
+        XCTAssertEqual(transactionIds.count, 1)
+
         let accountCreateReceipt = try await TransactionReceiptQuery()
             .transactionId(transactionIds[0]).execute(testEnv.client)
         let accountId = try XCTUnwrap(accountCreateReceipt.accountId)
@@ -44,38 +48,21 @@ internal final class Batch: XCTestCase {
             .batchify(client: testEnv.client, .single(batchKey.publicKey))
             .freezeWith(testEnv.client)
 
-        let batchTx = try BatchTransaction()
-            /// 25 account create transactions
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
-            .addInnerTransaction(accountCreateTx)
+        var batchTx = BatchTransaction()
+        for _ in 0..<25 {
+            try batchTx.addInnerTransaction(accountCreateTx)
+        }
+
+        batchTx = try batchTx
             .freezeWith(testEnv.client)
             .sign(batchKey)
-        _ = try await batchTx.execute(testEnv.client).getReceipt(testEnv.client)
+        let batchReceipt = try await batchTx.execute(testEnv.client).getReceipt(testEnv.client)
+
+        XCTAssertEqual(batchReceipt.status, .success)
 
         let transactionIds = batchTx.innerTransactionIds
+        XCTAssertEqual(transactionIds.count, 25)
+
         let accountCreateReceipt = try await TransactionReceiptQuery()
             .transactionId(transactionIds[0]).execute(testEnv.client)
         let accountId = try XCTUnwrap(accountCreateReceipt.accountId)
@@ -137,7 +124,9 @@ internal final class Batch: XCTestCase {
             .addInnerTransaction(topicMsgSubmitTx)
             .freezeWith(testEnv.client)
             .sign(batchKey)
-        _ = try await batchTx.execute(testEnv.client).getReceipt(testEnv.client)
+        let batchReceipt = try await batchTx.execute(testEnv.client).getReceipt(testEnv.client)
+
+        XCTAssertEqual(batchReceipt.status, .success)
 
         let info = try await TopicInfoQuery(topicId: topicId).execute(testEnv.client)
 
@@ -251,9 +240,9 @@ internal final class Batch: XCTestCase {
 
         let finalOperatorBalance = try await AccountBalanceQuery().accountId(testEnv.operator.accountId).execute(
             testEnv.client
-        )
-        .hbars
-        XCTAssertLessThan(initialOperatorBalance, finalOperatorBalance)
+        ).hbars
+
+        XCTAssertLessThan(finalOperatorBalance, initialOperatorBalance)
     }
 
     internal func testBatchifiedTxButNotInBatch() async throws {
