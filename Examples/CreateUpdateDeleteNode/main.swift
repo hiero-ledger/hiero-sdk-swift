@@ -43,7 +43,7 @@ internal enum Program {
         let adminKey = try PrivateKey.fromString(cfg.adminKey)
 
         // Create the node
-        print("Creating a new node\(cfg.newNode.name.map { " named \($0)" } ?? "") from \(configPath)...")
+        print("Creating a new node\(cfg.newNode.name.map { " named \($0)" } ?? "") from \(nodeCreateConfigPath)...")
 
         let createTransaction = try NodeCreateTransaction()
             .accountId(accountId)
@@ -61,7 +61,7 @@ internal enum Program {
         print("Node create receipt: \(receipt)")
 
         // Allow yourself five minutes to freeze solo and restart it with an `add-execute`.
-        await Task.sleep(nanoseconds: 1_000_000_000 * 60 * 5)
+        try await Task.sleep(nanoseconds: 1_000_000_000 * 60 * 5)
 
         // Print off the address book to verify the creation of the new node.
         let addressBook = try await NodeAddressBookQuery().setFileId(FileId.addressBook).execute(client)
@@ -87,7 +87,7 @@ internal enum Program {
         print("Node update receipt: \(updateTransactionReceipt)")
 
         // Allow yourself five minutes to freeze solo and restart it with an `update-execute`.
-        await Task.sleep(nanoseconds: 1_000_000_000 * 60 * 5)
+        try await Task.sleep(nanoseconds: 1_000_000_000 * 60 * 5)
 
         // Print off the address book to verify the update of the node.
         let addressBook2 = try await NodeAddressBookQuery().setFileId(FileId.addressBook).execute(client)
@@ -230,4 +230,85 @@ func byteArrayToData(_ bytes: [Int]) -> Data? {
     }
 
     return data
+}
+
+// A convenient, typed bundle to use downstream.
+private struct NodeUpdateInputs {
+    let adminKey: PrivateKey
+    let newAdminKey: PrivateKey?
+    let freezeAdminPrivateKey: PrivateKey
+    let treasuryKey: PrivateKey
+    let nodeAlias: String
+    let existingNodeAliases: [String]
+    let allNodeAliases: [String]
+    let upgradeZipHash: Data?
+    let newAccountId: AccountId?
+    // Keep these raw until we know format/usage
+    let tlsPublicKey: String?
+    let tlsPrivateKey: String?
+    let gossipPublicKey: String?
+    let gossipPrivateKey: String?
+}
+
+/// Build a Hiero `Endpoint` from host:port string
+private func endpointFrom(_ s: String) throws -> Endpoint {
+    let (host, port) = try parseHostPort(s)
+    guard let ip = IPv4Address(host) else {
+        // Domain name
+        return Endpoint(port: port, domainName: host)
+    }
+    // IP address: keep domain blank like your original
+    return Endpoint(ipAddress: ip, port: port, domainName: "")
+}
+
+/// Parse PrivateKey from a maybe-blank string.
+private func parsePrivateKey(_ s: String?, field: String) throws -> PrivateKey? {
+    guard let s = nilIfBlank(s) else { return nil }
+    do { return try PrivateKey.fromString(s) } catch {
+        throw NSError(domain: "Config", code: 30, userInfo: [NSLocalizedDescriptionKey: "Invalid \(field): \(error)"])
+    }
+}
+
+/// Parse AccountId from either "0.0.123" or just "123".
+private func parseAccountIdFlexible(_ s: String?) throws -> AccountId? {
+    guard let s = nilIfBlank(s) else { return nil }
+    // If it already looks like 0.0.x, defer to SDK.
+    if s.contains(".") {
+        return try AccountId.fromString(s)
+    }
+    // Otherwise treat as numeric 'num' in 0.0.num
+    guard let num = UInt64(s) else {
+        throw NSError(
+            domain: "Config", code: 40,
+            userInfo: [NSLocalizedDescriptionKey: "newAccountNumber must be a uint or '0.0.x'"])
+    }
+    return try AccountId.fromString("0.0.\(num)")
+}
+
+// MARK: - Map JSON -> strongly typed inputs
+
+private func makeNodeUpdateInputs(from cfg: NodeUpdateConfig) throws -> NodeUpdateInputs {
+    let adminKey = try parsePrivateKey(cfg.adminKey, field: "adminKey")!
+    let newAdminKey = try parsePrivateKey(cfg.newAdminKey, field: "newAdminKey")
+    let freezeAdmin = try parsePrivateKey(cfg.freezeAdminPrivateKey, field: "freezeAdminPrivateKey")!
+    let treasuryKey = try parsePrivateKey(cfg.treasuryKey, field: "treasuryKey")!
+
+    let upgradeZipHash = try dataFromHex(cfg.upgradeZipHash)
+    let newAccountId = try parseAccountIdFlexible(cfg.newAccountNumber)
+
+    return NodeUpdateInputs(
+        adminKey: adminKey,
+        newAdminKey: newAdminKey,
+        freezeAdminPrivateKey: freezeAdmin,
+        treasuryKey: treasuryKey,
+        nodeAlias: cfg.nodeAlias,
+        existingNodeAliases: cfg.existingNodeAliases ?? [],
+        allNodeAliases: cfg.allNodeAliases ?? [],
+        upgradeZipHash: upgradeZipHash,
+        newAccountId: newAccountId,
+        tlsPublicKey: nilIfBlank(cfg.tlsPublicKey),
+        tlsPrivateKey: nilIfBlank(cfg.tlsPrivateKey),
+        gossipPublicKey: nilIfBlank(cfg.gossipPublicKey),
+        gossipPrivateKey: nilIfBlank(cfg.gossipPrivateKey)
+    )
 }

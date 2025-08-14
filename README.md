@@ -1,7 +1,8 @@
 # Hiero Swift SDK
 
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/hiero-ledger/hiero-sdk-swift/badge)](https://api.scorecard.dev/projects/github.com/hiero-ledger/hiero-sdk-swift)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/hiero-ledger/hiero-sdk-swift/badge)](https://scorecard.dev/viewer/?uri=github.com/hiero-ledger/hiero-sdk-swift)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/10697/badge)](https://bestpractices.coreinfrastructure.org/projects/10697)
+[![License](https://img.shields.io/badge/license-apache2-blue.svg)](LICENSE)
 
 The SDK for interacting with a Hiero based network.
 

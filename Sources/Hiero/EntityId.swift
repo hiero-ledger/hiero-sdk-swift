@@ -24,49 +24,98 @@ where
     /// Create an entity ID in the default shard and realm with the given entity number.
     ///
     /// - Parameters:
-    ///   - num: the number for the new entity ID.
+    ///   - num: the entity number for the entity.
     init(num: UInt64)
 
     /// Creates an entity ID from the given shard, realm, and entity numbers.
     ///
     /// - Parameters:
-    ///   - shard: the shard that the realm is contained in.
-    ///   - realm: the realm that the entity number is contained in.
-    ///   - num: the entity ID in the given shard and realm.
+    ///   - shard: the shard in which the entity is contained.
+    ///   - realm: the realm in which the entity is contained.
+    ///   - num: the entity number for the entity.
     init(shard: UInt64, realm: UInt64, num: UInt64)
 
     /// Creates an entity ID from the given shard, realm, and entity numbers, and with the given checksum.
     ///
     /// - Parameters:
-    ///   - shard: the shard that the realm is contained in.
-    ///   - realm: the realm that the entity number is contained in.
-    ///   - num: the entity ID in the given shard and realm.
-    ///   - checksum: a 5 character checksum to help ensure a user-entered entity ID is correct.
+    ///   - shard: the shard in which the entity is contained.
+    ///   - realm: the realm in which the entity is contained.
+    ///   - num: the entity number for the entity.
+    ///   - checksum: the 5 character checksum of the entity.
     init(shard: UInt64, realm: UInt64, num: UInt64, checksum: Checksum?)
 
-    /// Parse an entity ID from a string.
+    /// Creates an entity ID from the given shard, realm, and EVM address.
+    ///
+    /// - Parameters:
+    ///   - evmAddress: the EVM address from which to generate the entity ID.
+    ///   - shard: the shard in which the entity is contained.
+    ///   - realm: the realm in which the entity is contained.
+    init(evmAddress: EvmAddress, shard: UInt64, realm: UInt64)
+
+    /// Creates an entity ID from a string.
+    ///
+    /// - Parameters:
+    ///   - description: the string to parse.
     init<S: StringProtocol>(parsing description: S) throws
 
-    /// Parse an entity ID from a string.
+    /// Creates an entity ID from a string.
+    ///
+    /// - Parameters:
+    ///   - description: the string to parse.
     static func fromString<S: StringProtocol>(_ description: S) throws -> Self
 
-    /// Parse an entity ID from the given `bytes`.
-    static func fromBytes(_ bytes: Data) throws -> Self
-
-    /// Convert this entity ID to bytes.
-    func toBytes() -> Data
-
-    /// Convert this entity ID to a string.
+    /// Converts this entity ID to a string.
     func toString() -> String
 
+    /// Converts this entity ID to a string with its checksum.
+    ///
+    /// - Parameters:
+    ///   - client: The client to use to generate the checksum.
     func toStringWithChecksum(_ client: Client) throws -> String
 
+    /// Creates an entity ID from the given bytes.
+    ///
+    /// - Parameters:
+    ///   - bytes: the bytes to parse.
+    static func fromBytes(_ bytes: Data) throws -> Self
+
+    /// Converts this entity ID to bytes.
+    func toBytes() -> Data
+
+    /// Creates an entity ID from an EVM address.
+    ///
+    /// - Parameters:
+    ///   - evmAddress: The EVM address from which generate the entity ID.
+    ///   - shard: The shard of the entity.
+    ///   - realm: The realm of the entity.
+    static func fromEvmAddress(_ evmAddress: EvmAddress, shard: UInt64, realm: UInt64) throws -> Self
+
+    /// Creates an entity ID from a string EVM address.
+    ///
+    /// - Parameters:
+    ///   - evmAddress: The EVM address string from which to generate the entity ID.
+    ///   - shard: The shard of the entity.
+    ///   - realm: The realm of the entity.
+    static func fromEvmAddress(_ evmAddress: String, shard: UInt64, realm: UInt64) throws -> Self
+
+    /// Converts this entity ID to an EVM address.
+    func toEvmAddress() throws -> EvmAddress
+
+    /// Validates the checksum of this entity ID.
+    ///
+    /// - Parameters:
+    ///   - client: The client to use to validate the checksum.
     func validateChecksum(_ client: Client) throws
 
-    /// Create `Self` from a solidity `address`.
+    /// *Deprecated* Creates an entity ID from a solidity address.
+    ///
+    /// - Parameters:
+    ///   - description: the solidity address to parse.
+    @available(*, deprecated, message: "Use fromEvmAddress(_shard:realm:) instead")
     static func fromSolidityAddress<S: StringProtocol>(_ description: S) throws -> Self
 
-    /// Convert `self` into a solidity `address`
+    /// *Deprecated* Converts this entity ID into a solidity address.
+    @available(*, deprecated, message: "Use toEvmAddress() instead")
     func toSolidityAddress() throws -> String
 }
 
@@ -75,77 +124,144 @@ extension EntityId {
 
     internal var helper: Helper { Helper(self) }
 
-    // swiftlint:disable:next missing_docs
-    public init(integerLiteral value: IntegerLiteralType) {
-        self.init(num: value)
-    }
+    /// The stringified entity ID.
+    public var description: String { helper.description }
 
-    // inherited docs.
-    // swiftlint:disable:next missing_docs
+    /// Creates an entity ID in the default shard and realm with the given entity number.
+    ///
+    /// - Parameters:
+    ///   - num: the entity number for the new entity.
     public init(num: UInt64) {
         self.init(shard: 0, realm: 0, num: num)
     }
 
-    // inherited docs.
-    // swiftlint:disable:next missing_docs
+    /// Creates an entity ID in the default shard and realm with the given entity number literal.
+    ///
+    /// - Parameters:
+    ///   - num: the entity number for the new entity.
+    public init(integerLiteral value: IntegerLiteralType) {
+        self.init(num: value)
+    }
+
+    /// Creates an entity ID from the given shard, realm, and EVM address.
+    ///
+    /// - Parameters:
+    ///   - evmAddress: the EVM address from which to get the entity number to use for the new entity.
+    ///   - shard: the shard in which the entity is contained.
+    ///   - realm: the realm in which the entity is contained.
+    public init(evmAddress: EvmAddress, shard: UInt64, realm: UInt64) {
+        self.init(
+            shard: shard, realm: realm,
+            num: evmAddress.toBytes().suffix(from: 12).withUnsafeBytes { rawBuffer -> UInt64 in
+                var result: UInt64 = 0
+                withUnsafeMutableBytes(of: &result) { resultBuffer in
+                    resultBuffer.copyBytes(from: rawBuffer.prefix(8))
+                }
+                return UInt64(bigEndian: result)
+            })
+    }
+
+    /// Creates an entity ID from a string.
+    ///
+    /// - Parameters:
+    ///   - description: the string to parse.
     public init<S: StringProtocol>(parsing description: S) throws {
         self = try PartialEntityId(parsing: description).intoNum()
     }
 
-    // inherited docs.
-    // swiftlint:disable:next missing_docs
-    public init?(_ description: String) {
-        try? self.init(parsing: description)
-    }
-
-    // inherited docs.
-    // swiftlint:disable:next missing_docs
+    /// Creates an entity ID from a string literal.
+    ///
+    /// - Parameters:
+    ///   - description: the string to parse.
     public init(stringLiteral value: StringLiteralType) {
         // Force try here because this is a logic error.
         // swiftlint:disable:next force_try
         try! self.init(parsing: value)
     }
 
-    // inherited docs.
-    // swiftlint:disable:next missing_docs
+    /// Creates an entity ID from a string.
+    ///
+    /// - Parameters:
+    ///   - description: the string to parse.
+    public init?(_ description: String) {
+        try? self.init(parsing: description)
+    }
+
+    /// Creates an entity ID from a string.
+    ///
+    /// - Parameters:
+    ///   - description: the string to parse.
     public static func fromString<S: StringProtocol>(_ description: S) throws -> Self {
         try Self(parsing: description)
     }
 
-    // inherited docs.
-    // swiftlint:disable:next missing_docs
-    public var description: String { helper.description }
-
-    // inherited docs.
-    // swiftlint:disable:next missing_docs
-    public static func fromSolidityAddress<S: StringProtocol>(_ description: S) throws -> Self {
-        try SolidityAddress(parsing: description).toEntityId()
-    }
-
-    // inherited docs.
-    // swiftlint:disable:next missing_docs
+    /// Converts this entity ID to a string.
     public func toString() -> String {
         String(describing: self)
     }
 
-    internal func makeChecksum(ledger ledgerId: LedgerId) -> Checksum {
-        Checksum.generate(for: self, on: ledgerId)
-    }
-
-    // inherited docs.
-    // swiftlint:disable:next missing_docs
+    /// Converts this entity ID to a string with its checksum.
+    ///
+    /// - Parameters:
+    ///   - client: The client to use to generate the checksum.
     public func toStringWithChecksum(_ client: Client) -> String {
-        helper.toStringWithChecksum(client)
+        return helper.toStringWithChecksum(client)
     }
 
-    // inherited docs.
-    // swiftlint:disable:next missing_docs
+    /// Creates an entity ID from an EVM address.
+    ///
+    /// - Parameters:
+    ///   - evmAddress: The EVM address from which to generate the entity ID.
+    ///   - shard: The shard of the entity.
+    ///   - realm: The realm of the entity.
+    public static func fromEvmAddress(_ evmAddress: EvmAddress, shard: UInt64, realm: UInt64) throws -> Self {
+        Self(evmAddress: evmAddress, shard: shard, realm: realm)
+    }
+
+    /// Creates an entity ID from a string EVM address.
+    ///
+    /// - Parameters:
+    ///   - evmAddress: The EVM address string from which to generate the entity ID.
+    ///   - shard: The shard of the entity.
+    ///   - realm: The realm of the entity.
+    public static func fromEvmAddress(_ evmAddress: String, shard: UInt64, realm: UInt64) throws -> Self {
+        Self(evmAddress: try EvmAddress.fromString(evmAddress), shard: shard, realm: realm)
+    }
+
+    /// Converts this entity ID to an EVM address.
+    public func toEvmAddress() throws -> EvmAddress {
+        var bigEndianValue = num.bigEndian
+        return try EvmAddress.fromBytes(
+            Data(repeating: 0, count: 12) + withUnsafeBytes(of: &bigEndianValue) { Data($0) })
+    }
+
+    /// Validates the checksum of this entity ID.
+    ///
+    /// - Parameters:
+    ///   - client: The client to use to validate the checksum.
     public func validateChecksum(_ client: Client) throws {
         try helper.validateChecksum(on: client)
     }
 
-    // inherited docs.
-    // swiftlint:disable:next missing_docs
+    /// Generates the checksum for this entity ID.
+    ///
+    /// - Parameters:
+    ///   - ledgerId: The ledger ID to use to generate the checksum.
+    internal func makeChecksum(ledger ledgerId: LedgerId) -> Checksum {
+        Checksum.generate(for: self, on: ledgerId)
+    }
+
+    /// *Deprecated* Creates an entity ID from a string solidity address.
+    ///
+    /// - Parameters:
+    ///   - description: the string solidity address to parse.
+    @available(*, deprecated, message: "Use fromEvmAddress(_shard:realm:) instead")
+    public static func fromSolidityAddress<S: StringProtocol>(_ description: S) throws -> Self {
+        try SolidityAddress(parsing: description).toEntityId()
+    }
+
+    /// *Deprecated* Converts this entity ID into a solidity address.
+    @available(*, deprecated, message: "Use toEvmAddress() instead")
     public func toSolidityAddress() throws -> String {
         try String(describing: SolidityAddress(self))
     }

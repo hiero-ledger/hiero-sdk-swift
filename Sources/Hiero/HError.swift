@@ -28,6 +28,7 @@ public struct HError: Error, CustomStringConvertible {
         case badEntityId(BadEntityId)
         case cannotCreateChecksum
         case freezeUnsetNodeAccountIds
+        case uninitialized
     }
 
     public let description: String
@@ -98,6 +99,10 @@ public struct HError: Error, CustomStringConvertible {
             description:
                 "Failed to complete request within the maximum time allowed; most recent attempt failed with: \(description)"
         )
+    }
+
+    internal static func unitialized(_ description: String) -> Self {
+        Self(kind: .uninitialized, description: description)
     }
 }
 

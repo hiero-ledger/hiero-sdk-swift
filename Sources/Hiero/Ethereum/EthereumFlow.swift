@@ -3,6 +3,7 @@
 import Foundation
 
 /// Flow for executing ethereum transactions.
+@available(*, deprecated, message: "Use EthereumTransaction instead")
 public final class EthereumFlow {
     private static let maxEthereumDataSize: Int = 5120
 

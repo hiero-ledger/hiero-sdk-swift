@@ -22,26 +22,71 @@ internal final class MirrorNetwork: AtomicReference, Sendable {
 
     private convenience init(targets: Set<HostAndPort>, eventLoop: EventLoopGroup) {
         self.init(
+            targets: targets,
+            eventLoop: eventLoop,
+            transportSecurity: .tls(
+                .makeClientDefault(compatibleWith: eventLoop)
+            )
+        )
+    }
+
+    private convenience init(
+        targets: Set<HostAndPort>,
+        eventLoop: EventLoopGroup,
+        transportSecurity: GRPCChannelPool.Configuration.TransportSecurity
+    ) {
+        let targetSecurityPairs = targets.map { hostAndPort in
+            let security: GRPCChannelPool.Configuration.TransportSecurity =
+                (hostAndPort.port == NodeConnection.mirrorTlsPort)
+                ? .tls(.makeClientDefault(compatibleWith: eventLoop)) : .plaintext
+            return (GRPC.ConnectionTarget.host(hostAndPort.host, port: Int(hostAndPort.port)), security)
+        }
+
+        self.init(
             channel: ChannelBalancer(
                 eventLoop: eventLoop.next(),
-                targets.map { .hostAndPort($0.host, Int($0.port)) },
-                transportSecurity: .tls(
-                    .makeClientDefault(compatibleWith: eventLoop)
-                )
+                targetSecurityPairs
             ),
             targets: targets
         )
     }
 
     internal convenience init(targets: [String], eventLoop: EventLoopGroup) {
-        let targets = Set(
+        self.init(
+            targets: targets, eventLoop: eventLoop,
+            transportSecurity: .tls(.makeClientDefault(compatibleWith: eventLoop)))
+    }
+
+    internal convenience init(
+        targets: [String],
+        eventLoop: EventLoopGroup,
+        transportSecurity: GRPCChannelPool.Configuration.TransportSecurity
+    ) {
+        let hostAndPorts = Set(
             targets.lazy.map { target in
                 let (host, port) = target.splitOnce(on: ":") ?? (target[...], nil)
+                return HostAndPort(
+                    host: String(host), port: port.flatMap { UInt16($0) } ?? NodeConnection.mirrorTlsPort)
+            }
+        )
 
-                return HostAndPort(host: String(host), port: port.flatMap { UInt16($0) } ?? 443)
-            })
+        let isLocal = targets.allSatisfy {
+            $0.contains("localhost") || $0.contains("127.0.0.1")
+        }
 
-        self.init(targets: targets, eventLoop: eventLoop)
+        let mirrorChannel = ChannelBalancer(
+            eventLoop: eventLoop.next(),
+            hostAndPorts.map {
+                let security: GRPCChannelPool.Configuration.TransportSecurity =
+                    isLocal
+                    ? .plaintext
+                    : .tls(.makeClientDefault(compatibleWith: eventLoop))
+
+                return (.host($0.host, port: Int($0.port)), security)
+            }
+        )
+
+        self.init(channel: mirrorChannel, targets: hostAndPorts)
     }
 
     internal static func mainnet(_ eventLoop: NIOCore.EventLoopGroup) -> Self {
@@ -57,6 +102,19 @@ internal final class MirrorNetwork: AtomicReference, Sendable {
     }
 
     internal static func localhost(_ eventLoop: NIOCore.EventLoopGroup) -> Self {
-        Self(targets: Targets.localhost, eventLoop: eventLoop)
+        let targetSecurityPairs = Targets.localhost.map { hostAndPort in
+            let security: GRPCChannelPool.Configuration.TransportSecurity =
+                (hostAndPort.port == NodeConnection.mirrorTlsPort)
+                ? .tls(.makeClientDefault(compatibleWith: eventLoop)) : .plaintext
+            return (GRPC.ConnectionTarget.host(hostAndPort.host, port: Int(hostAndPort.port)), security)
+        }
+
+        return Self(
+            channel: ChannelBalancer(
+                eventLoop: eventLoop.next(),
+                targetSecurityPairs
+            ),
+            targets: Targets.localhost
+        )
     }
 }

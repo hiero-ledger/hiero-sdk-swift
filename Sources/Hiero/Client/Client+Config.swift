@@ -85,11 +85,15 @@ extension Client {
         internal let `operator`: Operator?
         internal let network: Either<[String: AccountId], NetworkName>
         internal let mirrorNetwork: Either<[String], NetworkName>?
+        internal let shard: UInt64
+        internal let realm: UInt64
 
         private enum CodingKeys: CodingKey {
             case `operator`
             case network
             case mirrorNetwork
+            case shard
+            case realm
         }
 
         internal init(from decoder: Decoder) throws {
@@ -112,6 +116,8 @@ extension Client {
             }
 
             mirrorNetwork = try container.decodeIfPresent(Either<[String], NetworkName>.self, forKey: .mirrorNetwork)
+            shard = try container.decodeIfPresent(UInt64.self, forKey: .shard) ?? 0
+            realm = try container.decodeIfPresent(UInt64.self, forKey: .realm) ?? 0
         }
     }
 }
