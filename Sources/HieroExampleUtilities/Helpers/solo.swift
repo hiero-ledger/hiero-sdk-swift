@@ -87,7 +87,9 @@ private func dataFromCommaSeparatedBytes(_ s: String) throws -> Data {
     bytes.reserveCapacity(parts.count)
     for part in parts where !part.isEmpty {
         guard let val = UInt8(part) else {
-            throw NSError(domain: "Config", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid byte '\(part)' in signingCertDer"])
+            throw NSError(
+                domain: "Config", code: 3,
+                userInfo: [NSLocalizedDescriptionKey: "Invalid byte '\(part)' in signingCertDer"])
         }
         bytes.append(val)
     }
@@ -97,13 +99,12 @@ private func dataFromCommaSeparatedBytes(_ s: String) throws -> Data {
 /// Build a Hiero `Endpoint` from host:port string
 private func endpointFrom(_ s: String) throws -> Endpoint {
     let (host, port) = try parseHostPort(s)
-    if let ip = IPv4Address(host) {
-        // IP address: keep domain blank like your original
-        return Endpoint(ipAddress: ip, port: port, domainName: "")
-    } else {
+    guard let ip = IPv4Address(host) else {
         // Domain name
         return Endpoint(port: port, domainName: host)
     }
+    // IP address: keep domain blank like your original
+    return Endpoint(ipAddress: ip, port: port, domainName: "")
 }
 
 /// Load config JSON from path
@@ -148,16 +149,20 @@ private func dataFromHex(_ hexInput: String?) throws -> Data? {
     if chars.count % 2 != 0 {
         // odd length -> first nibble only
         guard let hi = UInt8(String(chars[0]), radix: 16) else {
-            throw NSError(domain: "Config", code: 20, userInfo: [NSLocalizedDescriptionKey: "Invalid hex in upgradeZipHash"])
+            throw NSError(
+                domain: "Config", code: 20, userInfo: [NSLocalizedDescriptionKey: "Invalid hex in upgradeZipHash"])
         }
         bytes.append(hi)
         idx = 1
     }
     while idx < chars.count {
-        let hiChar = chars[idx]; let loChar = chars[idx + 1]
+        let hiChar = chars[idx]
+        let loChar = chars[idx + 1]
         guard let hi = UInt8(String(hiChar), radix: 16),
-              let lo = UInt8(String(loChar), radix: 16) else {
-            throw NSError(domain: "Config", code: 21, userInfo: [NSLocalizedDescriptionKey: "Invalid hex in upgradeZipHash"])
+            let lo = UInt8(String(loChar), radix: 16)
+        else {
+            throw NSError(
+                domain: "Config", code: 21, userInfo: [NSLocalizedDescriptionKey: "Invalid hex in upgradeZipHash"])
         }
         bytes.append((hi << 4) | lo)
         idx += 2
@@ -168,8 +173,7 @@ private func dataFromHex(_ hexInput: String?) throws -> Data? {
 /// Parse PrivateKey from a maybe-blank string.
 private func parsePrivateKey(_ s: String?, field: String) throws -> PrivateKey? {
     guard let s = nilIfBlank(s) else { return nil }
-    do { return try PrivateKey.fromString(s) }
-    catch {
+    do { return try PrivateKey.fromString(s) } catch {
         throw NSError(domain: "Config", code: 30, userInfo: [NSLocalizedDescriptionKey: "Invalid \(field): \(error)"])
     }
 }
@@ -183,7 +187,9 @@ private func parseAccountIdFlexible(_ s: String?) throws -> AccountId? {
     }
     // Otherwise treat as numeric 'num' in 0.0.num
     guard let num = UInt64(s) else {
-        throw NSError(domain: "Config", code: 40, userInfo: [NSLocalizedDescriptionKey: "newAccountNumber must be a uint or '0.0.x'"])
+        throw NSError(
+            domain: "Config", code: 40,
+            userInfo: [NSLocalizedDescriptionKey: "newAccountNumber must be a uint or '0.0.x'"])
     }
     return try AccountId.fromString("0.0.\(num)")
 }

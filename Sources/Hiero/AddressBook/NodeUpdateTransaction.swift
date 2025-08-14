@@ -261,7 +261,7 @@ extension NodeUpdateTransaction: ToProtobuf {
             if let gossipCaCertificate = gossipCaCertificate {
                 proto.gossipCaCertificate = Google_Protobuf_BytesValue(gossipCaCertificate)
             }
-            
+
             if let grpcCertificateHash = grpcCertificateHash {
                 proto.grpcCertificateHash = Google_Protobuf_BytesValue(grpcCertificateHash)
             }

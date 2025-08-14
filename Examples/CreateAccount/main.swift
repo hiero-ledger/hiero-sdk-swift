@@ -10,8 +10,6 @@ internal enum Program {
         let client = try Client.forName(env.networkName)
 
         client.setOperator(env.operatorAccountId, env.operatorKey)
-        print(env.operatorAccountId)
-        print(env.operatorKey)
 
         let newKey = PrivateKey.generateEd25519()
 
