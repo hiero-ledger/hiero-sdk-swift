@@ -5,6 +5,77 @@ import Hiero
 import Network
 import SwiftDotenv
 
+private struct TLSBuffer: Decodable {
+    let type: String?
+    let data: [UInt8]
+}
+
+private struct NewNode: Decodable {
+    let accountId: String
+    let name: String?
+}
+
+private struct NodeConfig: Decodable {
+    let signingCertDer: String
+    let gossipEndpoints: [String]
+    let grpcServiceEndpoints: [String]
+    let adminKey: String
+    let existingNodeAliases: [String]?
+    let tlsCertHash: TLSBuffer
+    let upgradeZipHash: String?
+    let newNode: NewNode
+}
+
+// MARK: - Helpers
+
+/// Parse "host:port" into (host, port)
+private func parseHostPort(_ s: String) throws -> (host: String, port: Int32) {
+    // allow IPv6? If you need that, we can add bracketed parsing. For now mirror your JSON (IPv4/domain).
+    guard let lastColon = s.lastIndex(of: ":") else {
+        throw NSError(domain: "Config", code: 1, userInfo: [NSLocalizedDescriptionKey: "Endpoint '\(s)' missing :port"])
+    }
+    let host = String(s[..<lastColon]).trimmingCharacters(in: .whitespaces)
+    let portStr = String(s[s.index(after: lastColon)...]).trimmingCharacters(in: .whitespaces)
+    guard let port = Int32(portStr) else {
+        throw NSError(domain: "Config", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid port in '\(s)'"])
+    }
+    return (host, port)
+}
+
+/// Convert a comma-separated list of decimal bytes into Data
+private func dataFromCommaSeparatedBytes(_ s: String) throws -> Data {
+    let parts = s.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    var bytes = [UInt8]()
+    bytes.reserveCapacity(parts.count)
+    for part in parts where !part.isEmpty {
+        guard let val = UInt8(part) else {
+            throw NSError(domain: "Config", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid byte '\(part)' in signingCertDer"])
+        }
+        bytes.append(val)
+    }
+    return Data(bytes)
+}
+
+/// Build a Hiero `Endpoint` from host:port string
+private func endpointFrom(_ s: String) throws -> Endpoint {
+    let (host, port) = try parseHostPort(s)
+    if let ip = IPv4Address(host) {
+        // IP address: keep domain blank like your original
+        return Endpoint(ipAddress: ip, port: port, domainName: "")
+    } else {
+        // Domain name
+        return Endpoint(port: port, domainName: host)
+    }
+}
+
+/// Load config JSON from path
+private func loadConfig(at path: String) throws -> NodeConfig {
+    let data = try Data(contentsOf: URL(fileURLWithPath: path))
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .useDefaultKeys
+    return try decoder.decode(NodeConfig.self, from: data)
+}
+
 @main
 internal enum Program {
     internal static func main() async throws {
@@ -13,135 +84,89 @@ internal enum Program {
 
         // Set operator account
         client.setOperator(env.operatorAccountId, env.operatorKey)
+        await client.setNetworkUpdatePeriod(nanoseconds: 1_000_000_000 * 1_000_000)
 
-        // Transaction parameters
-        let accountId = try AccountId.fromString("0.0.999")
-        let description = "This is a description of the node."
-        let newDescription = "This is new a description of the node."
-        let ipAddressV4 = "127.0.0.1"
-        let port: Int32 = 50211
-        let grpcProxyIpAddressV4 = "127.0.0.1"
-        let grpcProxyPort: Int32 = 443
-        let gossipEndpoint = Endpoint(ipAddress: IPv4Address(ipAddressV4), port: port, domainName: "")
-        let gossipEndpoints = [gossipEndpoint]
-        let serviceEndpoint = Endpoint(ipAddress: IPv4Address(ipAddressV4), port: port, domainName: "")
-        let serviceEndpoints = [serviceEndpoint]
-        let gossipCaCertificate = byteStringToData(
-            "48,130,4,12,48,130,2,116,160,3,2,1,2,2,1,1,48,13,6,9,42,134,72,134,247,13,1,1,12,5,0,48,18,49,16,48,14,6,3,85,4,3,19,7,115,45,110,111,100,101,50,48,36,23,13,50,53,48,55,49,48,48,50,48,48,50,57,90,24,19,50,49,50,53,48,55,49,48,48,50,48,48,50,57,46,51,53,51,90,48,18,49,16,48,14,6,3,85,4,3,19,7,115,45,110,111,100,101,50,48,130,1,162,48,13,6,9,42,134,72,134,247,13,1,1,1,5,0,3,130,1,143,0,48,130,1,138,2,130,1,129,0,202,134,83,49,229,213,32,84,67,122,225,178,56,221,24,242,65,59,231,238,31,58,39,229,248,179,160,148,167,176,95,127,120,121,239,214,103,149,21,124,21,240,184,204,59,29,45,31,112,85,15,174,51,78,111,255,54,254,102,11,222,58,94,245,30,213,221,220,184,203,6,122,48,43,164,99,89,31,104,48,119,125,244,233,167,17,62,179,220,88,149,243,177,211,164,13,67,122,220,200,87,112,198,21,52,152,120,6,131,126,52,235,121,21,85,9,107,174,143,138,231,164,16,45,97,111,200,176,163,182,151,87,171,74,76,221,176,61,62,55,125,107,18,91,222,194,227,166,47,70,105,241,74,103,242,10,226,41,222,233,77,229,143,164,156,206,49,161,4,212,140,127,226,201,123,239,97,216,48,141,218,197,37,96,41,63,244,216,118,145,206,249,120,105,186,104,31,135,39,186,179,210,161,24,56,203,230,30,35,58,147,43,11,46,248,243,78,96,114,241,102,218,5,67,154,47,81,152,149,169,240,184,178,47,239,10,132,248,86,162,231,41,155,7,60,30,2,109,6,104,210,196,165,68,187,61,142,152,227,37,13,91,142,5,234,35,157,139,2,96,41,178,143,159,135,132,203,11,22,123,8,252,54,120,20,70,157,4,108,175,23,45,82,167,182,225,168,207,116,214,55,151,105,249,87,30,236,235,252,94,32,173,74,118,4,149,67,134,115,1,47,75,213,207,191,67,74,199,241,108,138,134,178,35,102,47,170,209,113,62,66,20,239,183,11,177,128,206,150,133,122,176,123,211,80,153,123,2,68,244,207,115,152,253,150,232,139,191,219,238,47,35,86,160,95,8,27,13,171,211,110,82,175,55,2,3,1,0,1,163,103,48,101,48,18,6,3,85,29,19,1,1,255,4,8,48,6,1,1,255,2,1,1,48,32,6,3,85,29,37,1,1,255,4,22,48,20,6,8,43,6,1,5,5,7,3,1,6,8,43,6,1,5,5,7,3,2,48,14,6,3,85,29,15,1,1,255,4,4,3,2,1,6,48,29,6,3,85,29,14,4,22,4,20,69,45,83,136,93,9,82,61,158,2,114,62,234,147,118,188,251,54,67,60,48,13,6,9,42,134,72,134,247,13,1,1,12,5,0,3,130,1,129,0,32,68,77,174,86,153,130,62,118,62,204,151,154,172,83,119,249,135,165,23,161,82,230,134,215,107,8,88,166,138,147,28,91,210,91,238,247,11,13,245,167,234,108,46,113,111,17,249,126,47,232,217,182,125,91,5,62,26,240,91,45,103,187,108,26,105,157,83,239,175,69,67,77,62,192,12,231,173,180,167,62,45,188,97,4,31,158,202,109,225,128,118,73,80,185,17,222,180,185,147,254,160,50,105,160,202,77,163,72,14,166,237,79,29,35,135,146,138,255,211,125,45,204,163,19,140,136,193,146,139,209,82,27,21,175,200,234,109,164,127,168,135,15,136,37,231,184,70,218,62,152,56,79,140,46,224,11,151,43,109,111,189,177,54,127,24,147,59,84,132,187,33,69,78,85,116,50,63,222,180,47,115,70,70,159,119,124,133,209,116,31,53,172,73,4,44,90,97,4,235,218,103,206,215,39,193,91,57,125,15,209,83,119,186,201,144,176,189,71,74,62,127,113,213,1,150,194,111,154,163,123,1,77,0,176,116,3,145,164,154,118,129,101,70,87,144,250,126,232,228,136,25,10,216,147,5,156,217,120,215,212,43,167,75,77,3,232,23,68,120,5,201,64,166,92,67,52,100,182,242,117,187,172,243,30,51,74,79,199,231,70,51,152,43,1,22,167,23,64,104,217,240,18,130,43,88,9,189,138,140,214,5,78,239,169,241,241,105,217,209,176,44,97,205,111,89,131,21,43,134,89,97,251,1,151,17,164,30,5,122,64,169,50,36,199,110,216,60,249,136,94,195,234,91,165,88,35,192,103,222,195,157,229,85,113,147,229,109,211,170,144,119,63,184,208,218,198,220,192,17,0,123,202,133"
-        )
-        let grpcWebProxyEndpoint = Endpoint(
-            ipAddress: IPv4Address(grpcProxyIpAddressV4), port: grpcProxyPort, domainName: "")
-        let adminKey = try PrivateKey.fromString(
-            "302e020100300506032b657004220420273389ed26af9c456faa81e9ae4004520130de36e4f534643b7081db21744496")
+        // Load config
+        // let configPath = "/Users/robertwalworth/solo/context/node-add.json"
+        // let cfg = try loadConfig(at: configPath)
 
-        // 1. Create a new node
-        print("Creating a new node...")
-        let createTransaction = try NodeCreateTransaction()
-            .accountId(accountId)
-            .description(description)
-            .gossipEndpoints(gossipEndpoints)
-            .serviceEndpoints(serviceEndpoints)
-            .gossipCaCertificate(gossipCaCertificate!)
-            .adminKey(.single(adminKey.publicKey))
-            .grpcWebProxyEndpoint(grpcWebProxyEndpoint)
-            .declineRewards(false)
-            .freezeWith(client)
-            .sign(adminKey)
+        // // Map JSON -> SDK types
+        // let accountId = try AccountId.fromString(cfg.newNode.accountId)
+        // print(accountId)
 
-        let createTransactionResponse = try await createTransaction.execute(client)
-        let createTransactionReceipt = try await createTransactionResponse.getReceipt(client)
-        let nodeId = createTransactionReceipt.nodeId
-        print("Node create transaction status: \(createTransactionReceipt.status.description)")
-        print("Node has been created successfully with node id: \(nodeId)")
+        // // Endpoints
+        // let gossipEndpoints: [Endpoint] = try cfg.gossipEndpoints.map(endpointFrom)
+        // print(gossipEndpoints)
+        // let grpcServiceEndpoints: [Endpoint] = try cfg.grpcServiceEndpoints.map(endpointFrom)
+        // print(grpcServiceEndpoints)
 
-        let addressBook = try await NodeAddressBookQuery().setFileId(FileId.addressBook).execute(client)
-        for nodeAddress in addressBook.nodeAddresses {
-            print("Node ID: \(nodeAddress.nodeId)")
-            print("Node Account ID: \(nodeAddress.nodeAccountId)")
-            print("Node Description: \(nodeAddress.description)")
-        }
+        // // Certificates / hashes
+        // let signingCertDer = try dataFromCommaSeparatedBytes(cfg.signingCertDer)
+        // print(signingCertDer)
+        // let tlsCertHash = Data(cfg.tlsCertHash.data)
+        // print(tlsCertHash)
+
+        // // Admin key
+        // let adminKey = try PrivateKey.fromString(cfg.adminKey)
+        // print(adminKey)
+
+        // // Create the node
+        // print("Creating a new node\(cfg.newNode.name.map { " named \($0)" } ?? "") from \(configPath)...")
+
+        // let createTransaction = try NodeCreateTransaction()
+        //     .accountId(accountId)
+        //     .gossipEndpoints(gossipEndpoints)
+        //     .serviceEndpoints(grpcServiceEndpoints)
+        //     .gossipCaCertificate(signingCertDer)
+        //     .grpcCertificateHash(tlsCertHash)
+        //     .grpcWebProxyEndpoint(grpcServiceEndpoints[0])
+        //     .adminKey(.single(adminKey.publicKey))
+        //     .freezeWith(client)
+        //     .sign(adminKey)
+
+        // let response = try await createTransaction.execute(client)
+        // let receipt = try await response.getReceipt(client)
+        // print("Node create receipt: \(receipt)")
+
+        // let addressBook = try await NodeAddressBookQuery().setFileId(FileId.addressBook).execute(client)
+        // for nodeAddress in addressBook.nodeAddresses {
+        //     print("Node ID: \(nodeAddress.nodeId)")
+        //     print("Node Account ID: \(nodeAddress.nodeAccountId)")
+        //     print("Node Description: \(nodeAddress.description)")
+        // }
+
+        let updateCfg = try loadNodeUpdateConfig(at: "/Users/robertwalworth/solo/context/node-update.json")
+        let updateInputs = try makeNodeUpdateInputs(from: updateCfg)
+        let endpoint = Endpoint(port: 50112, domainName: "network-node2-svc.solo.svc.cluster.local")
 
         // 2. Update the node
         print("Updating the node...")
         let updateTransaction = try NodeUpdateTransaction()
-            .nodeId(nodeId)
-            .description(newDescription)
-            .gossipCaCertificate(gossipCaCertificate!)
-            .grpcCertificateHash(
-                byteArrayToData([
-                    216,
-                    190,
-                    49,
-                    148,
-                    92,
-                    216,
-                    96,
-                    54,
-                    134,
-                    166,
-                    193,
-                    53,
-                    24,
-                    27,
-                    185,
-                    169,
-                    141,
-                    37,
-                    249,
-                    211,
-                    247,
-                    50,
-                    21,
-                    198,
-                    44,
-                    14,
-                    216,
-                    72,
-                    182,
-                    131,
-                    225,
-                    12,
-                    96,
-                    200,
-                    234,
-                    42,
-                    116,
-                    228,
-                    134,
-                    199,
-                    17,
-                    227,
-                    13,
-                    32,
-                    224,
-                    9,
-                    18,
-                    198,
-                ])!
-            )
+            .nodeId(1)
+            .grpcWebProxyEndpoint(endpoint)
             .declineRewards(true)
             .freezeWith(client)
-            .sign(adminKey)
+            .sign(updateInputs.adminKey)
         let updateTransactionResponse = try await updateTransaction.execute(client)
         let updateTransactionReceipt = try await updateTransactionResponse.getReceipt(client)
         print("Node update transaction status: \(updateTransactionReceipt.status.description)")
 
-        let addressBook2 = try await NodeAddressBookQuery().setFileId(FileId.addressBook).execute(client)
-        for nodeAddress in addressBook2.nodeAddresses {
-            print("Node ID: \(nodeAddress.nodeId)")
-            print("Node Account ID: \(nodeAddress.nodeAccountId)")
-            print("Node Description: \(nodeAddress.description)")
-        }
+        // let addressBook2 = try await NodeAddressBookQuery().setFileId(FileId.addressBook).execute(client)
+        // for nodeAddress in addressBook2.nodeAddresses {
+        //     print("Node ID: \(nodeAddress.nodeId)")
+        //     print("Node Account ID: \(nodeAddress.nodeAccountId)")
+        //     print("Node Description: \(nodeAddress.description)")
+        // }
 
-        // 3. Delete the node
-        print("Deleting the node...")
-        let deleteTransaction = try NodeDeleteTransaction()
-            .nodeId(nodeId)
-            .freezeWith(client)
-            .sign(adminKey)
-        let deleteTransactionResponse = try await deleteTransaction.execute(client)
-        let deleteTransactionReceipt = try await deleteTransactionResponse.getReceipt(client)
-        print("Node delete transaction status: \(deleteTransactionReceipt.status.description)")
+        // // 3. Delete the node
+        // print("Deleting the node...")
+        // let deleteTransaction = try NodeDeleteTransaction()
+        //     .nodeId(nodeId)
+        //     .freezeWith(client)
+        //     .sign(adminKey)
+        // let deleteTransactionResponse = try await deleteTransaction.execute(client)
+        // let deleteTransactionReceipt = try await deleteTransactionResponse.getReceipt(client)
+        // print("Node delete transaction status: \(deleteTransactionReceipt.status.description)")
     }
 }
 
@@ -276,4 +301,142 @@ func byteArrayToData(_ bytes: [Int]) -> Data? {
     }
 
     return data
+}
+
+// MARK: - Update Config Models
+
+private struct NodeUpdateConfig: Decodable {
+    let adminKey: String
+    let newAdminKey: String?                 // may be ""
+    let freezeAdminPrivateKey: String
+    let treasuryKey: String
+    let existingNodeAliases: [String]?
+    let upgradeZipHash: String?              // hex; may be ""
+    let nodeAlias: String
+    let newAccountNumber: String?            // may be "" or "123" or "0.0.123"
+    let tlsPublicKey: String?                // may be ""
+    let tlsPrivateKey: String?               // may be ""
+    let gossipPublicKey: String?             // may be ""
+    let gossipPrivateKey: String?            // may be ""
+    let allNodeAliases: [String]?
+}
+
+// A convenient, typed bundle to use downstream.
+private struct NodeUpdateInputs {
+    let adminKey: PrivateKey
+    let newAdminKey: PrivateKey?
+    let freezeAdminPrivateKey: PrivateKey
+    let treasuryKey: PrivateKey
+    let nodeAlias: String
+    let existingNodeAliases: [String]
+    let allNodeAliases: [String]
+    let upgradeZipHash: Data?
+    let newAccountId: AccountId?
+    // Keep these raw until we know format/usage
+    let tlsPublicKey: String?
+    let tlsPrivateKey: String?
+    let gossipPublicKey: String?
+    let gossipPrivateKey: String?
+}
+
+// MARK: - Generic JSON loader (reuses your style)
+
+private func loadNodeUpdateConfig(at path: String) throws -> NodeUpdateConfig {
+    // If you already added a "~" expander (resolveConfigURL), reuse it here.
+    let url = URL(fileURLWithPath: (path as NSString).expandingTildeInPath)
+    let data = try Data(contentsOf: url)
+    let decoder = JSONDecoder()
+    return try decoder.decode(NodeUpdateConfig.self, from: data)
+}
+
+// MARK: - Small helpers
+
+/// Treat nil / "" / all-whitespace as nil
+@inline(__always)
+private func nilIfBlank(_ s: String?) -> String? {
+    guard let s, !s.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+    return s
+}
+
+/// Parse a 0x-optional hex string into Data.
+/// Accepts even/odd length; odd gets left-padded with a '0'.
+private func dataFromHex(_ hexInput: String?) throws -> Data? {
+    guard let raw = nilIfBlank(hexInput) else { return nil }
+    let hex = raw.lowercased().hasPrefix("0x") ? String(raw.dropFirst(2)) : raw
+    let chars = Array(hex.filter { !$0.isWhitespace })
+    guard !chars.isEmpty else { return nil }
+
+    var bytes = [UInt8]()
+    bytes.reserveCapacity((chars.count + 1) / 2)
+
+    var idx = 0
+    if chars.count % 2 != 0 {
+        // odd length -> first nibble only
+        guard let hi = UInt8(String(chars[0]), radix: 16) else {
+            throw NSError(domain: "Config", code: 20, userInfo: [NSLocalizedDescriptionKey: "Invalid hex in upgradeZipHash"])
+        }
+        bytes.append(hi)
+        idx = 1
+    }
+    while idx < chars.count {
+        let hiChar = chars[idx]; let loChar = chars[idx + 1]
+        guard let hi = UInt8(String(hiChar), radix: 16),
+              let lo = UInt8(String(loChar), radix: 16) else {
+            throw NSError(domain: "Config", code: 21, userInfo: [NSLocalizedDescriptionKey: "Invalid hex in upgradeZipHash"])
+        }
+        bytes.append((hi << 4) | lo)
+        idx += 2
+    }
+    return Data(bytes)
+}
+
+/// Parse PrivateKey from a maybe-blank string.
+private func parsePrivateKey(_ s: String?, field: String) throws -> PrivateKey? {
+    guard let s = nilIfBlank(s) else { return nil }
+    do { return try PrivateKey.fromString(s) }
+    catch {
+        throw NSError(domain: "Config", code: 30, userInfo: [NSLocalizedDescriptionKey: "Invalid \(field): \(error)"])
+    }
+}
+
+/// Parse AccountId from either "0.0.123" or just "123".
+private func parseAccountIdFlexible(_ s: String?) throws -> AccountId? {
+    guard let s = nilIfBlank(s) else { return nil }
+    // If it already looks like 0.0.x, defer to SDK.
+    if s.contains(".") {
+        return try AccountId.fromString(s)
+    }
+    // Otherwise treat as numeric 'num' in 0.0.num
+    guard let num = UInt64(s) else {
+        throw NSError(domain: "Config", code: 40, userInfo: [NSLocalizedDescriptionKey: "newAccountNumber must be a uint or '0.0.x'"])
+    }
+    return try AccountId.fromString("0.0.\(num)")
+}
+
+// MARK: - Map JSON -> strongly typed inputs
+
+private func makeNodeUpdateInputs(from cfg: NodeUpdateConfig) throws -> NodeUpdateInputs {
+    let adminKey = try parsePrivateKey(cfg.adminKey, field: "adminKey")!
+    let newAdminKey = try parsePrivateKey(cfg.newAdminKey, field: "newAdminKey")
+    let freezeAdmin = try parsePrivateKey(cfg.freezeAdminPrivateKey, field: "freezeAdminPrivateKey")!
+    let treasuryKey = try parsePrivateKey(cfg.treasuryKey, field: "treasuryKey")!
+
+    let upgradeZipHash = try dataFromHex(cfg.upgradeZipHash)
+    let newAccountId = try parseAccountIdFlexible(cfg.newAccountNumber)
+
+    return NodeUpdateInputs(
+        adminKey: adminKey,
+        newAdminKey: newAdminKey,
+        freezeAdminPrivateKey: freezeAdmin,
+        treasuryKey: treasuryKey,
+        nodeAlias: cfg.nodeAlias,
+        existingNodeAliases: cfg.existingNodeAliases ?? [],
+        allNodeAliases: cfg.allNodeAliases ?? [],
+        upgradeZipHash: upgradeZipHash,
+        newAccountId: newAccountId,
+        tlsPublicKey: nilIfBlank(cfg.tlsPublicKey),
+        tlsPrivateKey: nilIfBlank(cfg.tlsPrivateKey),
+        gossipPublicKey: nilIfBlank(cfg.gossipPublicKey),
+        gossipPrivateKey: nilIfBlank(cfg.gossipPrivateKey)
+    )
 }

@@ -257,8 +257,14 @@ extension NodeUpdateTransaction: ToProtobuf {
             accountId?.toProtobufInto(&proto.accountID)
             proto.gossipEndpoint = gossipEndpoints.map { $0.toProtobuf() }
             proto.serviceEndpoint = serviceEndpoints.map { $0.toProtobuf() }
-            proto.gossipCaCertificate = Google_Protobuf_BytesValue(gossipCaCertificate ?? Data())
-            proto.grpcCertificateHash = Google_Protobuf_BytesValue(grpcCertificateHash ?? Data())
+
+            if let gossipCaCertificate = gossipCaCertificate {
+                proto.gossipCaCertificate = Google_Protobuf_BytesValue(gossipCaCertificate)
+            }
+            
+            if let grpcCertificateHash = grpcCertificateHash {
+                proto.grpcCertificateHash = Google_Protobuf_BytesValue(grpcCertificateHash)
+            }
 
             if let description = description {
                 proto.description_p = Google_Protobuf_StringValue(description)
