@@ -9,7 +9,7 @@ internal struct HbarAllowance {
 
     internal var amount: String
 
-    internal init(from params: [String: JSONObject], for funcName: JSONRPCMethod) throws {
-        self.amount = try JSONRPCParser.getRequiredJsonParameter(name: "amount", from: params, for: funcName)
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.amount = try JSONRPCParser.getRequiredParameter(name: "amount", from: params, for: method)
     }
 }

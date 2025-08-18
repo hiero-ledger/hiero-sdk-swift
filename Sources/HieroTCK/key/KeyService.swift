@@ -12,7 +12,7 @@ import HieroProtobufs
 /// - Threshold keys and key lists (with recursive generation)
 /// - EVM address keys derived from ECDSA
 ///
-/// It also includes robust parsing of input key data into strongly typed `Hiero.Key` representations,
+/// It also includes robust parsing of input key data into strongly typed Hiero `Key` representations,
 /// with support for DER and protobuf formats. Used primarily in JSON-RPC method dispatching.
 ///
 /// This is a singleton service class and should be accessed via `KeyService.service`.
@@ -40,7 +40,7 @@ internal class KeyService {
 
     // MARK: - Helpers
 
-    /// Attempts to convert a hex-encoded key string into a `Hiero.Key` object.
+    /// Attempts to convert a hex-encoded key string into a Hiero `Key` object.
     ///
     /// The decoding is attempted in the following order:
     /// 1. Treat the string as a DER-encoded private key and extract the public key.

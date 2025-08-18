@@ -7,9 +7,6 @@
 /// perform higher-level conversions to SDK types.
 ///
 /// Used by all parameter structs to handle optional/required field lookup and validation.
-///
-/// - Note: Input is expected to be `JSONObject`, already decoded from JSON-RPC.
-/// - Throws: `JSONError.invalidParams` for missing, malformed, or unexpected types.
 internal enum JSONRPCParser {
 
     // MARK: - Core JSON Value Extraction
@@ -30,11 +27,11 @@ internal enum JSONRPCParser {
     /// - Parameters:
     ///   - json: The `JSONObject` to convert.
     ///   - paramName: The name of the parameter being parsed (used in error messages).
-    ///   - funcName: The name of the JSON-RPC method being executed (used in error messages).
+    ///   - method: The name of the JSON-RPC method being executed (used in error messages).
     /// - Returns: A value of type `T` parsed from the input `json`.
     /// - Throws: `JSONError.invalidParams` if the value is missing or not of the expected type.
-    internal static func getJson<T>(name: String, from json: JSONObject, for funcName: JSONRPCMethod) throws -> T {
-        let errorMessage = "Parameter \(name) in \(funcName.rawValue)"
+    internal static func getJson<T>(name: String, from json: JSONObject, for method: JSONRPCMethod) throws -> T {
+        let errorMessage = "Parameter \(name) in \(method.rawValue)"
 
         if T.self == String.self {
             return try require(json.stringValue, "\(errorMessage) MUST be a string.") as! T
@@ -74,16 +71,16 @@ internal enum JSONRPCParser {
     /// - Parameters:
     ///   - name: The name of the required parameter.
     ///   - parameters: The JSON-RPC parameters dictionary (already parsed as `[String: JSONObject]`).
-    ///   - funcName: The name of the JSON-RPC method (used for contextual error reporting).
+    ///   - method: The name of the JSON-RPC method (used for contextual error reporting).
     /// - Returns: The decoded value of type `T`.
     /// - Throws: `JSONError.invalidParams` if the parameter is missing or cannot be decoded into type `T`.
-    internal static func getRequiredJsonParameter<T>(
-        name: String, from parameters: [String: JSONObject], for funcName: JSONRPCMethod
+    internal static func getRequiredParameter<T>(
+        name: String, from parameters: [String: JSONObject], for method: JSONRPCMethod
     ) throws -> T {
         return try getJson(
             name: name,
-            from: parameters[name] ?? { throw JSONError.invalidParams("\(funcName): \(name) MUST be provided.") }(),
-            for: funcName)
+            from: parameters[name] ?? { throw JSONError.invalidParams("\(method): \(name) MUST be provided.") }(),
+            for: method)
     }
 
     /// Extracts the top-level `"params"` object from a JSON-RPC request, ensuring it is present.
@@ -92,8 +89,8 @@ internal enum JSONRPCParser {
     ///   - request: The full JSON-RPC request object.
     /// - Returns: A dictionary of parameters (`[String: JSONObject]`) extracted from the `"params"` field.
     /// - Throws: `JSONError.invalidParams` if the `"params"` field is missing or malformed.
-    internal static func getRequiredParams(request: JSONRequest) throws -> [String: JSONObject] {
-        return try getRequiredJsonParameter(
+    internal static func getRequiredRequestParams(request: JSONRequest) throws -> [String: JSONObject] {
+        return try getRequiredParameter(
             name: "params",
             from: request.toDict(),
             for: JSONRPCMethod.method(named: request.method))
@@ -105,16 +102,16 @@ internal enum JSONRPCParser {
     /// - Parameters:
     ///   - name: The name of the required parameter.
     ///   - parameters: The JSON-RPC parameters dictionary.
-    ///   - funcName: The name of the JSON-RPC method (for error context).
+    ///   - method: The name of the JSON-RPC method (for error context).
     /// - Returns: An array of parsed values of type `T`.
     /// - Throws: `JSONError.invalidParams` if the parameter is missing, not a list, or contains invalid values.
     internal static func getRequiredPrimitiveList<T>(
         name: String,
         from parameters: [String: JSONObject],
-        for funcName: JSONRPCMethod
+        for method: JSONRPCMethod
     ) throws -> [T] {
-        let list: [JSONObject] = try getRequiredJsonParameter(name: name, from: parameters, for: funcName)
-        return try list.map { try getJson(name: "\(name) element", from: $0, for: funcName) as T }
+        let list: [JSONObject] = try getRequiredParameter(name: name, from: parameters, for: method)
+        return try list.map { try getJson(name: "\(name) element", from: $0, for: method) as T }
     }
 
     /// Extracts and parses a required JSON parameter as a list of custom objects,
@@ -123,17 +120,17 @@ internal enum JSONRPCParser {
     /// - Parameters:
     ///   - name: The name of the required parameter.
     ///   - parameters: The JSON-RPC parameters dictionary.
-    ///   - funcName: The name of the JSON-RPC method (for error context).
+    ///   - method: The name of the JSON-RPC method (for error context).
     ///   - transform: A function to convert each `JSONObject` into a custom type.
     /// - Returns: An array of parsed custom objects.
     /// - Throws: `JSONError.invalidParams` if the parameter is missing, not a list, or contains invalid elements.
     internal static func getRequiredCustomObjectList<T>(
         name: String,
         from parameters: [String: JSONObject],
-        for funcName: JSONRPCMethod,
+        for method: JSONRPCMethod,
         decoder: (JSONObject) throws -> T
     ) throws -> [T] {
-        let list: [JSONObject] = try getRequiredJsonParameter(name: name, from: parameters, for: funcName)
+        let list: [JSONObject] = try getRequiredParameter(name: name, from: parameters, for: method)
         return try list.map(decoder)
     }
 
@@ -144,15 +141,15 @@ internal enum JSONRPCParser {
     /// - Parameters:
     ///   - name: The name of the parameter to extract.
     ///   - parameters: The JSON-RPC parameters dictionary (already parsed as `[String: JSONObject]`).
-    ///   - funcName: The name of the JSON-RPC method (used for contextual error reporting).
+    ///   - method: The name of the JSON-RPC method (used for contextual error reporting).
     /// - Returns: The decoded value of type `T`, or `nil` if the parameter is not present.
     /// - Throws: `JSONError.invalidParams` if the parameter is present but cannot be decoded into type `T`.
-    internal static func getOptionalJsonParameterIfPresent<T>(
-        name: String, from parameters: [String: JSONObject], for funcName: JSONRPCMethod
+    internal static func getOptionalParameterIfPresent<T>(
+        name: String, from parameters: [String: JSONObject], for method: JSONRPCMethod
     )
         throws -> T?
     {
-        return try parameters[name].flatMap { try getJson(name: name, from: $0, for: funcName) as T }
+        return try parameters[name].flatMap { try getJson(name: name, from: $0, for: method) as T }
     }
 
     /// Attempts to extract the top-level `"params"` object from a JSON-RPC request, if present.
@@ -161,8 +158,8 @@ internal enum JSONRPCParser {
     ///   - request: The full JSON-RPC request object.
     /// - Returns: A dictionary of parameters (`[String: JSONObject]`), or `nil` if the `"params"` field is not present.
     /// - Throws: `JSONError.invalidParams` if the `"params"` field exists but is not a valid object.
-    internal static func getOptionalParamsIfPresent(request: JSONRequest) throws -> [String: JSONObject]? {
-        return try getOptionalJsonParameterIfPresent(
+    internal static func getOptionalRequestParamsIfPresent(request: JSONRequest) throws -> [String: JSONObject]? {
+        return try getOptionalParameterIfPresent(
             name: "params",
             from: request.toDict(),
             for: JSONRPCMethod.method(named: request.method))
@@ -174,21 +171,21 @@ internal enum JSONRPCParser {
     /// - Parameters:
     ///   - name: The name of the parameter to extract.
     ///   - parameters: The JSON-RPC parameters dictionary.
-    ///   - funcName: The name of the JSON-RPC method (for error context).
+    ///   - method: The name of the JSON-RPC method (for error context).
     /// - Returns: An optional array of parsed values of type `T`, or `nil` if the parameter is not present.
     /// - Throws: `JSONError.invalidParams` if the parameter exists but is not a list or contains invalid values.
     internal static func getOptionalPrimitiveListIfPresent<T>(
         name: String,
         from parameters: [String: JSONObject],
-        for funcName: JSONRPCMethod
+        for method: JSONRPCMethod
     ) throws -> [T]? {
         guard
-            let list: [JSONObject] = try getOptionalJsonParameterIfPresent(name: name, from: parameters, for: funcName)
+            let list: [JSONObject] = try getOptionalParameterIfPresent(name: name, from: parameters, for: method)
         else {
             return nil
         }
 
-        return try list.map { try getJson(name: "\(name) element", from: $0, for: funcName) as T }
+        return try list.map { try getJson(name: "\(name) element", from: $0, for: method) as T }
     }
 
     /// Attempts to extract and parse an optional JSON parameter as a list of strongly-typed custom objects.
@@ -196,17 +193,17 @@ internal enum JSONRPCParser {
     /// - Parameters:
     ///   - name: The name of the optional parameter.
     ///   - parameters: The JSON-RPC parameters.
-    ///   - funcName: The name of the JSON-RPC method (for error context).
+    ///   - method: The name of the JSON-RPC method (for error context).
     ///   - decoder: A function to decode each `JSONObject` into a custom type.
     /// - Returns: An optional array of parsed custom objects, or `nil` if the parameter is not present.
     /// - Throws: `JSONError.invalidParams` if the parameter exists but is not a list or contains invalid elements.
     internal static func getOptionalCustomObjectListIfPresent<T>(
         name: String,
         from parameters: [String: JSONObject],
-        for funcName: JSONRPCMethod,
+        for method: JSONRPCMethod,
         decoder: (JSONObject) throws -> T
     ) throws -> [T]? {
-        let list: [JSONObject]? = try getOptionalJsonParameterIfPresent(name: name, from: parameters, for: funcName)
+        let list: [JSONObject]? = try getOptionalParameterIfPresent(name: name, from: parameters, for: method)
         return try list?.map(decoder)
     }
 
@@ -215,24 +212,24 @@ internal enum JSONRPCParser {
     /// - Parameters:
     ///   - name: The name of the parameter.
     ///   - params: The JSON-RPC parameters.
-    ///   - funcName: The method name, for error context.
+    ///   - method: The method name, for error context.
     ///   - constructor: A throwing function that constructs the target type from a `[String: JSONObject]`.
     /// - Returns: The parsed value, or `nil` if the parameter is absent.
     /// - Throws: Rethrows any error from `constructor` if the parameter is present but parsing fails.
     internal static func getOptionalCustomObjectIfPresent<T>(
         name: String,
         from params: [String: JSONObject],
-        for funcName: JSONRPCMethod,
+        for method: JSONRPCMethod,
         using constructor: ([String: JSONObject], JSONRPCMethod) throws -> T
     ) throws -> T? {
         guard
-            let value: [String: JSONObject] = try JSONRPCParser.getOptionalJsonParameterIfPresent(
-                name: name, from: params, for: funcName)
+            let value: [String: JSONObject] = try JSONRPCParser.getOptionalParameterIfPresent(
+                name: name, from: params, for: method)
         else {
             return nil
         }
 
-        return try constructor(value, funcName)
+        return try constructor(value, method)
     }
 
     // MARK: - Private Helpers

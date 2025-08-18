@@ -22,31 +22,29 @@ internal struct CreateAccountParams {
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .createAccount
-        guard let params = try JSONRPCParser.getOptionalParamsIfPresent(request: request) else { return }
+        guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else { return }
 
-        self.key = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.key = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "key", from: params, for: method)
-        self.initialBalance = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.initialBalance = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "initialBalance", from: params, for: method)
-        self.receiverSignatureRequired = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.receiverSignatureRequired = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "receiverSignatureRequired", from: params, for: method)
-        self.autoRenewPeriod = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.autoRenewPeriod = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "autoRenewPeriod", from: params, for: method)
-        self.memo = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.memo = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "memo", from: params, for: method)
-        self.maxAutoTokenAssociations = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.maxAutoTokenAssociations = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "maxAutoTokenAssociations", from: params, for: method)
-        self.stakedAccountId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.stakedAccountId = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "stakedAccountId", from: params, for: method)
-        self.stakedNodeId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.stakedNodeId = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "stakedNodeId", from: params, for: method)
-        self.declineStakingReward = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.declineStakingReward = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "declineStakingReward", from: params, for: method)
-        self.alias = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.alias = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "alias", from: params, for: method)
-        self.commonTransactionParams = try CommonTransactionParams(
-            from: JSONRPCParser.getOptionalJsonParameterIfPresent(
-                name: "commonTransactionParams", from: params, for: method),
-            for: method)
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams", from: params, for: method, using: CommonTransactionParams.init)
     }
 }

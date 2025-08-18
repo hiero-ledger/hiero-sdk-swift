@@ -9,8 +9,8 @@ internal struct TokenAllowance {
     internal var tokenId: String
     internal var amount: String
 
-    internal init(from params: [String: JSONObject], for funcName: JSONRPCMethod) throws {
-        self.tokenId = try JSONRPCParser.getRequiredJsonParameter(name: "tokenId", from: params, for: funcName)
-        self.amount = try JSONRPCParser.getRequiredJsonParameter(name: "amount", from: params, for: funcName)
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.tokenId = try JSONRPCParser.getRequiredParameter(name: "tokenId", from: params, for: method)
+        self.amount = try JSONRPCParser.getRequiredParameter(name: "amount", from: params, for: method)
     }
 }

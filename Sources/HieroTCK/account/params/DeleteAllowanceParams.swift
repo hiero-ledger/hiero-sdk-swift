@@ -12,13 +12,11 @@ internal struct DeleteAllowanceParams {
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .deleteAllowance
-        let params = try JSONRPCParser.getRequiredParams(request: request)
+        let params = try JSONRPCParser.getRequiredRequestParams(request: request)
 
         self.allowances = try JSONRPCParser.getRequiredCustomObjectList(
             name: "allowances", from: params, for: method, decoder: RemoveAllowance.jsonObjectDecoder(for: method))
-        self.commonTransactionParams = try CommonTransactionParams(
-            from: JSONRPCParser.getOptionalJsonParameterIfPresent(
-                name: "commonTransactionParams", from: params, for: method),
-            for: method)
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams", from: params, for: method, using: CommonTransactionParams.init)
     }
 }

@@ -153,7 +153,7 @@ internal class TCKServer {
                     )
                 )
             default:
-            print(error)
+                print(error)
                 return JSONResponse(
                     id: request.id,
                     error: JSONError.internalError(

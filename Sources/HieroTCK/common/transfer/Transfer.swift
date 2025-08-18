@@ -17,15 +17,15 @@ internal struct Transfer {
     internal var nft: NftTransfer? = nil
     internal var approved: Bool? = nil
 
-    internal init(from params: [String: JSONObject], for funcName: JSONRPCMethod) throws {
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
         self.hbar = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "hbar", from: params, for: funcName, using: HbarTransfer.init)
+            name: "hbar", from: params, for: method, using: HbarTransfer.init)
         self.token = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "token", from: params, for: funcName, using: TokenTransfer.init)
+            name: "token", from: params, for: method, using: TokenTransfer.init)
         self.nft = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "nft", from: params, for: funcName, using: NftTransfer.init)
-        self.approved = try JSONRPCParser.getOptionalJsonParameterIfPresent(
-            name: "approved", from: params, for: funcName)
+            name: "nft", from: params, for: method, using: NftTransfer.init)
+        self.approved = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "approved", from: params, for: method)
 
         // Only one transfer type should be allowed.
         let nonNilCount = [self.hbar as Any?, self.token as Any?, self.nft as Any?].compactMap { $0 }

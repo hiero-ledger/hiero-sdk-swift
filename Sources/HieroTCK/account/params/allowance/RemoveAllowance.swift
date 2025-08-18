@@ -14,13 +14,13 @@ internal struct RemoveAllowance {
     internal var tokenId: String
     internal var serialNumbers: [String]
 
-    internal init(from params: [String: JSONObject], for funcName: JSONRPCMethod) throws {
-        self.ownerAccountId = try JSONRPCParser.getRequiredJsonParameter(
-            name: "ownerAccountId", from: params, for: funcName)
-        self.tokenId = try JSONRPCParser.getRequiredJsonParameter(
-            name: "tokenId", from: params, for: funcName)
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.ownerAccountId = try JSONRPCParser.getRequiredParameter(
+            name: "ownerAccountId", from: params, for: method)
+        self.tokenId = try JSONRPCParser.getRequiredParameter(
+            name: "tokenId", from: params, for: method)
         self.serialNumbers = try JSONRPCParser.getRequiredPrimitiveList(
-            name: "serialNumbers", from: params, for: funcName)
+            name: "serialNumbers", from: params, for: method)
     }
 
     /// Returns a closure that decodes a `JSONObject` into a `RemoveAllowance`, using the given method for error context.

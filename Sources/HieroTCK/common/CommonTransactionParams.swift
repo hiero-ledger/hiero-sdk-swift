@@ -22,19 +22,19 @@ internal struct CommonTransactionParams {
 
     // MARK: - Initializers
 
-    internal init(from parameters: [String: JSONObject]?, for funcName: JSONRPCMethod) throws {
+    internal init(from parameters: [String: JSONObject]?, for method: JSONRPCMethod) throws {
         guard let params = parameters else { return }
 
-        self.transactionId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
-            name: "transactionId", from: params, for: funcName)
-        self.maxTransactionFee = try JSONRPCParser.getOptionalJsonParameterIfPresent(
-            name: "maxTransactionFee", from: params, for: funcName)
-        self.validTransactionDuration = try JSONRPCParser.getOptionalJsonParameterIfPresent(
-            name: "validTransactionDuration", from: params, for: funcName)
-        self.memo = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "memo", from: params, for: funcName)
-        self.regenerateTransactionId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
-            name: "regenerateTransactionId", from: params, for: funcName)
-        self.signers = try JSONRPCParser.getOptionalPrimitiveListIfPresent(name: "signers", from: params, for: funcName)
+        self.transactionId = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "transactionId", from: params, for: method)
+        self.maxTransactionFee = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "maxTransactionFee", from: params, for: method)
+        self.validTransactionDuration = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "validTransactionDuration", from: params, for: method)
+        self.memo = try JSONRPCParser.getOptionalParameterIfPresent(name: "memo", from: params, for: method)
+        self.regenerateTransactionId = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "regenerateTransactionId", from: params, for: method)
+        self.signers = try JSONRPCParser.getOptionalPrimitiveListIfPresent(name: "signers", from: params, for: method)
     }
 
     // MARK: - Helper Functions
@@ -56,18 +56,17 @@ internal struct CommonTransactionParams {
                 // If parsing fails, treat it as an AccountId and generate a TransactionId from it.
                 transaction.transactionId = try TransactionId.generateFrom(AccountId.fromString(transactionId))
             }
-        
         }
 
         transaction.maxTransactionFee = self.maxTransactionFee.flatMap { Hbar.fromTinybars($0) }
         transaction.transactionValidDuration = self.validTransactionDuration.flatMap {
-            Duration(seconds: toUint64($0))
+            Duration(seconds: UInt64(bitPattern: $0))
         }
-        transaction.transactionMemo = self.memo ?? transaction.transactionMemo
-        transaction.regenerateTransactionId = self.regenerateTransactionId ?? transaction.regenerateTransactionId
+        setIfPresent(&transaction.transactionMemo, to: self.memo)
+        setIfPresent(&transaction.regenerateTransactionId, to: self.regenerateTransactionId)
 
         try self.signers.map {
-            try transaction.freezeWith(SDKClient.client.getClient())
+            try SDKClient.client.freezeTransaction(&transaction)
             try $0.forEach { transaction.sign(try PrivateKey.fromStringDer($0)) }
         }
     }

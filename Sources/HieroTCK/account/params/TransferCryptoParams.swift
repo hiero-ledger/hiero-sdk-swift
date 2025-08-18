@@ -11,13 +11,11 @@ internal struct TransferCryptoParams {
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .transferCrypto
-        let params = try JSONRPCParser.getRequiredParams(request: request)
+        let params = try JSONRPCParser.getRequiredRequestParams(request: request)
 
         self.transfers = try JSONRPCParser.getOptionalCustomObjectListIfPresent(
             name: "transfers", from: params, for: method, decoder: Transfer.jsonObjectDecoder(for: method))
-        self.commonTransactionParams = try CommonTransactionParams(
-            from: JSONRPCParser.getOptionalJsonParameterIfPresent(
-                name: "commonTransactionParams", from: params, for: method),
-            for: method)
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams", from: params, for: method, using: CommonTransactionParams.init)
     }
 }

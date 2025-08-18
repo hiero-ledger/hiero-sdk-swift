@@ -22,7 +22,7 @@ internal struct GenerateKeyParams {
     ///   - request: The JSON-RPC request parameters.
     /// - Throws: `JSONError.invalidParams` if required fields are missing or malformed.
     internal init(request: JSONRequest) throws {
-        try self.init(params: JSONRPCParser.getRequiredParams(request: request))
+        try self.init(params: JSONRPCParser.getRequiredRequestParams(request: request))
     }
 
     /// Initializes from a `[String: JSONObject]` parameter map.
@@ -33,11 +33,11 @@ internal struct GenerateKeyParams {
     private init(params: [String: JSONObject]) throws {
         let method: JSONRPCMethod = .generateKey
 
-        self.type = try JSONRPCParser.getRequiredJsonParameter(
+        self.type = try JSONRPCParser.getRequiredParameter(
             name: "type", from: params, for: method)
-        self.fromKey = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.fromKey = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "fromKey", from: params, for: method)
-        self.threshold = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.threshold = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "threshold", from: params, for: method)
         self.keys = try JSONRPCParser.getOptionalCustomObjectListIfPresent(
             name: "keys", from: params, for: method

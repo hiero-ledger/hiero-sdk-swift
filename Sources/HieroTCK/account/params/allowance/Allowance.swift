@@ -23,17 +23,17 @@ internal struct Allowance {
     internal var token: TokenAllowance? = nil
     internal var nft: NftAllowance? = nil
 
-    internal init(from params: [String: JSONObject], for funcName: JSONRPCMethod) throws {
-        self.ownerAccountId = try JSONRPCParser.getRequiredJsonParameter(
-            name: "ownerAccountId", from: params, for: funcName)
-        self.spenderAccountId = try JSONRPCParser.getRequiredJsonParameter(
-            name: "spenderAccountId", from: params, for: funcName)
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.ownerAccountId = try JSONRPCParser.getRequiredParameter(
+            name: "ownerAccountId", from: params, for: method)
+        self.spenderAccountId = try JSONRPCParser.getRequiredParameter(
+            name: "spenderAccountId", from: params, for: method)
         self.hbar = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "hbar", from: params, for: funcName, using: HbarAllowance.init)
+            name: "hbar", from: params, for: method, using: HbarAllowance.init)
         self.token = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "token", from: params, for: funcName, using: TokenAllowance.init)
+            name: "token", from: params, for: method, using: TokenAllowance.init)
         self.nft = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "nft", from: params, for: funcName, using: NftAllowance.init)
+            name: "nft", from: params, for: method, using: NftAllowance.init)
 
         // Only one allowance type should be allowed.
         let nonNilCount = [self.hbar as Any?, self.token as Any?, self.nft as Any?].compactMap { $0 }.count

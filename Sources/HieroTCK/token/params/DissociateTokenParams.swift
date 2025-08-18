@@ -14,15 +14,12 @@ internal struct DissociateTokenParams {
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .dissociateToken
-        guard let params = try JSONRPCParser.getOptionalParamsIfPresent(request: request) else { return }
+        guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else { return }
 
-        self.accountId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.accountId = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "accountId", from: params, for: method)
         self.tokenIds = try JSONRPCParser.getOptionalPrimitiveListIfPresent(name: "tokenIds", from: params, for: method)
-        self.commonTransactionParams = try CommonTransactionParams(
-            from: try JSONRPCParser.getOptionalJsonParameterIfPresent(
-                name: "commonTransactionParams", from: params, for: method),
-            for: method)
-
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams", from: params, for: method, using: CommonTransactionParams.init)
     }
 }

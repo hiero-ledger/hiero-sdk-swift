@@ -25,17 +25,17 @@ internal struct SetupParams {
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .setup
-        let params = try JSONRPCParser.getRequiredParams(request: request)
+        let params = try JSONRPCParser.getRequiredRequestParams(request: request)
 
-        self.operatorAccountId = try JSONRPCParser.getRequiredJsonParameter(
+        self.operatorAccountId = try JSONRPCParser.getRequiredParameter(
             name: "operatorAccountId", from: params, for: method)
-        self.operatorPrivateKey = try JSONRPCParser.getRequiredJsonParameter(
+        self.operatorPrivateKey = try JSONRPCParser.getRequiredParameter(
             name: "operatorPrivateKey", from: params, for: method)
-        self.nodeIp = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.nodeIp = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "nodeIp", from: params, for: method)
-        self.nodeAccountId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.nodeAccountId = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "nodeAccountId", from: params, for: method)
-        self.mirrorNetworkIp = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.mirrorNetworkIp = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "mirrorNetworkIp", from: params, for: method)
     }
 }

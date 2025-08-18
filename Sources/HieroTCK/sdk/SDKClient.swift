@@ -57,9 +57,48 @@ internal class SDKClient {
 
     // MARK: - Helpers
 
-    /// Returns the active `Hiero.Client` instance.
-    internal func getClient() -> Client {
-        return client
+    /// Executes a Hiero transaction and wraps its final status in a JSON-RPC friendly `JSONObject`.
+    ///
+    /// This is a convenience for JSON-RPC responses where only the transaction status is required,
+    /// rather than the full receipt. The status is returned as a `.dictionary` containing a single
+    /// `"status"` key with the string description of the receipt status.
+    ///
+    /// - Parameters:
+    ///   - tx: The Hiero transaction to execute.
+    /// - Returns: A `JSONObject.dictionary` with `"status"` mapped to the transaction's final status string.
+    /// - Throws: Any error that occurs while executing the transaction or fetching its receipt.
+    internal func executeTransactionAndGetJsonRpcStatus<T: Transaction>(_ tx: T) async throws -> JSONObject {
+        let txReceipt = try await executeTransactionAndGetReceipt(tx)
+        return .dictionary(["status": .string(txReceipt.status.description)])
+    }
+
+    /// Executes a Hiero transaction and waits for its final receipt.
+    ///
+    /// This submits the transaction to the Hiero network, waits for consensus, and then queries
+    /// the network for the transaction's receipt. The receipt contains the authoritative final
+    /// outcome of the transaction (e.g. status, new entity IDs, etc.).
+    ///
+    /// - Parameters:
+    ///   - tx: The Hiero transaction to execute.
+    /// - Returns: The `TransactionReceipt` for the transaction once consensus is reached.
+    /// - Throws: Any error that occurs during execution or receipt retrieval.
+    internal func executeTransactionAndGetReceipt<T: Transaction>(_ tx: T) async throws
+        -> TransactionReceipt
+    {
+        return try await tx.execute(client).getReceipt(client)
+    }
+
+    /// Freezes a Hiero transaction with the current client.
+    ///
+    /// Freezing finalizes the transaction body, preventing further modifications to its fields
+    /// and preparing it for signing and execution. This is a required step before submitting
+    /// a transaction to the network.
+    ///
+    /// - Parameters:
+    ///   - tx: The transaction to freeze. Passed `inout` so its state is updated in place.
+    /// - Throws: Any error encountered while freezing the transaction (e.g. invalid configuration).
+    internal func freezeTransaction<T: Transaction>(_ tx: inout T) throws {
+        try tx.freezeWith(client)
     }
 
     // MARK: - Private

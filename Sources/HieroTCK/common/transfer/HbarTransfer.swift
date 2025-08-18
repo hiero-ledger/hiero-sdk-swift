@@ -14,11 +14,11 @@ internal struct HbarTransfer {
     internal var evmAddress: String? = nil
     internal var amount: String
 
-    internal init(from params: [String: JSONObject], for funcName: JSONRPCMethod) throws {
-        self.accountId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
-            name: "accountId", from: params, for: funcName)
-        self.evmAddress = try JSONRPCParser.getOptionalJsonParameterIfPresent(
-            name: "evmAddress", from: params, for: funcName)
-        self.amount = try JSONRPCParser.getRequiredJsonParameter(name: "amount", from: params, for: funcName)
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.accountId = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "accountId", from: params, for: method)
+        self.evmAddress = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "evmAddress", from: params, for: method)
+        self.amount = try JSONRPCParser.getRequiredParameter(name: "amount", from: params, for: method)
     }
 }

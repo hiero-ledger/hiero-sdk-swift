@@ -59,17 +59,16 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
         _ amount: Int64,
         _ approved: Bool
     ) -> Self {
-        for (index, transfer) in transfers.enumerated() {
-            if transfer.accountId == accountId && transfer.isApproval == approved {
-                let newTinybars = transfer.amount + amount
-                if newTinybars == 0 {
-                    transfers.remove(at: index)
-                } else {
-                    transfers[index].amount = newTinybars
-                }
-
-                return self
+        for (index, transfer) in transfers.enumerated()
+        where transfer.accountId == accountId && transfer.isApproval == approved {
+            let newTinybars = transfer.amount + amount
+            if newTinybars == 0 {
+                transfers.remove(at: index)
+            } else {
+                transfers[index].amount = newTinybars
             }
+
+            return self
         }
 
         transfers.append(Transfer(accountId: accountId, amount: amount, isApproval: approved))

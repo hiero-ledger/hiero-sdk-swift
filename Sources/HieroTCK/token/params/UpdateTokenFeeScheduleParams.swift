@@ -14,14 +14,12 @@ internal struct UpdateTokenFeeScheduleParams {
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .updateTokenFeeSchedule
-        guard let params = try JSONRPCParser.getOptionalParamsIfPresent(request: request) else { return }
+        guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else { return }
 
-        self.tokenId = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "tokenId", from: params, for: method)
+        self.tokenId = try JSONRPCParser.getOptionalParameterIfPresent(name: "tokenId", from: params, for: method)
         self.customFees = try JSONRPCParser.getOptionalCustomObjectListIfPresent(
             name: "customFees", from: params, for: method, decoder: CustomFee.jsonObjectDecoder(for: method))
-        self.commonTransactionParams = try CommonTransactionParams(
-            from: try JSONRPCParser.getOptionalJsonParameterIfPresent(
-                name: "commonTransactionParams", from: params, for: method),
-            for: method)
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams", from: params, for: method, using: CommonTransactionParams.init)
     }
 }

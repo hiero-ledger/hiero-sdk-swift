@@ -12,10 +12,10 @@ internal struct FixedFee {
     internal var amount: String
     internal var denominatingTokenID: String? = nil
 
-    internal init(from params: [String: JSONObject], for funcName: JSONRPCMethod) throws {
-        self.amount = try JSONRPCParser.getRequiredJsonParameter(name: "amount", from: params, for: funcName)
-        self.denominatingTokenID = try JSONRPCParser.getOptionalJsonParameterIfPresent(
-            name: "denominatingTokenId", from: params, for: funcName)
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.amount = try JSONRPCParser.getRequiredParameter(name: "amount", from: params, for: method)
+        self.denominatingTokenID = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "denominatingTokenId", from: params, for: method)
     }
 
     /// Converts this `FixedFee` type into a Hiero `FixedFee` type.
@@ -27,17 +27,20 @@ internal struct FixedFee {
     /// - Parameters:
     ///   - feeCollectorAccountId: The `AccountId` of the account collecting the fee.
     ///   - feeCollectorsExempt: Whether all fee collectors are exempt from fees.
-    ///   - funcName: The JSON-RPC method name, used for error context if parsing fails.
-    /// - Returns: A fully constructed `Hiero.FixedFee` object.
+    ///   - method: The JSON-RPC method name, used for error context if parsing fails.
+    /// - Returns: A fully constructed Hiero `FixedFee` object.
     /// - Throws: `JSONError.invalidParams` if `amount` is invalid or token ID decoding fails.
     internal func toHieroCustomFee(
-        feeCollectorAccountId: AccountId, feeCollectorsExempt: Bool, for funcName: JSONRPCMethod
-    )
-        throws -> Hiero.FixedFee
-    {
+        feeCollectorAccountId: AccountId,
+        feeCollectorsExempt: Bool,
+        for method: JSONRPCMethod
+    ) throws -> Hiero.FixedFee {
         // Unwrap of self.amount can be safely forced since self.amount isn't optional.
         return Hiero.FixedFee(
-            amount: try CommonParamsParser.getSdkUInt64IfPresent(name: "amount", from: self.amount, for: funcName)!,
+            amount: try CommonParamsParser.getAmount(
+                from: self.amount,
+                for: method,
+                using: parseUInt64ReinterpretingSigned(name:from:for:)),
             denominatingTokenId: try CommonParamsParser.getTokenIdIfPresent(from: self.denominatingTokenID),
             feeCollectorAccountId: feeCollectorAccountId,
             allCollectorsAreExempt: feeCollectorsExempt

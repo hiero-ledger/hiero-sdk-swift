@@ -13,8 +13,8 @@ internal enum Program {
         client.setOperator(env.operatorAccountId, env.operatorKey)
 
         let transactionResponse = try await TransferTransaction()
-            .hbarTransfer("0.0.1001", 20)
-            .hbarTransfer("0.0.6189", -20)
+            .hbarTransfer(AccountId.fromString("0.0.1001"), 20)
+            .hbarTransfer(AccountId.fromString("0.0.6189"), -20)
             .execute(client)
 
         // either of these values can be used to lookup transactions in an explorer such as

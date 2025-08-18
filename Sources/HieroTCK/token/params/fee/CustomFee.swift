@@ -18,17 +18,17 @@ internal struct CustomFee {
     internal var fractionalFee: FractionalFee? = nil
     internal var royaltyFee: RoyaltyFee? = nil
 
-    internal init(from params: [String: JSONObject], for funcName: JSONRPCMethod) throws {
-        self.feeCollectorAccountId = try JSONRPCParser.getRequiredJsonParameter(
-            name: "feeCollectorAccountId", from: params, for: funcName)
-        self.feeCollectorsExempt = try JSONRPCParser.getRequiredJsonParameter(
-            name: "feeCollectorsExempt", from: params, for: funcName)
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.feeCollectorAccountId = try JSONRPCParser.getRequiredParameter(
+            name: "feeCollectorAccountId", from: params, for: method)
+        self.feeCollectorsExempt = try JSONRPCParser.getRequiredParameter(
+            name: "feeCollectorsExempt", from: params, for: method)
         self.fixedFee = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "fixedFee", from: params, for: funcName, using: FixedFee.init)
+            name: "fixedFee", from: params, for: method, using: FixedFee.init)
         self.fractionalFee = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "fractionalFee", from: params, for: funcName, using: FractionalFee.init)
+            name: "fractionalFee", from: params, for: method, using: FractionalFee.init)
         self.royaltyFee = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "royaltyFee", from: params, for: funcName, using: RoyaltyFee.init)
+            name: "royaltyFee", from: params, for: method, using: RoyaltyFee.init)
 
         // Only one fee type should be allowed.
         let nonNilCount = [self.fixedFee as Any?, self.fractionalFee as Any?, self.royaltyFee as Any?].compactMap { $0 }
@@ -46,10 +46,10 @@ internal struct CustomFee {
     /// Constructs the appropriate fee variant with the common `feeCollectorAccountId` and `feeCollectorsExempt` values.
     ///
     /// - Parameters:
-    ///   - funcName: The JSON-RPC method name, used for contextual error messages.
+    ///   - method: The JSON-RPC method name, used for contextual error messages.
     /// - Returns: A strongly-typed `AnyCustomFee` (fixed, fractional, or royalty).
     /// - Throws: `JSONError.invalidParams` if more than one or no fee type is provided, or if parsing fails.
-    internal func toHieroCustomFee(for funcName: JSONRPCMethod) throws -> AnyCustomFee {
+    internal func toHieroCustomFee(for method: JSONRPCMethod) throws -> AnyCustomFee {
         let feeCollectorAccountId = try AccountId.fromString(self.feeCollectorAccountId)
         let feeCollectorsExempt = self.feeCollectorsExempt
 
@@ -57,7 +57,7 @@ internal struct CustomFee {
         let nonNilFees = [self.fixedFee as Any?, self.fractionalFee as Any?, self.royaltyFee as Any?].compactMap { $0 }
         guard nonNilFees.count == 1 else {
             throw JSONError.invalidParams(
-                "\(funcName): exactly one fee type (fixedFee, fractionalFee, or royaltyFee) SHALL be provided.")
+                "\(method): exactly one fee type (fixedFee, fractionalFee, or royaltyFee) SHALL be provided.")
         }
 
         if let fixed = self.fixedFee {
@@ -65,20 +65,20 @@ internal struct CustomFee {
                 try fixed.toHieroCustomFee(
                     feeCollectorAccountId: feeCollectorAccountId,
                     feeCollectorsExempt: feeCollectorsExempt,
-                    for: funcName))
+                    for: method))
         } else if let fractional = self.fractionalFee {
             return .fractional(
                 try fractional.toHieroCustomFee(
                     feeCollectorAccountId: feeCollectorAccountId,
                     feeCollectorsExempt: feeCollectorsExempt,
-                    for: funcName))
+                    for: method))
         } else {
             // Safe to force unwrap since royalty is guaranteed to be non-nil at this point.
             return .royalty(
                 try self.royaltyFee!.toHieroCustomFee(
                     feeCollectorAccountId: feeCollectorAccountId,
                     feeCollectorsExempt: feeCollectorsExempt,
-                    for: funcName))
+                    for: method))
         }
     }
 

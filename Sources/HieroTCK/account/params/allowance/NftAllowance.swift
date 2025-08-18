@@ -15,13 +15,13 @@ internal struct NftAllowance {
     internal var approvedForAll: Bool? = nil
     internal var delegateSpenderAccountId: String? = nil
 
-    internal init(from params: [String: JSONObject], for funcName: JSONRPCMethod) throws {
-        self.tokenId = try JSONRPCParser.getRequiredJsonParameter(name: "tokenId", from: params, for: funcName)
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.tokenId = try JSONRPCParser.getRequiredParameter(name: "tokenId", from: params, for: method)
         self.serialNumbers = try JSONRPCParser.getOptionalPrimitiveListIfPresent(
-            name: "serialNumbers", from: params, for: funcName)
-        self.approvedForAll = try JSONRPCParser.getOptionalJsonParameterIfPresent(
-            name: "approvedForAll", from: params, for: funcName)
-        self.delegateSpenderAccountId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
-            name: "delegateSpenderAccountId", from: params, for: funcName)
+            name: "serialNumbers", from: params, for: method)
+        self.approvedForAll = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "approvedForAll", from: params, for: method)
+        self.delegateSpenderAccountId = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "delegateSpenderAccountId", from: params, for: method)
     }
 }

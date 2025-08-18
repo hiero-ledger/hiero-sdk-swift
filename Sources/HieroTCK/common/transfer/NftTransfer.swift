@@ -14,14 +14,14 @@ internal struct NftTransfer {
     internal var tokenId: String
     internal var serialNumber: String
 
-    internal init(from params: [String: JSONObject], for funcName: JSONRPCMethod) throws {
-        self.senderAccountId = try JSONRPCParser.getRequiredJsonParameter(
-            name: "senderAccountId", from: params, for: funcName)
-        self.receiverAccountId = try JSONRPCParser.getRequiredJsonParameter(
-            name: "receiverAccountId", from: params, for: funcName)
-        self.tokenId = try JSONRPCParser.getRequiredJsonParameter(
-            name: "tokenId", from: params, for: funcName)
-        self.serialNumber = try JSONRPCParser.getRequiredJsonParameter(
-            name: "serialNumber", from: params, for: funcName)
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.senderAccountId = try JSONRPCParser.getRequiredParameter(
+            name: "senderAccountId", from: params, for: method)
+        self.receiverAccountId = try JSONRPCParser.getRequiredParameter(
+            name: "receiverAccountId", from: params, for: method)
+        self.tokenId = try JSONRPCParser.getRequiredParameter(
+            name: "tokenId", from: params, for: method)
+        self.serialNumber = try JSONRPCParser.getRequiredParameter(
+            name: "serialNumber", from: params, for: method)
     }
 }

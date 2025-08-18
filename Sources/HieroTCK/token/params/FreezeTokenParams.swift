@@ -15,14 +15,12 @@ internal struct FreezeTokenParams {
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .freezeToken
-        guard let params = try JSONRPCParser.getOptionalParamsIfPresent(request: request) else { return }
+        guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else { return }
 
-        self.tokenId = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "tokenId", from: params, for: method)
-        self.accountId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.tokenId = try JSONRPCParser.getOptionalParameterIfPresent(name: "tokenId", from: params, for: method)
+        self.accountId = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "accountId", from: params, for: method)
-        self.commonTransactionParams = try CommonTransactionParams(
-            from: try JSONRPCParser.getOptionalJsonParameterIfPresent(
-                name: "commonTransactionParams", from: params, for: method),
-            for: method)
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams", from: params, for: method, using: CommonTransactionParams.init)
     }
 }

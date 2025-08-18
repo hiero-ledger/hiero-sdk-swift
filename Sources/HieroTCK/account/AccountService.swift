@@ -27,28 +27,30 @@ internal class AccountService {
 
             switch (allowance.hbar, allowance.token, allowance.nft) {
             case let (hbar?, nil, nil):
-                let amount: Int64 = try toInt(name: "amount", from: hbar.amount, for: method)
+                let amount = try CommonParamsParser.getAmount(
+                    from: hbar.amount, for: method, using: parseInt64(name:from:for:))
                 tx.approveHbarAllowance(ownerAccountId, spenderAccountId, Hbar.fromTinybars(amount))
 
             case let (nil, token?, nil):
                 let tokenId = try TokenId.fromString(token.tokenId)
-                let amount: Int64 = try toInt(name: "amount", from: token.amount, for: method)
-                tx.approveTokenAllowance(tokenId, ownerAccountId, spenderAccountId, toUint64(amount))
+                let amount = try CommonParamsParser.getAmount(
+                    from: token.amount, for: method, using: parseUInt64ReinterpretingSigned(name:from:for:))
+                tx.approveTokenAllowance(tokenId, ownerAccountId, spenderAccountId, amount)
 
             case let (nil, nil, nft?):
                 let tokenId = try TokenId.fromString(nft.tokenId)
 
                 if let serials = nft.serialNumbers {
-                    for serial in serials {
-                        let serialNum = toUint64(
-                            try toInt(name: "serial number in serialNumbers", from: serial, for: method))
-                        let nftId = NftId(tokenId: tokenId, serial: serialNum)
+                    for (index, serial) in serials.enumerated() {
+                        let nftId = NftId(
+                            tokenId: tokenId,
+                            serial: try CommonParamsParser.getSerialNumber(from: serial, for: method, index: index))
 
                         tx.approveTokenNftAllowance(
                             nftId,
                             ownerAccountId,
                             spenderAccountId,
-                            try nft.delegateSpenderAccountId.flatMap(AccountId.fromString)
+                            try nft.delegateSpenderAccountId.map(AccountId.fromString)
                         )
                     }
                 } else if let approvedForAll = nft.approvedForAll, approvedForAll {
@@ -65,9 +67,7 @@ internal class AccountService {
 
         try params.commonTransactionParams?.fillOutTransaction(transaction: &tx)
 
-        let txReceipt = try await tx.execute(SDKClient.client.getClient()).getReceipt(
-            SDKClient.client.getClient())
-        return .dictionary(["status": .string(txReceipt.status.description)])
+        return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
     }
 
     /// Handles the `deleteAllowance` JSON-RPC method.
@@ -79,20 +79,17 @@ internal class AccountService {
             let ownerAccountId = try AccountId.fromString(allowance.ownerAccountId)
             let tokenId = try TokenId.fromString(allowance.tokenId)
 
-            for serialNumber in allowance.serialNumbers {
+            for (index, serial) in allowance.serialNumbers.enumerated() {
                 let nftId = NftId(
                     tokenId: tokenId,
-                    serial: toUint64(
-                        try toInt(name: "serial number in serialNumbers list", from: serialNumber, for: method)))
+                    serial: try CommonParamsParser.getSerialNumber(from: serial, for: method, index: index))
                 tx.deleteAllTokenNftAllowances(nftId, ownerAccountId)
             }
         }
 
         try params.commonTransactionParams?.fillOutTransaction(transaction: &tx)
 
-        let txReceipt = try await tx.execute(SDKClient.client.getClient()).getReceipt(
-            SDKClient.client.getClient())
-        return .dictionary(["status": .string(txReceipt.status.description)])
+        return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
     }
 
     /// Handles the `createAccount` JSON-RPC method.
@@ -101,24 +98,23 @@ internal class AccountService {
         let method: JSONRPCMethod = .createAccount
 
         tx.key = try CommonParamsParser.getKeyIfPresent(from: params.key)
-        tx.initialBalance =
-            try params.initialBalance.flatMap {
-                Hbar.fromTinybars(try toInt(name: "initialBalance", from: $0, for: method))
-            }
-            ?? tx.initialBalance
-        tx.receiverSignatureRequired = params.receiverSignatureRequired ?? tx.receiverSignatureRequired
+        setIfPresent(
+            &tx.initialBalance,
+            to: try params.initialBalance.flatMap {
+                Hbar.fromTinybars(try parseInt64(name: "initialBalance", from: $0, for: method))
+            })
+        setIfPresent(&tx.receiverSignatureRequired, to: params.receiverSignatureRequired)
         tx.autoRenewPeriod = try CommonParamsParser.getAutoRenewPeriodIfPresent(
             from: params.autoRenewPeriod, for: method)
-        tx.accountMemo = params.memo ?? tx.accountMemo
-        tx.maxAutomaticTokenAssociations = params.maxAutoTokenAssociations ?? tx.maxAutomaticTokenAssociations
+        setIfPresent(&tx.accountMemo, to: params.memo)
+        setIfPresent(&tx.maxAutomaticTokenAssociations, to: params.maxAutoTokenAssociations)
         tx.alias = try params.alias.flatMap { try EvmAddress.fromString($0) }
         tx.stakedAccountId = try CommonParamsParser.getAccountIdIfPresent(from: params.stakedAccountId)
         tx.stakedNodeId = try CommonParamsParser.getStakedNodeIdIfPresent(from: params.stakedNodeId, for: method)
-        tx.declineStakingReward = params.declineStakingReward ?? tx.declineStakingReward
+        setIfPresent(&tx.declineStakingReward, to: params.declineStakingReward)
         try params.commonTransactionParams?.fillOutTransaction(transaction: &tx)
 
-        let txReceipt = try await tx.execute(SDKClient.client.getClient()).getReceipt(
-            SDKClient.client.getClient())
+        let txReceipt = try await SDKClient.client.executeTransactionAndGetReceipt(tx)
         return .dictionary([
             "accountId": .string(txReceipt.accountId!.toString()),
             "status": .string(txReceipt.status.description),
@@ -133,9 +129,7 @@ internal class AccountService {
         tx.transferAccountId = try CommonParamsParser.getAccountIdIfPresent(from: params.transferAccountId)
         try params.commonTransactionParams?.fillOutTransaction(transaction: &tx)
 
-        let txReceipt = try await tx.execute(SDKClient.client.getClient()).getReceipt(
-            SDKClient.client.getClient())
-        return .dictionary(["status": .string(txReceipt.status.description)])
+        return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
     }
 
     /// Handles the `transferCrypto` JSON-RPC method.
@@ -148,48 +142,44 @@ internal class AccountService {
                 let approved: Bool = transfer.approved ?? false
 
                 if let hbar = transfer.hbar {
-                    let amount = Hbar.fromTinybars(try toInt(name: "amount", from: hbar.amount, for: method))
+                    let amount = Hbar.fromTinybars(
+                        try CommonParamsParser.getAmount(
+                            from: hbar.amount, for: method, using: parseInt64(name:from:for:)))
 
                     if let accountIdStr = hbar.accountId {
                         let accountId = try AccountId.fromString(accountIdStr)
-                        approved
-                            ? tx.approvedHbarTransfer(accountId, amount)
-                            : tx.hbarTransfer(accountId, amount)
-
+                        _ = approved ? tx.approvedHbarTransfer(accountId, amount) : tx.hbarTransfer(accountId, amount)
                     } else if let evmAddressStr = hbar.evmAddress {
                         let evmAddress = try EvmAddress.fromString("0x" + evmAddressStr)
-                        let accountId = AccountId.fromEvmAddress(evmAddress)
-                        approved
-                            ? tx.approvedHbarTransfer(accountId, amount)
-                            : tx.hbarTransfer(evmAddress, amount)
+                        let accountId = try AccountId.fromEvmAddress(evmAddress, shard: 0, realm: 0)
+                        _ = approved ? tx.approvedHbarTransfer(accountId, amount) : tx.hbarTransfer(evmAddress, amount)
                     }
-
                 } else if let token = transfer.token {
                     let accountId = try AccountId.fromString(token.accountId)
                     let tokenId = try TokenId.fromString(token.tokenId)
-                    let amount: Int64 = try toInt(name: "amount", from: token.amount, for: method)
+                    let amount = try CommonParamsParser.getAmount(
+                        from: token.amount, for: method, using: parseInt64(name:from:for:))
 
                     if let decimals = token.decimals {
-                        approved
+                        _ =
+                            approved
                             ? tx.approvedTokenTransferWithDecimals(tokenId, accountId, amount, decimals)
                             : tx.tokenTransferWithDecimals(tokenId, accountId, amount, decimals)
                     } else {
-                        approved
+                        _ =
+                            approved
                             ? tx.approvedTokenTransfer(tokenId, accountId, amount)
                             : tx.tokenTransfer(tokenId, accountId, amount)
                     }
-
                 } else if let nft = transfer.nft {
                     let sender = try AccountId.fromString(nft.senderAccountId)
                     let receiver = try AccountId.fromString(nft.receiverAccountId)
                     let nftId = NftId(
                         tokenId: try TokenId.fromString(nft.tokenId),
-                        serial: toUint64(try toInt(name: "serialNumber", from: nft.serialNumber, for: method)))
-
-                    approved
-                        ? tx.approvedNftTransfer(nftId, sender, receiver)
-                        : tx.nftTransfer(nftId, sender, receiver)
-
+                        serial: try CommonParamsParser.getSerialNumber(from: nft.serialNumber, for: method))
+                    _ =
+                        approved
+                        ? tx.approvedNftTransfer(nftId, sender, receiver) : tx.nftTransfer(nftId, sender, receiver)
                 } else {
                     // Defensive guard: validation should prevent this, but double-check at runtime.
                     throw JSONError.invalidParams("Only one type of transfer SHALL be provided per transfer.")
@@ -199,9 +189,7 @@ internal class AccountService {
 
         try params.commonTransactionParams?.fillOutTransaction(transaction: &tx)
 
-        let txReceipt = try await tx.execute(SDKClient.client.getClient()).getReceipt(
-            SDKClient.client.getClient())
-        return .dictionary(["status": .string(txReceipt.status.description)])
+        return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
     }
 
     /// Handles the `updateAccount` JSON-RPC method.
@@ -222,8 +210,6 @@ internal class AccountService {
         tx.declineStakingReward = params.declineStakingReward
         try params.commonTransactionParams?.fillOutTransaction(transaction: &tx)
 
-        let txReceipt = try await tx.execute(SDKClient.client.getClient()).getReceipt(
-            SDKClient.client.getClient())
-        return .dictionary(["status": .string(txReceipt.status.description)])
+        return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
     }
 }

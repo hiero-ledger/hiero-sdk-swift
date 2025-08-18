@@ -15,15 +15,13 @@ internal struct DeleteAccountParams {
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .deleteAccount
-        guard let params = try JSONRPCParser.getOptionalParamsIfPresent(request: request) else { return }
+        guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else { return }
 
-        self.deleteAccountId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.deleteAccountId = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "deleteAccountId", from: params, for: method)
-        self.transferAccountId = try JSONRPCParser.getOptionalJsonParameterIfPresent(
+        self.transferAccountId = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "transferAccountId", from: params, for: method)
-        self.commonTransactionParams = try CommonTransactionParams(
-            from: JSONRPCParser.getOptionalJsonParameterIfPresent(
-                name: "commonTransactionParams", from: params, for: method),
-            for: method)
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams", from: params, for: method, using: CommonTransactionParams.init)
     }
 }

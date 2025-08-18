@@ -16,15 +16,13 @@ internal struct BurnTokenParams {
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .burnToken
-        guard let params = try JSONRPCParser.getOptionalParamsIfPresent(request: request) else { return }
+        guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else { return }
 
-        self.tokenId = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "tokenId", from: params, for: method)
-        self.amount = try JSONRPCParser.getOptionalJsonParameterIfPresent(name: "amount", from: params, for: method)
+        self.tokenId = try JSONRPCParser.getOptionalParameterIfPresent(name: "tokenId", from: params, for: method)
+        self.amount = try JSONRPCParser.getOptionalParameterIfPresent(name: "amount", from: params, for: method)
         self.serialNumbers = try JSONRPCParser.getOptionalPrimitiveListIfPresent(
             name: "serialNumbers", from: params, for: method)
-        self.commonTransactionParams = try CommonTransactionParams(
-            from: try JSONRPCParser.getOptionalJsonParameterIfPresent(
-                name: "commonTransactionParams", from: params, for: method),
-            for: method)
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams", from: params, for: method, using: CommonTransactionParams.init)
     }
 }
