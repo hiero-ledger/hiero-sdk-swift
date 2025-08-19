@@ -18,16 +18,10 @@ import HieroProtobufs
 /// This is a singleton service class and should be accessed via `KeyService.service`.
 internal class KeyService {
 
-    // MARK: - Singleton
-
-    /// Singleton instance of KeyService.
-    static let service = KeyService()
-    fileprivate init() {}
-
     // MARK: - JSON-RPC Methods
 
     /// Handles the `generateKey` JSON-RPC method.
-    internal func generateKey(from params: GenerateKeyParams) throws -> JSONObject {
+    internal static func generateKey(from params: GenerateKeyParams) throws -> JSONObject {
         var collectedPrivateKeys = [JSONObject]()
         let key = try generateKeyHelper(from: params, collectingPrivateKeysInto: &collectedPrivateKeys)
 
@@ -64,7 +58,7 @@ internal class KeyService {
     ///   - key: A hex-encoded DER or protobuf key string.
     /// - Returns: A `Key` object representing the parsed key.
     /// - Throws: `JSONError.invalidParams` if the key string is not a valid private key, public key, or Proto_Key.
-    static internal func getHieroKey(from key: String) throws -> Key {
+    internal static func getHieroKey(from key: String) throws -> Key {
         // Attempt to parse as DER-encoded private key, extract public key
         if let privateKey = try? PrivateKey.fromStringDer(key) {
             return .single(privateKey.publicKey)
@@ -94,7 +88,7 @@ internal class KeyService {
     ///   - isList: Indicates whether the key is being generated as part of a parent key list (for controlling output).
     /// - Returns: The generated key as a hex-encoded DER or protobuf string.
     /// - Throws: `JSONError.invalidParams` if input validation fails or the key cannot be generated.
-    private func generateKeyHelper(
+    private static func generateKeyHelper(
         from params: GenerateKeyParams,
         collectingPrivateKeysInto privateKeys: inout [JSONObject],
         isNestedKey: Bool = false
@@ -204,7 +198,7 @@ internal class KeyService {
     /// - Parameters:
     ///   - evmAddress: An EVM address that may or may not begin with the `0x` prefix.
     /// - Returns: The address string without the `0x` prefix.
-    private func stripHexPrefix(from evmAddress: String) -> String {
+    private static func stripHexPrefix(from evmAddress: String) -> String {
         let prefix = "0x"
         return evmAddress.hasPrefix(prefix)
             ? String(evmAddress.dropFirst(prefix.count))

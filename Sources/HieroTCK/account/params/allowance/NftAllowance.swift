@@ -18,10 +18,16 @@ internal struct NftAllowance {
     internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
         self.tokenId = try JSONRPCParser.getRequiredParameter(name: "tokenId", from: params, for: method)
         self.serialNumbers = try JSONRPCParser.getOptionalPrimitiveListIfPresent(
-            name: "serialNumbers", from: params, for: method)
+            name: "serialNumbers",
+            from: params,
+            for: method)
         self.approvedForAll = try JSONRPCParser.getOptionalParameterIfPresent(
-            name: "approvedForAll", from: params, for: method)
+            name: "approvedForAll",
+            from: params,
+            for: method)
         self.delegateSpenderAccountId = try JSONRPCParser.getOptionalParameterIfPresent(
-            name: "delegateSpenderAccountId", from: params, for: method)
+            name: "delegateSpenderAccountId",
+            from: params,
+            for: method)
     }
 }

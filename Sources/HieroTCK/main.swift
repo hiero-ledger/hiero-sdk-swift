@@ -85,7 +85,7 @@ internal class TCKServer {
             // MARK: - KeyService Methods
 
             case .generateKey:
-                jsonRpcResponse = try KeyService.service.generateKey(from: GenerateKeyParams(request: request))
+                jsonRpcResponse = try KeyService.generateKey(from: GenerateKeyParams(request: request))
 
             // MARK: - SDKClient Methods
 

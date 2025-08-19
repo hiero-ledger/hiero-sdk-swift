@@ -2,15 +2,18 @@
 
 /// Represents the parameters for a `claimToken` JSON-RPC method call.
 ///
-/// This struct parses and validates inputs required to claim pending token airdrops.
-/// It includes:
-/// - `pendingAirdrops`: A required list of `PendingAirdrop` objects identifying which
-///   airdrops are being claimed.
-/// - `commonTransactionParams`: Optional shared transaction parameters for customizing
-///   execution (e.g. fee payer, transaction memo).
+/// This struct captures the inputs required to claim one or more pending token airdrops.
+/// It distinguishes between **required identifiers** and **optional modifiers**:
+/// - `senderAccountId`: Required. The account ID of the original token sender.
+/// - `receiverAccountId`: Required. The account ID of the intended recipient claiming the airdrop.
+/// - `tokenId`: Required. The ID of the token being claimed.
+/// - `serialNumbers`: Optional. Specific NFT serial numbers to claim (for non-fungible tokens).
+/// - `commonTransactionParams`: Optional. Shared transaction parameters such as fee payer,
+///   transaction memo, or custom fee settings.
 ///
-/// Validation of required vs. optional fields is enforced during initialization.
-/// Downstream logic may apply further defaults or business rules.
+/// Validation of required vs. optional fields occurs during initialization; parsing failures
+/// throw `JSONError.invalidParams`. Additional business rules and defaulting may be applied
+/// downstream when constructing and executing the transaction.
 internal struct ClaimTokenParams {
 
     internal var senderAccountId: String

@@ -17,10 +17,16 @@ internal struct RemoveAllowance: JSONRPCListElementDecodable {
 
     internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
         self.ownerAccountId = try JSONRPCParser.getRequiredParameter(
-            name: "ownerAccountId", from: params, for: method)
+            name: "ownerAccountId",
+            from: params,
+            for: method)
         self.tokenId = try JSONRPCParser.getRequiredParameter(
-            name: "tokenId", from: params, for: method)
+            name: "tokenId",
+            from: params,
+            for: method)
         self.serialNumbers = try JSONRPCParser.getRequiredPrimitiveList(
-            name: "serialNumbers", from: params, for: method)
+            name: "serialNumbers",
+            from: params,
+            for: method)
     }
 }

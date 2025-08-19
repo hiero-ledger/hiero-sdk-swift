@@ -31,7 +31,8 @@ internal enum FileService {
 
         try CommonParamsParser.getKeyListIfPresent(from: params.keys).assign(to: &tx.keys)
         try CommonParamsParser.getContentsIfPresent(from: params.contents, for: method).assign(to: &tx.contents)
-        try CommonParamsParser.getExpirationTimeIfPresent(from: params.expirationTime, for: method).assign(to: &tx.expirationTime)
+        try CommonParamsParser.getExpirationTimeIfPresent(from: params.expirationTime, for: method).assign(
+            to: &tx.expirationTime)
         params.memo.assign(to: &tx.fileMemo)
         try params.commonTransactionParams?.applyToTransaction(&tx)
 

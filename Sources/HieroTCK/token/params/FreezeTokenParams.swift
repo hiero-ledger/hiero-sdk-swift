@@ -20,8 +20,7 @@ internal struct FreezeTokenParams {
         self.tokenId = try JSONRPCParser.getOptionalParameterIfPresent(name: "tokenId", from: params, for: method)
         self.accountId = try JSONRPCParser.getOptionalParameterIfPresent(
             name: "accountId",
-            from:
-                params,
+            from: params,
             for: method)
         self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
             name: "commonTransactionParams",

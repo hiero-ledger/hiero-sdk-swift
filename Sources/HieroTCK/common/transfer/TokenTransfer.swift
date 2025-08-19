@@ -21,7 +21,9 @@ internal struct TokenTransfer {
         self.tokenId = try JSONRPCParser.getRequiredParameter(name: "tokenId", from: params, for: method)
         self.amount = try JSONRPCParser.getRequiredParameter(name: "amount", from: params, for: method)
         self.decimals = try JSONRPCParser.getOptionalParameterIfPresent(
-            name: "decimals", from: params, for: method)
+            name: "decimals",
+            from: params,
+            for: method)
     }
 
     /// Applies this token transfer to the given token transfer transaction.

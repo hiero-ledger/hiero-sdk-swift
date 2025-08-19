@@ -26,15 +26,28 @@ internal struct Allowance: JSONRPCListElementDecodable {
 
     internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
         self.ownerAccountId = try JSONRPCParser.getRequiredParameter(
-            name: "ownerAccountId", from: params, for: method)
+            name: "ownerAccountId",
+            from: params,
+            for: method)
         self.spenderAccountId = try JSONRPCParser.getRequiredParameter(
-            name: "spenderAccountId", from: params, for: method)
+            name: "spenderAccountId",
+            from: params,
+            for: method)
         self.hbar = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "hbar", from: params, for: method, using: HbarAllowance.init)
+            name: "hbar",
+            from: params,
+            for: method,
+            using: HbarAllowance.init)
         self.token = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "token", from: params, for: method, using: TokenAllowance.init)
+            name: "token",
+            from: params,
+            for: method,
+            using: TokenAllowance.init)
         self.nft = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "nft", from: params, for: method, using: NftAllowance.init)
+            name: "nft",
+            from: params,
+            for: method,
+            using: NftAllowance.init)
 
         // Only one allowance type should be allowed.
         let nonNilCount = [self.hbar as Any?, self.token as Any?, self.nft as Any?].compactMap { $0 }.count

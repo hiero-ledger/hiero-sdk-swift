@@ -23,7 +23,7 @@ internal enum TokenService {
 
                 if transfer.hbar != nil {
                     // Hbar transfers are not allowed for token airdrop.
-                    throw JSONError.invalidParams("Hbar transfers SHALL NOT be provided in a token airdrop.")
+                    throw JSONError.invalidParams("Hbar transfers MUST NOT be provided in a token airdrop.")
                 } else if let token = transfer.token {
                     try token.applyToTransaction(&tx, approved: approved, for: method)
                 } else if let nft = transfer.nft {
