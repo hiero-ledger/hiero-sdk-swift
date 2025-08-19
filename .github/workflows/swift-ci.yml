@@ -32,13 +32,14 @@ jobs:
   build:
     strategy:
       matrix:
-        # Swift 5.x -> Xcode 15.4 on macOS 14
-        - os: macos-14
-          swift: "5.9"
-          xcode: "/Applications/Xcode_15.4.app"
-        - os: macos-14
-          swift: "5.10"
-          xcode: "/Applications/Xcode_15.4.app"
+        include:
+          # Swift 5.x -> Xcode 15.4 on macOS 14
+          - os: macos-14
+            swift: "5.9"
+            xcode: "/Applications/Xcode_15.4.app"
+          - os: macos-14
+            swift: "5.10"
+            xcode: "/Applications/Xcode_15.4.app"
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -78,12 +79,13 @@ jobs:
   test:
     strategy:
       matrix:
-        - os: macos-14
-          swift: "5.9"
-          xcode: "/Applications/Xcode_15.4.app"
-        - os: macos-14
-          swift: "5.10"
-          xcode: "/Applications/Xcode_15.4.app"
+        include:
+          - os: macos-14
+            swift: "5.9"
+            xcode: "/Applications/Xcode_15.4.app"
+          - os: macos-14
+            swift: "5.10"
+            xcode: "/Applications/Xcode_15.4.app"
 
     needs: [build]
     runs-on: ${{ matrix.os }}
