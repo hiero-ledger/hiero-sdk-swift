@@ -32,8 +32,13 @@ jobs:
   build:
     strategy:
       matrix:
-        swift: ["5.9", "5.10"]
-        os: [macos-13, macos-latest]
+        # Swift 5.x -> Xcode 15.4 on macOS 14
+        - os: macos-14
+          swift: "5.9"
+          xcode: "/Applications/Xcode_15.4.app"
+        - os: macos-14
+          swift: "5.10"
+          xcode: "/Applications/Xcode_15.4.app"
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -41,6 +46,9 @@ jobs:
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
         with:
           egress-policy: audit
+
+      - name: Select Xcode
+        run: sudo xcode-select -s "${{ matrix.xcode }}"
 
       - name: Setup Swift
         uses: swift-actions/setup-swift@3aed395c5397f62deb91d8fe7af1418a9ae4d16f # v2.1.0
@@ -58,14 +66,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.swift }}-spm-
 
+      - name: Versions (sanity)
+        run: |
+          xcodebuild -version
+          swift --version
+          xcrun --sdk macosx --show-sdk-path
+
       - name: Build
-        run: swift build
+        run: swift build -v
 
   test:
     strategy:
       matrix:
-        swift: ["5.9", "5.10"]
-        os: [macos-13, macos-latest]
+        - os: macos-14
+          swift: "5.9"
+          xcode: "/Applications/Xcode_15.4.app"
+        - os: macos-14
+          swift: "5.10"
+          xcode: "/Applications/Xcode_15.4.app"
 
     needs: [build]
     runs-on: ${{ matrix.os }}
@@ -74,6 +92,9 @@ jobs:
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
         with:
           egress-policy: audit
+
+      - name: Select Xcode
+        run: sudo xcode-select -s "${{ matrix.xcode }}"
 
       - name: Setup Swift
         uses: swift-actions/setup-swift@3aed395c5397f62deb91d8fe7af1418a9ae4d16f # v2.1.0
@@ -91,5 +112,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.swift }}-spm-
 
+      - name: Versions (sanity)
+        run: |
+          xcodebuild -version
+          swift --version
+          xcrun --sdk macosx --show-sdk-path
+
       - name: Test
-        run: swift test
+        run: swift test -v
