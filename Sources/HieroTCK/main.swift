@@ -57,23 +57,30 @@ internal class TCKServer {
             // MARK: - AccountService Methods
 
             case .approveAllowance:
-                jsonRpcResponse = try await AccountService.service.approveAllowance(
+                jsonRpcResponse = try await AccountService.approveAllowance(
                     from: ApproveAllowanceParams(request: request))
             case .createAccount:
-                jsonRpcResponse = try await AccountService.service.createAccount(
-                    from: CreateAccountParams(request: request))
+                jsonRpcResponse = try await AccountService.createAccount(from: CreateAccountParams(request: request))
             case .deleteAccount:
-                jsonRpcResponse = try await AccountService.service.deleteAccount(
-                    from: DeleteAccountParams(request: request))
+                jsonRpcResponse = try await AccountService.deleteAccount(from: DeleteAccountParams(request: request))
             case .deleteAllowance:
-                jsonRpcResponse = try await AccountService.service.deleteAllowance(
+                jsonRpcResponse = try await AccountService.deleteAllowance(
                     from: DeleteAllowanceParams(request: request))
             case .transferCrypto:
-                jsonRpcResponse = try await AccountService.service.transferCrypto(
-                    from: TransferCryptoParams(request: request))
+                jsonRpcResponse = try await AccountService.transferCrypto(from: TransferCryptoParams(request: request))
             case .updateAccount:
-                jsonRpcResponse = try await AccountService.service.updateAccount(
-                    from: UpdateAccountParams(request: request))
+                jsonRpcResponse = try await AccountService.updateAccount(from: UpdateAccountParams(request: request))
+
+            // MARK: - FileService Methods
+
+            case .appendFile:
+                jsonRpcResponse = try await FileService.appendFile(from: AppendFileParams(request: request))
+            case .createFile:
+                jsonRpcResponse = try await FileService.createFile(from: CreateFileParams(request: request))
+            case .deleteFile:
+                jsonRpcResponse = try await FileService.deleteFile(from: DeleteFileParams(request: request))
+            case .updateFile:
+                jsonRpcResponse = try await FileService.updateFile(from: UpdateFileParams(request: request))
 
             // MARK: - KeyService Methods
 
@@ -89,42 +96,43 @@ internal class TCKServer {
 
             // MARK: - TokenService Methods
 
+            case .airdropToken:
+                jsonRpcResponse = try await TokenService.airdropToken(from: AirdropTokenParams(request: request))
             case .associateToken:
-                jsonRpcResponse = try await TokenService.service.associateToken(
-                    from: AssociateTokenParams(request: request))
+                jsonRpcResponse = try await TokenService.associateToken(from: AssociateTokenParams(request: request))
             case .burnToken:
-                jsonRpcResponse = try await TokenService.service.burnToken(from: BurnTokenParams(request: request))
+                jsonRpcResponse = try await TokenService.burnToken(from: BurnTokenParams(request: request))
+            case .cancelAirdrop:
+                jsonRpcResponse = try await TokenService.cancelAirdrop(from: CancelAirdropParams(request: request))
+            case .claimToken:
+                jsonRpcResponse = try await TokenService.claimToken(from: ClaimTokenParams(request: request))
             case .createToken:
-                jsonRpcResponse = try await TokenService.service.createToken(from: CreateTokenParams(request: request))
+                jsonRpcResponse = try await TokenService.createToken(from: CreateTokenParams(request: request))
             case .deleteToken:
-                jsonRpcResponse = try await TokenService.service.deleteToken(from: DeleteTokenParams(request: request))
+                jsonRpcResponse = try await TokenService.deleteToken(from: DeleteTokenParams(request: request))
             case .dissociateToken:
-                jsonRpcResponse = try await TokenService.service.dissociateToken(
-                    from: DissociateTokenParams(request: request))
+                jsonRpcResponse = try await TokenService.dissociateToken(from: DissociateTokenParams(request: request))
             case .freezeToken:
-                jsonRpcResponse = try await TokenService.service.freezeToken(from: FreezeTokenParams(request: request))
+                jsonRpcResponse = try await TokenService.freezeToken(from: FreezeTokenParams(request: request))
             case .grantTokenKyc:
-                jsonRpcResponse = try await TokenService.service.grantTokenKyc(
-                    from: GrantTokenKycParams(request: request))
+                jsonRpcResponse = try await TokenService.grantTokenKyc(from: GrantTokenKycParams(request: request))
             case .mintToken:
-                jsonRpcResponse = try await TokenService.service.mintToken(from: MintTokenParams(request: request))
+                jsonRpcResponse = try await TokenService.mintToken(from: MintTokenParams(request: request))
             case .pauseToken:
-                jsonRpcResponse = try await TokenService.service.pauseToken(from: PauseTokenParams(request: request))
+                jsonRpcResponse = try await TokenService.pauseToken(from: PauseTokenParams(request: request))
+            case .rejectToken:
+                jsonRpcResponse = try await TokenService.rejectToken(from: RejectTokenParams(request: request))
             case .revokeTokenKyc:
-                jsonRpcResponse = try await TokenService.service.revokeTokenKyc(
-                    from: RevokeTokenKycParams(request: request))
+                jsonRpcResponse = try await TokenService.revokeTokenKyc(from: RevokeTokenKycParams(request: request))
             case .unfreezeToken:
-                jsonRpcResponse = try await TokenService.service.unfreezeToken(
-                    from: UnfreezeTokenParams(request: request))
+                jsonRpcResponse = try await TokenService.unfreezeToken(from: UnfreezeTokenParams(request: request))
             case .unpauseToken:
-                jsonRpcResponse = try await TokenService.service.unpauseToken(
-                    from: UnpauseTokenParams(request: request))
+                jsonRpcResponse = try await TokenService.unpauseToken(from: UnpauseTokenParams(request: request))
             case .updateTokenFeeSchedule:
-                jsonRpcResponse =
-                    try await TokenService.service.updateTokenFeeSchedule(
-                        from: UpdateTokenFeeScheduleParams(request: request))
+                jsonRpcResponse = try await TokenService.updateTokenFeeSchedule(
+                    from: UpdateTokenFeeScheduleParams(request: request))
             case .updateToken:
-                jsonRpcResponse = try await TokenService.service.updateToken(from: UpdateTokenParams(request: request))
+                jsonRpcResponse = try await TokenService.updateToken(from: UpdateTokenParams(request: request))
 
             // MARK: - Unsupported Method
             case .unsupported:

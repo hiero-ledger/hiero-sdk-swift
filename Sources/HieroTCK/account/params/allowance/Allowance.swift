@@ -15,7 +15,8 @@ import Hiero
 /// - At most one of `hbar`, `token`, or `nft` is provided. If none or more than one are present, it throws an error.
 ///
 /// Used for decoding and validating user-defined allowance declarations in JSON-RPC requests.
-internal struct Allowance {
+internal struct Allowance: JSONRPCListElementDecodable {
+    internal static let elementName = "allowance"
 
     internal var ownerAccountId: String
     internal var spenderAccountId: String
@@ -39,24 +40,6 @@ internal struct Allowance {
         let nonNilCount = [self.hbar as Any?, self.token as Any?, self.nft as Any?].compactMap { $0 }.count
         if nonNilCount != 1 {
             throw JSONError.invalidParams("invalid parameters: only one type of allowance SHALL be provided.")
-        }
-    }
-
-    /// Returns a closure that decodes a `JSONObject` into an `Allowance`, using the given method for error context.
-    ///
-    /// This is useful when parsing arrays of custom fee objects from JSON-RPC parameters,
-    /// especially in conjunction with helper functions like `getOptionalCustomObjectListIfPresent`.
-    ///
-    /// - Parameters:
-    ///   - method: The JSON-RPC method name, used for constructing informative error messages.
-    /// - Returns: A closure that takes a `JSONObject`, validates its structure, and returns a parsed `Allowance`.
-    /// - Throws: `JSONError.invalidParams` if the `JSONObject` is not a valid dictionary or cannot be parsed.
-    static func jsonObjectDecoder(for method: JSONRPCMethod) -> (JSONObject) throws -> Allowance {
-        return {
-            guard let dict = $0.dictValue else {
-                throw JSONError.invalidParams("\(method.rawValue): each allowance MUST be a JSON object.")
-            }
-            return try Allowance(from: dict, for: method)
         }
     }
 }

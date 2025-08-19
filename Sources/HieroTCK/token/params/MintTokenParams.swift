@@ -22,6 +22,9 @@ internal struct MintTokenParams {
         self.amount = try JSONRPCParser.getOptionalParameterIfPresent(name: "amount", from: params, for: method)
         self.metadata = try JSONRPCParser.getOptionalPrimitiveListIfPresent(name: "metadata", from: params, for: method)
         self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "commonTransactionParams", from: params, for: method, using: CommonTransactionParams.init)
+            name: "commonTransactionParams",
+            from: params,
+            for: method,
+            using: CommonTransactionParams.init)
     }
 }

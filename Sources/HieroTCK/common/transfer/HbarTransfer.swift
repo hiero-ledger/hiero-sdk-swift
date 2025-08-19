@@ -16,9 +16,13 @@ internal struct HbarTransfer {
 
     internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
         self.accountId = try JSONRPCParser.getOptionalParameterIfPresent(
-            name: "accountId", from: params, for: method)
+            name: "accountId",
+            from: params,
+            for: method)
         self.evmAddress = try JSONRPCParser.getOptionalParameterIfPresent(
-            name: "evmAddress", from: params, for: method)
+            name: "evmAddress",
+            from: params,
+            for: method)
         self.amount = try JSONRPCParser.getRequiredParameter(name: "amount", from: params, for: method)
     }
 }

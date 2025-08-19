@@ -17,14 +17,24 @@ internal enum CommonParamsParser {
 
     // MARK: - Entity Identifiers
 
-    /// Parses an optional JSON-RPC string into a Hiero `AccountId`.
+    /// Parses an optional JSON-RPC string into an `AccountId`.
     ///
     /// - Parameters:
-    ///   - param: A JSON-RPC string representing an account ID, or `nil`.
-    /// - Returns: A parsed `AccountId`, or `nil` if the input is `nil`.
-    /// - Throws: `HError.basicParse` if the string is non-nil but invalid.
+    ///   - param: A string representing an account ID, or `nil`.
+    /// - Returns: An `AccountId` if the string is present and valid; otherwise `nil`.
+    /// - Throws: If the account ID format is invalid.
     static internal func getAccountIdIfPresent(from param: String?) throws -> AccountId? {
         try param.flatMap { try AccountId.fromString($0) }
+    }
+
+    /// Parses an optional JSON-RPC string into a `FileId`.
+    ///
+    /// - Parameters:
+    ///   - param: A string representing a file ID, or `nil`.
+    /// - Returns: A `FileId` if the string is present and valid; otherwise `nil`.
+    /// - Throws: If the file ID format is invalid.
+    static internal func getFileIdIfPresent(from param: String?) throws -> FileId? {
+        try param.flatMap { try FileId.fromString($0) }
     }
 
     /// Parses an optional JSON-RPC string into a `TokenId`.
@@ -57,7 +67,7 @@ internal enum CommonParamsParser {
     /// - Returns: A parsed `UInt64` value, or `nil` if the input is `nil`.
     /// - Throws: `JSONError.invalidParams` if the string is non-nil but not a valid integer.
     static internal func getAmountIfPresent(from param: String?, for method: JSONRPCMethod) throws -> UInt64? {
-        try param.flatMap { try parseUInt64(name: "amount", from: $0, for: method) }
+        try param.flatMap { try getAmount(from: $0, for: method, using: JSONRPCParam.parseUInt64(name:from:for:)) }
     }
 
     /// Parses a required JSON-RPC string into an amount, using the specified parsing function.
@@ -90,7 +100,7 @@ internal enum CommonParamsParser {
     /// - Returns: The parsed value as an `Int64`.
     /// - Throws: `JSONError.invalidParams` if the string cannot be parsed as a valid integer.
     static internal func getNumerator(from param: String, for method: JSONRPCMethod) throws -> Int64 {
-        try parseInt64(name: "numerator", from: param, for: method)
+        try JSONRPCParam.parseInt64(name: "numerator", from: param, for: method)
     }
 
     /// Parses a required JSON-RPC string into an `Int64` denominator.
@@ -101,7 +111,7 @@ internal enum CommonParamsParser {
     /// - Returns: The parsed value as an `Int64`.
     /// - Throws: `JSONError.invalidParams` if the string cannot be parsed as a valid integer.
     static internal func getDenominator(from param: String, for method: JSONRPCMethod) throws -> Int64 {
-        try parseInt64(name: "denominator", from: param, for: method)
+        try JSONRPCParam.parseInt64(name: "denominator", from: param, for: method)
     }
 
     /// Parses a serial number string into a `UInt64`.
@@ -125,7 +135,7 @@ internal enum CommonParamsParser {
         for method: JSONRPCMethod,
         index: Int? = nil
     ) throws -> UInt64 {
-        return try parseUInt64ReinterpretingSigned(
+        return try JSONRPCParam.parseUInt64ReinterpretingSigned(
             name: index.map { "serial number[\($0)]" } ?? "serial number",
             from: param,
             for: method)
@@ -144,7 +154,11 @@ internal enum CommonParamsParser {
         -> Duration?
     {
         try param.flatMap {
-            Duration(seconds: try parseUInt64ReinterpretingSigned(name: "autoRenewPeriod", from: $0, for: method))
+            Duration(
+                seconds: try JSONRPCParam.parseUInt64ReinterpretingSigned(
+                    name: "autoRenewPeriod",
+                    from: $0,
+                    for: method))
         }
     }
 
@@ -162,7 +176,10 @@ internal enum CommonParamsParser {
     {
         try param.flatMap {
             Timestamp(
-                seconds: try parseUInt64ReinterpretingSigned(name: "expirationTime", from: $0, for: method),
+                seconds: try JSONRPCParam.parseUInt64ReinterpretingSigned(
+                    name: "expirationTime",
+                    from: $0,
+                    for: method),
                 subSecondNanos: 0)
         }
     }
@@ -177,7 +194,9 @@ internal enum CommonParamsParser {
     /// - Returns: A `UInt64` if the string is present and valid; otherwise `nil`.
     /// - Throws: `JSONError.invalidParams` if the input is malformed.
     static internal func getStakedNodeIdIfPresent(from param: String?, for method: JSONRPCMethod) throws -> UInt64? {
-        try param.flatMap { try parseUInt64ReinterpretingSigned(name: "stakedNodeId", from: $0, for: method) }
+        try param.flatMap {
+            try JSONRPCParam.parseUInt64ReinterpretingSigned(name: "stakedNodeId", from: $0, for: method)
+        }
     }
 
     /// Parses an optional JSON-RPC string into a Hiero `Key`.
@@ -187,61 +206,214 @@ internal enum CommonParamsParser {
     /// - Returns: A Hiero `Key` if the string is present and valid; otherwise `nil`.
     /// - Throws: If key parsing fails.
     static internal func getKeyIfPresent(from param: String?) throws -> Key? {
-        try param.flatMap { try KeyService.service.getHieroKey(from: $0) }
+        try param.flatMap { try KeyService.getHieroKey(from: $0) }
     }
 
-    // MARK: - Fees
-
-    /// Parses an optional list of custom fee parameter objects into Hiero `AnyCustomFee` types.
+    /// Parses an optional JSON-RPC string array into a Hiero `KeyList`.
     ///
     /// - Parameters:
-    ///   - param: An optional list of parsed `CustomFee` structs from JSON-RPC input.
-    ///   - method: The JSON-RPC method name, used for contextual error reporting during transformation.
-    /// - Returns: A list of Hiero `AnyCustomFee` instances, or `nil` if `param` is `nil`.
-    /// - Throws: `JSONError.invalidParams` if any fee entry fails to convert.
-    static internal func getCustomFeesIfPresent(from param: [CustomFee]?, for method: JSONRPCMethod) throws
-        -> [AnyCustomFee]?
-    {
-        try param?.map { try $0.toHieroCustomFee(for: method) }
+    ///   - param: An array of strings representing keys, or `nil`.
+    /// - Returns: A Hiero `KeyList` if the array is present and all keys are valid; otherwise `nil`.
+    /// - Throws: If any key parsing fails.
+    static internal func getKeyListIfPresent(from param: [String]?) throws -> KeyList? {
+        try param.map { try KeyList(keys: $0.map { try KeyService.getHieroKey(from: $0) }) }
     }
 
     // MARK: - Metadata
 
-    /// Parses a metadata string into UTF-8–encoded `Data`.
-    ///
-    /// It validates that the given string can be represented as UTF-8 and returns
-    /// the corresponding `Data`. If validation fails, a descriptive error message
-    /// is thrown that includes the JSON-RPC method name and parameter context.
+    /// Parses an optional JSON-RPC metadata string into a UTF-8 encoded `Data`.
     ///
     /// - Parameters:
-    ///   - name: The parameter name, included in error messages (defaults to `"metadata"`).
-    ///   - param: The metadata string to parse.
-    ///   - method: The JSON-RPC method name, used in error reporting.
-    /// - Returns: The UTF-8–encoded metadata as `Data`.
-    /// - Throws: `JSONError.invalidParams` if the string is not valid UTF-8.
-    static internal func parseMetadataString(name: String = "metadata", from param: String, for method: JSONRPCMethod)
-        throws
-        -> Data
-    {
-        guard let data = param.data(using: .utf8) else {
-            throw JSONError.invalidParams("\(method.rawValue): \(name) MUST be a UTF-8 string.")
-        }
-        return data
+    ///   - param: The optional `metadata` string provided in the JSON-RPC request.
+    ///   - method: The JSON-RPC method name, used for contextual error messages.
+    /// - Returns: The UTF-8 encoded `Data`, or `nil` if `param` was not provided.
+    /// - Throws: `JSONError.invalidParams` if `param` is present but not valid UTF-8.
+    static internal func getMetadataIfPresent(from param: String?, for method: JSONRPCMethod) throws -> Data? {
+        try JSONRPCParam.parseUtf8DataIfPresent(name: "metadata", from: param, for: method)
     }
 
-    /// Parses optional metadata from a JSON-RPC parameter into `Data`.
+    // MARK: - Fees
+
+    /// Converts a list of JSON-RPC `CustomFee` types into a list of Hiero `AnyCustomFee` types.
     ///
-    /// If `param` is `nil`, this returns `nil` without attempting to parse.
-    /// If `param` is non-nil, its `metadata` element is expected to be a UTF-8 encoded string.
-    /// The string is converted to `Data` using UTF-8 encoding, and a descriptive error is thrown
-    /// if the value is not valid UTF-8.
+    /// Each input fee must specify **exactly one** fee type (`fixedFee`, `fractionalFee`, or `royaltyFee`).
+    /// The function validates that constraint and translates string fields into SDK types, including:
+    /// `AccountId`, `TokenId` (when present), and integer amounts/ratios. For fractional fees,
+    /// the `assessmentMethod` must be `"inclusive"` or `"exclusive"`.
+    ///
+    /// If `param` is `nil`, this returns `nil` as well (i.e., “no custom fees provided”).
     ///
     /// - Parameters:
-    ///   - param: An optional list of metadata strings from the JSON-RPC request.
-    ///   - method: The JSON-RPC method name, used in error reporting.
-    /// - Returns: The UTF-8–encoded metadata as `Data`, or `nil` if `param` is `nil`.
-    /// - Throws: `JSONError.invalidParams` if `metadata` is present but not a valid UTF-8 string.
-    static internal func getMetadataIfPresent(from param: String?, for method: JSONRPCMethod) throws -> Data? {
-        try param.flatMap { try parseMetadataString(from: $0, for: method) }
+    ///   - param: The optional list of `CustomFee` entries from the JSON-RPC request.
+    ///   - method: The JSON-RPC method name, used for contextual error messages during parsing.
+    /// - Returns: An array of `AnyCustomFee` values suitable for Hiero APIs, or `nil`.
+    /// - Throws:
+    ///   - `JSONError.invalidParams` if a fee specifies zero or more than one fee type,
+    ///     if `assessmentMethod` is not `"inclusive"`/`"exclusive"`, or if any numeric/string
+    ///     field cannot be parsed (e.g., account IDs, token IDs, amounts, numerators/denominators).
+    static internal func getHieroAnyCustomFeesIfPresent(from param: [CustomFee]?, for method: JSONRPCMethod) throws
+        -> [AnyCustomFee]?
+    {
+        guard let customFees = param else { return nil }
+
+        var anyCustomFees = [AnyCustomFee]()
+
+        for customFee in customFees {
+            let feeCollectorAccountId = try AccountId.fromString(customFee.feeCollectorAccountId)
+            let feeCollectorsExempt = customFee.feeCollectorsExempt
+
+            // Double-check exactly one fee type is present.
+            let nonNilFees = [
+                customFee.fixedFee as Any?, customFee.fractionalFee as Any?, customFee.royaltyFee as Any?,
+            ].compactMap { $0 }
+            guard nonNilFees.count == 1 else {
+                throw JSONError.invalidParams(
+                    "\(method): exactly one fee type (fixedFee, fractionalFee, or royaltyFee) SHALL be provided.")
+            }
+
+            if let fixed = customFee.fixedFee {
+                anyCustomFees.append(
+                    .fixed(
+                        try getHieroFixedFee(
+                            fixed,
+                            feeCollectorAccountId: feeCollectorAccountId,
+                            feeCollectorsExempt: feeCollectorsExempt,
+                            for: method)))
+            } else if let fractional = customFee.fractionalFee {
+                guard fractional.assessmentMethod == "inclusive" || fractional.assessmentMethod == "exclusive"
+                else {
+                    throw JSONError.invalidParams(
+                        "\(method.rawValue): assessmentMethod MUST be 'inclusive' or 'exclusive'.")
+                }
+
+                anyCustomFees.append(
+                    .fractional(
+                        Hiero.FractionalFee(
+                            numerator: try getNumerator(from: fractional.numerator, for: method),
+                            denominator: try getDenominator(
+                                from: fractional.denominator,
+                                for: method),
+                            minimumAmount: try JSONRPCParam.parseUInt64ReinterpretingSigned(
+                                name: "minimumAmount",
+                                from: fractional.minimumAmount,
+                                for: method),
+                            maximumAmount: try JSONRPCParam.parseUInt64ReinterpretingSigned(
+                                name: "maximumAmount",
+                                from: fractional.maximumAmount,
+                                for: method),
+                            assessmentMethod: fractional.assessmentMethod == "inclusive"
+                                ? Hiero.FractionalFee.FeeAssessmentMethod.inclusive
+                                : Hiero.FractionalFee.FeeAssessmentMethod.exclusive,
+                            feeCollectorAccountId: feeCollectorAccountId,
+                            allCollectorsAreExempt: feeCollectorsExempt)))
+            } else {
+                // Safe to force unwrap since royalty is guaranteed to be non-nil at this point.
+                anyCustomFees.append(
+                    .royalty(
+                        Hiero.RoyaltyFee(
+                            numerator: try getNumerator(from: customFee.royaltyFee!.numerator, for: method),
+                            denominator: try getDenominator(from: customFee.royaltyFee!.denominator, for: method),
+                            fallbackFee: try customFee.royaltyFee!.fallbackFee.map {
+                                try getHieroFixedFee(
+                                    $0,
+                                    feeCollectorAccountId: feeCollectorAccountId,
+                                    feeCollectorsExempt: feeCollectorsExempt,
+                                    for: method)
+                            },
+                            feeCollectorAccountId: feeCollectorAccountId,
+                            allCollectorsAreExempt: feeCollectorsExempt
+                        )))
+            }
+        }
+
+        return anyCustomFees
+    }
+
+    /// Converts a JSON-RPC `FixedFee` types into a Hiero `FixedFee` type.
+    ///
+    /// This helper extracts and validates all fields from the JSON-RPC representation,
+    /// including the fee amount and (optional) denominating token. It also attaches
+    /// the specified fee collector and exemption flag to produce a valid SDK type.
+    ///
+    /// - Parameters:
+    ///   - fee: The JSON-RPC `FixedFee` object to convert.
+    ///   - feeCollectorAccountId: The `AccountId` of the account designated to collect this fee.
+    ///   - feeCollectorsExempt: A flag indicating whether all collectors are exempt from paying the fee.
+    ///   - method: The JSON-RPC method name, used for contextual error messages if parsing fails.
+    /// - Returns: A fully-constructed `Hiero.FixedFee` ready for transaction execution.
+    /// - Throws: `JSONError.invalidParams` if the `amount` or `denominatingTokenID` fields are invalid or malformed.
+    static private func getHieroFixedFee(
+        _ fee: FixedFee,
+        feeCollectorAccountId: AccountId,
+        feeCollectorsExempt: Bool,
+        for method: JSONRPCMethod
+    ) throws -> Hiero.FixedFee {
+        return Hiero.FixedFee(
+            amount: try getAmount(
+                from: fee.amount,
+                for: method,
+                using: JSONRPCParam.parseUInt64ReinterpretingSigned(name:from:for:)),
+            denominatingTokenId: try getTokenIdIfPresent(from: fee.denominatingTokenID),
+            feeCollectorAccountId: feeCollectorAccountId,
+            allCollectorsAreExempt: feeCollectorsExempt)
+    }
+
+    // MARK: - Airdrop
+
+    /// Converts a list of `PendingAirdrop` types into a list of Hiero `PendingAirdropId` types.
+    ///
+    /// Each input airdrop may represent either:
+    /// - A fungible token airdrop (identified by `tokenId` only), or
+    /// - An NFT airdrop (identified by `tokenId` + one or more `serialNumbers`).
+    ///
+    /// The function parses the string identifiers into typed Hiero IDs (`AccountId`, `TokenId`,
+    /// `NftId`) and constructs a matching set of `PendingAirdropId` objects.
+    ///
+    /// - Parameters:
+    ///   - airdrops: The list of pending airdrop objects from a JSON-RPC request.
+    ///   - method:   The JSON-RPC method being processed, used for contextual error messages.
+    /// - Returns: An array of `PendingAirdropId` values corresponding to the input airdrops.
+    /// - Throws:
+    ///   - `HError` variants if any of the string IDs (`senderAccountId`, `receiverAccountId`,
+    ///     `tokenId`) fail to parse into their typed counterparts.
+    ///   - `JSONError.invalidParams` if an NFT serial number is invalid or cannot be parsed.
+    static internal func pendingAirdropsToHieroPendingAirdropIds(
+        _ airdrops: [PendingAirdrop],
+        for method: JSONRPCMethod
+    ) throws -> [PendingAirdropId] {
+        var pendingAirdropIds = [PendingAirdropId]()
+        for airdrop in airdrops {
+            let senderAccountId = try AccountId.fromString(airdrop.senderAccountId)
+            let receiverAccountId = try AccountId.fromString(airdrop.receiverAccountId)
+            let tokenId = try TokenId.fromString(airdrop.tokenId)
+
+            if let serialNumbers = airdrop.serialNumbers {
+                for serial in serialNumbers {
+                    let nftId = NftId(
+                        tokenId: tokenId,
+                        serial: try getSerialNumber(from: serial, for: method))
+                    pendingAirdropIds.append(
+                        PendingAirdropId(senderId: senderAccountId, receiverId: receiverAccountId, nftId: nftId))
+                }
+            } else {
+                pendingAirdropIds.append(
+                    PendingAirdropId(senderId: senderAccountId, receiverId: receiverAccountId, tokenId: tokenId))
+            }
+        }
+
+        return pendingAirdropIds
+    }
+
+    // MARK: - File Contents
+
+    /// Parses an optional JSON-RPC contents string into a UTF-8 encoded `Data`.
+    ///
+    /// - Parameters:
+    ///   - param: The optional `contents` string provided in the JSON-RPC request.
+    ///   - method: The JSON-RPC method name, used for contextual error messages.
+    /// - Returns: The UTF-8 encoded `Data`, or `nil` if `param` was not provided.
+    /// - Throws: `JSONError.invalidParams` if `param` is present but not valid UTF-8.
+    static internal func getContentsIfPresent(from param: String?, for method: JSONRPCMethod) throws -> Data? {
+        try JSONRPCParam.parseUtf8DataIfPresent(name: "contents", from: param, for: method)
     }
 }

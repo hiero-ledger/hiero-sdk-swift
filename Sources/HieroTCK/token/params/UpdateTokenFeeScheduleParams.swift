@@ -18,8 +18,14 @@ internal struct UpdateTokenFeeScheduleParams {
 
         self.tokenId = try JSONRPCParser.getOptionalParameterIfPresent(name: "tokenId", from: params, for: method)
         self.customFees = try JSONRPCParser.getOptionalCustomObjectListIfPresent(
-            name: "customFees", from: params, for: method, decoder: CustomFee.jsonObjectDecoder(for: method))
+            name: "customFees",
+            from: params,
+            for: method,
+            decoder: CustomFee.jsonObjectDecoder(for: method))
         self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
-            name: "commonTransactionParams", from: params, for: method, using: CommonTransactionParams.init)
+            name: "commonTransactionParams",
+            from: params,
+            for: method,
+            using: CommonTransactionParams.init)
     }
 }

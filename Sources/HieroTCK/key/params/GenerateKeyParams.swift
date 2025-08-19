@@ -9,7 +9,8 @@
 ///
 /// This is designed to map directly from JSON-RPC input and enforce validation
 /// on required and optional parameters through the parsing logic.
-internal struct GenerateKeyParams {
+internal struct GenerateKeyParams: JSONRPCListElementDecodable {
+    internal static let elementName = "key"
 
     internal var type: String
     internal var fromKey: String? = nil
@@ -22,7 +23,7 @@ internal struct GenerateKeyParams {
     ///   - request: The JSON-RPC request parameters.
     /// - Throws: `JSONError.invalidParams` if required fields are missing or malformed.
     internal init(request: JSONRequest) throws {
-        try self.init(params: JSONRPCParser.getRequiredRequestParams(request: request))
+        try self.init(from: try JSONRPCParser.getRequiredRequestParams(request: request), for: .generateKey)
     }
 
     /// Initializes from a `[String: JSONObject]` parameter map.
@@ -30,19 +31,15 @@ internal struct GenerateKeyParams {
     /// - Parameters:
     ///   - params: The JSON-RPC parameters for this key.
     /// - Throws: `JSONError.invalidParams` for invalid or missing fields.
-    private init(params: [String: JSONObject]) throws {
-        let method: JSONRPCMethod = .generateKey
-
-        self.type = try JSONRPCParser.getRequiredParameter(
-            name: "type", from: params, for: method)
-        self.fromKey = try JSONRPCParser.getOptionalParameterIfPresent(
-            name: "fromKey", from: params, for: method)
-        self.threshold = try JSONRPCParser.getOptionalParameterIfPresent(
-            name: "threshold", from: params, for: method)
+    internal init(from dict: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.type = try JSONRPCParser.getRequiredParameter(name: "type", from: dict, for: method)
+        self.fromKey = try JSONRPCParser.getOptionalParameterIfPresent(name: "fromKey", from: dict, for: method)
+        self.threshold = try JSONRPCParser.getOptionalParameterIfPresent(name: "threshold", from: dict, for: method)
         self.keys = try JSONRPCParser.getOptionalCustomObjectListIfPresent(
-            name: "keys", from: params, for: method
-        ) {
-            try GenerateKeyParams(params: JSONRPCParser.getJson(name: "key in keys list", from: $0, for: method))
-        }
+            name: "keys",
+            from: dict,
+            for: method,
+            decoder: GenerateKeyParams.jsonObjectDecoder(for: method)
+        )
     }
 }

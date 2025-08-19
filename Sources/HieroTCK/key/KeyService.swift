@@ -38,6 +38,19 @@ internal class KeyService {
         return .dictionary(response)
     }
 
+    // MARK: - KeyType Enum
+
+    /// Enum of the possible key types.
+    private enum KeyType: String {
+        case ecdsaSecp256k1PrivateKeyType = "ecdsaSecp256k1PrivateKey"
+        case ecdsaSecp256k1PublicKeyType = "ecdsaSecp256k1PublicKey"
+        case ed25519PrivateKeyType = "ed25519PrivateKey"
+        case ed25519PublicKeyType = "ed25519PublicKey"
+        case evmAddressKeyType = "evmAddress"
+        case listKeyType = "keyList"
+        case thresholdKeyType = "thresholdKey"
+    }
+
     // MARK: - Helpers
 
     /// Attempts to convert a hex-encoded key string into a Hiero `Key` object.
@@ -51,7 +64,7 @@ internal class KeyService {
     ///   - key: A hex-encoded DER or protobuf key string.
     /// - Returns: A `Key` object representing the parsed key.
     /// - Throws: `JSONError.invalidParams` if the key string is not a valid private key, public key, or Proto_Key.
-    internal func getHieroKey(from key: String) throws -> Key {
+    static internal func getHieroKey(from key: String) throws -> Key {
         // Attempt to parse as DER-encoded private key, extract public key
         if let privateKey = try? PrivateKey.fromStringDer(key) {
             return .single(privateKey.publicKey)
@@ -150,7 +163,7 @@ internal class KeyService {
         case .listKeyType, .thresholdKeyType:
             // It's guaranteed at this point that a list of keys is provided, so the unwrap can be safely forced.
             let hieroKeys = try params.keys!.map {
-                try getHieroKey(
+                try KeyService.getHieroKey(
                     from: generateKeyHelper(from: $0, collectingPrivateKeysInto: &privateKeys, isNestedKey: true))
             }
 
@@ -196,18 +209,5 @@ internal class KeyService {
         return evmAddress.hasPrefix(prefix)
             ? String(evmAddress.dropFirst(prefix.count))
             : evmAddress
-    }
-
-    // MARK: - KeyType Enum
-
-    /// Enum of the possible key types.
-    private enum KeyType: String {
-        case ecdsaSecp256k1PrivateKeyType = "ecdsaSecp256k1PrivateKey"
-        case ecdsaSecp256k1PublicKeyType = "ecdsaSecp256k1PublicKey"
-        case ed25519PrivateKeyType = "ed25519PrivateKey"
-        case ed25519PublicKeyType = "ed25519PublicKey"
-        case evmAddressKeyType = "evmAddress"
-        case listKeyType = "keyList"
-        case thresholdKeyType = "thresholdKey"
     }
 }

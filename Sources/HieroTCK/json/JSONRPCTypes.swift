@@ -6,6 +6,8 @@ import Vapor
 
 private let jsonRpcVersion = "2.0"
 
+// MARK: - JSON-RPC Core
+
 /// Represents an incoming JSON-RPC request compliant with JSON-RPC 2.0.
 ///
 /// Handles deserialization and validation of required fields such as `jsonrpc`, `id`, and `method`,
@@ -38,6 +40,8 @@ internal struct JSONRequest: Decodable {
         self.method = method
         self.params = params
     }
+
+    // MARK: - Decodable
 
     internal init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -194,6 +198,8 @@ internal enum JSONError: Encodable, Error {
     }
 }
 
+// MARK: - JSONObject
+
 /// A recursive enum that represents any valid JSON value in a type-safe way.
 ///
 /// Enables structured parsing and encoding of JSON values for use with strongly typed logic.
@@ -299,6 +305,60 @@ internal enum JSONObject: Codable {
             try container.encode(value)
         case .dictionary(let value):
             try container.encode(value)
+        }
+    }
+}
+
+// MARK: - JSON-RPC List Element Decoding
+
+/// A type that can be constructed from a JSON-RPC parameter list element.
+///
+/// Conformers define how to decode themselves from a `JSONObject` dictionary
+/// within an array parameter of a JSON-RPC request. This is typically used
+/// for structured list elements such as transfers, allowances, or pending airdrops.
+///
+/// - Conforming types must supply:
+///   - `elementName`: A human-readable label for use in error messages.
+///   - An initializer that builds the type from a `[String: JSONObject]`
+///     given the originating `JSONRPCMethod`.
+internal protocol JSONRPCListElementDecodable {
+
+    /// A descriptive name for this element type (e.g. `"transfer"`, `"airdrop"`),
+    /// used in error messages when parsing fails.
+    static var elementName: String { get }
+
+    /// Creates an instance of the conforming type from a dictionary representation.
+    ///
+    /// - Parameters:
+    ///   - params: The raw JSON object decoded into a `[String: JSONObject]`.
+    ///   - method: The JSON-RPC method currently being parsed, included for error context.
+    /// - Throws: `JSONError.invalidParams` if the dictionary is missing
+    ///           required fields or contains invalid values.
+    init(from params: [String: JSONObject], for method: JSONRPCMethod) throws
+}
+
+extension JSONRPCListElementDecodable {
+
+    /// Returns a closure suitable for use with indexed JSON-RPC array parsing helpers.
+    ///
+    /// The closure validates that the element at the given index is a JSON object,
+    /// then attempts to initialize the conforming type from it. If validation fails,
+    /// the error message includes both the `method` name, the `elementName`, and the
+    /// failing index for clear debugging context.
+    ///
+    /// - Parameters:
+    ///   - method: The JSON-RPC method name, used in constructing error messages.
+    /// - Returns: A closure that accepts a tuple `(Int, JSONObject)`, where `Int` is the
+    ///   element’s index in the array, validates it, and decodes it as `Self`.
+    /// - Throws: `JSONError.invalidParams` if the element at that index is not a dictionary
+    ///           or cannot be parsed into a valid instance.
+    internal static func jsonObjectDecoder(for method: JSONRPCMethod) -> (Int, JSONObject) throws -> Self {
+        { index, json in
+            guard let dict = json.dictValue else {
+                throw JSONError.invalidParams(
+                    "\(method.rawValue): \(Self.elementName)[\(index)] MUST be a JSON object.")
+            }
+            return try Self(from: dict, for: method)
         }
     }
 }
