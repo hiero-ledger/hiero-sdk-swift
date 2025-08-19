@@ -20,14 +20,14 @@ internal enum AccountService {
             let spenderAccountId = try AccountId.fromString(allowance.spenderAccountId)
 
             switch (allowance.hbar, allowance.token, allowance.nft) {
-            case let (hbar?, nil, nil):
+            case (let hbar?, nil, nil):
                 let amount = try CommonParamsParser.getAmount(
                     from: hbar.amount,
                     for: method,
                     using: JSONRPCParam.parseInt64(name:from:for:))
                 tx.approveHbarAllowance(ownerAccountId, spenderAccountId, Hbar.fromTinybars(amount))
 
-            case let (nil, token?, nil):
+            case (nil, let token?, nil):
                 let tokenId = try TokenId.fromString(token.tokenId)
                 let amount = try CommonParamsParser.getAmount(
                     from: token.amount,
@@ -35,7 +35,7 @@ internal enum AccountService {
                     using: JSONRPCParam.parseUInt64ReinterpretingSigned(name:from:for:))
                 tx.approveTokenAllowance(tokenId, ownerAccountId, spenderAccountId, amount)
 
-            case let (nil, nil, nft?):
+            case (nil, nil, let nft?):
                 let tokenId = try TokenId.fromString(nft.tokenId)
 
                 if let serials = nft.serialNumbers {
