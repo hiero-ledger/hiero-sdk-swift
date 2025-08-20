@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import Hiero
-
 /// Represents a parsed remove allowance object from a JSON-RPC request.
 ///
 /// This struct encapsulates an NFT allowance to be removed granted by an `ownerAccountId`,

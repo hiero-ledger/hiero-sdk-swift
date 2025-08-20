@@ -22,7 +22,9 @@ internal struct RejectTokenParams {
         self.ownerId = try JSONRPCParser.getRequiredParameter(name: "ownerId", from: params, for: method)
         self.tokenIds = try JSONRPCParser.getOptionalPrimitiveListIfPresent(name: "tokenIds", from: params, for: method)
         self.serialNumbers = try JSONRPCParser.getOptionalPrimitiveListIfPresent(
-            name: "serialNumbers", from: params, for: method)
+            name: "serialNumbers",
+            from: params,
+            for: method)
         self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
             name: "commonTransactionParams",
             from: params,

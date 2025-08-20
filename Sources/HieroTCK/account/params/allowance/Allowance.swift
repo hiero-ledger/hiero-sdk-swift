@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import Hiero
-
 /// Represents a parsed allowance object from a JSON-RPC request.
 ///
 /// This struct encapsulates a single allowance granted by an `ownerAccountId` to a `spenderAccountId`,

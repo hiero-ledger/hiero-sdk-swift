@@ -14,8 +14,6 @@ import HieroProtobufs
 ///
 /// It also includes robust parsing of input key data into strongly typed Hiero `Key` representations,
 /// with support for DER and protobuf formats. Used primarily in JSON-RPC method dispatching.
-///
-/// This is a singleton service class and should be accessed via `KeyService.service`.
 internal class KeyService {
 
     // MARK: - JSON-RPC Methods

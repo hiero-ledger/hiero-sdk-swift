@@ -86,7 +86,9 @@ internal enum JSONRPCParser {
         for method: JSONRPCMethod
     ) throws -> [T] {
         let list: [JSONObject] = try getRequiredParameter(name: name, from: parameters, for: method)
-        return try list.map { try getJson(name: "\(name) element", from: $0, for: method) as T }
+        return try list.enumerated().map {
+            try getJson(name: "\(name)[\($0.offset)]", from: $0.element, for: method) as T
+        }
     }
 
     /// Extracts and parses a required JSON parameter as a list of custom objects,
@@ -157,7 +159,9 @@ internal enum JSONRPCParser {
         guard let list: [JSONObject] = try getOptionalParameterIfPresent(name: name, from: parameters, for: method)
         else { return nil }
 
-        return try list.map { try getJson(name: "\(name) element", from: $0, for: method) as T }
+        return try list.enumerated().map {
+            try getJson(name: "\(name)[\($0.offset)]", from: $0.element, for: method) as T
+        }
     }
 
     /// Attempts to extract and parse an optional JSON parameter as a list of strongly-typed custom objects.

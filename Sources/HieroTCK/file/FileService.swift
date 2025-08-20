@@ -2,7 +2,7 @@
 
 import Hiero
 
-/// Service responsible for handling account-related JSON-RPC methods.
+/// Service responsible for handling file-related JSON-RPC methods.
 ///
 /// Each method corresponds to a specific JSON-RPC operation, maps input parameters into
 /// Hiero SDK requests, and returns a structured result.
@@ -13,10 +13,9 @@ internal enum FileService {
     /// Handles the `appendFile` JSON-RPC method.
     internal static func appendFile(from params: AppendFileParams) async throws -> JSONObject {
         var tx = FileAppendTransaction()
-        let method: JSONRPCMethod = .appendFile
 
         tx.fileId = try CommonParamsParser.getFileIdIfPresent(from: params.fileId)
-        try CommonParamsParser.getContentsIfPresent(from: params.contents, for: method).assign(to: &tx.contents)
+        try CommonParamsParser.getContentsIfPresent(from: params.contents, for: .appendFile).assign(to: &tx.contents)
         params.maxChunks.assign(to: &tx.maxChunks)
         params.chunkSize.assign(to: &tx.chunkSize)
         try params.commonTransactionParams?.applyToTransaction(&tx)
@@ -60,8 +59,7 @@ internal enum FileService {
 
         tx.fileId = try CommonParamsParser.getFileIdIfPresent(from: params.fileId)
         tx.keys = try CommonParamsParser.getKeyListIfPresent(from: params.keys)
-        try JSONRPCParam.parseUtf8DataIfPresent(name: "contents", from: params.contents, for: method).assign(
-            to: &tx.contents)
+        try CommonParamsParser.getContentsIfPresent(from: params.contents, for: method).assign(to: &tx.contents)
         tx.expirationTime = try CommonParamsParser.getExpirationTimeIfPresent(from: params.expirationTime, for: method)
         params.memo.assign(to: &tx.fileMemo)
         try params.commonTransactionParams?.applyToTransaction(&tx)

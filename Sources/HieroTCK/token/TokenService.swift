@@ -143,21 +143,21 @@ internal enum TokenService {
             from: params.autoRenewPeriod,
             for: method)
         params.memo.assign(to: &tx.tokenMemo)
-        try params.tokenType.flatMap {
-            try ["ft", "nft"].contains($0)
-                ? ($0 == "ft" ? .fungibleCommon : .nonFungibleUnique)
-                : { throw JSONError.invalidParams("\(#function): tokenType MUST be 'ft' or 'nft'.") }()
-        }.assign(to: &tx.tokenType)
-        try params.supplyType.flatMap {
-            try ["finite", "infinite"].contains($0)
-                ? ($0 == "finite" ? .finite : .infinite)
-                : { throw JSONError.invalidParams("\(#function): supplyType MUST be 'finite' or 'infinite'.") }()
-        }.assign(to: &tx.tokenSupplyType)
-        try JSONRPCParam.parseUInt64IfPresentReinterpretingSigned(
-            name: "maxSupply",
-            from: params.maxSupply,
+        try JSONRPCParam.parseEnumIfPresent(
+            name: "tokenType",
+            from: params.tokenType,
+            map: ["ft": .fungibleCommon, "nft": .nonFungibleUnique],
             for: method
-        ).assign(to: &tx.maxSupply)
+        ).assign(to: &tx.tokenType)
+        try JSONRPCParam.parseEnumIfPresent(
+            name: "supplyType",
+            from: params.supplyType,
+            map: ["finite": .finite, "infinite": .infinite],
+            for: method
+        ).assign(to: &tx.tokenSupplyType)
+        try params.maxSupply.assign(to: &tx.maxSupply) {
+            try JSONRPCParam.parseUInt64ReinterpretingSigned(name: "maxSupply", from: $0, for: method)
+        }
         tx.feeScheduleKey = try CommonParamsParser.getKeyIfPresent(from: params.feeScheduleKey)
         try CommonParamsParser.getHieroAnyCustomFeesIfPresent(from: params.customFees, for: method).assign(
             to: &tx.customFees)

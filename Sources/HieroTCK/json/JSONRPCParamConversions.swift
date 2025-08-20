@@ -1,61 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Foundation
-import Hiero
-
-// MARK: - JSON-RPC Method Names
-
-/// Represents all supported JSON-RPC method names.
-///
-/// Each case corresponds to a specific method string expected from incoming JSON-RPC requests.
-/// Used to match requests with their appropriate handlers during routing.
-internal enum JSONRPCMethod: String {
-    case airdropToken = "airdropToken"
-    case appendFile = "appendFile"
-    case approveAllowance = "approveAllowance"
-    case associateToken = "associateToken"
-    case burnToken = "burnToken"
-    case cancelAirdrop = "cancelAirdrop"
-    case claimToken = "claimToken"
-    case createAccount = "createAccount"
-    case createFile = "createFile"
-    case createToken = "createToken"
-    case deleteAccount = "deleteAccount"
-    case deleteAllowance = "deleteAllowance"
-    case deleteFile = "deleteFile"
-    case deleteToken = "deleteToken"
-    case dissociateToken = "dissociateToken"
-    case freezeToken = "freezeToken"
-    case generateKey = "generateKey"
-    case grantTokenKyc = "grantTokenKyc"
-    case mintToken = "mintToken"
-    case pauseToken = "pauseToken"
-    case rejectToken = "rejectToken"
-    case reset = "reset"
-    case revokeTokenKyc = "revokeTokenKyc"
-    case setup = "setup"
-    case transferCrypto = "transferCrypto"
-    case unfreezeToken = "unfreezeToken"
-    case unpauseToken = "unpauseToken"
-    case updateAccount = "updateAccount"
-    case updateFile = "updateFile"
-    case updateTokenFeeSchedule = "updateTokenFeeSchedule"
-    case updateToken = "updateToken"
-    case unsupported
-
-    /// Attempts to parse a string into a corresponding `JSONRPCMethod` enum value.
-    ///
-    /// If the method name is not recognized, `.unsupported` is returned to allow graceful fallback handling.
-    ///
-    /// - Parameters:
-    ///   - method: The method string from the incoming JSON-RPC request.
-    /// - Returns: A `JSONRPCMethod` value, or `.unsupported` if not recognized.
-    internal static func method(named method: String) -> JSONRPCMethod {
-        JSONRPCMethod(rawValue: method) ?? .unsupported
-    }
-}
-
-// MARK: - JSONRPCParam
 
 /// Higher-level parameter **conversion** and **optional-handling** helpers.
 ///
@@ -63,7 +8,7 @@ internal enum JSONRPCMethod: String {
 /// It converts primitive inputs (typically strings) into the exact types your
 /// business logic needs (e.g., string -> `Int64`/`UInt64`, string -> UTF-8 `Data`,
 /// signed <-> unsigned bit-pattern reinterpretation), and provides `…IfPresent`
-/// variants for optional fields, plus small utilities like `setIfPresent`.
+/// variants for optional fields.
 ///
 /// This layer assumes you already located the parameter in the JSON and now need
 /// a precise, validated conversion or conditional assignment.
@@ -92,7 +37,7 @@ internal enum JSONRPCMethod: String {
 ///     for: method)
 ///
 /// // Conditionally assign:
-/// JSONRPCParam.setIfPresent(&tx.memo, to: memoData)
+/// memoData.assign(to: &tx.memo)
 /// ```
 internal enum JSONRPCParam {
 
@@ -307,6 +252,21 @@ internal enum JSONRPCParam {
             throw JSONError.invalidParams("\(method.rawValue): \(name) MUST be a UTF-8 string.")
         }
         return data
+    }
+
+    // MARK: - Enums
+
+    internal static func parseEnum<T>(name: String, from s: String, map: [String: T], for method: JSONRPCMethod) throws
+        -> T
+    {
+        if let v = map[s] { return v }
+        throw JSONError.invalidParams("\(method.rawValue): \(name) MUST be one of \(Array(map.keys)).")
+    }
+
+    internal static func parseEnumIfPresent<T>(
+        name: String, from s: String?, map: [String: T], for method: JSONRPCMethod
+    ) throws -> T? {
+        try s.map { try parseEnum(name: name, from: $0, map: map, for: method) }
     }
 
     // MARK: - Core Generic (Implementation Detail)
