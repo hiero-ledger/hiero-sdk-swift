@@ -4,7 +4,7 @@ import Hiero
 import XCTest
 
 internal class TopicInfo: XCTestCase {
-    internal func disabled_testQuery() async throws {
+    internal func disabledTestQuery() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let topic = try await Topic.create(testEnv)
@@ -18,7 +18,7 @@ internal class TopicInfo: XCTestCase {
         XCTAssertEqual(info.topicMemo, "[e2e::TopicCreateTransaction]")
     }
 
-    internal func disabled_testQueryCost() async throws {
+    internal func disabledTestQueryCost() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let topic = try await Topic.create(testEnv)
@@ -36,7 +36,7 @@ internal class TopicInfo: XCTestCase {
         XCTAssertEqual(info.topicMemo, "[e2e::TopicCreateTransaction]")
     }
 
-    internal func disabled_testQueryCostBigMax() async throws {
+    internal func disabledTestQueryCostBigMax() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let topic = try await Topic.create(testEnv)
@@ -54,7 +54,7 @@ internal class TopicInfo: XCTestCase {
         XCTAssertEqual(info.topicMemo, "[e2e::TopicCreateTransaction]")
     }
 
-    internal func disabled_testQueryCostSmallMaxFails() async throws {
+    internal func disabledTestQueryCostSmallMaxFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let topic = try await Topic.create(testEnv)
@@ -76,7 +76,7 @@ internal class TopicInfo: XCTestCase {
         }
     }
 
-    internal func disabled_testQueryCostInsufficientTxFeeFails() async throws {
+    internal func disabledTestQueryCostInsufficientTxFeeFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let topic = try await Topic.create(testEnv)

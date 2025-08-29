@@ -6,7 +6,7 @@ import XCTest
 @testable import Hiero
 
 internal class TopicMessageSubmit: XCTestCase {
-    internal func disabled_testBasic() async throws {
+    internal func disabledTestBasic() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let topic = try await Topic.create(testEnv)
@@ -27,7 +27,7 @@ internal class TopicMessageSubmit: XCTestCase {
         XCTAssertEqual(info.sequenceNumber, 1)
     }
 
-    internal func disabled_testLargeMessage() async throws {
+    internal func disabledTestLargeMessage() async throws {
         let testEnv = try TestEnvironment.nonFree
         async let bigContents = Resources.bigContents.data(using: .utf8)!
 
@@ -74,7 +74,7 @@ internal class TopicMessageSubmit: XCTestCase {
         }
     }
 
-    internal func disabled_testMissingMessageFails() async throws {
+    internal func disabledTestMissingMessageFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let topic = try await Topic.create(testEnv)
@@ -117,7 +117,7 @@ internal class TopicMessageSubmit: XCTestCase {
         _ = try XCTUnwrap(transaction.transactionId)
     }
 
-    internal func disabled_testSubmitMessage() async throws {
+    internal func disabledTestSubmitMessage() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let topic = try await Topic.create(testEnv)

@@ -4,7 +4,7 @@ import Hiero
 import XCTest
 
 internal class TransactionReceipt: XCTestCase {
-    internal func disabled_testQuery() async throws {
+    internal func disabledTestQuery() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let resp = try await TopicCreateTransaction()

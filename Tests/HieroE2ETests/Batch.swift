@@ -4,7 +4,7 @@ import Hiero
 import XCTest
 
 internal final class Batch: XCTestCase {
-    internal func disabled_testBatchOneTransaction() async throws {
+    internal func disabledTestBatchOneTransaction() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let key = PrivateKey.generateEd25519()
@@ -33,7 +33,7 @@ internal final class Batch: XCTestCase {
         XCTAssertEqual(info.accountId, accountId)
     }
 
-    internal func disabled_testBatchMaxTransactions() async throws {
+    internal func disabledTestBatchMaxTransactions() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let key = PrivateKey.generateEd25519()
@@ -87,7 +87,7 @@ internal final class Batch: XCTestCase {
         XCTAssertEqual(info.accountId, accountId)
     }
 
-    internal func disabled_testEmptyBatchTransaction() async throws {
+    internal func disabledTestEmptyBatchTransaction() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         await assertThrowsHErrorAsync(
@@ -103,7 +103,7 @@ internal final class Batch: XCTestCase {
         }
     }
 
-    internal func disabled_testBlacklistedBatchTransaction() async throws {
+    internal func disabledTestBlacklistedBatchTransaction() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         await assertThrowsHErrorAsync(
@@ -121,7 +121,7 @@ internal final class Batch: XCTestCase {
         }
     }
 
-    internal func disabled_testChunkedBatchTransaction() async throws {
+    internal func disabledTestChunkedBatchTransaction() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let key = PrivateKey.generateEd25519()
@@ -144,7 +144,7 @@ internal final class Batch: XCTestCase {
         XCTAssertEqual(info.topicId, topicId)
     }
 
-    internal func disabled_testMultipleBatchKeysBatchTransactions() async throws {
+    internal func disabledTestMultipleBatchKeysBatchTransactions() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let batchKey1 = PrivateKey.generateEcdsa()
@@ -208,7 +208,7 @@ internal final class Batch: XCTestCase {
         XCTAssertEqual(batchTxReceipt.status, .success)
     }
 
-    internal func disabled_testBatchTransactionsFailButIncurFees() async throws {
+    internal func disabledTestBatchTransactionsFailButIncurFees() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let initialOperatorBalance = try await AccountBalanceQuery().accountId(testEnv.operator.accountId).execute(
@@ -256,7 +256,7 @@ internal final class Batch: XCTestCase {
         XCTAssertLessThan(initialOperatorBalance, finalOperatorBalance)
     }
 
-    internal func disabled_testBatchifiedTxButNotInBatch() async throws {
+    internal func disabledTestBatchifiedTxButNotInBatch() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         await assertThrowsHErrorAsync(

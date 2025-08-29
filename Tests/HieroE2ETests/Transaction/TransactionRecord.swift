@@ -17,7 +17,7 @@ internal class TransactionRecord: XCTestCase {
             .execute(testEnv.client)
     }
 
-    internal func disabled_testQuery() async throws {
+    internal func disabledTestQuery() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let account = try await Account.create(testEnv)
@@ -37,7 +37,7 @@ internal class TransactionRecord: XCTestCase {
         XCTAssertEqual(txId, query.transactionId)
     }
 
-    internal func disabled_testQueryInvalidTxIdFails() async throws {
+    internal func disabledTestQueryInvalidTxIdFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let account = try await Account.create(testEnv)

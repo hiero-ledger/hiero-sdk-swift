@@ -102,7 +102,7 @@ internal final class ContractInfo: XCTestCase {
         }
     }
 
-    internal func disabled_testQueryCostInsufficientTxFeeFails() async throws {
+    internal func disabledTestQueryCostInsufficientTxFeeFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let contractId = try await ContractHelpers.makeContract(testEnv, operatorAdminKey: true)

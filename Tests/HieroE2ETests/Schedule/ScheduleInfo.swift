@@ -141,7 +141,7 @@ internal class ScheduleInfo: XCTestCase {
         }
     }
 
-    internal func disabled_testQueryCostInsufficientTxFeeFails() async throws {
+    internal func disabledTestQueryCostInsufficientTxFeeFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let account = try await makeAccount(testEnv, balance: 1)

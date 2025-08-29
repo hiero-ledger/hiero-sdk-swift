@@ -4,7 +4,7 @@ import Hiero
 import XCTest
 
 internal class TopicUpdate: XCTestCase {
-    internal func disabled_testBasic() async throws {
+    internal func disabledTestBasic() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let topic = try await Topic.create(testEnv)

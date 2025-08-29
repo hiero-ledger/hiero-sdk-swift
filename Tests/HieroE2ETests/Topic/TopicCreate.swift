@@ -21,7 +21,7 @@ internal class TopicCreate: XCTestCase {
         try await topic.delete(testEnv)
     }
 
-    internal func disabled_testFieldless() async throws {
+    internal func disabledTestFieldless() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let receipt = try await TopicCreateTransaction()
@@ -31,7 +31,7 @@ internal class TopicCreate: XCTestCase {
         _ = try XCTUnwrap(receipt.topicId)
     }
 
-    internal func disabled_testCreatesAndUpdatesRevenueGeneratingTopic() async throws {
+    internal func disabledTestCreatesAndUpdatesRevenueGeneratingTopic() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let feeExemptKeys = [PrivateKey.generateEcdsa(), PrivateKey.generateEcdsa()]
@@ -143,7 +143,7 @@ internal class TopicCreate: XCTestCase {
         }
     }
 
-    internal func disabled_testUpdateFeeScheduleKeyWithoutPermissionFails() async throws {
+    internal func disabledTestUpdateFeeScheduleKeyWithoutPermissionFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let receipt = try await TopicCreateTransaction()
@@ -172,7 +172,7 @@ internal class TopicCreate: XCTestCase {
         }
     }
 
-    internal func disabled_testUpdateCustomFeesWithoutFeeScheduleKeyFails() async throws {
+    internal func disabledTestUpdateCustomFeesWithoutFeeScheduleKeyFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let receipt = try await TopicCreateTransaction()
@@ -249,7 +249,7 @@ internal class TopicCreate: XCTestCase {
     }
 
     // This test is to ensure that the fee exempt keys are exempted from the custom fee
-    internal func disabled_testExemptsFeeExemptKeysFromHbarFees() async throws {
+    internal func disabledTestExemptsFeeExemptKeysFromHbarFees() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let hbarAmount: UInt64 = 100_000_000
@@ -312,7 +312,7 @@ internal class TopicCreate: XCTestCase {
         XCTAssertNotNil(info.autoRenewAccountId)
     }
 
-    internal func disabled_testCreateWithTransactionIdAssignsAutoRenewAccountIdToTransactionIdAccountId() async throws {
+    internal func disabledTestCreateWithTransactionIdAssignsAutoRenewAccountIdToTransactionIdAccountId() async throws {
         let testEnv = try TestEnvironment.nonFree
         let privateKey = PrivateKey.generateEcdsa()
         let publicKey = privateKey.publicKey

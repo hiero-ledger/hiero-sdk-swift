@@ -4,7 +4,7 @@ import Hiero
 import XCTest
 
 internal final class MirrorNodeContract: XCTestCase {
-    internal func disabled_testCanEstimateAndCall() async throws {
+    internal func disabledTestCanEstimateAndCall() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let fileCreateReceipt = try await FileCreateTransaction()
@@ -65,7 +65,7 @@ internal final class MirrorNodeContract: XCTestCase {
         }
     }
 
-    internal func disabled_testBadContractId() async throws {
+    internal func disabledTestBadContractId() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let estimateResponse = try await MirrorNodeContractEstimateGasQuery()
@@ -79,7 +79,7 @@ internal final class MirrorNodeContract: XCTestCase {
         XCTAssertEqual(estimatedGas, 22892)
     }
 
-    internal func disabled_testLowGasLimit() async throws {
+    internal func disabledTestLowGasLimit() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let fileCreateReceipt = try await FileCreateTransaction()
