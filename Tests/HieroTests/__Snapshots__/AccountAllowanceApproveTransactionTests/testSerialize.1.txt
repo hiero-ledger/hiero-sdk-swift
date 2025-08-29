@@ -48,6 +48,24 @@ cryptoApproveAllowance {
   }
   nftAllowances {
     tokenId {
+      shardNum: 4
+      realmNum: 4
+      tokenNum: 4
+    }
+    owner {
+      shardNum: 5
+      realmNum: 6
+      accountNum: 7
+    }
+    spender {
+      shardNum: 5
+      realmNum: 5
+      accountNum: 5
+    }
+    serial_numbers: [456]
+  }
+  nftAllowances {
+    tokenId {
       shardNum: 8
       realmNum: 8
       tokenNum: 8

@@ -127,7 +127,9 @@ public class ChunkedTransaction: Transaction {
                 .executeAll(client, timeoutPerChunk: timeoutPerChunk)
         }
 
-        precondition(self.data.count < self.maxMessageSize, "todo: throw an actual error here")
+        if self.data.count > self.maxMessageSize {
+            throw HError.illegalState("transaction requires \(self.data.count) but only has \(self.maxMessageSize)")
+        }
 
         var responses: [Response] = []
 

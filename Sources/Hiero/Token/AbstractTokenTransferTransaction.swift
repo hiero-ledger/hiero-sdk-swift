@@ -144,7 +144,7 @@ public class AbstractTokenTransferTransaction: Transaction {
     public func approvedTokenTransferWithDecimals(
         _ tokenId: TokenId, _ accountId: AccountId, _ amount: Int64, _ expectedDecimals: UInt32
     ) -> Self {
-        doTokenTransferWithDecimals(tokenId, accountId, amount, false, expectedDecimals)
+        doTokenTransferWithDecimals(tokenId, accountId, amount, true, expectedDecimals)
     }
 
     /// Add a non-approved nft transfer to the transaction.

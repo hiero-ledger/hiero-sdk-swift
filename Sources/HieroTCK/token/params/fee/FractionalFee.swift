@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import Hiero
-
-/// Struct to hold the parameters of a fractional fee.
+/// Represents a fractional fee parsed from JSON-RPC parameters.
+///
+/// A `FractionalFee` defines a fee as a fraction of the transferred amount,
+/// governed by a numerator/denominator ratio and bounded by minimum and maximum limits.
+/// The fee assessment behavior is controlled via the `assessmentMethod` field, which must
+/// be either `"inclusive"` or `"exclusive"`.
 internal struct FractionalFee {
 
     internal var numerator: String
@@ -11,35 +14,20 @@ internal struct FractionalFee {
     internal var maximumAmount: String
     internal var assessmentMethod: String
 
-    internal init(_ params: [String: JSONObject], _ funcName: JSONRPCMethod) throws {
-        self.numerator = try getRequiredJsonParameter("numerator", params, funcName)
-        self.denominator = try getRequiredJsonParameter("denominator", params, funcName)
-        self.minimumAmount = try getRequiredJsonParameter("minimumAmount", params, funcName)
-        self.maximumAmount = try getRequiredJsonParameter("maximumAmount", params, funcName)
-        self.assessmentMethod = try getRequiredJsonParameter("assessmentMethod", params, funcName)
-    }
-
-    /// Convert this FractionalFee to a Hedera FractionalFee.
-    internal func toHederaFractionalFee(
-        _ feeCollectorAccountID: AccountId, _ feeCollectorsExempt: Bool, _ funcName: JSONRPCMethod
-    ) throws
-        -> Hiero.FractionalFee
-    {
-        guard self.assessmentMethod == "inclusive" || self.assessmentMethod == "exclusive" else {
-            throw JSONError.invalidParams("\(funcName.rawValue): assessmentMethod MUST be 'inclusive' or 'exclusive'.")
-        }
-
-        /// Unwrap of self.minimumAmount and self.maximumAmount can be safely forced since they are not optional.
-        return Hiero.FractionalFee(
-            numerator: try CommonParams.getNumerator(self.numerator, funcName),
-            denominator: try CommonParams.getDenominator(self.denominator, funcName),
-            minimumAmount: try CommonParams.getSdkUInt64(self.minimumAmount, "minimumAmount", funcName)!,
-            maximumAmount: try CommonParams.getSdkUInt64(self.maximumAmount, "maximumAmount", funcName)!,
-            assessmentMethod: self.assessmentMethod == "inclusive"
-                ? Hiero.FractionalFee.FeeAssessmentMethod.inclusive
-                : Hiero.FractionalFee.FeeAssessmentMethod.exclusive,
-            feeCollectorAccountId: feeCollectorAccountID,
-            allCollectorsAreExempt: feeCollectorsExempt
-        )
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.numerator = try JSONRPCParser.getRequiredParameter(name: "numerator", from: params, for: method)
+        self.denominator = try JSONRPCParser.getRequiredParameter(name: "denominator", from: params, for: method)
+        self.minimumAmount = try JSONRPCParser.getRequiredParameter(
+            name: "minimumAmount",
+            from: params,
+            for: method)
+        self.maximumAmount = try JSONRPCParser.getRequiredParameter(
+            name: "maximumAmount",
+            from: params,
+            for: method)
+        self.assessmentMethod = try JSONRPCParser.getRequiredParameter(
+            name: "assessmentMethod",
+            from: params,
+            for: method)
     }
 }

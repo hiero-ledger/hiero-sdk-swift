@@ -2,7 +2,13 @@
 
 import Hiero
 
-/// Struct to hold the parameters for all transactions.
+/// Encapsulates optional JSON-RPC parameters common to all Hiero transactions.
+///
+/// This struct encapsulates common metadata such as transaction ID, memo, transaction fee limits,
+/// duration, and signer keys. It is used to populate standard fields on any Hiero `Transaction`
+/// instance.
+///
+/// - Parameters may be omitted; defaults and overrides are applied later in the transaction flow.
 internal struct CommonTransactionParams {
 
     internal var transactionId: String? = nil
@@ -12,33 +18,58 @@ internal struct CommonTransactionParams {
     internal var regenerateTransactionId: Bool? = nil
     internal var signers: [String]? = nil
 
-    internal init(_ parameters: [String: JSONObject]?, _ funcName: JSONRPCMethod) throws {
-        if let params = parameters {
-            self.transactionId = try getOptionalJsonParameter("transactionId", params, funcName)
-            self.maxTransactionFee = try getOptionalJsonParameter("maxTransactionFee", params, funcName)
-            self.validTransactionDuration = try getOptionalJsonParameter("validTransactionDuration", params, funcName)
-            self.memo = try getOptionalJsonParameter("memo", params, funcName)
-            self.regenerateTransactionId = try getOptionalJsonParameter("regenerateTransactionId", params, funcName)
-            self.signers = try (getOptionalJsonParameter("signers", params, funcName) as [JSONObject]?)?.map {
-                try getJson($0, "signer in signers list", funcName) as String
-            }
-        }
+    internal init(from parameters: [String: JSONObject]?, for method: JSONRPCMethod) throws {
+        guard let params = parameters else { return }
+
+        self.transactionId = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "transactionId",
+            from: params,
+            for: method)
+        self.maxTransactionFee = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "maxTransactionFee",
+            from: params,
+            for: method)
+        self.validTransactionDuration = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "validTransactionDuration",
+            from: params,
+            for: method)
+        self.memo = try JSONRPCParser.getOptionalParameterIfPresent(name: "memo", from: params, for: method)
+        self.regenerateTransactionId = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "regenerateTransactionId",
+            from: params,
+            for: method)
+        self.signers = try JSONRPCParser.getOptionalPrimitiveListIfPresent(name: "signers", from: params, for: method)
     }
 
-    /// Fill in a Transaction's common parameters based on JSON input.
-    internal func fillOutTransaction<T: Transaction>(_ transaction: inout T) throws {
-        transaction.transactionId = try self.transactionId.flatMap { try TransactionId.fromString($0) }
-        transaction.maxTransactionFee = self.maxTransactionFee.flatMap { Hbar.fromTinybars($0) }
-        transaction.transactionValidDuration = self.validTransactionDuration.flatMap {
-            Duration(seconds: toUint64($0))
+    /// Applies common transaction parameters to a Hiero `Transaction`.
+    ///
+    /// This method populates standard fields on the given `Transaction` instance using values
+    /// parsed from JSON input, including transaction ID, fee, memo, duration, and signer information.
+    ///
+    /// - Parameters:
+    ///   - transaction: The mutable `Transaction` instance to configure.
+    /// - Note: If `signers` is present, the transaction is frozen and each provided key is used to sign it.
+    internal func applyToTransaction<T: Transaction>(_ tx: inout T) throws {
+        // The transaction ID may be the entire transaction ID, or just the account ID of the payer.
+        if let transactionId = self.transactionId {
+            do {
+                tx.transactionId = try TransactionId.fromString(transactionId)
+            } catch {
+                // If parsing fails, treat it as an AccountId and generate a TransactionId from it.
+                tx.transactionId = try TransactionId.generateFrom(AccountId.fromString(transactionId))
+            }
         }
-        transaction.transactionMemo = self.memo ?? transaction.transactionMemo
-        transaction.regenerateTransactionId = self.regenerateTransactionId ?? transaction.regenerateTransactionId
+
+        tx.maxTransactionFee = self.maxTransactionFee.flatMap { Hbar.fromTinybars($0) }
+        tx.transactionValidDuration = self.validTransactionDuration.flatMap {
+            Duration(seconds: UInt64(bitPattern: $0))
+        }
+        self.memo.assign(to: &tx.transactionMemo)
+        tx.regenerateTransactionId = self.regenerateTransactionId
 
         try self.signers.map {
-            try transaction.freezeWith(SDKClient.client.getClient())
-            try $0.forEach { transaction.sign(try PrivateKey.fromStringDer($0)) }
+            try SDKClient.client.freezeTransaction(&tx)
+            try $0.forEach { tx.sign(try PrivateKey.fromStringDer($0)) }
         }
-
     }
 }

@@ -8,7 +8,7 @@ tasks:
             - |
                 echo "// SPDX-License-Identifier: Apache-2.0
                 public enum VersionInfo {
-                    public static let version = \"$(git describe --tags)\"
+                    public static let version = \"$(git describe --tags $(git rev-list --tags --max-count=1))-dev\"
                 }" > Sources/Hiero/Version.swift
             - swift build
 
