@@ -1,30 +1,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import Hiero
-
-/// Struct to hold the parameters of a fixed fee.
+/// Represents a fixed fee parsed from JSON-RPC parameters.
+///
+/// A fixed fee charges a specific amount of a token or HBAR per transaction.
+/// If a `denominatingTokenID` is provided, the fee is charged in that token;
+/// otherwise, it is charged in HBAR.
 internal struct FixedFee {
 
     internal var amount: String
     internal var denominatingTokenID: String? = nil
 
-    internal init(_ params: [String: JSONObject], _ funcName: JSONRPCMethod) throws {
-        self.amount = try getRequiredJsonParameter("amount", params, funcName)
-        self.denominatingTokenID = try getOptionalJsonParameter("denominatingTokenId", params, funcName)
-    }
-
-    /// Convert this FixedFee to a Hedera FixedFee.
-    internal func toHederaFixedFee(
-        _ feeCollectorAccountID: AccountId, _ feeCollectorsExempt: Bool, _ funcName: JSONRPCMethod
-    ) throws
-        -> Hiero.FixedFee
-    {
-        /// Unwrap of self.amount can be safely forced since self.amount isn't optional.
-        return Hiero.FixedFee(
-            amount: try CommonParams.getSdkUInt64(self.amount, "amount", funcName)!,
-            denominatingTokenId: try CommonParams.getTokenId(self.denominatingTokenID),
-            feeCollectorAccountId: feeCollectorAccountID,
-            allCollectorsAreExempt: feeCollectorsExempt
-        )
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.amount = try JSONRPCParser.getRequiredParameter(name: "amount", from: params, for: method)
+        self.denominatingTokenID = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "denominatingTokenId",
+            from: params,
+            for: method)
     }
 }

@@ -1,35 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import Hiero
-
-/// Struct to hold the parameters of a royalty fee.
+/// Represents a royalty fee parsed from JSON-RPC parameters.
+///
+/// A `RoyaltyFee` defines a fraction of value owed to the fee collector upon NFT transfers,
+/// calculated as `numerator / denominator`. Optionally, a fallback fixed fee may be provided
+/// to apply in situations where fractional value cannot be determined (e.g., no sale price).
 internal struct RoyaltyFee {
 
     internal var numerator: String
     internal var denominator: String
     internal var fallbackFee: FixedFee? = nil
 
-    internal init(_ params: [String: JSONObject], _ funcName: JSONRPCMethod) throws {
-        self.numerator = try getRequiredJsonParameter("numerator", params, funcName)
-        self.denominator = try getRequiredJsonParameter("denominator", params, funcName)
-        self.fallbackFee = try getOptionalJsonParameter("fallbackFee", params, funcName).map {
-            try FixedFee($0, funcName)
-        }
-    }
-
-    /// Convert this RoyaltyFee to a Hedera RoyaltyFee.
-    internal func toHederaRoyaltyFee(
-        _ feeCollectorAccountID: AccountId, _ feeCollectorsExempt: Bool, _ funcName: JSONRPCMethod
-    ) throws
-        -> Hiero.RoyaltyFee
-    {
-        return Hiero.RoyaltyFee(
-            numerator: try CommonParams.getNumerator(self.numerator, funcName),
-            denominator: try CommonParams.getDenominator(self.denominator, funcName),
-            fallbackFee: try self.fallbackFee?.toHederaFixedFee(feeCollectorAccountID, feeCollectorsExempt, funcName),
-            feeCollectorAccountId: feeCollectorAccountID,
-            allCollectorsAreExempt: feeCollectorsExempt
-        )
-
+    internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
+        self.numerator = try JSONRPCParser.getRequiredParameter(name: "numerator", from: params, for: method)
+        self.denominator = try JSONRPCParser.getRequiredParameter(name: "denominator", from: params, for: method)
+        self.fallbackFee = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "fallbackFee",
+            from: params,
+            for: method,
+            using: FixedFee.init)
     }
 }
