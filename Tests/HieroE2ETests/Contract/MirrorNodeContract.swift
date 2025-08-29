@@ -17,7 +17,7 @@ internal final class MirrorNodeContract: XCTestCase {
 
         let receipt = try await ContractCreateTransaction()
             .adminKey(.single(testEnv.operator.privateKey.publicKey))
-            .gas(2000000)
+            .gas(2_000_000)
             .constructorParameters(ContractFunctionParameters().addString("Hello from Hiero."))
             .bytecodeFileId(fileId)
             .contractMemo("[e2e::ContractCreateTransaction]")
@@ -92,7 +92,7 @@ internal final class MirrorNodeContract: XCTestCase {
 
         let receipt = try await ContractCreateTransaction()
             .adminKey(.single(testEnv.operator.privateKey.publicKey))
-            .gas(2000000)
+            .gas(2_000_000)
             .constructorParameters(ContractFunctionParameters().addString("Hello from Hiero."))
             .bytecodeFileId(fileId)
             .contractMemo("[e2e::ContractCreateTransaction]")

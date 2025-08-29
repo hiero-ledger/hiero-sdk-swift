@@ -47,7 +47,7 @@ extension ContractHelpers {
         let receipt = try await ContractCreateTransaction(
             bytecodeFileId: file.fileId,
             adminKey: operatorAdminKey ? .single(testEnv.operator.privateKey.publicKey) : nil,
-            gas: 2000000,
+            gas: 2_000_000,
             constructorParameters: ContractFunctionParameters().addString("Hello from Hiero.").toBytes(),
             contractMemo: "[e2e::ContractCreateTransaction]"
         )
