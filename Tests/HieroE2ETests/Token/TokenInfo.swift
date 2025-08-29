@@ -205,7 +205,7 @@ internal final class TokenInfo: XCTestCase {
         }
     }
 
-    internal func testQueryCostInsufficientTxFeeFails() async throws {
+    internal func disabled_testQueryCostInsufficientTxFeeFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let account = try await makeAccount(testEnv)

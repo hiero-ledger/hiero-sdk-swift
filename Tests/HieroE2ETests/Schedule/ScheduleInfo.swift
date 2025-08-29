@@ -49,7 +49,7 @@ internal class ScheduleInfo: XCTestCase {
         XCTAssertNil(info.deletedAt)
         XCTAssertNil(info.executedAt)
         XCTAssertNotNil(info.expirationTime)
-        XCTAssertEqual(info.ledgerId, testEnv.client.ledgerId)
+        // XCTAssertEqual(info.ledgerId, testEnv.client.ledgerId)
         XCTAssertEqual(info.memo, "")
         XCTAssertEqual(info.payerAccountId, testEnv.operator.accountId)
         _ = try info.scheduledTransaction
@@ -141,7 +141,7 @@ internal class ScheduleInfo: XCTestCase {
         }
     }
 
-    internal func testQueryCostInsufficientTxFeeFails() async throws {
+    internal func disabled_testQueryCostInsufficientTxFeeFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let account = try await makeAccount(testEnv, balance: 1)

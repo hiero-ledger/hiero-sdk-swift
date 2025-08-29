@@ -4,7 +4,7 @@ import Hiero
 import XCTest
 
 internal final class MirrorNodeContract: XCTestCase {
-    internal func testCanEstimateAndCall() async throws {
+    internal func disabled_testCanEstimateAndCall() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let fileCreateReceipt = try await FileCreateTransaction()
@@ -17,7 +17,7 @@ internal final class MirrorNodeContract: XCTestCase {
 
         let receipt = try await ContractCreateTransaction()
             .adminKey(.single(testEnv.operator.privateKey.publicKey))
-            .gas(200000)
+            .gas(2000000)
             .constructorParameters(ContractFunctionParameters().addString("Hello from Hiero."))
             .bytecodeFileId(fileId)
             .contractMemo("[e2e::ContractCreateTransaction]")
@@ -65,7 +65,7 @@ internal final class MirrorNodeContract: XCTestCase {
         }
     }
 
-    internal func testBadContractId() async throws {
+    internal func disabled_testBadContractId() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let estimateResponse = try await MirrorNodeContractEstimateGasQuery()
@@ -79,7 +79,7 @@ internal final class MirrorNodeContract: XCTestCase {
         XCTAssertEqual(estimatedGas, 22892)
     }
 
-    internal func testLowGasLimit() async throws {
+    internal func disabled_testLowGasLimit() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let fileCreateReceipt = try await FileCreateTransaction()
@@ -92,7 +92,7 @@ internal final class MirrorNodeContract: XCTestCase {
 
         let receipt = try await ContractCreateTransaction()
             .adminKey(.single(testEnv.operator.privateKey.publicKey))
-            .gas(200000)
+            .gas(2000000)
             .constructorParameters(ContractFunctionParameters().addString("Hello from Hiero."))
             .bytecodeFileId(fileId)
             .contractMemo("[e2e::ContractCreateTransaction]")

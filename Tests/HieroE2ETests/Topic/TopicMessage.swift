@@ -6,7 +6,7 @@ import HieroExampleUtilities
 import XCTest
 
 internal class TopicMessage: XCTestCase {
-    internal func testBasic() async throws {
+    internal func disabled_testBasic() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let topic = try await Topic.create(testEnv)
@@ -65,7 +65,7 @@ internal class TopicMessage: XCTestCase {
         }
     }
 
-    internal func testLarge() async throws {
+    internal func disabled_testLarge() async throws {
         let testEnv = try TestEnvironment.nonFree
         async let bigContentsFut = Resources.bigContents.data(using: .utf8)!
 

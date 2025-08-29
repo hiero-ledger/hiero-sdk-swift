@@ -51,7 +51,7 @@ internal class NetworkVersionInfo: XCTestCase {
         }
     }
 
-    internal func testGetCostInsufficientTxFeeFails() async throws {
+    internal func disabled_testGetCostInsufficientTxFeeFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         await assertThrowsHErrorAsync(

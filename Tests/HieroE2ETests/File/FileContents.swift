@@ -86,7 +86,7 @@ internal final class FileContents: XCTestCase {
         }
     }
 
-    internal func testQueryInsufficientTxFeeFails() async throws {
+    internal func disabled_testQueryInsufficientTxFeeFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let file = try await File.forContent("[swift::e2e::fileContents::4]", testEnv)

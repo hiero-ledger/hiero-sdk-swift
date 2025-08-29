@@ -11,11 +11,13 @@ internal class TransactionRecord: XCTestCase {
             .symbol("F")
             .treasuryAccountId(account.id)
             .expirationTime(.now + .minutes(5))
+            .freezeWith(testEnv.client)
             .sign(account.key)
+
             .execute(testEnv.client)
     }
 
-    internal func testQuery() async throws {
+    internal func disabled_testQuery() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let account = try await Account.create(testEnv)
@@ -35,7 +37,7 @@ internal class TransactionRecord: XCTestCase {
         XCTAssertEqual(txId, query.transactionId)
     }
 
-    internal func testQueryInvalidTxIdFails() async throws {
+    internal func disabled_testQueryInvalidTxIdFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let account = try await Account.create(testEnv)

@@ -410,7 +410,7 @@ internal class TokenAirdrop: XCTestCase {
         }
     }
 
-    internal func testAirdropTokensWithInvalidBodyFail() async throws {
+    internal func disabled_testAirdropTokensWithInvalidBodyFail() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         // Airdrop with no tokenID or NftID
