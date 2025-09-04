@@ -33,7 +33,7 @@ jobs:
     strategy:
       matrix:
         swift: ["5.9"]
-        os: [macos-14]
+        os: [macos-13]
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -65,7 +65,7 @@ jobs:
     strategy:
       matrix:
         swift: ["5.9"]
-        os: [macos-14]
+        os: [macos-13]
 
     needs: [build]
     runs-on: ${{ matrix.os }}
@@ -96,19 +96,21 @@ jobs:
         shell: bash
         run: |
           brew update
-          # Docker runtime via Colima + Docker CLI
-          brew install colima docker
-          # Kubernetes toolchain
-          brew install kind kubectl helm
-          # Useful utilities (jq) and sha256sum (from coreutils)
-          brew install jq coreutils
+          # Install Colima + Docker CLI and explicit deps (lima/qemu)
+          brew install colima docker lima qemu
+          # k8s toolchain + utilities
+          brew install kind kubectl helm jq coreutils
+          # prep the mount Colima warns about
+          mkdir -p /tmp/colima
 
-      - name: Start Colima (Docker runtime)
+      - name: Start Colima (qemu)
         shell: bash
         run: |
-          # Allocate enough for a minimal 1-node network per guide (8GB+ recommended)
-          # If the job fails due to memory, bump --memory to 10-12
-          colima start --cpu 4 --memory 8 --disk 60
+          # Clean any half-baked state from previous runs
+          colima delete -f || true
+          # Start with qemu (not vz), aarch64 guest, and adequate resources
+          colima start --vm-type=qemu --arch aarch64 --cpu 4 --memory 8 --disk 60
+          docker context use colima
           docker info
           docker version
 
@@ -227,6 +229,10 @@ jobs:
         run: |
           kind delete cluster -n "${SOLO_CLUSTER_NAME}" || true
           colima stop || true
+          # Dump colima logs
+          LOGDIR="$HOME/.colima/_lima/colima"
+          echo "=== ha.stderr.log ===" ; cat "$LOGDIR/ha.stderr.log" || true
+          echo "=== serial logs ==="   ; cat "$LOGDIR"/serial*.log   || true
 
       - name: Test
         run: swift test
