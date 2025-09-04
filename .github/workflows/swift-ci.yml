@@ -133,8 +133,6 @@ jobs:
       - name: Create kind cluster
         shell: bash
         run: |
-          # Pull an explicit image to avoid implicit network fetch in kind
-          docker pull "${KIND_IMAGE}"
           kind create cluster -n "${SOLO_CLUSTER_NAME}" --image "${KIND_IMAGE}"
           kubectl cluster-info --context "kind-${SOLO_CLUSTER_NAME}"
 
