@@ -107,15 +107,24 @@ jobs:
         shell: bash
         run: |
           brew install --cask docker
-          # launch the app; it runs headless on Actions
-          open -a Docker
+
+          # Install privileged components + accept license for the current user ("runner")
+          # (official CLI installer + flags)
+          sudo /Applications/Docker.app/Contents/MacOS/install \
+            --accept-license \
+            --user "$USER"
+
+          # Start the app WITHOUT LaunchServices
+          /Applications/Docker.app/Contents/MacOS/Docker --unattended &
+
           echo "Waiting for Docker to become ready..."
-          for i in {1..60}; do
+          for i in {1..90}; do
             if docker system info >/dev/null 2>&1; then
               break
             fi
-            sleep 5
+            sleep 3
           done
+
           docker info
           docker version
 
