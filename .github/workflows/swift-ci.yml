@@ -103,13 +103,19 @@ jobs:
           # prep the mount Colima warns about
           mkdir -p /tmp/colima
 
-      - name: Start Colima (qemu)
+      - name: Install & start Docker Desktop (headless)
         shell: bash
         run: |
-          mkdir -p /tmp/colima
-          colima delete -f || true
-          colima start --vm-type=qemu --arch x86_64 --cpu 4 --memory 8 --disk 60
-          docker context use colima
+          brew install --cask docker
+          # launch the app; it runs headless on Actions
+          open -a Docker
+          echo "Waiting for Docker to become ready..."
+          for i in {1..60}; do
+            if docker system info >/dev/null 2>&1; then
+              break
+            fi
+            sleep 5
+          done
           docker info
           docker version
 
