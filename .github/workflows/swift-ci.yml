@@ -106,10 +106,9 @@ jobs:
       - name: Start Colima (qemu)
         shell: bash
         run: |
-          # Clean any half-baked state from previous runs
+          mkdir -p /tmp/colima
           colima delete -f || true
-          # Start with qemu (not vz), aarch64 guest, and adequate resources
-          colima start --vm-type=qemu --arch aarch64 --cpu 4 --memory 8 --disk 60
+          colima start --vm-type=qemu --arch x86_64 --cpu 4 --memory 8 --disk 60
           docker context use colima
           docker info
           docker version
