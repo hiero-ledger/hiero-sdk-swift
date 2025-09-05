@@ -244,12 +244,13 @@ jobs:
         shell: bash
         run: |
           umask 077
-          cat > .env <<'EOF'
-          TEST_NETWORK_NAME=localhost
-          TEST_RUN_NONFREE=1
-          TEST_OPERATOR_ID=0.0.2
-          TEST_OPERATOR_KEY=302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137
-          EOF
+          {
+            echo "TEST_NETWORK_NAME=localhost"
+            echo "TEST_RUN_NONFREE=1"
+            echo "TEST_OPERATOR_ID=0.0.2"
+            echo "TEST_OPERATOR_KEY=302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137"
+          } > .env
+          cat .env
 
       - name: Test
         run: swift test
