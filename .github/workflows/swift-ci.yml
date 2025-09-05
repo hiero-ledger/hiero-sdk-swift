@@ -69,6 +69,14 @@ jobs:
 
     needs: [build]
     runs-on: ${{ matrix.os }}
+
+    env:
+      SOLO_CLUSTER_NAME: solo
+      SOLO_NAMESPACE: solo
+      SOLO_CLUSTER_SETUP_NAMESPACE: solo-cluster
+      SOLO_DEPLOYMENT: solo-deployment
+      KIND_IMAGE: kindest/node:v1.34.0
+
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
@@ -92,62 +100,25 @@ jobs:
             ${{ runner.os }}-${{ matrix.swift }}-spm-
 
       # ---------- Tooling ----------
-      - name: Install Homebrew packages (Colima, Docker CLI, kind, kubectl, Helm, jq, coreutils)
-        shell: bash
+      - name: Install kind / kubectl / Helm / utils
         run: |
           brew update
-          # Install Colima + Docker CLI and explicit deps (lima/qemu)
-          brew install colima docker lima qemu
-          # k8s toolchain + utilities
           brew install kind kubectl helm jq coreutils
-          # prep the mount Colima warns about
-          mkdir -p /tmp/colima
 
       - name: Install & start Docker Desktop (headless)
-        shell: bash
         run: |
           set -euxo pipefail
-
-          # Install the app
           brew install --cask docker
-
-          # Locate the app (bundle id is stable)
           APP="$(mdfind 'kMDItemCFBundleIdentifier == "com.docker.docker"' | head -n1 || true)"
-          if [[ -z "$APP" || ! -d "$APP" ]]; then
-            APP="/Applications/Docker.app"
-          fi
-          if [[ ! -d "$APP" ]]; then
-            echo "::error::Docker.app not found after install"
-            exit 1
-          fi
-
-          # Install privileged components & symlinks for the current user (no GUI prompt)
+          [[ -z "$APP" || ! -d "$APP" ]] && APP="/Applications/Docker.app"
+          [[ -d "$APP" ]] || { echo "::error::Docker.app not found"; exit 1; }
           sudo "$APP/Contents/MacOS/install" --accept-license --user "$USER"
-
-          # Determine the actual executable name from Info.plist (can change across releases)
           BIN_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Contents/Info.plist")"
           BIN="$APP/Contents/MacOS/$BIN_NAME"
-
-          if [[ ! -x "$BIN" ]]; then
-            echo "::error::Docker binary not found at $BIN"
-            ls -la "$APP/Contents/MacOS" || true
-            exit 1
-          fi
-
-          # Clear quarantine just in case (seen on CI occasionally)
           xattr -r -d com.apple.quarantine "$APP" || true
-
-          # Start Docker Desktop headlessly
           "$BIN" --unattended &
-
-          echo "Waiting for Docker to become ready..."
-          for i in {1..120}; do
-            if docker system info >/dev/null 2>&1; then
-              break
-            fi
-            sleep 2
-          done
-
+          echo "Waiting for Docker to be ready..."
+          for i in {1..120}; do docker system info >/dev/null 2>&1 && break; sleep 2; done
           docker info
           docker version
 
