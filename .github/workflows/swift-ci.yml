@@ -240,6 +240,17 @@ jobs:
           echo "=== ha.stderr.log ===" ; cat "$LOGDIR/ha.stderr.log" || true
           echo "=== serial logs ==="   ; cat "$LOGDIR"/serial*.log   || true
 
+      - name: Write .env for tests
+        shell: bash
+        run: |
+          umask 077
+          cat > .env <<'EOF'
+          TEST_NETWORK_NAME=localhost
+          TEST_RUN_NONFREE=1
+          TEST_OPERATOR_ID=0.0.2
+          TEST_OPERATOR_KEY=302e0201003005...
+          EOF
+
       - name: Test
         env:
           TEST_NETWORK_NAME: "localhost"
