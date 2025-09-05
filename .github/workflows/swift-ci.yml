@@ -76,6 +76,7 @@ jobs:
       SOLO_CLUSTER_SETUP_NAMESPACE: solo-cluster
       SOLO_DEPLOYMENT: solo-deployment
       KIND_IMAGE: kindest/node:v1.34.0
+      TEST_RUN_NONFREE: 1
 
     steps:
       - name: Harden Runner
