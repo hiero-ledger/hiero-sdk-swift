@@ -103,7 +103,7 @@ jobs:
       - name: Install kind / kubectl / Helm / utils
         run: |
           brew update
-          brew install kind kubectl helm jq coreutils
+          brew install kind kubectl helm jq coreutils docker colima
 
       # - name: Install & start Docker Desktop (headless)
       #   run: |
@@ -133,11 +133,21 @@ jobs:
           sudo rm -rvf /usr/local/bin/docker* || true
           sudo rm -rvf /usr/local/bin/*lima* || true
 
-      - name: Install Lima
+      - name: Start CoLima
         run: |
-          VERSION="v0.20.0"
-          curl -fsSL "https://github.com/lima-vm/lima/releases/download/${VERSION}/lima-${VERSION:1}-$(uname -s)-$(uname -m).tar.gz" | sudo tar Cxzvm /usr/local
+          colima start --vm-type=vz --cpu=2 --memory=4 --disk=10
 
+      - name: Show CoLima Logs
+        if: failure()
+        run: |
+          echo "::group::Serial Logs"
+          cat ${HOME}/.colima/_lima/colima/serial*.log
+          echo "::endgroup::"
+          
+          echo "::group::Error Logs"
+          cat ${HOME}/.colima/_lima/colima/ha.stderr.log
+          echo "::endgroup::"
+          
       # ---------- Node.js for Solo ----------
       - name: Use Node 20.18.x
         uses: actions/setup-node@v4
