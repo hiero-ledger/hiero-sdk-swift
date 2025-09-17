@@ -123,7 +123,6 @@ jobs:
       #     docker version
 
       - name: Remove Preinstalled Docker
-        if: ${{ runner.os == 'macOS' }}
         run: |
           set -x
           sudo killall dockerd || true
