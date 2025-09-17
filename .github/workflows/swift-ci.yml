@@ -105,22 +105,38 @@ jobs:
           brew update
           brew install kind kubectl helm jq coreutils
 
-      - name: Install & start Docker Desktop (headless)
+      # - name: Install & start Docker Desktop (headless)
+      #   run: |
+      #     set -euxo pipefail
+      #     brew install --cask docker
+      #     APP="$(mdfind 'kMDItemCFBundleIdentifier == "com.docker.docker"' | head -n1 || true)"
+      #     [[ -z "$APP" || ! -d "$APP" ]] && APP="/Applications/Docker.app"
+      #     [[ -d "$APP" ]] || { echo "::error::Docker.app not found"; exit 1; }
+      #     sudo "$APP/Contents/MacOS/install" --accept-license --user "$USER"
+      #     BIN_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Contents/Info.plist")"
+      #     BIN="$APP/Contents/MacOS/$BIN_NAME"
+      #     xattr -r -d com.apple.quarantine "$APP" || true
+      #     "$BIN" --unattended &
+      #     echo "Waiting for Docker to be ready..."
+      #     for i in {1..120}; do docker system info >/dev/null 2>&1 && break; sleep 2; done
+      #     docker info
+      #     docker version
+
+      - name: Remove Preinstalled Docker
+        if: ${{ runner.os == 'macOS' }}
         run: |
-          set -euxo pipefail
-          brew install --cask docker
-          APP="$(mdfind 'kMDItemCFBundleIdentifier == "com.docker.docker"' | head -n1 || true)"
-          [[ -z "$APP" || ! -d "$APP" ]] && APP="/Applications/Docker.app"
-          [[ -d "$APP" ]] || { echo "::error::Docker.app not found"; exit 1; }
-          sudo "$APP/Contents/MacOS/install" --accept-license --user "$USER"
-          BIN_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Contents/Info.plist")"
-          BIN="$APP/Contents/MacOS/$BIN_NAME"
-          xattr -r -d com.apple.quarantine "$APP" || true
-          "$BIN" --unattended &
-          echo "Waiting for Docker to be ready..."
-          for i in {1..120}; do docker system info >/dev/null 2>&1 && break; sleep 2; done
-          docker info
-          docker version
+          set -x
+          sudo killall dockerd || true
+          sudo killall containerd || true
+          sudo rm -rvf /usr/bin/*containerd* || true
+          sudo rm -rvf /usr/bin/docker* || true
+          sudo rm -rvf /usr/local/bin/docker* || true
+          sudo rm -rvf /usr/local/bin/*lima* || true
+
+      - name: Install Lima
+        run: |
+          VERSION="v0.20.0"
+          curl -fsSL "https://github.com/lima-vm/lima/releases/download/${VERSION}/lima-${VERSION:1}-$(uname -s)-$(uname -m).tar.gz" | sudo tar Cxzvm /usr/local
 
       # ---------- Node.js for Solo ----------
       - name: Use Node 20.18.x
