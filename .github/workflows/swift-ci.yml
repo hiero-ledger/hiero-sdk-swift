@@ -103,7 +103,7 @@ jobs:
       - name: Install kind / kubectl / Helm / utils
         run: |
           brew update
-          brew install kind kubectl helm jq coreutils docker colima
+          brew install kind kubectl helm jq coreutils
 
       # - name: Install & start Docker Desktop (headless)
       #   run: |
@@ -135,6 +135,8 @@ jobs:
 
       - name: Start CoLima
         run: |
+          brew install docker
+          brew install colima
           colima start --vm-type=vz --cpu=2 --memory=4 --disk=10
 
       - name: Show CoLima Logs
@@ -147,7 +149,7 @@ jobs:
           echo "::group::Error Logs"
           cat ${HOME}/.colima/_lima/colima/ha.stderr.log
           echo "::endgroup::"
-          
+
       # ---------- Node.js for Solo ----------
       - name: Use Node 20.18.x
         uses: actions/setup-node@v4
