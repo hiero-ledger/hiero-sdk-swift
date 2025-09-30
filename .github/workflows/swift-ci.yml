@@ -105,23 +105,6 @@ jobs:
           brew update
           brew install kind kubectl helm jq coreutils
 
-      # - name: Install & start Docker Desktop (headless)
-      #   run: |
-      #     set -euxo pipefail
-      #     brew install --cask docker
-      #     APP="$(mdfind 'kMDItemCFBundleIdentifier == "com.docker.docker"' | head -n1 || true)"
-      #     [[ -z "$APP" || ! -d "$APP" ]] && APP="/Applications/Docker.app"
-      #     [[ -d "$APP" ]] || { echo "::error::Docker.app not found"; exit 1; }
-      #     sudo "$APP/Contents/MacOS/install" --accept-license --user "$USER"
-      #     BIN_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Contents/Info.plist")"
-      #     BIN="$APP/Contents/MacOS/$BIN_NAME"
-      #     xattr -r -d com.apple.quarantine "$APP" || true
-      #     "$BIN" --unattended &
-      #     echo "Waiting for Docker to be ready..."
-      #     for i in {1..120}; do docker system info >/dev/null 2>&1 && break; sleep 2; done
-      #     docker info
-      #     docker version
-
       - name: Remove Preinstalled Docker
         run: |
           set -x
@@ -171,6 +154,32 @@ jobs:
         run: |
           kind create cluster -n "${SOLO_CLUSTER_NAME}" --image "${KIND_IMAGE}"
           kubectl cluster-info --context "kind-${SOLO_CLUSTER_NAME}"
+
+      - name: Debug kube-apiserver (on failure)
+        if: failure()
+        run: |
+          set -x
+          NODE="${SOLO_CLUSTER_NAME}-control-plane"
+          docker ps -a || true
+          # Show node logs
+          docker logs "${NODE}" | sed -n '1,200p' || true
+          # Inspect apiserver container via crictl inside the node
+          docker exec -i "${NODE}" crictl --runtime-endpoint /run/containerd/containerd.sock ps -a | grep kube-apiserver || true
+          APISERVER_ID="$(docker exec -i "${NODE}" crictl --runtime-endpoint /run/containerd/containerd.sock ps -a | awk '/kube-apiserver/ {print $1; exit}')"
+          if [ -n "${APISERVER_ID}" ]; then
+            docker exec -i "${NODE}" crictl --runtime-endpoint /run/containerd/containerd.sock logs "${APISERVER_ID}" || true
+          fi
+
+      - name: Export kind logs (on failure)
+        if: failure()
+        run: kind export logs --name "${SOLO_CLUSTER_NAME}" ./kind-logs || true
+
+      - name: Upload kind logs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kind-logs
+          path: ./kind-logs
 
       # ---------- Solo initialization & deployment (minimal path) ----------
       - name: Solo init
