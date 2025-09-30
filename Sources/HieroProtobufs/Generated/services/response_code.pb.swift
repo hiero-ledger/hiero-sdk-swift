@@ -1546,6 +1546,72 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   /// The GRPC proxy endpoint is set in the NodeCreate or NodeUpdate transaction,
   /// which the network does not support.
   case grpcWebProxyNotSupported // = 399
+
+  ///*
+  /// An NFT transfers list referenced a token type other than NON_FUNGIBLE_UNIQUE.
+  case nftTransfersOnlyAllowedForNonFungibleUnique // = 400
+
+  ///*
+  /// A HAPI client cannot set the SignedTransaction#use_serialized_tx_message_hash_algorithm field.
+  case invalidSerializedTxMessageHashAlgorithm // = 401
+
+  ///*
+  /// An EVM hook execution was throttled due to high network gas utilization.
+  case evmHookGasThrottled // = 500
+
+  ///*
+  /// A user tried to create a hook with an id already in use.
+  case hookIDInUse // = 501
+
+  ///*
+  /// A transaction tried to execute a hook that did not match the specified
+  /// type or was malformed in some other way.
+  case badHookRequest // = 502
+
+  ///*
+  /// A CryptoTransfer relying on a ACCOUNT_ALLOWANCE hook was rejected.
+  case rejectedByAccountAllowanceHook // = 503
+
+  ///*
+  /// A hook id was not found.
+  case hookNotFound // = 504
+
+  ///*
+  /// A lambda mapping slot, storage key, or storage value exceeded 32 bytes.
+  case lambdaStorageUpdateBytesTooLong // = 505
+
+  ///*
+  /// A lambda mapping slot, storage key, or storage value failed to use the
+  /// minimal representation (i.e., no leading zeros).
+  case lambdaStorageUpdateBytesMustUseMinimalRepresentation // = 506
+
+  ///*
+  /// A hook id was invalid.
+  case invalidHookID // = 507
+
+  ///*
+  /// A lambda storage update had no contents.
+  case emptyLambdaStorageUpdate // = 508
+
+  ///*
+  /// A user repeated the same hook id in a creation details list.
+  case hookIDRepeatedInCreationDetails // = 509
+
+  ///*
+  /// Hooks are not not enabled on the target Hiero network.
+  case hooksNotEnabled // = 510
+
+  ///*
+  /// The target hook is not a lambda.
+  case hookIsNotALambda // = 511
+
+  ///*
+  /// A hook was deleted.
+  case hookDeleted // = 512
+
+  ///*
+  /// The LambdaSStore tried to update too many storage slots in a single transaction.
+  case tooManyLambdaStorageUpdates // = 513
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -1912,6 +1978,22 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 397: self = .throttleGroupLcmOverflow
     case 398: self = .airdropContainsMultipleSendersForAToken
     case 399: self = .grpcWebProxyNotSupported
+    case 400: self = .nftTransfersOnlyAllowedForNonFungibleUnique
+    case 401: self = .invalidSerializedTxMessageHashAlgorithm
+    case 500: self = .evmHookGasThrottled
+    case 501: self = .hookIDInUse
+    case 502: self = .badHookRequest
+    case 503: self = .rejectedByAccountAllowanceHook
+    case 504: self = .hookNotFound
+    case 505: self = .lambdaStorageUpdateBytesTooLong
+    case 506: self = .lambdaStorageUpdateBytesMustUseMinimalRepresentation
+    case 507: self = .invalidHookID
+    case 508: self = .emptyLambdaStorageUpdate
+    case 509: self = .hookIDRepeatedInCreationDetails
+    case 510: self = .hooksNotEnabled
+    case 511: self = .hookIsNotALambda
+    case 512: self = .hookDeleted
+    case 513: self = .tooManyLambdaStorageUpdates
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -2276,6 +2358,22 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .throttleGroupLcmOverflow: return 397
     case .airdropContainsMultipleSendersForAToken: return 398
     case .grpcWebProxyNotSupported: return 399
+    case .nftTransfersOnlyAllowedForNonFungibleUnique: return 400
+    case .invalidSerializedTxMessageHashAlgorithm: return 401
+    case .evmHookGasThrottled: return 500
+    case .hookIDInUse: return 501
+    case .badHookRequest: return 502
+    case .rejectedByAccountAllowanceHook: return 503
+    case .hookNotFound: return 504
+    case .lambdaStorageUpdateBytesTooLong: return 505
+    case .lambdaStorageUpdateBytesMustUseMinimalRepresentation: return 506
+    case .invalidHookID: return 507
+    case .emptyLambdaStorageUpdate: return 508
+    case .hookIDRepeatedInCreationDetails: return 509
+    case .hooksNotEnabled: return 510
+    case .hookIsNotALambda: return 511
+    case .hookDeleted: return 512
+    case .tooManyLambdaStorageUpdates: return 513
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -2640,6 +2738,22 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     .throttleGroupLcmOverflow,
     .airdropContainsMultipleSendersForAToken,
     .grpcWebProxyNotSupported,
+    .nftTransfersOnlyAllowedForNonFungibleUnique,
+    .invalidSerializedTxMessageHashAlgorithm,
+    .evmHookGasThrottled,
+    .hookIDInUse,
+    .badHookRequest,
+    .rejectedByAccountAllowanceHook,
+    .hookNotFound,
+    .lambdaStorageUpdateBytesTooLong,
+    .lambdaStorageUpdateBytesMustUseMinimalRepresentation,
+    .invalidHookID,
+    .emptyLambdaStorageUpdate,
+    .hookIDRepeatedInCreationDetails,
+    .hooksNotEnabled,
+    .hookIsNotALambda,
+    .hookDeleted,
+    .tooManyLambdaStorageUpdates,
   ]
 
 }
@@ -3006,5 +3120,21 @@ extension Proto_ResponseCodeEnum: SwiftProtobuf._ProtoNameProviding {
     397: .same(proto: "THROTTLE_GROUP_LCM_OVERFLOW"),
     398: .same(proto: "AIRDROP_CONTAINS_MULTIPLE_SENDERS_FOR_A_TOKEN"),
     399: .same(proto: "GRPC_WEB_PROXY_NOT_SUPPORTED"),
+    400: .same(proto: "NFT_TRANSFERS_ONLY_ALLOWED_FOR_NON_FUNGIBLE_UNIQUE"),
+    401: .same(proto: "INVALID_SERIALIZED_TX_MESSAGE_HASH_ALGORITHM"),
+    500: .same(proto: "EVM_HOOK_GAS_THROTTLED"),
+    501: .same(proto: "HOOK_ID_IN_USE"),
+    502: .same(proto: "BAD_HOOK_REQUEST"),
+    503: .same(proto: "REJECTED_BY_ACCOUNT_ALLOWANCE_HOOK"),
+    504: .same(proto: "HOOK_NOT_FOUND"),
+    505: .same(proto: "LAMBDA_STORAGE_UPDATE_BYTES_TOO_LONG"),
+    506: .same(proto: "LAMBDA_STORAGE_UPDATE_BYTES_MUST_USE_MINIMAL_REPRESENTATION"),
+    507: .same(proto: "INVALID_HOOK_ID"),
+    508: .same(proto: "EMPTY_LAMBDA_STORAGE_UPDATE"),
+    509: .same(proto: "HOOK_ID_REPEATED_IN_CREATION_DETAILS"),
+    510: .same(proto: "HOOKS_NOT_ENABLED"),
+    511: .same(proto: "HOOK_IS_NOT_A_LAMBDA"),
+    512: .same(proto: "HOOK_DELETED"),
+    513: .same(proto: "TOO_MANY_LAMBDA_STORAGE_UPDATES"),
   ]
 }
