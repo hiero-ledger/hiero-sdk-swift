@@ -67,7 +67,7 @@ jobs:
         swift: ["5.9"]
         os: [macos-13]
 
-    needs: [build]
+  #  needs: [build]
     runs-on: ${{ matrix.os }}
 
     env:
