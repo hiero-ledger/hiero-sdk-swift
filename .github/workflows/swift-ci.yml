@@ -75,7 +75,7 @@ jobs:
       SOLO_NAMESPACE: solo
       SOLO_CLUSTER_SETUP_NAMESPACE: solo-cluster
       SOLO_DEPLOYMENT: solo-deployment
-      KIND_IMAGE: kindest/node:v1.33.4@sha256:25a6018e48dfcaee478f4a59af81157a437f15e6e140bf103f85a2e7cd0cbbf2
+      KIND_IMAGE: kindest/node:v1.32.0
 
     steps:
       - name: Harden Runner
