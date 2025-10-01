@@ -118,8 +118,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20.18.x"
-      - name: npm ci
-        run: npm ci
 
       - name: Clean any existing kind clusters & ~/.solo
         run: |
