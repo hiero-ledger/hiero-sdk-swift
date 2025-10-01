@@ -76,7 +76,6 @@ jobs:
       SOLO_DEPLOYMENT: solo-deployment
       KIND_IMAGE: kindest/node:v1.33.5
       NO_PROXY: 127.0.0.1,localhost,.svc,.cluster.local,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,10.96.0.0/12
-      no_proxy: 127.0.0.1,localhost,.svc,.cluster.local,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,10.96.0.0/12
 
     steps:
       - name: Harden Runner
