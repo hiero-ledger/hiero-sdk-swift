@@ -97,11 +97,13 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.swift }}-spm-${{ github.job }}-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.swift }}-spm-
+
       # ---------- Tooling ----------
       - name: Install kind / kubectl / Helm / utils
         run: |
           brew update
           brew install kind kubectl helm jq coreutils
+
       - name: Remove Preinstalled Docker
         run: |
           set -x
@@ -111,11 +113,13 @@ jobs:
           sudo rm -rvf /usr/bin/docker* || true
           sudo rm -rvf /usr/local/bin/docker* || true
           sudo rm -rvf /usr/local/bin/*lima* || true
+
       - name: Start CoLima
         run: |
           brew install docker
           brew install colima
           colima start --vm-type=vz --cpu=2 --memory=4 --disk=10
+
       - name: Show CoLima Logs
         if: failure()
         run: |
@@ -126,26 +130,31 @@ jobs:
           echo "::group::Error Logs"
           cat ${HOME}/.colima/_lima/colima/ha.stderr.log
           echo "::endgroup::"
+
       # ---------- Node.js for Solo ----------
       - name: Use Node 20.18.x
         uses: actions/setup-node@v4
         with:
           node-version: "20.18.x"
+
       - name: Verify Node
         run: |
           node -v
           npm -v
+
       # ---------- Solo CLI ----------
       - name: Install Solo CLI (v0.38.x)
         run: |
           npm install -g @hashgraph/solo@0.38
           solo --version
+
       # ---------- Create a local K8s cluster with kind ----------
       - name: Create kind cluster
         shell: bash
         run: |
           kind create cluster -n "${SOLO_CLUSTER_NAME}" --image "${KIND_IMAGE}"
           kubectl cluster-info --context "kind-${SOLO_CLUSTER_NAME}"
+
       - name: Debug kube-apiserver (on failure)
         if: failure()
         run: |
@@ -160,6 +169,7 @@ jobs:
           if [ -n "${APISERVER_ID}" ]; then
             docker exec -i "${NODE}" crictl --runtime-endpoint /run/containerd/containerd.sock logs "${APISERVER_ID}" || true
           fi
+
       - name: Export kind logs (on failure)
         if: failure()
         run: kind export logs --name "${SOLO_CLUSTER_NAME}" ./kind-logs || true
@@ -182,11 +192,13 @@ jobs:
           kind get clusters | grep -qx "${SOLO_CLUSTER_NAME}" || kind create cluster -n "${SOLO_CLUSTER_NAME}" --image "${KIND_IMAGE}"
           # Initialize solo (checks dependencies incl. helm)
           solo init
+
       - name: Connect cluster-ref and create deployment
         shell: bash
         run: |
           solo cluster-ref connect --cluster-ref "kind-${SOLO_CLUSTER_NAME}" --context "kind-${SOLO_CLUSTER_NAME}"
           solo deployment create -n "${SOLO_NAMESPACE}" --deployment "${SOLO_DEPLOYMENT}"
+
       - name: Add a cluster (1 consensus node)
         shell: bash
         run: |
@@ -194,29 +206,35 @@ jobs:
             --deployment "${SOLO_DEPLOYMENT}" \
             --cluster-ref "kind-${SOLO_CLUSTER_NAME}" \
             --num-consensus-nodes 1
+
       - name: Generate node keys (gossip + TLS)
         shell: bash
         run: |
           solo node keys --gossip-keys --tls-keys --deployment "${SOLO_DEPLOYMENT}"
           ls -la ~/.solo/cache/keys || true
+
       - name: Setup cluster shared components
         shell: bash
         run: |
           solo cluster-ref setup -s "${SOLO_CLUSTER_SETUP_NAMESPACE}"
+
       - name: Deploy network (consensus node only)
         shell: bash
         run: |
           # This charts install may take a bit—prints will help you see progress
           set -x
           solo network deploy --deployment "${SOLO_DEPLOYMENT}" --cluster-ref "kind-${SOLO_CLUSTER_NAME}"
+
       - name: Set up Hedera node
         shell: bash
         run: |
           solo node setup --deployment "${SOLO_DEPLOYMENT}" --cluster-ref "kind-${SOLO_CLUSTER_NAME}"
+
       - name: Start Hedera node(s)
         shell: bash
         run: |
           solo node start --deployment "${SOLO_DEPLOYMENT}" --cluster-ref "kind-${SOLO_CLUSTER_NAME}"
+
       - name: Wait for pods to become Ready
         shell: bash
         run: |
@@ -236,6 +254,21 @@ jobs:
           echo "Timed out waiting for pods."
           kubectl -n "${SOLO_NAMESPACE}" get pods -o wide
           exit 1
+
+      - name: Port forward service ports
+        shell: bash
+        run: |
+          # Consensus Service for node1 (node ID = 0): localhost:50211
+          kubectl port-forward svc/haproxy-node1-svc -n "${SOLO_NAMESPACE}" 50211:50211 > /dev/null 2>&1 &
+          # Explorer UI: http://localhost:8080
+          kubectl port-forward svc/hiero-explorer -n "${SOLO_NAMESPACE}" 8080:80 > /dev/null 2>&1 &
+          # Mirror Node gRPC: localhost:5600
+          kubectl port-forward svc/mirror-grpc -n "${SOLO_NAMESPACE}" 5600:5600 &
+          # Mirror Node REST API: http://localhost:5551
+          kubectl port-forward svc/mirror-rest -n "${SOLO_NAMESPACE}" svc/mirror-rest 5551:80 &
+          # Mirror Node REST Java API http://localhost:8084
+          kubectl port-forward svc/mirror-restjava -n "${SOLO_NAMESPACE}" 8084:80 &
+
       # ---------- (Optional) Show endpoints / basic sanity ----------
       - name: Show services and endpoints
         if: always()
@@ -245,6 +278,7 @@ jobs:
           kubectl -n "${SOLO_NAMESPACE}" get svc
           echo "Solo endpoints (if any):"
           kubectl -n "${SOLO_NAMESPACE}" get endpoints
+
       # ---------- Cleanup on failure to avoid runner leftovers ----------
       - name: Cleanup kind cluster (on failure)
         if: failure()
@@ -255,6 +289,7 @@ jobs:
           LOGDIR="$HOME/.colima/_lima/colima"
           echo "=== ha.stderr.log ===" ; cat "$LOGDIR/ha.stderr.log" || true
           echo "=== serial logs ==="   ; cat "$LOGDIR"/serial*.log   || true
+
       - name: Write .env for tests
         shell: bash
         run: |
@@ -266,5 +301,6 @@ jobs:
             echo "TEST_OPERATOR_KEY=302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137"
           } > .env
           cat .env
+
       - name: Test
         run: swift test
