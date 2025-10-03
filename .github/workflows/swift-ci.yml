@@ -65,33 +65,30 @@ jobs:
       matrix:
         swift: ["5.9"]
         os: [macos-13]
-
-  #  needs: [build]
     runs-on: ${{ matrix.os }}
-
     env:
       SOLO_CLUSTER_NAME: solo
       SOLO_NAMESPACE: solo
       SOLO_CLUSTER_SETUP_NAMESPACE: solo-cluster
       SOLO_DEPLOYMENT: solo-deployment
-      KIND_IMAGE: kindest/node:v1.34.0
+      KIND_IMAGE: kindest/node:v1.32.2   # pin to a stable image
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f
         with:
           egress-policy: audit
 
       - name: Setup Swift
-        uses: swift-actions/setup-swift@3aed395c5397f62deb91d8fe7af1418a9ae4d16f # v2.1.0
+        uses: swift-actions/setup-swift@3aed395c5397f62deb91d8fe7af1418a9ae4d16f
         with:
           swift-version: ${{ matrix.swift }}
 
       - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Cache Code
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
         with:
           path: sdk/swift/.build
           key: ${{ runner.os }}-${{ matrix.swift }}-spm-${{ github.job }}-${{ hashFiles('**/Package.resolved') }}
@@ -101,10 +98,11 @@ jobs:
       # ---------- Tooling ----------
       - name: Install kind / kubectl / Helm / utils
         run: |
+          set -euxo pipefail
           brew update
           brew install kind kubectl helm jq coreutils
 
-      - name: Remove Preinstalled Docker
+      - name: Remove Preinstalled Docker (clean path)
         run: |
           set -x
           sudo killall dockerd || true
@@ -114,21 +112,23 @@ jobs:
           sudo rm -rvf /usr/local/bin/docker* || true
           sudo rm -rvf /usr/local/bin/*lima* || true
 
-      - name: Start CoLima
+      - name: Start Colima (Docker runtime, more resources)
         run: |
-          brew install docker
-          brew install colima
-          colima start --vm-type=vz --cpu=2 --memory=4 --disk=10
+          set -euxo pipefail
+          brew install docker colima
+          colima start --vm-type=vz --runtime docker --cpu=4 --memory=8 --disk=20
+          docker context use colima
+          docker version
+          docker info | sed -n '1,120p'
 
-      - name: Show CoLima Logs
+      - name: Show Colima Logs (on failure)
         if: failure()
         run: |
           echo "::group::Serial Logs"
-          cat ${HOME}/.colima/_lima/colima/serial*.log
+          cat ${HOME}/.colima/_lima/colima/serial*.log || true
           echo "::endgroup::"
-          
           echo "::group::Error Logs"
-          cat ${HOME}/.colima/_lima/colima/ha.stderr.log
+          cat ${HOME}/.colima/_lima/colima/ha.stderr.log || true
           echo "::endgroup::"
 
       # ---------- Node.js for Solo ----------
@@ -137,23 +137,24 @@ jobs:
         with:
           node-version: "20.18.x"
 
-      - name: Verify Node
-        run: |
-          node -v
-          npm -v
-
-      # ---------- Solo CLI ----------
       - name: Install Solo CLI (v0.38.x)
         run: |
           npm install -g @hashgraph/solo@0.38
           solo --version
 
-      # ---------- Create a local K8s cluster with kind ----------
-      - name: Create kind cluster
-        shell: bash
+      # ---------- Create a local K8s cluster with KinD (robust) ----------
+      - name: Pre-pull KinD node image
+        run: docker pull "${KIND_IMAGE}"
+
+      - name: Create KinD cluster (retry + wait)
         run: |
-          kind create cluster -n "${SOLO_CLUSTER_NAME}" --image "${KIND_IMAGE}"
+          set -euxo pipefail
+          retry() { n=0; until [ $n -ge 3 ]; do "$@" && break; n=$((n+1)); echo "retry $n..."; sleep $((5*n)); done; [ $n -lt 3 ]; }
+          # Clean any leftovers
+          kind get clusters | xargs -r -I{} kind delete cluster --name {}
+          retry kind create cluster --name "${SOLO_CLUSTER_NAME}" --image "${KIND_IMAGE}" --wait 5m
           kubectl cluster-info --context "kind-${SOLO_CLUSTER_NAME}"
+          kubectl get nodes -o wide
 
       - name: Debug kube-apiserver (on failure)
         if: failure()
@@ -161,18 +162,13 @@ jobs:
           set -x
           NODE="${SOLO_CLUSTER_NAME}-control-plane"
           docker ps -a || true
-          # Show node logs
           docker logs "${NODE}" | sed -n '1,200p' || true
-          # Inspect apiserver container via crictl inside the node
           docker exec -i "${NODE}" crictl --runtime-endpoint /run/containerd/containerd.sock ps -a | grep kube-apiserver || true
           APISERVER_ID="$(docker exec -i "${NODE}" crictl --runtime-endpoint /run/containerd/containerd.sock ps -a | awk '/kube-apiserver/ {print $1; exit}')"
           if [ -n "${APISERVER_ID}" ]; then
             docker exec -i "${NODE}" crictl --runtime-endpoint /run/containerd/containerd.sock logs "${APISERVER_ID}" || true
           fi
-
-      - name: Export kind logs (on failure)
-        if: failure()
-        run: kind export logs --name "${SOLO_CLUSTER_NAME}" ./kind-logs || true
+          kind export logs --name "${SOLO_CLUSTER_NAME}" ./kind-logs || true
 
       - name: Upload kind logs (on failure)
         if: failure()
@@ -181,26 +177,20 @@ jobs:
           name: kind-logs
           path: ./kind-logs
 
-      # ---------- Solo initialization & deployment (minimal path) ----------
+      # ---------- Solo initialization & deployment ----------
       - name: Solo init
-        shell: bash
         run: |
-          # Clean artifacts if re-running the job (optional safety)
-          for cluster in $(kind get clusters); do kind delete cluster -n "$cluster"; done || true
+          set -euxo pipefail
+          # Do NOT delete/recreate the cluster here anymore
           rm -rf ~/.solo || true
-          # Recreate the cluster after cleanup (when above deletion occurred)
-          kind get clusters | grep -qx "${SOLO_CLUSTER_NAME}" || kind create cluster -n "${SOLO_CLUSTER_NAME}" --image "${KIND_IMAGE}"
-          # Initialize solo (checks dependencies incl. helm)
           solo init
 
       - name: Connect cluster-ref and create deployment
-        shell: bash
         run: |
           solo cluster-ref connect --cluster-ref "kind-${SOLO_CLUSTER_NAME}" --context "kind-${SOLO_CLUSTER_NAME}"
           solo deployment create -n "${SOLO_NAMESPACE}" --deployment "${SOLO_DEPLOYMENT}"
 
       - name: Add a cluster (1 consensus node)
-        shell: bash
         run: |
           solo deployment add-cluster \
             --deployment "${SOLO_DEPLOYMENT}" \
@@ -208,90 +198,42 @@ jobs:
             --num-consensus-nodes 1
 
       - name: Generate node keys (gossip + TLS)
-        shell: bash
         run: |
           solo node keys --gossip-keys --tls-keys --deployment "${SOLO_DEPLOYMENT}"
           ls -la ~/.solo/cache/keys || true
 
       - name: Setup cluster shared components
-        shell: bash
-        run: |
-          solo cluster-ref setup -s "${SOLO_CLUSTER_SETUP_NAMESPACE}"
+        run: solo cluster-ref setup -s "${SOLO_CLUSTER_SETUP_NAMESPACE}"
 
       - name: Deploy network (consensus node only)
-        shell: bash
         run: |
-          # This charts install may take a bit—prints will help you see progress
           set -x
           solo network deploy --deployment "${SOLO_DEPLOYMENT}" --cluster-ref "kind-${SOLO_CLUSTER_NAME}"
 
       - name: Set up Hedera node
-        shell: bash
-        run: |
-          solo node setup --deployment "${SOLO_DEPLOYMENT}" --cluster-ref "kind-${SOLO_CLUSTER_NAME}"
+        run: solo node setup --deployment "${SOLO_DEPLOYMENT}" --cluster-ref "kind-${SOLO_CLUSTER_NAME}"
 
       - name: Start Hedera node(s)
-        shell: bash
-        run: |
-          solo node start --deployment "${SOLO_DEPLOYMENT}" --cluster-ref "kind-${SOLO_CLUSTER_NAME}"
+        run: solo node start --deployment "${SOLO_DEPLOYMENT}" --cluster-ref "kind-${SOLO_CLUSTER_NAME}"
 
-      - name: Wait for pods to become Ready
-        shell: bash
+      - name: Wait for workloads to be Ready (robust)
         run: |
-          # Wait up to ~10 minutes for all pods in the Solo namespace to be ready
-          kubectl -n "${SOLO_NAMESPACE}" get pods
-          end=$((SECONDS+600))
-          while [ $SECONDS -lt $end ]; do
-            not_ready=$(kubectl -n "${SOLO_NAMESPACE}" get pods --no-headers | awk '{print $2}' | grep -v '^1/1$' || true)
-            if [ -z "$not_ready" ]; then
-              echo "All pods ready."
-              kubectl -n "${SOLO_NAMESPACE}" get pods -o wide
-              exit 0
-            fi
-            echo "Pods not ready yet; sleeping 10s..."
-            sleep 10
-          done
-          echo "Timed out waiting for pods."
+          set -euxo pipefail
+          # Wait on controllers first (less churn), then pods
+          kubectl -n "${SOLO_NAMESPACE}" wait --for=condition=Available deployment --all --timeout=10m || true
+          kubectl -n "${SOLO_NAMESPACE}" wait --for=condition=Ready statefulset --all --timeout=10m || true
+          kubectl -n "${SOLO_NAMESPACE}" wait --for=condition=Ready pod --all --timeout=10m
           kubectl -n "${SOLO_NAMESPACE}" get pods -o wide
-          exit 1
 
-      - name: Port forward service ports
-        shell: bash
-        run: |
-          # Consensus Service for node1 (node ID = 0): localhost:50211
-          kubectl port-forward svc/haproxy-node1-svc -n "${SOLO_NAMESPACE}" 50211:50211 > /dev/null 2>&1 &
-          # Explorer UI: http://localhost:8080
-          kubectl port-forward svc/hiero-explorer -n "${SOLO_NAMESPACE}" 8080:80 > /dev/null 2>&1 &
-          # Mirror Node gRPC: localhost:5600
-          kubectl port-forward svc/mirror-grpc -n "${SOLO_NAMESPACE}" 5600:5600 &
-          # Mirror Node REST API: http://localhost:5551
-          kubectl port-forward svc/mirror-rest -n "${SOLO_NAMESPACE}" svc/mirror-rest 5551:80 &
-          # Mirror Node REST Java API http://localhost:8084
-          kubectl port-forward svc/mirror-restjava -n "${SOLO_NAMESPACE}" 8084:80 &
-
-      # ---------- (Optional) Show endpoints / basic sanity ----------
       - name: Show services and endpoints
         if: always()
-        shell: bash
         run: |
           echo "Solo services in ${SOLO_NAMESPACE}:"
           kubectl -n "${SOLO_NAMESPACE}" get svc
           echo "Solo endpoints (if any):"
           kubectl -n "${SOLO_NAMESPACE}" get endpoints
 
-      # ---------- Cleanup on failure to avoid runner leftovers ----------
-      - name: Cleanup kind cluster (on failure)
-        if: failure()
-        run: |
-          kind delete cluster -n "${SOLO_CLUSTER_NAME}" || true
-          colima stop || true
-          # Dump colima logs
-          LOGDIR="$HOME/.colima/_lima/colima"
-          echo "=== ha.stderr.log ===" ; cat "$LOGDIR/ha.stderr.log" || true
-          echo "=== serial logs ==="   ; cat "$LOGDIR"/serial*.log   || true
-
       - name: Write .env for tests
-        shell: bash
         run: |
           umask 077
           {
@@ -304,3 +246,12 @@ jobs:
 
       - name: Test
         run: swift test
+
+      - name: Cleanup KinD / Colima (always)
+        if: always()
+        run: |
+          kind delete cluster --name "${SOLO_CLUSTER_NAME}" || true
+          colima stop || true
+          LOGDIR="$HOME/.colima/_lima/colima"
+          echo "=== ha.stderr.log ===" ; cat "$LOGDIR/ha.stderr.log" || true
+          echo "=== serial logs ==="   ; cat "$LOGDIR"/serial*.log   || true
