@@ -219,11 +219,34 @@ jobs:
       - name: Wait for workloads to be Ready (robust)
         run: |
           set -euxo pipefail
-          # Wait on controllers first (less churn), then pods
-          kubectl -n "${SOLO_NAMESPACE}" wait --for=condition=Available deployment --all --timeout=10m || true
-          kubectl -n "${SOLO_NAMESPACE}" wait --for=condition=Ready statefulset --all --timeout=10m || true
-          kubectl -n "${SOLO_NAMESPACE}" wait --for=condition=Ready pod --all --timeout=10m
-          kubectl -n "${SOLO_NAMESPACE}" get pods -o wide
+          ns="${SOLO_NAMESPACE}"
+
+          # 1) Wait for the namespace to exist (created by Solo)
+          end=$((SECONDS+300))
+          until kubectl get ns "$ns" >/dev/null 2>&1; do
+            [ $SECONDS -ge $end ] && { echo "timeout: namespace $ns not found"; kubectl get ns; exit 1; }
+            sleep 3
+          done
+
+          # 2) Wait until at least one pod shows up in the namespace
+          end=$((SECONDS+600))
+          until [ "$(kubectl -n "$ns" get pods --no-headers 2>/dev/null | wc -l | xargs || echo 0)" -gt 0 ]; do
+            [ $SECONDS -ge $end ] && { echo "timeout: no pods appeared in $ns"; kubectl -n "$ns" get all; exit 1; }
+            sleep 5
+          done
+
+          # 3) Wait for controllers to roll out (only if they exist)
+          kubectl -n "$ns" get deploy -o name | xargs -r -L1 kubectl -n "$ns" rollout status --timeout=10m
+          kubectl -n "$ns" get sts   -o name | xargs -r -L1 kubectl -n "$ns" rollout status --timeout=10m
+
+          # 4) Wait for long-running pods to be Ready (exclude short-lived job pods)
+          pods_exist=$(kubectl -n "$ns" get pod -o name | wc -l | xargs || echo 0)
+          if [ "$pods_exist" -gt 0 ]; then
+            kubectl -n "$ns" wait pod -l '!job-name' --for=condition=Ready --timeout=10m || true
+          fi
+
+          kubectl -n "$ns" get all -o wide
+
 
       - name: Show services and endpoints
         if: always()
