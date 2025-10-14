@@ -4,7 +4,9 @@ import HieroProtobufs
 
 public final class HookEntityId {
     /// ID of the account that owns a hook.
-    public var accountId: AccountId?
+    public var accountId: AccountId? = nil
+
+    public init() {}
 
     public init(_ accountId: AccountId) {
         self.accountId = accountId

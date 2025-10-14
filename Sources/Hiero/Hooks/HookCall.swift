@@ -8,6 +8,8 @@ public struct HookCall {
     public var hookId: Int64?
     public var evmHookCall: EvmHookCall?
 
+    public init() {}
+
     public init(fullHookId: HookId? = nil, evmHookCall: EvmHookCall? = nil) {
         self.fullHookId = fullHookId
         self.hookId = nil

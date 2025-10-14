@@ -11,7 +11,7 @@ public struct HookId {
     /// The ID for the hook.
     public var hookId: Int64
 
-    public init(entityId: HookEntityId, hookId: Int64 = 0) {
+    public init(entityId: HookEntityId = HookEntityId(), hookId: Int64 = 0) {
         self.entityId = entityId
         self.hookId = hookId
     }

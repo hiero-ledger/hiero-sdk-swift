@@ -4,31 +4,43 @@ import Foundation
 import HieroProtobufs
 
 public struct HookCreationDetails {
-    public var extensionPoint: HookExtensionPoint
+    public var hookExtensionPoint: HookExtensionPoint
     public var hookId: Int64
     public var lambdaEvmHook: LambdaEvmHook?
     public var adminKey: Key?
 
     public init(
-        extensionPoint: HookExtensionPoint,
+        hookExtensionPoint: HookExtensionPoint,
         hookId: Int64 = 0,
         lambdaEvmHook: LambdaEvmHook? = nil,
         adminKey: Key? = nil
     ) {
-        self.extensionPoint = extensionPoint
+        self.hookExtensionPoint = hookExtensionPoint
         self.hookId = hookId
         self.lambdaEvmHook = lambdaEvmHook
         self.adminKey = adminKey
     }
 
     @discardableResult
-    public mutating func setLambdaEvmHook(_ hook: LambdaEvmHook) -> Self {
+    public mutating func hookExtensionPoint(_ hookExtensionPoint: HookExtensionPoint) -> Self {
+        self.hookExtensionPoint = hookExtensionPoint
+        return self
+    }
+
+    @discardableResult
+    public mutating func hookId(_ hookId: Int64) -> Self {
+        self.hookId = hookId
+        return self
+    }
+
+    @discardableResult
+    public mutating func lambdaEvmHook(_ hook: LambdaEvmHook) -> Self {
         self.lambdaEvmHook = hook
         return self
     }
 
     @discardableResult
-    public mutating func setAdminKey(_ key: Key?) -> Self {
+    public mutating func adminKey(_ key: Key?) -> Self {
         self.adminKey = key
         return self
     }
@@ -38,7 +50,7 @@ extension HookCreationDetails: TryProtobufCodable {
     internal typealias Protobuf = Com_Hedera_Hapi_Node_Hooks_HookCreationDetails
 
     internal init(protobuf proto: Protobuf) throws {
-        self.extensionPoint = try HookExtensionPoint(protobuf: proto.extensionPoint)
+        self.hookExtensionPoint = try HookExtensionPoint(protobuf: proto.extensionPoint)
         self.hookId = proto.hookID
 
         // Only accept lambda; anything else => nil
@@ -54,7 +66,7 @@ extension HookCreationDetails: TryProtobufCodable {
 
     internal func toProtobuf() -> Protobuf {
         var proto = Protobuf()
-        proto.extensionPoint = extensionPoint.toProtobuf()
+        proto.extensionPoint = hookExtensionPoint.toProtobuf()
         proto.hookID = hookId
 
         // Only encode lambda; otherwise leave the oneof unset (nil)

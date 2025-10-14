@@ -18,14 +18,14 @@ public struct LambdaStorageSlot {
 
     /// Set the storage slot key.
     @discardableResult
-    public mutating func setKey(_ key: Data) -> Self {
+    public mutating func key(_ key: Data) -> Self {
         self.key = key
         return self
     }
 
     /// Set the storage slot value.
     @discardableResult
-    public mutating func setValue(_ value: Data) -> Self {
+    public mutating func value(_ value: Data) -> Self {
         self.value = value
         return self
     }
