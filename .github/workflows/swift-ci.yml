@@ -116,7 +116,7 @@ jobs:
         run: |
           set -euxo pipefail
           brew install docker colima
-          colima start --vm-type=vz --runtime docker --cpu=4 --memory=8 --disk=20
+          colima start --vm-type=vz --runtime docker --cpu=8 --memory=16 --disk=20
           docker context use colima
           docker version
           docker info | sed -n '1,120p'
