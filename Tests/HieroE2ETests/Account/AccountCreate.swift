@@ -4,6 +4,9 @@ import Hiero
 import XCTest
 
 internal final class AccountCreate: XCTestCase {
+
+    private let testContractId = ContractId(shard: 1, realm: 2, num: 3)
+
     internal func testInitialBalanceAndKey() async throws {
         let testEnv = try TestEnvironment.nonFree
 
@@ -97,41 +100,6 @@ internal final class AccountCreate: XCTestCase {
 
         XCTAssertEqual(info.aliasKey, key.publicKey)
     }
-
-    // there's a disagreement between Java and Swift here.
-    // internal func testManagesExpiration() async throws {
-    //     let testEnv = try TestEnvironment.nonFree
-
-    //     let key = PrivateKey.generateEd25519()
-
-    //     let receipt = try await AccountCreateTransaction()
-    //         .keyWithoutAlias(.single(key.publicKey))
-    //         .transactionId(
-    //             .withValidStart(
-    //                 testEnv.operator.accountId,
-    //                 .now - .seconds(40)
-    //             )
-    //         )
-    //         .transactionValidDuration(.seconds(30))
-    //         .freezeWith(testEnv.client)
-    //         .execute(testEnv.client)
-    //         .getReceipt(testEnv.client)
-
-    //     let accountId = try XCTUnwrap(receipt.accountId)
-
-    //        addTeardownBlock { try await Account(id: accountId, key: key).delete(testEnv) }
-
-    //     let info = try await AccountInfoQuery(accountId: accountId).execute(testEnv.client)
-
-    //     XCTAssertEqual(info.accountId, accountId)
-    //     XCTAssertFalse(info.isDeleted)
-    //     XCTAssertEqual(info.key, .single(key.publicKey))
-    //     XCTAssertEqual(info.balance, 0)
-    //     XCTAssertEqual(info.autoRenewPeriod, .days(90))
-    //     // fixme: ensure no warning gets emitted.
-    //     // XCTAssertNil(info.proxyAccountId)
-    //     XCTAssertEqual(info.proxyReceived, 0)
-    // }
 
     internal func testAliasFromAdminKey() async throws {
         // Tests the third row of this table
@@ -471,6 +439,139 @@ internal final class AccountCreate: XCTestCase {
             return false
         }
         return true
+    }
+
+    internal func test_CreateTransactionWithLambdaHook() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        // Given
+        let ecdsaPrivateKey = PrivateKey.generateEcdsa()
+
+        var lambdaEvmHook = LambdaEvmHook()
+        lambdaEvmHook.spec.contractId = testContractId
+
+        let hookCreationDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook, hookId: 1, lambdaEvmHook: lambdaEvmHook)
+
+        // When / Then
+        var txReceipt: Hiero.TransactionReceipt!
+        do {
+            txReceipt = try await AccountCreateTransaction()
+                .keyWithoutAlias(.single(ecdsaPrivateKey.publicKey))
+                .addHook(hookCreationDetails)
+                .freezeWith(testEnv.client)
+                .sign(ecdsaPrivateKey)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        } catch {
+            XCTFail("Unexpected throw: \(error)")
+        }
+
+        XCTAssertNotNil(txReceipt.accountId)
+    }
+
+    func test_CreateTransactionWithLambdaHookAndStorageUpdates() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        // Given
+        let ecdsaPrivateKey = PrivateKey.generateEcdsa()
+
+        var lambdaEvmHook = LambdaEvmHook()
+        lambdaEvmHook.spec.contractId = testContractId
+
+        var lambdaStorageSlot = LambdaStorageSlot()
+        lambdaStorageSlot.key = Data([0x01, 0x23, 0x45])
+        lambdaStorageSlot.value = Data([0x67, 0x89, 0xAB])
+
+        var lambdaStorageUpdate = LambdaStorageUpdate()
+        lambdaStorageUpdate.storageSlot = lambdaStorageSlot
+
+        lambdaEvmHook.addStorageUpdate(lambdaStorageUpdate)
+
+        let hookCreationDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook, hookId: 1, lambdaEvmHook: lambdaEvmHook)
+
+        // When / Then
+        var txReceipt: Hiero.TransactionReceipt!
+        do {
+            txReceipt = try await AccountCreateTransaction()
+                .keyWithoutAlias(.single(ecdsaPrivateKey.publicKey))
+                .addHook(hookCreationDetails)
+                .freezeWith(testEnv.client)
+                .sign(ecdsaPrivateKey)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        } catch {
+            XCTFail("Unexpected throw: \(error)")
+        }
+
+        XCTAssertNotNil(txReceipt.accountId)
+    }
+
+    func test_CreateTransactionWithLambdaHookWithNoContractId() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        // Given
+        let ecdsaPrivateKey = PrivateKey.generateEcdsa()
+
+        var lambdaEvmHook = LambdaEvmHook()
+
+        var lambdaStorageSlot = LambdaStorageSlot()
+        lambdaStorageSlot.key = Data([0x01, 0x23, 0x45])
+        lambdaStorageSlot.value = Data([0x67, 0x89, 0xAB])
+
+        var lambdaStorageUpdate = LambdaStorageUpdate()
+        lambdaStorageUpdate.storageSlot = lambdaStorageSlot
+
+        lambdaEvmHook.addStorageUpdate(lambdaStorageUpdate)
+
+        let hookCreationDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook, hookId: 1, lambdaEvmHook: lambdaEvmHook)
+
+        // When / Then (expecting a precheck failure)
+        await assertThrowsHErrorAsync(
+            try await AccountCreateTransaction()
+                .keyWithoutAlias(.single(ecdsaPrivateKey.publicKey))
+                .addHook(hookCreationDetails)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client), "expected error creating account"
+        ) { error in
+            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
+                XCTFail("\(error.kind) is not `.transactionPreCheckStatus(status: _)`")
+                return
+            }
+
+            XCTAssertEqual(status, .invalidHookId)
+        }
+    }
+
+    func test_CreateTransactionWithSameLambdaHookIds() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        // Given
+        let ecdsaPrivateKey = PrivateKey.generateEcdsa()
+
+        var lambdaEvmHook = LambdaEvmHook()
+        lambdaEvmHook.spec.contractId = testContractId
+
+        let hookCreationDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook, hookId: 1, lambdaEvmHook: lambdaEvmHook)
+
+        // When / Then — expect precheck error when duplicate hook IDs supplied
+        await assertThrowsHErrorAsync(
+            try await AccountCreateTransaction()
+                .addHook(hookCreationDetails)
+                .addHook(hookCreationDetails)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        ) { error in
+            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
+                XCTFail("\(error.kind) is not `.transactionPreCheckStatus(status: _)`")
+                return
+            }
+
+            XCTAssertEqual(status, .hookIdRepeatedInCreationDetails)
+        }
     }
 
 }

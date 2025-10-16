@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import XCTest
 import Foundation
-@testable import Hiero
 import HieroProtobufs
+import XCTest
+
+@testable import Hiero
 
 final class LambdaEvmHookUnitTests: XCTestCase {
 
@@ -49,13 +50,13 @@ final class LambdaEvmHookUnitTests: XCTestCase {
 
     private func makeUpdates() -> [LambdaStorageUpdate] {
         // test bytes
-        let key1      = Data([0x01, 0x23, 0x45])
-        let key2      = Data([0x67, 0x89, 0xAB])
-        let preimage  = Data([0xCD, 0xEF, 0x02])
+        let key1 = Data([0x01, 0x23, 0x45])
+        let key2 = Data([0x67, 0x89, 0xAB])
+        let preimage = Data([0xCD, 0xEF, 0x02])
 
-        let value1    = Data([0x04, 0x06, 0x08])
-        let value2    = Data([0x0A, 0x0C, 0x0E])
-        let value3    = Data([0x11, 0x13, 0x15])
+        let value1 = Data([0x04, 0x06, 0x08])
+        let value2 = Data([0x0A, 0x0C, 0x0E])
+        let value3 = Data([0x11, 0x13, 0x15])
 
         let mappingSlot = Data([0x17, 0x19, 0x1B])
 

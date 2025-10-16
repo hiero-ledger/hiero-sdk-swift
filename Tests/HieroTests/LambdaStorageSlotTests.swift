@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import XCTest
 import Foundation
-@testable import Hiero
 import HieroProtobufs
+import XCTest
+
+@testable import Hiero
 
 final class LambdaStorageSlotUnitTests: XCTestCase {
 
     // Fixture-equivalent constants
-    private let testKey   = Data([0x01, 0x23, 0x45])
+    private let testKey = Data([0x01, 0x23, 0x45])
     private let testValue = Data([0x67, 0x89, 0xAB])
 
     func test_GetSetKey() {

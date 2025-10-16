@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import XCTest
-@testable import Hiero  // TODO: Replace with your Swift target/module name
 import HieroProtobufs
+import XCTest
+
+@testable import Hiero  // TODO: Replace with your Swift target/module name
 
 final class HookEntityIdUnitTests: XCTestCase {
 

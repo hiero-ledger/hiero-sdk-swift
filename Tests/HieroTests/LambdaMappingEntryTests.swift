@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import XCTest
 import Foundation
-@testable import Hiero
 import HieroProtobufs
+import XCTest
+
+@testable import Hiero
 
 final class LambdaMappingEntryUnitTests: XCTestCase {
 
     // Fixture-equivalent constants
-    private let testKey      = Data([0x01, 0x23, 0x45])
+    private let testKey = Data([0x01, 0x23, 0x45])
     private let testPreimage = Data([0x67, 0x89, 0xAB])
-    private let testValue    = Data([0xCD, 0xEF, 0x02])
+    private let testValue = Data([0xCD, 0xEF, 0x02])
 
     func test_GetSetKey() {
         // Given

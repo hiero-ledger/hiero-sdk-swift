@@ -78,7 +78,7 @@ extension HookCreationDetails: TryProtobufCodable {
 
         if let key = adminKey {
             proto.adminKey = key.toProtobuf()
-        } // else: leave unset
+        }  // else: leave unset
 
         return proto
     }

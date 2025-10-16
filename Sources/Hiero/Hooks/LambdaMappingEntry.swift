@@ -63,7 +63,7 @@ extension LambdaMappingEntry: TryProtobufCodable {
         if let preimage = preimage {
             proto.preimage = preimage
         }
-        
+
         proto.value = value
         return proto
     }

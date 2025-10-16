@@ -122,4 +122,352 @@ internal final class AccountUpdate: XCTestCase {
             XCTAssertEqual(status, .existingAutomaticAssociationsExceedGivenLimit)
         }
     }
+
+    internal func test_CanaddHookToCreateToAccount() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        // Given
+        let privateKey = PrivateKey.generateEd25519()
+        let receipt = try await AccountCreateTransaction()
+            .keyWithoutAlias(.single(privateKey.publicKey))
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+        let accountId = try XCTUnwrap(receipt.accountId)
+
+        addTeardownBlock {
+            _ = try await AccountDeleteTransaction()
+                .accountId(accountId)
+                .transferAccountId(testEnv.operator.accountId)
+                .sign(privateKey)
+                .execute(testEnv.client)
+        }
+
+        var lambdaEvmHook = LambdaEvmHook()
+        lambdaEvmHook.spec.contractId = ContractId(shard: 1, realm: 2, num: 3)
+
+        let hookCreationDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook,
+            hookId: 1,
+            lambdaEvmHook: lambdaEvmHook
+        )
+
+        // When / Then
+        do {
+            _ = try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToCreate(hookCreationDetails)
+                .freezeWith(testEnv.client)
+                .sign(privateKey)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        } catch {
+            XCTFail("Unexpected throw: \(error)")
+        }
+    }
+
+    internal func test_CannotUpdateWithMultipleOfSameHook() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        // Given
+        let privateKey = PrivateKey.generateEd25519()
+        let receipt = try await AccountCreateTransaction()
+            .keyWithoutAlias(.single(privateKey.publicKey))
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+        let accountId = try XCTUnwrap(receipt.accountId)
+
+        addTeardownBlock {
+            _ = try await AccountDeleteTransaction()
+                .accountId(accountId)
+                .transferAccountId(testEnv.operator.accountId)
+                .sign(privateKey)
+                .execute(testEnv.client)
+        }
+
+        var lambdaEvmHook = LambdaEvmHook()
+        lambdaEvmHook.spec.contractId = ContractId(shard: 1, realm: 2, num: 3)
+
+        let hookCreationDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook,
+            hookId: 1,
+            lambdaEvmHook: lambdaEvmHook
+        )
+
+        await assertThrowsHErrorAsync(
+            try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToCreate(hookCreationDetails)
+                .addHookToCreate(hookCreationDetails)
+                .freezeWith(testEnv.client)
+                .sign(privateKey)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        ) { error in
+            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
+                XCTFail("Expected `.transactionPreCheckStatus`, got \(error.kind)")
+                return
+            }
+            XCTAssertEqual(status, .hookIdRepeatedInCreationDetails)
+        }
+    }
+
+    internal func test_CannotUpdateWithHookAlreadyInUse() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        // Given
+        let privateKey = PrivateKey.generateEd25519()
+        let receipt = try await AccountCreateTransaction()
+            .keyWithoutAlias(.single(privateKey.publicKey))
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+        let accountId = try XCTUnwrap(receipt.accountId)
+
+        addTeardownBlock {
+            _ = try await AccountDeleteTransaction()
+                .accountId(accountId)
+                .transferAccountId(testEnv.operator.accountId)
+                .sign(privateKey)
+                .execute(testEnv.client)
+        }
+
+        var lambdaEvmHook = LambdaEvmHook()
+        lambdaEvmHook.spec.contractId = ContractId(shard: 1, realm: 2, num: 3)
+
+        let hookCreationDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook,
+            hookId: 1,
+            lambdaEvmHook: lambdaEvmHook
+        )
+
+        // Add once
+        _ = try await AccountUpdateTransaction()
+            .accountId(accountId)
+            .addHookToCreate(hookCreationDetails)
+            .freezeWith(testEnv.client)
+            .sign(privateKey)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // Add again should fail
+        await assertThrowsHErrorAsync(
+            try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToCreate(hookCreationDetails)
+                .freezeWith(testEnv.client)
+                .sign(privateKey)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        ) { error in
+            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
+                XCTFail("Expected `.transactionPreCheckStatus`, got \(error.kind)")
+                return
+            }
+            XCTAssertEqual(status, .hookIdInUse)
+        }
+    }
+
+    internal func test_CanaddHookToCreateToAccountWithStorageUpdates() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        // Given
+        let privateKey = PrivateKey.generateEd25519()
+        let receipt = try await AccountCreateTransaction()
+            .keyWithoutAlias(.single(privateKey.publicKey))
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+        let accountId = try XCTUnwrap(receipt.accountId)
+
+        addTeardownBlock {
+            _ = try await AccountDeleteTransaction()
+                .accountId(accountId)
+                .transferAccountId(testEnv.operator.accountId)
+                .sign(privateKey)
+                .execute(testEnv.client)
+        }
+
+        var lambdaEvmHook = LambdaEvmHook()
+        lambdaEvmHook.spec.contractId = ContractId(shard: 1, realm: 2, num: 3)
+
+        var slot = LambdaStorageSlot()
+        slot.key = Data([0x01, 0x23, 0x45])
+        slot.value = Data([0x67, 0x89, 0xAB])
+
+        var update = LambdaStorageUpdate()
+        update.storageSlot = slot
+
+        lambdaEvmHook.addStorageUpdate(update)
+
+        let hookCreationDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook,
+            hookId: 1,
+            lambdaEvmHook: lambdaEvmHook
+        )
+
+        // When / Then
+        do {
+            _ = try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToCreate(hookCreationDetails)
+                .freezeWith(testEnv.client)
+                .sign(privateKey)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        } catch {
+            XCTFail("Unexpected throw: \(error)")
+        }
+    }
+
+    internal func test_CanDeleteHook() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        // Given
+        let privateKey = PrivateKey.generateEd25519()
+        let receipt = try await AccountCreateTransaction()
+            .keyWithoutAlias(.single(privateKey.publicKey))
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+        let accountId = try XCTUnwrap(receipt.accountId)
+
+        addTeardownBlock {
+            _ = try await AccountDeleteTransaction()
+                .accountId(accountId)
+                .transferAccountId(testEnv.operator.accountId)
+                .sign(privateKey)
+                .execute(testEnv.client)
+        }
+
+        var lambdaEvmHook = LambdaEvmHook()
+        lambdaEvmHook.spec.contractId = ContractId(shard: 1, realm: 2, num: 3)
+
+        let hookId: Int64 = 1
+        let hookCreationDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook,
+            hookId: hookId,
+            lambdaEvmHook: lambdaEvmHook
+        )
+
+        // Add
+        _ = try await AccountUpdateTransaction()
+            .accountId(accountId)
+            .addHookToCreate(hookCreationDetails)
+            .freezeWith(testEnv.client)
+            .sign(privateKey)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // Delete
+        do {
+            _ = try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToDelete(hookId)
+                .freezeWith(testEnv.client)
+                .sign(privateKey)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        } catch {
+            XCTFail("Unexpected throw: \(error)")
+        }
+    }
+
+    internal func test_CannotDeleteNonExistentHook() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        // Given
+        let privateKey = PrivateKey.generateEd25519()
+        let receipt = try await AccountCreateTransaction()
+            .keyWithoutAlias(.single(privateKey.publicKey))
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+        let accountId = try XCTUnwrap(receipt.accountId)
+
+        addTeardownBlock {
+            _ = try await AccountDeleteTransaction()
+                .accountId(accountId)
+                .transferAccountId(testEnv.operator.accountId)
+                .sign(privateKey)
+                .execute(testEnv.client)
+        }
+
+        var lambdaEvmHook = LambdaEvmHook()
+        lambdaEvmHook.spec.contractId = ContractId(shard: 1, realm: 2, num: 3)
+
+        let hookCreationDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook,
+            hookId: 1,
+            lambdaEvmHook: lambdaEvmHook
+        )
+
+        // Add
+        _ = try await AccountUpdateTransaction()
+            .accountId(accountId)
+            .addHookToCreate(hookCreationDetails)
+            .freezeWith(testEnv.client)
+            .sign(privateKey)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // Delete non-existent hook
+        await assertThrowsHErrorAsync(
+            try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToDelete(999)
+                .freezeWith(testEnv.client)
+                .sign(privateKey)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        ) { error in
+            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
+                XCTFail("Expected `.transactionPreCheckStatus`, got \(error.kind)")
+                return
+            }
+            XCTAssertEqual(status, .hookNotFound)
+        }
+    }
+
+    internal func test_CannotAddAndDeleteSameHook() async throws {
+        let testEnv = try TestEnvironment.nonFree
+
+        // Given
+        let privateKey = PrivateKey.generateEd25519()
+        let receipt = try await AccountCreateTransaction()
+            .keyWithoutAlias(.single(privateKey.publicKey))
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+        let accountId = try XCTUnwrap(receipt.accountId)
+
+        addTeardownBlock {
+            _ = try await AccountDeleteTransaction()
+                .accountId(accountId)
+                .transferAccountId(testEnv.operator.accountId)
+                .sign(privateKey)
+                .execute(testEnv.client)
+        }
+
+        var lambdaEvmHook = LambdaEvmHook()
+        lambdaEvmHook.spec.contractId = ContractId(shard: 1, realm: 2, num: 3)
+
+        let hookId: Int64 = 1
+        let hookCreationDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook,
+            hookId: hookId,
+            lambdaEvmHook: lambdaEvmHook
+        )
+
+        await assertThrowsHErrorAsync(
+            try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToCreate(hookCreationDetails)
+                .addHookToDelete(hookId)
+                .freezeWith(testEnv.client)
+                .sign(privateKey)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        ) { error in
+            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
+                XCTFail("Expected `.transactionPreCheckStatus`, got \(error.kind)")
+                return
+            }
+            XCTAssertEqual(status, .hookNotFound)
+        }
+    }
 }

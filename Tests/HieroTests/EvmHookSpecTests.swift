@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import XCTest
-@testable import Hiero
 import HieroProtobufs
+import XCTest
+
+@testable import Hiero
 
 final class EvmHookSpecUnitTests: XCTestCase {
 
@@ -41,8 +42,8 @@ final class EvmHookSpecUnitTests: XCTestCase {
         let protoSpec = evmHookSpec.toProtobuf()
 
         // Then
-        XCTAssertEqual(UInt64(truncatingIfNeeded: protoSpec.contractID.shardNum),  testContractId.shard)
-        XCTAssertEqual(UInt64(truncatingIfNeeded: protoSpec.contractID.realmNum),  testContractId.realm)
+        XCTAssertEqual(UInt64(truncatingIfNeeded: protoSpec.contractID.shardNum), testContractId.shard)
+        XCTAssertEqual(UInt64(truncatingIfNeeded: protoSpec.contractID.realmNum), testContractId.realm)
         XCTAssertEqual(UInt64(truncatingIfNeeded: protoSpec.contractID.contractNum), testContractId.num)
     }
 }

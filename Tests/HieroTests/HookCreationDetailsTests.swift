@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import XCTest
 import Foundation
-@testable import Hiero
 import HieroProtobufs
+import XCTest
+
+@testable import Hiero
 
 final class HookCreationDetailsUnitTests: XCTestCase {
 

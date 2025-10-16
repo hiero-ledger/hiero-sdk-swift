@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import XCTest
-@testable import Hiero
 import HieroProtobufs
+import XCTest
+
+@testable import Hiero
 
 final class HookIdUnitTests: XCTestCase {
 
@@ -59,8 +60,8 @@ final class HookIdUnitTests: XCTestCase {
 
         // Then
         XCTAssertTrue(proto.hasEntityID)
-        XCTAssertEqual(UInt64(truncatingIfNeeded: proto.entityID.accountID.shardNum),  testAccountId.shard)
-        XCTAssertEqual(UInt64(truncatingIfNeeded: proto.entityID.accountID.realmNum),  testAccountId.realm)
+        XCTAssertEqual(UInt64(truncatingIfNeeded: proto.entityID.accountID.shardNum), testAccountId.shard)
+        XCTAssertEqual(UInt64(truncatingIfNeeded: proto.entityID.accountID.realmNum), testAccountId.realm)
         XCTAssertEqual(UInt64(truncatingIfNeeded: proto.entityID.accountID.accountNum), testAccountId.num)
     }
 }
