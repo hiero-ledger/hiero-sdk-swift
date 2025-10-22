@@ -1,89 +1,87 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import CryptoKit
 import Foundation
 
 #if canImport(CommonCrypto)
-    import CommonCrypto
+import CommonCrypto
+#else
+import CryptoSwift
+#endif
 
-    enum CryptoError: Error {
-        case invalidInput
+// MARK: - Cross-platform AES helpers (standalone)
+
+enum CryptoError: Error {
+    case invalidInput
+}
+
+/// Cross-platform AES-CBC implementation.
+/// - Apple platforms: CommonCrypto
+/// - Linux: CryptoSwift
+enum CryptoAES {
+    static func encrypt(_ data: Data, key: Data, iv: Data) throws -> Data {
+        #if canImport(CommonCrypto)
+        return try cryptCC(data: data, key: key, iv: iv, operation: kCCEncrypt)
+        #else
+        let aes = try AES(key: Array(key), blockMode: CBC(iv: Array(iv)), padding: .pkcs7)
+        return Data(try aes.encrypt(Array(data)))
+        #endif
     }
 
-    enum CryptoAES {
-        static func encrypt(_ data: Data, key: Data, iv: Data) throws -> Data {
-            return try crypt(data: data, key: key, iv: iv, operation: kCCEncrypt)
-        }
+    static func decrypt(_ data: Data, key: Data, iv: Data) throws -> Data {
+        #if canImport(CommonCrypto)
+        return try cryptCC(data: data, key: key, iv: iv, operation: kCCDecrypt)
+        #else
+        let aes = try AES(key: Array(key), blockMode: CBC(iv: Array(iv)), padding: .pkcs7)
+        return Data(try aes.decrypt(Array(data)))
+        #endif
+    }
 
-        static func decrypt(_ data: Data, key: Data, iv: Data) throws -> Data {
-            return try crypt(data: data, key: key, iv: iv, operation: kCCDecrypt)
-        }
+    #if canImport(CommonCrypto)
+    private static func cryptCC(data: Data, key: Data, iv: Data, operation: Int) throws -> Data {
+        var outLength = 0
+        var outData = Data(count: data.count + kCCBlockSizeAES128)
+        let outCapacity = outData.count // capture before mutating closure (avoid overlapping access)
 
-        private static func crypt(data: Data, key: Data, iv: Data, operation: Int) throws -> Data {
-            var outLength = 0
-            var outData = Data(count: data.count + kCCBlockSizeAES128)
-            // Capture length before entering the mutating closure to avoid overlapping access.
-            let outCapacity = outData.count
-
-            let status = outData.withUnsafeMutableBytes { outBytes in
-                data.withUnsafeBytes { inBytes in
-                    key.withUnsafeBytes { keyBytes in
-                        iv.withUnsafeBytes { ivBytes in
-                            let outPtr = outBytes.baseAddress
-                            let inPtr = inBytes.baseAddress
-                            let keyPtr = keyBytes.baseAddress
-                            let ivPtr = ivBytes.baseAddress
-                            guard let outPtr, let inPtr, let keyPtr, let ivPtr else {
-                                return CCCryptorStatus(kCCMemoryFailure)
-                            }
-                            return CCCrypt(
-                                CCOperation(operation),
-                                CCAlgorithm(kCCAlgorithmAES),
-                                CCOptions(kCCOptionPKCS7Padding),
-                                keyPtr, key.count,
-                                ivPtr,
-                                inPtr, data.count,
-                                outPtr, outCapacity,
-                                &outLength
-                            )
+        let status = outData.withUnsafeMutableBytes { outBytes in
+            data.withUnsafeBytes { inBytes in
+                key.withUnsafeBytes { keyBytes in
+                    iv.withUnsafeBytes { ivBytes in
+                        guard
+                            let outPtr = outBytes.baseAddress,
+                            let inPtr  = inBytes.baseAddress,
+                            let keyPtr = keyBytes.baseAddress,
+                            let ivPtr  = ivBytes.baseAddress
+                        else {
+                            return CCCryptorStatus(kCCMemoryFailure)
                         }
+
+                        return CCCrypt(
+                            CCOperation(operation),
+                            CCAlgorithm(kCCAlgorithmAES),
+                            CCOptions(kCCOptionPKCS7Padding),
+                            keyPtr, key.count,
+                            ivPtr,
+                            inPtr, data.count,
+                            outPtr, outCapacity,
+                            &outLength
+                        )
                     }
                 }
             }
-
-            guard status == kCCSuccess else { throw CryptoError.invalidInput }
-            outData.removeSubrange(outLength..<outData.count)
-            return outData
-        }
-    }
-
-#else
-    import CryptoSwift  // Linux path
-
-    enum CryptoError: Error {
-        case invalidInput
-    }
-
-    enum CryptoAES {
-        static func encrypt(_ data: Data, key: Data, iv: Data) throws -> Data {
-            let aes = try AES(key: key.bytes, blockMode: CBC(iv: iv.bytes), padding: .pkcs7)
-            let cipher = try aes.encrypt(data.bytes)
-            return Data(cipher)
         }
 
-        static func decrypt(_ data: Data, key: Data, iv: Data) throws -> Data {
-            let aes = try AES(key: key.bytes, blockMode: CBC(iv: iv.bytes), padding: .pkcs7)
-            let plain = try aes.decrypt(data.bytes)
-            return Data(plain)
-        }
+        guard status == kCCSuccess else { throw CryptoError.invalidInput }
+        outData.removeSubrange(outLength..<outData.count)
+        return outData
     }
+    #endif
+}
 
-    extension Data {
-        fileprivate var bytes: [UInt8] { Array(self) }
-    }
+// MARK: - Add `Aes` into your existing `Crypto` namespace
 
-#endif
-
+/// Extend the project’s existing `Crypto` namespace with AES helpers used by PBES2, etc.
+/// This avoids creating a new top-level `enum Crypto` (which caused ambiguity), while
+/// letting existing call sites keep using `Crypto.Aes.aes128CbcPadDecrypt(...)`.
 extension Crypto {
     internal enum AesError: Error {
         case bufferTooSmall(available: Int, needed: Int)
@@ -93,83 +91,82 @@ extension Crypto {
     }
 
     internal enum Aes {
-    }
-}
+        /// AES-128-CBC with PKCS#7 padding decrypt helper.
+        /// - Note: On Apple platforms uses CommonCrypto. On Linux uses CryptoSwift.
+        internal static func aes128CbcPadDecrypt(key: Data, iv: Data, message: Data) throws -> Data {
+            precondition(key.count == 16, "bug: key size \(key.count) incorrect for AES-128")
+            precondition(iv.count == 16, "bug: iv size incorrect for AES-128")
 
-extension Crypto.Aes {
-    internal static func aes128CbcPadDecrypt(key: Data, iv: Data, message: Data) throws -> Data {
-        precondition(key.count == 16, "bug: key size \(key.count) incorrect for algorithm")
-        precondition(iv.count == 16, "bug: iv size incorrect for algorithm")
-
-        // we have to do the very fun dance of trying a second time if the buffer is too small
-        do {
-            return try aes128CbcPadDecryptOnce(key: key, iv: iv, message: message, outputCapacity: message.count)
-        } catch Crypto.AesError.bufferTooSmall(available: _, let needed) {
-            return try aes128CbcPadDecryptOnce(key: key, iv: iv, message: message, outputCapacity: needed)
-        }
-    }
-
-    private static func aes128CbcPadDecryptOnce(
-        key: Data,
-        iv: Data,
-        message: Data,
-        outputCapacity: Int
-    ) throws -> Data {
-        var output = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: message.count)
-        output.initialize(repeating: 0)
-
-        defer {
-            output.deallocate()
+            #if canImport(CommonCrypto)
+            // Try once with message.count, retry if CommonCrypto reports a larger needed size.
+            do {
+                return try aes128CbcPadDecryptOnce(key: key, iv: iv, message: message, outputCapacity: message.count)
+            } catch AesError.bufferTooSmall(_, let needed) {
+                return try aes128CbcPadDecryptOnce(key: key, iv: iv, message: message, outputCapacity: needed)
+            }
+            #else
+            let aes = try AES(key: Array(key), blockMode: CBC(iv: Array(iv)), padding: .pkcs7)
+            return Data(try aes.decrypt(Array(message)))
+            #endif
         }
 
-        let data = try aes128CbcPadDecryptInner(
-            key: key,
-            iv: iv,
-            message: message,
-            output: &output
-        )
+        #if canImport(CommonCrypto)
+        private static func aes128CbcPadDecryptOnce(
+            key: Data,
+            iv: Data,
+            message: Data,
+            outputCapacity: Int
+        ) throws -> Data {
+            var output = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: outputCapacity)
+            output.initialize(repeating: 0)
+            defer { output.deallocate() }
 
-        return data
-    }
+            return try aes128CbcPadDecryptInner(
+                key: key,
+                iv: iv,
+                message: message,
+                output: &output
+            )
+        }
 
-    private static func aes128CbcPadDecryptInner(
-        key: Data,
-        iv: Data,
-        message: Data,
-        output: inout UnsafeMutableBufferPointer<UInt8>
-    ) throws -> Data {
-        try key.withUnsafeBytes { key in
-            try iv.withUnsafeBytes { iv in
-                try message.withUnsafeBytes { message in
-                    var dataOutMoved: Int = 0
+        private static func aes128CbcPadDecryptInner(
+            key: Data,
+            iv: Data,
+            message: Data,
+            output: inout UnsafeMutableBufferPointer<UInt8>
+        ) throws -> Data {
+            try key.withUnsafeBytes { key in
+                try iv.withUnsafeBytes { iv in
+                    try message.withUnsafeBytes { message in
+                        var dataOutMoved = 0
 
-                    let status = CCCrypt(
-                        CCOperation(kCCDecrypt),
-                        CCAlgorithm(kCCAlgorithmAES),
-                        CCOptions(kCCOptionPKCS7Padding),
-                        key.baseAddress,
-                        key.count,
-                        iv.baseAddress,
-                        message.baseAddress,
-                        message.count,
-                        output.baseAddress,
-                        output.count,
-                        &dataOutMoved
-                    )
+                        let status = CCCrypt(
+                            CCOperation(kCCDecrypt),
+                            CCAlgorithm(kCCAlgorithmAES),
+                            CCOptions(kCCOptionPKCS7Padding),
+                            key.baseAddress, key.count,
+                            iv.baseAddress,
+                            message.baseAddress, message.count,
+                            output.baseAddress, output.count,
+                            &dataOutMoved
+                        )
 
-                    switch Int(status) {
-                    case kCCSuccess:
-                        let tmp = output[..<dataOutMoved]
-                        return Data(tmp)
-
-                    case kCCBufferTooSmall:
-                        throw Crypto.AesError.bufferTooSmall(available: output.count, needed: dataOutMoved)
-                    case kCCAlignmentError: throw Crypto.AesError.alignment
-                    case kCCDecodeError: throw Crypto.AesError.decode
-                    default: throw Crypto.AesError.other(status)
+                        switch Int(status) {
+                        case kCCSuccess:
+                            return Data(output[..<dataOutMoved])
+                        case kCCBufferTooSmall:
+                            throw AesError.bufferTooSmall(available: output.count, needed: dataOutMoved)
+                        case kCCAlignmentError:
+                            throw AesError.alignment
+                        case kCCDecodeError:
+                            throw AesError.decode
+                        default:
+                            throw AesError.other(status)
+                        }
                     }
                 }
             }
         }
+        #endif
     }
 }
