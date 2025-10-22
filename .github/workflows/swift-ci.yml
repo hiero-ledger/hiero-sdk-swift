@@ -313,10 +313,10 @@ jobs:
             echo "Java REST API service mirror-1-restjava not found, skipping port-forward"
           fi
 
-      - name: Create ECDSA account
-        run: |
-          npm run solo -- ledger account create --generate-ecdsa-key --deployment ${SOLO_DEPLOYMENT}
-          npm run solo -- ledger account update --account-id 0.0.1002 --hbar-amount 1000000 --deployment ${SOLO_DEPLOYMENT}
+      # - name: Create ECDSA account
+      #   run: |
+      #     npm run solo -- ledger account create --generate-ecdsa-key --deployment ${SOLO_DEPLOYMENT}
+      #     npm run solo -- ledger account update --account-id 0.0.1002 --hbar-amount 1000000 --deployment ${SOLO_DEPLOYMENT}
 
       - name: Write .env for tests
         run: |
