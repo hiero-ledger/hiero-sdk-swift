@@ -3,11 +3,11 @@
 import Foundation
 
 #if canImport(Crypto)
-// Prefer Swift Crypto (cross-platform)
-import Crypto
+    // Prefer Swift Crypto (cross-platform)
+    import Crypto
 #elseif canImport(CryptoKit)
-// Fallback to Apple CryptoKit (Darwin only)
-import CryptoKit
+    // Fallback to Apple CryptoKit (Darwin only)
+    import CryptoKit
 #endif
 
 extension Crypto {
@@ -25,23 +25,23 @@ extension Crypto {
             switch self {
             case .sha256:
                 #if canImport(Crypto)
-                return Data(SHA256.hash(data: data))
+                    return Data(SHA256.hash(data: data))
                 #else
-                return Data(CryptoKit.SHA256.hash(data: data))
+                    return Data(CryptoKit.SHA256.hash(data: data))
                 #endif
 
             case .sha384:
                 #if canImport(Crypto)
-                return Data(SHA384.hash(data: data))
+                    return Data(SHA384.hash(data: data))
                 #else
-                return Data(CryptoKit.SHA384.hash(data: data))
+                    return Data(CryptoKit.SHA384.hash(data: data))
                 #endif
 
             case .sha512:
                 #if canImport(Crypto)
-                return Data(SHA512.hash(data: data))
+                    return Data(SHA512.hash(data: data))
                 #else
-                return Data(CryptoKit.SHA512.hash(data: data))
+                    return Data(CryptoKit.SHA512.hash(data: data))
                 #endif
             }
         }

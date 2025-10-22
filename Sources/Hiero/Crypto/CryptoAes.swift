@@ -3,9 +3,9 @@
 import Foundation
 
 #if canImport(CommonCrypto)
-import CommonCrypto
+    import CommonCrypto
 #else
-import CryptoSwift
+    import CryptoSwift
 #endif
 
 // MARK: - Cross-platform AES helpers (standalone)
@@ -20,60 +20,60 @@ enum CryptoError: Error {
 enum CryptoAES {
     static func encrypt(_ data: Data, key: Data, iv: Data) throws -> Data {
         #if canImport(CommonCrypto)
-        return try cryptCC(data: data, key: key, iv: iv, operation: kCCEncrypt)
+            return try cryptCC(data: data, key: key, iv: iv, operation: kCCEncrypt)
         #else
-        let aes = try AES(key: Array(key), blockMode: CBC(iv: Array(iv)), padding: .pkcs7)
-        return Data(try aes.encrypt(Array(data)))
+            let aes = try AES(key: Array(key), blockMode: CBC(iv: Array(iv)), padding: .pkcs7)
+            return Data(try aes.encrypt(Array(data)))
         #endif
     }
 
     static func decrypt(_ data: Data, key: Data, iv: Data) throws -> Data {
         #if canImport(CommonCrypto)
-        return try cryptCC(data: data, key: key, iv: iv, operation: kCCDecrypt)
+            return try cryptCC(data: data, key: key, iv: iv, operation: kCCDecrypt)
         #else
-        let aes = try AES(key: Array(key), blockMode: CBC(iv: Array(iv)), padding: .pkcs7)
-        return Data(try aes.decrypt(Array(data)))
+            let aes = try AES(key: Array(key), blockMode: CBC(iv: Array(iv)), padding: .pkcs7)
+            return Data(try aes.decrypt(Array(data)))
         #endif
     }
 
     #if canImport(CommonCrypto)
-    private static func cryptCC(data: Data, key: Data, iv: Data, operation: Int) throws -> Data {
-        var outLength = 0
-        var outData = Data(count: data.count + kCCBlockSizeAES128)
-        let outCapacity = outData.count // capture before mutating closure (avoid overlapping access)
+        private static func cryptCC(data: Data, key: Data, iv: Data, operation: Int) throws -> Data {
+            var outLength = 0
+            var outData = Data(count: data.count + kCCBlockSizeAES128)
+            let outCapacity = outData.count  // capture before mutating closure (avoid overlapping access)
 
-        let status = outData.withUnsafeMutableBytes { outBytes in
-            data.withUnsafeBytes { inBytes in
-                key.withUnsafeBytes { keyBytes in
-                    iv.withUnsafeBytes { ivBytes in
-                        guard
-                            let outPtr = outBytes.baseAddress,
-                            let inPtr  = inBytes.baseAddress,
-                            let keyPtr = keyBytes.baseAddress,
-                            let ivPtr  = ivBytes.baseAddress
-                        else {
-                            return CCCryptorStatus(kCCMemoryFailure)
+            let status = outData.withUnsafeMutableBytes { outBytes in
+                data.withUnsafeBytes { inBytes in
+                    key.withUnsafeBytes { keyBytes in
+                        iv.withUnsafeBytes { ivBytes in
+                            guard
+                                let outPtr = outBytes.baseAddress,
+                                let inPtr = inBytes.baseAddress,
+                                let keyPtr = keyBytes.baseAddress,
+                                let ivPtr = ivBytes.baseAddress
+                            else {
+                                return CCCryptorStatus(kCCMemoryFailure)
+                            }
+
+                            return CCCrypt(
+                                CCOperation(operation),
+                                CCAlgorithm(kCCAlgorithmAES),
+                                CCOptions(kCCOptionPKCS7Padding),
+                                keyPtr, key.count,
+                                ivPtr,
+                                inPtr, data.count,
+                                outPtr, outCapacity,
+                                &outLength
+                            )
                         }
-
-                        return CCCrypt(
-                            CCOperation(operation),
-                            CCAlgorithm(kCCAlgorithmAES),
-                            CCOptions(kCCOptionPKCS7Padding),
-                            keyPtr, key.count,
-                            ivPtr,
-                            inPtr, data.count,
-                            outPtr, outCapacity,
-                            &outLength
-                        )
                     }
                 }
             }
-        }
 
-        guard status == kCCSuccess else { throw CryptoError.invalidInput }
-        outData.removeSubrange(outLength..<outData.count)
-        return outData
-    }
+            guard status == kCCSuccess else { throw CryptoError.invalidInput }
+            outData.removeSubrange(outLength..<outData.count)
+            return outData
+        }
     #endif
 }
 
@@ -98,75 +98,76 @@ extension Crypto {
             precondition(iv.count == 16, "bug: iv size incorrect for AES-128")
 
             #if canImport(CommonCrypto)
-            // Try once with message.count, retry if CommonCrypto reports a larger needed size.
-            do {
-                return try aes128CbcPadDecryptOnce(key: key, iv: iv, message: message, outputCapacity: message.count)
-            } catch AesError.bufferTooSmall(_, let needed) {
-                return try aes128CbcPadDecryptOnce(key: key, iv: iv, message: message, outputCapacity: needed)
-            }
+                // Try once with message.count, retry if CommonCrypto reports a larger needed size.
+                do {
+                    return try aes128CbcPadDecryptOnce(
+                        key: key, iv: iv, message: message, outputCapacity: message.count)
+                } catch AesError.bufferTooSmall(_, let needed) {
+                    return try aes128CbcPadDecryptOnce(key: key, iv: iv, message: message, outputCapacity: needed)
+                }
             #else
-            let aes = try AES(key: Array(key), blockMode: CBC(iv: Array(iv)), padding: .pkcs7)
-            return Data(try aes.decrypt(Array(message)))
+                let aes = try AES(key: Array(key), blockMode: CBC(iv: Array(iv)), padding: .pkcs7)
+                return Data(try aes.decrypt(Array(message)))
             #endif
         }
 
         #if canImport(CommonCrypto)
-        private static func aes128CbcPadDecryptOnce(
-            key: Data,
-            iv: Data,
-            message: Data,
-            outputCapacity: Int
-        ) throws -> Data {
-            var output = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: outputCapacity)
-            output.initialize(repeating: 0)
-            defer { output.deallocate() }
+            private static func aes128CbcPadDecryptOnce(
+                key: Data,
+                iv: Data,
+                message: Data,
+                outputCapacity: Int
+            ) throws -> Data {
+                var output = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: outputCapacity)
+                output.initialize(repeating: 0)
+                defer { output.deallocate() }
 
-            return try aes128CbcPadDecryptInner(
-                key: key,
-                iv: iv,
-                message: message,
-                output: &output
-            )
-        }
+                return try aes128CbcPadDecryptInner(
+                    key: key,
+                    iv: iv,
+                    message: message,
+                    output: &output
+                )
+            }
 
-        private static func aes128CbcPadDecryptInner(
-            key: Data,
-            iv: Data,
-            message: Data,
-            output: inout UnsafeMutableBufferPointer<UInt8>
-        ) throws -> Data {
-            try key.withUnsafeBytes { key in
-                try iv.withUnsafeBytes { iv in
-                    try message.withUnsafeBytes { message in
-                        var dataOutMoved = 0
+            private static func aes128CbcPadDecryptInner(
+                key: Data,
+                iv: Data,
+                message: Data,
+                output: inout UnsafeMutableBufferPointer<UInt8>
+            ) throws -> Data {
+                try key.withUnsafeBytes { key in
+                    try iv.withUnsafeBytes { iv in
+                        try message.withUnsafeBytes { message in
+                            var dataOutMoved = 0
 
-                        let status = CCCrypt(
-                            CCOperation(kCCDecrypt),
-                            CCAlgorithm(kCCAlgorithmAES),
-                            CCOptions(kCCOptionPKCS7Padding),
-                            key.baseAddress, key.count,
-                            iv.baseAddress,
-                            message.baseAddress, message.count,
-                            output.baseAddress, output.count,
-                            &dataOutMoved
-                        )
+                            let status = CCCrypt(
+                                CCOperation(kCCDecrypt),
+                                CCAlgorithm(kCCAlgorithmAES),
+                                CCOptions(kCCOptionPKCS7Padding),
+                                key.baseAddress, key.count,
+                                iv.baseAddress,
+                                message.baseAddress, message.count,
+                                output.baseAddress, output.count,
+                                &dataOutMoved
+                            )
 
-                        switch Int(status) {
-                        case kCCSuccess:
-                            return Data(output[..<dataOutMoved])
-                        case kCCBufferTooSmall:
-                            throw AesError.bufferTooSmall(available: output.count, needed: dataOutMoved)
-                        case kCCAlignmentError:
-                            throw AesError.alignment
-                        case kCCDecodeError:
-                            throw AesError.decode
-                        default:
-                            throw AesError.other(status)
+                            switch Int(status) {
+                            case kCCSuccess:
+                                return Data(output[..<dataOutMoved])
+                            case kCCBufferTooSmall:
+                                throw AesError.bufferTooSmall(available: output.count, needed: dataOutMoved)
+                            case kCCAlignmentError:
+                                throw AesError.alignment
+                            case kCCDecodeError:
+                                throw AesError.decode
+                            default:
+                                throw AesError.other(status)
+                            }
                         }
                     }
                 }
             }
-        }
         #endif
     }
 }

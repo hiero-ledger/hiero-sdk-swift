@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 import CryptoSwift
+import Foundation
 
 extension Crypto {
     internal enum Sha3 {
