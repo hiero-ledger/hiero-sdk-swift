@@ -1,6 +1,23 @@
 import Foundation
+
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
+
+    extension URLSession {
+        /// Async wrapper for URLSession.dataTask on Linux where `data(from:)` may not exist.
+        func data(from url: URL) async throws -> (Data, URLResponse) {
+            try await withCheckedThrowingContinuation { cont in
+                let task = self.dataTask(with: url) { data, response, error in
+                    if let data, let response {
+                        cont.resume(returning: (data, response))
+                    } else {
+                        cont.resume(throwing: error ?? URLError(.badServerResponse))
+                    }
+                }
+                task.resume()
+            }
+        }
+    }
 #endif
 
 private struct ContractJson: Decodable {
@@ -16,7 +33,7 @@ public enum Resources {
     private static func getData(forUrl url: URL) async throws -> Data {
         if #available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *) {
             // this version is different than the one above (this one has a `delegate: nil`), confusing I know
-            return try await URLSession.shared.data(from: url, delegate: nil).0
+            return try await URLSession.shared.data(from: url).0
         }
 
         return try await withCheckedThrowingContinuation { continuation in
