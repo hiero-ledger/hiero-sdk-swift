@@ -3,7 +3,7 @@
 import CryptoSwift
 import Foundation
 
-extension Crypto {
+extension CryptoNamespace {
     internal enum Sha3 {
         case keccak256
 

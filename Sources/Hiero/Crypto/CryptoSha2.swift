@@ -10,7 +10,7 @@ import Foundation
     import CryptoKit
 #endif
 
-extension Crypto {
+extension CryptoNamespace {
     internal enum Sha2 {
         case sha256
         case sha384

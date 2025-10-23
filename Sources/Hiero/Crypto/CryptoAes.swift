@@ -36,6 +36,13 @@ enum CryptoAES {
         #endif
     }
 
+    static func aes128CbcPadDecrypt(key: Data, iv: Data, message: Data) throws -> Data {
+        precondition(key.count == 16, "bug: key size \(key.count) incorrect for AES-128")
+        precondition(iv.count == 16, "bug: iv size incorrect for AES-128")
+        
+        return try decrypt(message, key: key, iv: iv)
+    }
+
     #if canImport(CommonCrypto)
         private static func cryptCC(data: Data, key: Data, iv: Data, operation: Int) throws -> Data {
             var outLength = 0
@@ -79,10 +86,10 @@ enum CryptoAES {
 
 // MARK: - Add `Aes` into your existing `Crypto` namespace
 
-/// Extend the project’s existing `Crypto` namespace with AES helpers used by PBES2, etc.
+/// Extend the project's existing `CryptoNamespace` with AES helpers used by PBES2, etc.
 /// This avoids creating a new top-level `enum Crypto` (which caused ambiguity), while
-/// letting existing call sites keep using `Crypto.Aes.aes128CbcPadDecrypt(...)`.
-extension Crypto {
+/// letting existing call sites keep using `CryptoNamespace.Aes.aes128CbcPadDecrypt(...)`.
+extension CryptoNamespace {
     internal enum AesError: Error {
         case bufferTooSmall(available: Int, needed: Int)
         case alignment

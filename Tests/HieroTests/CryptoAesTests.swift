@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import CommonCrypto
-import CryptoKit
 import SwiftASN1
 import XCTest
 
@@ -14,14 +12,14 @@ internal final class CryptoAesTests: XCTestCase {
         let bytesDer = PrivateKey.toBytesDer(Resources.privateKey)
         let iv = Data(hexEncoded: "0046A9EED8D16BE8BD6F0CAA6A197CE8")!
 
-        var hash = CryptoKit.Insecure.MD5()
+        var hash = CrossPlatformMD5()
 
         hash.update(data: Self.testPassphrase.data(using: .utf8)!)
         hash.update(data: iv[slicing: ..<8]!)
 
         let password = Data(hash.finalize().bytes)
 
-        let decrypted = try Crypto.Aes.aes128CbcPadDecrypt(key: password, iv: iv, message: bytesDer())
+        let decrypted = try CryptoNamespace.Aes.aes128CbcPadDecrypt(key: password, iv: iv, message: bytesDer())
 
         XCTAssertEqual(
             decrypted.hexStringEncoded(),

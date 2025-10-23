@@ -110,6 +110,7 @@ let package = Package(
         // Currently, only used for keccak256
         .package(url: "https://github.com/krzyzanowskim/OpenSSL-Package.git", .upToNextMajor(from: "3.3.2000")),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", from: "1.8.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.0.0")),
     ],
     targets: [
         .target(
@@ -142,6 +143,7 @@ let package = Package(
                 .product(name: "BigInt", package: "BigInt"),
                 .product(name: "OpenSSL", package: "OpenSSL-Package"),
                 .product(name: "CryptoSwift", package: "CryptoSwift"),
+                .product(name: "Crypto", package: "swift-crypto"),
             ]
             // todo: find some way to enable these locally.
             // swiftSettings: [

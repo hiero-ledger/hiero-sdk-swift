@@ -3,8 +3,6 @@
 import Foundation
 import SwiftASN1
 
-internal enum Pkcs5 {}
-
 extension Pkcs5 {
     /// ```text
     /// PBES2-params ::= SEQUENCE {
@@ -30,70 +28,6 @@ extension Pkcs5 {
     }
 }
 
-extension ASN1ObjectIdentifier.NamedCurves {
-    /// OID for the secp256k1 named curve.
-    /// `1.3.132.0.10`
-    internal static let secp256k1: ASN1ObjectIdentifier = [1, 3, 132, 0, 10]
-}
-
-extension ASN1ObjectIdentifier.AlgorithmIdentifier {
-    /// OID for Ed25519.
-    /// `1.3.101.112`
-    internal static let ed25519: ASN1ObjectIdentifier = [1, 3, 101, 112]
-
-    /// OID for PBKDF2.
-    /// `1.2.840.113549.1.5.12`
-    internal static let pbkdf2: ASN1ObjectIdentifier = [1, 2, 840, 113_549, 1, 5, 12]
-
-    /// OID for PBES2.
-    /// `1.2.840.113549.1.5.13`
-    internal static let pbes2: ASN1ObjectIdentifier = [1, 2, 840, 113_549, 1, 5, 13]
-
-    /// OID for AES-128-CBC with RFC-5652 padding.
-    /// `2.16.840.1.101.3.4.1.2`
-    internal static let aes128CbcPad: ASN1ObjectIdentifier = [2, 16, 840, 1, 101, 3, 4, 1, 2]
-}
-
-extension Pkcs5.EncryptionScheme {
-    internal func decrypt(password: Data, document: Data) throws -> Data {
-        switch self {
-        case .pbes2(let params):
-            return try params.decrypt(password: password, document: document)
-        }
-    }
-}
-
-extension Pkcs5.EncryptionScheme: DERImplicitlyTaggable {
-    internal static var defaultIdentifier: ASN1Identifier {
-        Pkcs5.AlgorithmIdentifier.defaultIdentifier
-    }
-
-    internal init(derEncoded: ASN1Node, withIdentifier identifier: ASN1Identifier) throws {
-        let algId = try Pkcs5.AlgorithmIdentifier(derEncoded: derEncoded, withIdentifier: identifier)
-
-        guard let parameters = algId.parameters else {
-            throw ASN1Error.invalidASN1Object
-        }
-
-        switch algId.oid {
-        case .AlgorithmIdentifier.pbes2:
-            self = .pbes2(try Pkcs5.Pbes2Parameters(asn1Any: parameters))
-        default:
-            throw ASN1Error.invalidASN1Object
-        }
-    }
-
-    internal func serialize(into coder: inout DER.Serializer, withIdentifier identifier: ASN1Identifier) throws {
-        let params: ASN1Any
-        switch self {
-        case .pbes2(let pbes2):
-            params = try .init(erasing: pbes2)
-        }
-
-        try Pkcs5.AlgorithmIdentifier(oid: .AlgorithmIdentifier.pbes2, parameters: params)
-            .serialize(into: &coder, withIdentifier: identifier)
-    }
-}
 
 extension Pkcs5.Pbes2Kdf: DERImplicitlyTaggable {
     internal static var defaultIdentifier: ASN1Identifier {

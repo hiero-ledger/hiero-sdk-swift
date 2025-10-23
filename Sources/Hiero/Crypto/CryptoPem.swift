@@ -1,10 +1,10 @@
 import Foundation
 
-extension Crypto {
+extension CryptoNamespace {
     internal enum Pem {}
 }
 
-extension Crypto.Pem {
+extension CryptoNamespace.Pem {
     private static func isValidLabelCharacter(_ char: Character) -> Bool {
         let visibleAscii: ClosedRange<UInt8> = 0x21...0x7e
         let hyphenMinus: Character = "-"
