@@ -33,6 +33,7 @@ internal final class NodeCreateTransactionTests: XCTestCase {
             .serviceEndpoints(spawnTestEndpointList(offset: 2))
             .gossipCaCertificate(Self.testGossipCertificate)
             .grpcCertificateHash(Self.testGrpcCertificateHash)
+            .grpcWebProxyEndpoint(spawnTestEndpoint(offset: 4))
             .adminKey(Key.single(Resources.privateKey.publicKey))
             .freeze()
             .sign(Resources.privateKey)
@@ -54,6 +55,7 @@ internal final class NodeCreateTransactionTests: XCTestCase {
     internal func testFromProtoBody() throws {
         let gossipEndpoints = Self.spawnTestEndpointList(offset: 0)
         let serviceEndpoints = Self.spawnTestEndpointList(offset: 2)
+        let grpcProxyEndpoint = Self.spawnTestEndpoint(offset: 4)
         let protoData = Com_Hedera_Hapi_Node_Addressbook_NodeCreateTransactionBody.with { proto in
             proto.accountID = Resources.accountId.toProtobuf()
             proto.description_p = Self.testDescription
@@ -62,6 +64,7 @@ internal final class NodeCreateTransactionTests: XCTestCase {
             proto.gossipCaCertificate = Self.testGossipCertificate
             proto.grpcCertificateHash = Self.testGrpcCertificateHash
             proto.adminKey = Key.single(Resources.publicKey).toProtobuf()
+            proto.grpcProxyEndpoint = grpcProxyEndpoint.toProtobuf()
         }
 
         let protoBody = Proto_TransactionBody.with { proto in
@@ -90,6 +93,10 @@ internal final class NodeCreateTransactionTests: XCTestCase {
             XCTAssertEqual(endpoint.port, serviceEndpoints[index].port)
             XCTAssertEqual(endpoint.domainName, serviceEndpoints[index].domainName)
         }
+
+        XCTAssertEqual(tx.grpcWebProxyEndpoint?.ipAddress, grpcProxyEndpoint.ipAddress)
+        XCTAssertEqual(tx.grpcWebProxyEndpoint?.port, grpcProxyEndpoint.port)
+        XCTAssertEqual(tx.grpcWebProxyEndpoint?.domainName, grpcProxyEndpoint.domainName)
     }
 
     internal func testGetSetAccountId() throws {
@@ -149,5 +156,15 @@ internal final class NodeCreateTransactionTests: XCTestCase {
         tx.grpcCertificateHash(Self.testGrpcCertificateHash)
 
         XCTAssertEqual(tx.grpcCertificateHash, Self.testGrpcCertificateHash)
+    }
+
+    internal func testGetSetGrpcWebProxyEndpoint() throws {
+        let tx = NodeCreateTransaction()
+        let endpoint = Self.spawnTestEndpoint(offset: 4)
+        tx.grpcWebProxyEndpoint(endpoint)
+
+        XCTAssertEqual(tx.grpcWebProxyEndpoint?.ipAddress, endpoint.ipAddress)
+        XCTAssertEqual(tx.grpcWebProxyEndpoint?.port, endpoint.port)
+        XCTAssertEqual(tx.grpcWebProxyEndpoint?.domainName, endpoint.domainName)
     }
 }

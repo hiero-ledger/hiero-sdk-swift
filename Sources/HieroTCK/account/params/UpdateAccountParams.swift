@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-/// Struct to hold the parameters of a 'updateAccount' JSON-RPC method call.
+/// Represents the parameters for an `updateAccount` JSON-RPC method call.
+///
+/// This struct parses and stores the optional fields available for updating an existing account,
+/// including cryptographic keys, staking preferences, auto-renew settings, and transaction metadata.
+///
+/// - Note: All fields are optional; validation and defaulting behavior should be handled downstream.
 internal struct UpdateAccountParams {
 
     internal var accountId: String? = nil
@@ -15,24 +20,54 @@ internal struct UpdateAccountParams {
     internal var declineStakingReward: Bool? = nil
     internal var commonTransactionParams: CommonTransactionParams? = nil
 
-    internal init(_ request: JSONRequest) throws {
-        if let params = try getOptionalParams(request) {
-            self.accountId = try getOptionalJsonParameter("accountId", params, JSONRPCMethod.updateAccount)
-            self.key = try getOptionalJsonParameter("key", params, JSONRPCMethod.updateAccount)
-            self.autoRenewPeriod = try getOptionalJsonParameter("autoRenewPeriod", params, JSONRPCMethod.updateAccount)
-            self.expirationTime = try getOptionalJsonParameter("expirationTime", params, JSONRPCMethod.updateAccount)
-            self.receiverSignatureRequired = try getOptionalJsonParameter(
-                "receiverSignatureRequired", params, JSONRPCMethod.updateAccount)
-            self.memo = try getOptionalJsonParameter("memo", params, JSONRPCMethod.updateAccount)
-            self.maxAutoTokenAssociations = try getOptionalJsonParameter(
-                "maxAutoTokenAssociations", params, JSONRPCMethod.updateAccount)
-            self.stakedAccountId = try getOptionalJsonParameter("stakedAccountId", params, JSONRPCMethod.updateAccount)
-            self.stakedNodeId = try getOptionalJsonParameter("stakedNodeId", params, JSONRPCMethod.updateAccount)
-            self.declineStakingReward = try getOptionalJsonParameter(
-                "declineStakingReward", params, JSONRPCMethod.updateAccount)
-            self.commonTransactionParams = try CommonTransactionParams(
-                getOptionalJsonParameter("commonTransactionParams", params, JSONRPCMethod.updateAccount),
-                JSONRPCMethod.updateAccount)
-        }
+    internal init(request: JSONRequest) throws {
+        let method: JSONRPCMethod = .updateAccount
+        guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else { return }
+
+        self.accountId = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "accountId",
+            from: params,
+            for: method)
+        self.key = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "key",
+            from: params,
+            for: method)
+        self.autoRenewPeriod = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "autoRenewPeriod",
+            from: params,
+            for: method)
+        self.expirationTime = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "expirationTime",
+            from: params,
+            for: method)
+        self.receiverSignatureRequired = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "receiverSignatureRequired",
+            from: params,
+            for: method)
+        self.memo = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "memo",
+            from: params,
+            for: method)
+        self.maxAutoTokenAssociations = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "maxAutoTokenAssociations",
+            from: params,
+            for: method)
+        self.stakedAccountId = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "stakedAccountId",
+            from: params,
+            for: method)
+        self.stakedNodeId = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "stakedNodeId",
+            from: params,
+            for: method)
+        self.declineStakingReward = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "declineStakingReward",
+            from: params,
+            for: method)
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams",
+            from: params,
+            for: method,
+            using: CommonTransactionParams.init)
     }
 }

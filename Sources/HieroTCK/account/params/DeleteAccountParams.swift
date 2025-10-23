@@ -1,20 +1,34 @@
 // SPDX-License-Identifier: Apache-2.0
 
-/// Struct to hold the parameters of a 'deleteAccount' JSON-RPC method call.
+/// Represents the parameters for a `deleteAccount` JSON-RPC method call.
+///
+/// This struct extracts and stores the optional fields required to perform a `deleteAccount`
+/// operation, including the account to delete, the account to transfer remaining balance to,
+/// and any shared transaction configuration.
+///
+/// - Note: All fields are optional; validation and defaulting behavior should be handled downstream.
 internal struct DeleteAccountParams {
 
     internal var deleteAccountId: String? = nil
     internal var transferAccountId: String? = nil
     internal var commonTransactionParams: CommonTransactionParams? = nil
 
-    internal init(_ request: JSONRequest) throws {
-        if let params = try getOptionalParams(request) {
-            self.deleteAccountId = try getOptionalJsonParameter("deleteAccountId", params, JSONRPCMethod.deleteAccount)
-            self.transferAccountId = try getOptionalJsonParameter(
-                "transferAccountId", params, JSONRPCMethod.deleteAccount)
-            self.commonTransactionParams = try CommonTransactionParams(
-                getOptionalJsonParameter("commonTransactionParams", params, JSONRPCMethod.deleteAccount),
-                JSONRPCMethod.deleteAccount)
-        }
+    internal init(request: JSONRequest) throws {
+        let method: JSONRPCMethod = .deleteAccount
+        guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else { return }
+
+        self.deleteAccountId = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "deleteAccountId",
+            from: params,
+            for: method)
+        self.transferAccountId = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "transferAccountId",
+            from: params,
+            for: method)
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams",
+            from: params,
+            for: method,
+            using: CommonTransactionParams.init)
     }
 }

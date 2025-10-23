@@ -1,17 +1,25 @@
 // SPDX-License-Identifier: Apache-2.0
 
-/// Struct to hold the parameters of a 'unpauseToken' JSON-RPC method call.
+/// Represents the parameters for an `unpauseToken` JSON-RPC method call.
+///
+/// This struct encapsulates the optional parameters required to unpause a previously paused token,
+/// including the token ID and any common transaction configuration.
+///
+/// - Note: All fields are optional; validation and defaulting behavior should be handled downstream.
 internal struct UnpauseTokenParams {
 
     internal var tokenId: String? = nil
     internal var commonTransactionParams: CommonTransactionParams? = nil
 
-    internal init(_ request: JSONRequest) throws {
-        if let params = try getOptionalParams(request) {
-            self.tokenId = try getOptionalJsonParameter("tokenId", params, JSONRPCMethod.unpauseToken)
-            self.commonTransactionParams = try CommonTransactionParams(
-                try getOptionalJsonParameter("commonTransactionParams", params, JSONRPCMethod.unpauseToken),
-                JSONRPCMethod.unpauseToken)
-        }
+    internal init(request: JSONRequest) throws {
+        let method: JSONRPCMethod = .unpauseToken
+        guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else { return }
+
+        self.tokenId = try JSONRPCParser.getOptionalParameterIfPresent(name: "tokenId", from: params, for: method)
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams",
+            from: params,
+            for: method,
+            using: CommonTransactionParams.init)
     }
 }

@@ -15,7 +15,7 @@ public final class FileCreateTransaction: Transaction {
         fileMemo = data.memo
         keys = try .fromProtobuf(data.keys)
         contents = data.contents
-        expirationTime = data.hasExpirationTime ? .fromProtobuf(data.expirationTime) : nil
+        expirationTime = data.hasExpirationTime ? .fromProtobuf(data.expirationTime) : .now + .days(90)
 
         // hedera doesn't have these currently.
         autoRenewPeriod = nil
@@ -115,7 +115,7 @@ public final class FileCreateTransaction: Transaction {
     }
 
     /// The time at which this file should expire.
-    public var expirationTime: Timestamp? = .now + .days(90) {
+    public var expirationTime: Timestamp = .now + .days(90) {
         willSet {
             ensureNotFrozen(fieldName: "expirationTime")
         }
@@ -158,7 +158,7 @@ extension FileCreateTransaction: ToProtobuf {
             proto.keys = keys.toProtobuf()
             proto.contents = contents
 
-            expirationTime?.toProtobufInto(&proto.expirationTime)
+            expirationTime.toProtobufInto(&proto.expirationTime)
         }
     }
 }

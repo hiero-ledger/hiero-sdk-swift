@@ -30,7 +30,7 @@ extension TokenAllowance: TryProtobufCodable {
             proto.tokenID = tokenId.toProtobuf()
             proto.owner = ownerAccountId.toProtobuf()
             proto.spender = spenderAccountId.toProtobuf()
-            proto.amount = Int64(amount)
+            proto.amount = Int64(truncatingIfNeeded: amount)
         }
     }
 }
