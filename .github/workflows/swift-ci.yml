@@ -73,7 +73,7 @@ jobs:
           egress-policy: audit
 
       - name: Setup Swift
-        uses: swift-actions/setup-swift@3aed395c5397f62deb91d8fe7af1418a9ae4d16f
+        uses: SwiftyLab/setup-swift@v1
         with:
           swift-version: ${{ matrix.swift }}
 
