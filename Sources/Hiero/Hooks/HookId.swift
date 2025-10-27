@@ -48,3 +48,9 @@ extension HookId: TryProtobufCodable {
         }
     }
 }
+
+extension HookId: ValidateChecksums {
+    internal func validateChecksums(on ledgerId: LedgerId) throws {
+        try entityId.validateChecksums(on: ledgerId)
+    }
+}

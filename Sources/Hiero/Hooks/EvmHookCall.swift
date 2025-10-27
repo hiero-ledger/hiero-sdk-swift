@@ -48,3 +48,9 @@ extension EvmHookCall: TryProtobufCodable {
         }
     }
 }
+
+extension EvmHookCall: ValidateChecksums {
+    internal func validateChecksums(on ledgerId: LedgerId) throws {
+        // EvmHookCall only contains Data and UInt64, no checksums to validate
+    }
+}

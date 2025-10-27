@@ -24,6 +24,7 @@ public struct LambdaMappingEntry {
     @discardableResult
     public mutating func key(_ key: Data) -> Self {
         self.key = key
+        self.preimage = nil  // Reset preimage when setting key
         return self
     }
 
@@ -31,6 +32,7 @@ public struct LambdaMappingEntry {
     @discardableResult
     public mutating func preimage(_ preimage: Data) -> Self {
         self.preimage = preimage
+        self.key = nil  // Reset key when setting preimage
         return self
     }
 

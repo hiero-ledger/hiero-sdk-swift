@@ -25,7 +25,12 @@ extension EvmHookSpec: TryProtobufCodable {
 
     /// Construct from protobuf.
     internal init(protobuf proto: Protobuf) throws {
-        self.contractId = try ContractId.fromProtobuf(proto.contractID)
+        // Handle the case where contractID might not be set
+        if case .contractID(let contractID)? = proto.bytecodeSource {
+            self.contractId = try ContractId.fromProtobuf(contractID)
+        } else {
+            self.contractId = nil
+        }
     }
 
     /// Convert to protobuf.

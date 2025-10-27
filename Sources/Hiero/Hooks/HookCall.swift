@@ -91,3 +91,10 @@ extension HookCall: TryProtobufCodable {
         return proto
     }
 }
+
+extension HookCall: ValidateChecksums {
+    internal func validateChecksums(on ledgerId: LedgerId) throws {
+        try fullHookId?.validateChecksums(on: ledgerId)
+        try evmHookCall?.validateChecksums(on: ledgerId)
+    }
+}
