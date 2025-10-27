@@ -1,40 +1,39 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 import Hiero
-import HieroProtobufs
+import HieroExampleUtilities
+import SwiftDotenv
+import Foundation
 
 @main
-struct ContractHooksExample {
-    static func main() async throws {
-        // Initialize the client
-        let client = Client.forTestnet()
+internal enum Program {
+    internal static func main() async throws {
+        /// Grab the environment variables.
+        let env = try Dotenv.load()
+
+        /// Initialize the client based on the provided environment.
+        let client = try Client.forName(env.networkName)
+        client.setOperator(env.operatorAccountId, env.operatorKey)
         
-        // Create operator account
-        let operatorKey = PrivateKey.generateEd25519()
-        let operatorId = try AccountId.fromString("0.0.1234") // Replace with your account ID
-        
-        client.setOperator(operatorId, operatorKey)
-        
-        print("🚀 Contract Hooks Example")
-        print("========================")
+        print("Contract Hooks Example")
+        print("=====================")
         
         // Create a contract that will serve as our hook
-        print("\n📝 Creating hook contract...")
+        print("Creating hook contract...")
         
         let hookContractKey = PrivateKey.generateEd25519()
         let hookContractResponse = try await ContractCreateTransaction()
-            .bytecodeFileId(FileId.fromString("0.0.1235")) // Replace with your contract file ID
+            .bytecode(Data(hexEncoded: "608060405234801561001057600080fd5b50610167806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80632f570a2314610030575b600080fd5b61004a600480360381019061004591906100b6565b610060565b604051610057919061010a565b60405180910390f35b60006001905092915050565b60008083601f84011261007e57600080fd5b8235905067ffffffffffffffff81111561009757600080fd5b6020830191508360018202830111156100af57600080fd5b9250929050565b600080602083850312156100c957600080fd5b600083013567ffffffffffffffff8111156100e357600080fd5b6100ef8582860161006c565b92509250509250929050565b61010481610125565b82525050565b600060208201905061011f60008301846100fb565b92915050565b6000811515905091905056fea264697066735822122097fc0c3ac3155b53596be3af3b4d2c05eb5e273c020ee447f01b72abc3416e1264736f6c63430008000033")!)
             .adminKey(.single(hookContractKey.publicKey))
             .gas(100000)
             .execute(client)
         let hookContractReceipt = try await hookContractResponse.getReceipt(client)
         let hookContractId = hookContractReceipt.contractId!
         
-        print("✅ Created hook contract: \(hookContractId)")
+        print("Created hook contract: \(hookContractId)")
         
         // Create Lambda EVM Hook specification
-        print("\n🔧 Creating Lambda EVM Hook specification...")
+        print("Creating Lambda EVM Hook specification...")
         
         var evmHookSpec = EvmHookSpec()
         evmHookSpec = evmHookSpec.contractId(hookContractId)
@@ -47,11 +46,11 @@ struct ContractHooksExample {
         hookCreationDetails = hookCreationDetails.adminKey(Key.single(hookContractKey.publicKey))
         
         // Example 1: Create contract with hooks
-        print("\n📄 Example 1: Creating contract with hooks")
+        print("Example 1: Creating contract with hooks")
         
         let contractKey = PrivateKey.generateEd25519()
         let contractResponse = try await ContractCreateTransaction()
-            .bytecodeFileId(FileId.fromString("0.0.1236")) // Replace with your contract file ID
+            .bytecode(Data(hexEncoded: "608060405234801561001057600080fd5b50610167806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80632f570a2314610030575b600080fd5b61004a600480360381019061004591906100b6565b610060565b604051610057919061010a565b60405180910390f35b60006001905092915050565b60008083601f84011261007e57600080fd5b8235905067ffffffffffffffff81111561009757600080fd5b6020830191508360018202830111156100af57600080fd5b9250929050565b600080602083850312156100c957600080fd5b600083013567ffffffffffffffff8111156100e357600080fd5b6100ef8582860161006c565b92509250509250929050565b61010481610125565b82525050565b600060208201905061011f60008301846100fb565b92915050565b6000811515905091905056fea264697066735822122097fc0c3ac3155b53596be3af3b4d2c05eb5e273c020ee447f01b72abc3416e1264736f6c63430008000033")!)
             .adminKey(.single(contractKey.publicKey))
             .gas(200000)
             .addHook(hookCreationDetails)
@@ -59,10 +58,10 @@ struct ContractHooksExample {
         let contractReceipt = try await contractResponse.getReceipt(client)
         let contractId = contractReceipt.contractId!
         
-        print("✅ Created contract with hooks: \(contractId)")
+        print("Created contract with hooks: \(contractId)")
         
         // Example 2: Update contract to add more hooks
-        print("\n🔄 Example 2: Updating contract to add more hooks")
+        print("Example 2: Updating contract to add more hooks")
         
         var hookCreationDetails2 = HookCreationDetails(hookExtensionPoint: .accountAllowanceHook)
         hookCreationDetails2 = hookCreationDetails2.lambdaEvmHook(lambdaEvmHook)
@@ -74,10 +73,10 @@ struct ContractHooksExample {
             .execute(client)
         let updateReceipt = try await updateResponse.getReceipt(client)
         
-        print("✅ Updated contract with additional hooks: \(updateReceipt.status)")
+        print("Updated contract with additional hooks: \(updateReceipt.status)")
         
         // Example 3: Update contract to delete hooks
-        print("\n🗑️ Example 3: Updating contract to delete hooks")
+        print("Example 3: Updating contract to delete hooks")
         
         let deleteResponse = try await ContractUpdateTransaction()
             .contractId(contractId)
@@ -85,10 +84,10 @@ struct ContractHooksExample {
             .execute(client)
         let deleteReceipt = try await deleteResponse.getReceipt(client)
         
-        print("✅ Updated contract to delete hooks: \(deleteReceipt.status)")
+        print("Updated contract to delete hooks: \(deleteReceipt.status)")
         
         // Example 4: Execute contract with hooks
-        print("\n⚡ Example 4: Executing contract with hooks")
+        print("Example 4: Executing contract with hooks")
         
         let executeResponse = try await ContractExecuteTransaction()
             .contractId(contractId)
@@ -97,24 +96,41 @@ struct ContractHooksExample {
             .execute(client)
         let executeReceipt = try await executeResponse.getReceipt(client)
         
-        print("✅ Executed contract with hooks: \(executeReceipt.status)")
+        print("Executed contract with hooks: \(executeReceipt.status)")
         
         // Cleanup
-        print("\n🧹 Cleaning up...")
+        print("Cleaning up...")
         
         _ = try await ContractDeleteTransaction()
             .contractId(contractId)
-            .transferAccountId(operatorId)
+            .transferAccountId(env.operatorAccountId)
             .execute(client)
             .getReceipt(client)
         
         _ = try await ContractDeleteTransaction()
             .contractId(hookContractId)
-            .transferAccountId(operatorId)
+            .transferAccountId(env.operatorAccountId)
             .execute(client)
             .getReceipt(client)
         
-        print("✅ Cleanup completed")
-        print("\n🎉 Contract Hooks Example completed successfully!")
+        print("Cleanup completed")
+        print("\nContract Hooks Example completed successfully!")
+    }
+}
+
+extension Environment {
+    /// Account ID for the operator to use in this example.
+    internal var operatorAccountId: AccountId {
+        AccountId(self["OPERATOR_ID"]!.stringValue)!
+    }
+
+    /// Private key for the operator to use in this example.
+    internal var operatorKey: PrivateKey {
+        PrivateKey(self["OPERATOR_KEY"]!.stringValue)!
+    }
+
+    /// The name of the Hiero network this example should run against.
+    internal var networkName: String {
+        self["HEDERA_NETWORK"]?.stringValue ?? "testnet"
     }
 }

@@ -22,11 +22,11 @@ struct TransferWithHooksExample {
         
         client.setOperator(operatorId, operatorKey)
         
-        print("🚀 Transfer with Hooks Example")
+        print("Transfer with Hooks Example")
         print("==============================")
         
         // Create test accounts
-        print("\n📝 Creating test accounts...")
+        print("Creating test accounts...")
         
         let senderKey = PrivateKey.generateEd25519()
         let senderResponse = try await AccountCreateTransaction()
@@ -44,11 +44,11 @@ struct TransferWithHooksExample {
         let receiverReceipt = try await receiverResponse.getReceipt(client)
         let receiverAccountId = receiverReceipt.accountId!
         
-        print("✅ Created sender account: \(senderAccountId)")
-        print("✅ Created receiver account: \(receiverAccountId)")
+        print("Created sender account: \(senderAccountId)")
+        print("Created receiver account: \(receiverAccountId)")
         
         // Example 1: HBAR transfer with pre-transaction hook
-        print("\n💰 Example 1: HBAR transfer with pre-transaction hook")
+        print("Example 1: HBAR transfer with pre-transaction hook")
         
         var preTxHook = HookCall()
         preTxHook = preTxHook.hookId(1)
@@ -63,10 +63,10 @@ struct TransferWithHooksExample {
         let hbarResponse = try await hbarTransferTx.execute(client)
         let hbarReceipt = try await hbarResponse.getReceipt(client)
         
-        print("✅ HBAR transfer with hook completed: \(hbarReceipt.status)")
+        print("HBAR transfer with hook completed: \(hbarReceipt.status)")
         
         // Example 2: HBAR transfer with pre-post-transaction hook
-        print("\n💰 Example 2: HBAR transfer with pre-post-transaction hook")
+        print("Example 2: HBAR transfer with pre-post-transaction hook")
         
         var prePostTxHook = HookCall()
         prePostTxHook = prePostTxHook.hookId(2)
@@ -81,10 +81,10 @@ struct TransferWithHooksExample {
         let hbarPrePostResponse = try await hbarPrePostTx.execute(client)
         let hbarPrePostReceipt = try await hbarPrePostResponse.getReceipt(client)
         
-        print("✅ HBAR transfer with pre-post hook completed: \(hbarPrePostReceipt.status)")
+        print("HBAR transfer with pre-post hook completed: \(hbarPrePostReceipt.status)")
         
         // Example 3: Create a token and transfer with hooks
-        print("\n🪙 Example 3: Token transfer with hooks")
+        print("Example 3: Token transfer with hooks")
         
         let tokenId = try await TokenCreateTransaction()
             .name("Hook Test Token")
@@ -97,7 +97,7 @@ struct TransferWithHooksExample {
             .getReceipt(client)
             .tokenId!
         
-        print("✅ Created token: \(tokenId)")
+        print("Created token: \(tokenId)")
         
         // Associate accounts with the token
         _ = try await TokenAssociateTransaction(accountId: senderAccountId, tokenIds: [tokenId])
@@ -108,7 +108,7 @@ struct TransferWithHooksExample {
             .execute(client)
             .getReceipt(client)
         
-        print("✅ Associated accounts with token")
+        print("Associated accounts with token")
         
         // Transfer tokens with hook
         var tokenHook = HookCall()
@@ -124,10 +124,10 @@ struct TransferWithHooksExample {
         let tokenResponse = try await tokenTransferTx.execute(client)
         let tokenReceipt = try await tokenResponse.getReceipt(client)
         
-        print("✅ Token transfer with hook completed: \(tokenReceipt.status)")
+        print("Token transfer with hook completed: \(tokenReceipt.status)")
         
         // Example 4: NFT transfer with hooks
-        print("\n🎨 Example 4: NFT transfer with hooks")
+        print("Example 4: NFT transfer with hooks")
         
         let nftTokenId = try await TokenCreateTransaction()
             .name("Hook Test NFT")
@@ -140,7 +140,7 @@ struct TransferWithHooksExample {
             .getReceipt(client)
             .tokenId!
         
-        print("✅ Created NFT token: \(nftTokenId)")
+        print("Created NFT token: \(nftTokenId)")
         
         // Associate accounts with the NFT token
         _ = try await TokenAssociateTransaction(accountId: senderAccountId, tokenIds: [nftTokenId])
@@ -158,7 +158,7 @@ struct TransferWithHooksExample {
             .getReceipt(client)
             .serials?.first!
         
-        print("✅ Minted NFT with serial: \(nftSerial!)")
+        print("Minted NFT with serial: \(nftSerial!)")
         
         // Transfer NFT to sender first
         _ = try await TransferTransaction()
@@ -185,10 +185,10 @@ struct TransferWithHooksExample {
         let nftResponse = try await nftTransferTx.execute(client)
         let nftReceipt = try await nftResponse.getReceipt(client)
         
-        print("✅ NFT transfer with sender hook completed: \(nftReceipt.status)")
+        print("NFT transfer with sender hook completed: \(nftReceipt.status)")
         
         // Example 5: NFT transfer with receiver hook
-        print("\n🎨 Example 5: NFT transfer with receiver hook")
+        print("Example 5: NFT transfer with receiver hook")
         
         var receiverHook = HookCall()
         receiverHook = receiverHook.hookId(5)
@@ -208,10 +208,10 @@ struct TransferWithHooksExample {
         let nftReceiverResponse = try await nftReceiverTx.execute(client)
         let nftReceiverReceipt = try await nftReceiverResponse.getReceipt(client)
         
-        print("✅ NFT transfer with receiver hook completed: \(nftReceiverReceipt.status)")
+        print("NFT transfer with receiver hook completed: \(nftReceiverReceipt.status)")
         
         // Example 6: NFT transfer with all hooks
-        print("\n🎨 Example 6: NFT transfer with all hooks")
+        print("Example 6: NFT transfer with all hooks")
         
         var allSenderHook = HookCall()
         allSenderHook = allSenderHook.hookId(6)
@@ -239,10 +239,10 @@ struct TransferWithHooksExample {
         let nftAllHooksResponse = try await nftAllHooksTx.execute(client)
         let nftAllHooksReceipt = try await nftAllHooksResponse.getReceipt(client)
         
-        print("✅ NFT transfer with all hooks completed: \(nftAllHooksReceipt.status)")
+        print("NFT transfer with all hooks completed: \(nftAllHooksReceipt.status)")
         
         // Cleanup
-        print("\n🧹 Cleaning up...")
+        print("Cleaning up...")
         
         _ = try await AccountDeleteTransaction()
             .accountId(senderAccountId)
@@ -264,7 +264,7 @@ struct TransferWithHooksExample {
             .execute(client)
             .getReceipt(client)
         
-        print("✅ Cleanup completed")
-        print("\n🎉 Transfer with Hooks Example completed successfully!")
+        print("Cleanup completed")
+        print("Transfer with Hooks Example completed successfully!")
     }
 }
