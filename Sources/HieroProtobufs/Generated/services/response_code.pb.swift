@@ -1612,6 +1612,47 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   ///*
   /// The LambdaSStore tried to update too many storage slots in a single transaction.
   case tooManyLambdaStorageUpdates // = 513
+
+  ///*
+  /// A lambda mapping slot, storage key, or storage value failed to use the
+  /// minimal representation (i.e., no leading zeros).
+  case hookCreationBytesMustUseMinimalRepresentation // = 514
+
+  ///*
+  /// A lambda mapping slot, storage key, or storage value exceeded 32 bytes.
+  case hookCreationBytesTooLong // = 515
+
+  ///*
+  /// A hook creation spec was not found.
+  case invalidHookCreationSpec // = 516
+
+  ///*
+  /// A hook extension point was empty.
+  case hookExtensionEmpty // = 517
+
+  ///*
+  /// A hook admin key was invalid.
+  case invalidHookAdminKey // = 518
+
+  ///*
+  /// The hook deletion requires the hook to have zero storage slots.
+  case hookDeletionRequiresZeroStorageSlots // = 519
+
+  ///*
+  /// Cannot set both a hook call and an approval on the same AccountAmount or NftTransfer message.
+  case cannotSetHooksAndApproval // = 520
+
+  ///*
+  /// The attempted operation is invalid until all the target entity's hooks have been deleted.
+  case transactionRequiresZeroHooks // = 521
+
+  ///*
+  /// The HookCall set in the transaction is invalid
+  case invalidHookCall // = 522
+
+  ///*
+  ///  Hooks are not supported to be used in TokenAirdrop transactions
+  case hooksAreNotSupportedInAirdrops // = 523
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -1994,6 +2035,16 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 511: self = .hookIsNotALambda
     case 512: self = .hookDeleted
     case 513: self = .tooManyLambdaStorageUpdates
+    case 514: self = .hookCreationBytesMustUseMinimalRepresentation
+    case 515: self = .hookCreationBytesTooLong
+    case 516: self = .invalidHookCreationSpec
+    case 517: self = .hookExtensionEmpty
+    case 518: self = .invalidHookAdminKey
+    case 519: self = .hookDeletionRequiresZeroStorageSlots
+    case 520: self = .cannotSetHooksAndApproval
+    case 521: self = .transactionRequiresZeroHooks
+    case 522: self = .invalidHookCall
+    case 523: self = .hooksAreNotSupportedInAirdrops
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -2374,6 +2425,16 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .hookIsNotALambda: return 511
     case .hookDeleted: return 512
     case .tooManyLambdaStorageUpdates: return 513
+    case .hookCreationBytesMustUseMinimalRepresentation: return 514
+    case .hookCreationBytesTooLong: return 515
+    case .invalidHookCreationSpec: return 516
+    case .hookExtensionEmpty: return 517
+    case .invalidHookAdminKey: return 518
+    case .hookDeletionRequiresZeroStorageSlots: return 519
+    case .cannotSetHooksAndApproval: return 520
+    case .transactionRequiresZeroHooks: return 521
+    case .invalidHookCall: return 522
+    case .hooksAreNotSupportedInAirdrops: return 523
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -2754,6 +2815,16 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     .hookIsNotALambda,
     .hookDeleted,
     .tooManyLambdaStorageUpdates,
+    .hookCreationBytesMustUseMinimalRepresentation,
+    .hookCreationBytesTooLong,
+    .invalidHookCreationSpec,
+    .hookExtensionEmpty,
+    .invalidHookAdminKey,
+    .hookDeletionRequiresZeroStorageSlots,
+    .cannotSetHooksAndApproval,
+    .transactionRequiresZeroHooks,
+    .invalidHookCall,
+    .hooksAreNotSupportedInAirdrops,
   ]
 
 }
@@ -3136,5 +3207,15 @@ extension Proto_ResponseCodeEnum: SwiftProtobuf._ProtoNameProviding {
     511: .same(proto: "HOOK_IS_NOT_A_LAMBDA"),
     512: .same(proto: "HOOK_DELETED"),
     513: .same(proto: "TOO_MANY_LAMBDA_STORAGE_UPDATES"),
+    514: .same(proto: "HOOK_CREATION_BYTES_MUST_USE_MINIMAL_REPRESENTATION"),
+    515: .same(proto: "HOOK_CREATION_BYTES_TOO_LONG"),
+    516: .same(proto: "INVALID_HOOK_CREATION_SPEC"),
+    517: .same(proto: "HOOK_EXTENSION_EMPTY"),
+    518: .same(proto: "INVALID_HOOK_ADMIN_KEY"),
+    519: .same(proto: "HOOK_DELETION_REQUIRES_ZERO_STORAGE_SLOTS"),
+    520: .same(proto: "CANNOT_SET_HOOKS_AND_APPROVAL"),
+    521: .same(proto: "TRANSACTION_REQUIRES_ZERO_HOOKS"),
+    522: .same(proto: "INVALID_HOOK_CALL"),
+    523: .same(proto: "HOOKS_ARE_NOT_SUPPORTED_IN_AIRDROPS"),
   ]
 }

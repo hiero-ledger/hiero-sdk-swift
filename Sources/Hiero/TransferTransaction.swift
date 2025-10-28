@@ -76,36 +76,17 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
         return self
     }
 
-    /// Add a non-approved hbar transfer with a pre-transaction allowance hook to the transaction.
+    /// Add an Hbar transfer with a hook to be submitted as part of this TransferTransaction.
     @discardableResult
-    public func hbarTransferWithPreTxHook(_ accountId: AccountId, _ amount: Hbar, _ hookCall: HookCall) -> Self {
-        doHbarTransferWithHook(accountId, amount.toTinybars(), false, hookCall, nil)
-    }
-
-    /// Add a non-approved hbar transfer with a pre-post-transaction allowance hook to the transaction.
-    @discardableResult
-    public func hbarTransferWithPrePostTxHook(_ accountId: AccountId, _ amount: Hbar, _ hookCall: HookCall) -> Self {
-        doHbarTransferWithHook(accountId, amount.toTinybars(), false, nil, hookCall)
-    }
-
-    /// Add an approved hbar transfer with a pre-transaction allowance hook to the transaction.
-    @discardableResult
-    public func approvedHbarTransferWithPreTxHook(_ accountId: AccountId, _ amount: Hbar, _ hookCall: HookCall) -> Self {
-        doHbarTransferWithHook(accountId, amount.toTinybars(), true, hookCall, nil)
-    }
-
-    /// Add an approved hbar transfer with a pre-post-transaction allowance hook to the transaction.
-    @discardableResult
-    public func approvedHbarTransferWithPrePostTxHook(_ accountId: AccountId, _ amount: Hbar, _ hookCall: HookCall) -> Self {
-        doHbarTransferWithHook(accountId, amount.toTinybars(), true, nil, hookCall)
+    public func hbarTransferWithHook(_ accountId: AccountId, _ amount: Hbar, _ hookCall: FungibleHookCall) -> Self {
+        doHbarTransferWithHook(accountId, amount.toTinybars(), false, hookCall)
     }
 
     private func doHbarTransferWithHook(
         _ accountId: AccountId,
         _ amount: Int64,
         _ approved: Bool,
-        _ preTxHook: HookCall?,
-        _ prePostTxHook: HookCall?
+        _ hookCall: FungibleHookCall
     ) -> Self {
         for (index, transfer) in transfers.enumerated()
         where transfer.accountId == accountId && transfer.isApproval == approved {
@@ -114,20 +95,19 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
                 transfers.remove(at: index)
             } else {
                 transfers[index].amount = newTinybars
-                transfers[index].preTxAllowanceHook = preTxHook
-                transfers[index].prePostTxAllowanceHook = prePostTxHook
+                transfers[index].hookCall = hookCall
             }
 
             return self
         }
 
-        transfers.append(Transfer(
-            accountId: accountId, 
-            amount: amount, 
-            isApproval: approved,
-            preTxAllowanceHook: preTxHook,
-            prePostTxAllowanceHook: prePostTxHook
-        ))
+        transfers.append(
+            Transfer(
+                accountId: accountId,
+                amount: amount,
+                isApproval: approved,
+                hookCall: hookCall
+            ))
 
         return self
     }

@@ -125,17 +125,6 @@ public struct Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: Sendable {
   public var hook: Com_Hedera_Hapi_Node_Hooks_HookCreationDetails.OneOf_Hook? = nil
 
   ///*
-  /// A hook programmed in EVM bytecode that does not require access to state
-  /// or interactions with external contracts.
-  public var pureEvmHook: Com_Hedera_Hapi_Node_Hooks_PureEvmHook {
-    get {
-      if case .pureEvmHook(let v)? = hook {return v}
-      return Com_Hedera_Hapi_Node_Hooks_PureEvmHook()
-    }
-    set {hook = .pureEvmHook(newValue)}
-  }
-
-  ///*
   /// A hook programmed in EVM bytecode that may access state or interact with
   /// external contracts.
   public var lambdaEvmHook: Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook {
@@ -165,10 +154,6 @@ public struct Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: Sendable {
   /// The hook implementation.
   public enum OneOf_Hook: Equatable, Sendable {
     ///*
-    /// A hook programmed in EVM bytecode that does not require access to state
-    /// or interactions with external contracts.
-    case pureEvmHook(Com_Hedera_Hapi_Node_Hooks_PureEvmHook)
-    ///*
     /// A hook programmed in EVM bytecode that may access state or interact with
     /// external contracts.
     case lambdaEvmHook(Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook)
@@ -178,31 +163,6 @@ public struct Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: Sendable {
   public init() {}
 
   fileprivate var _adminKey: Proto_Key? = nil
-}
-
-///*
-/// Definition of a lambda EVM hook.
-public struct Com_Hedera_Hapi_Node_Hooks_PureEvmHook: Sendable {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  ///*
-  /// The specification for the hook.
-  public var spec: Com_Hedera_Hapi_Node_Hooks_EvmHookSpec {
-    get {return _spec ?? Com_Hedera_Hapi_Node_Hooks_EvmHookSpec()}
-    set {_spec = newValue}
-  }
-  /// Returns true if `spec` has been explicitly set.
-  public var hasSpec: Bool {return self._spec != nil}
-  /// Clears the value of `spec`. Subsequent reads from it will return its default value.
-  public mutating func clearSpec() {self._spec = nil}
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  public init() {}
-
-  fileprivate var _spec: Com_Hedera_Hapi_Node_Hooks_EvmHookSpec? = nil
 }
 
 ///*
@@ -495,9 +455,8 @@ extension Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: SwiftProtobuf.Message,
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "extension_point"),
     2: .standard(proto: "hook_id"),
-    3: .standard(proto: "pure_evm_hook"),
-    4: .standard(proto: "lambda_evm_hook"),
-    5: .standard(proto: "admin_key"),
+    3: .standard(proto: "lambda_evm_hook"),
+    4: .standard(proto: "admin_key"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -509,19 +468,6 @@ extension Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: SwiftProtobuf.Message,
       case 1: try { try decoder.decodeSingularEnumField(value: &self.extensionPoint) }()
       case 2: try { try decoder.decodeSingularInt64Field(value: &self.hookID) }()
       case 3: try {
-        var v: Com_Hedera_Hapi_Node_Hooks_PureEvmHook?
-        var hadOneofValue = false
-        if let current = self.hook {
-          hadOneofValue = true
-          if case .pureEvmHook(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.hook = .pureEvmHook(v)
-        }
-      }()
-      case 4: try {
         var v: Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook?
         var hadOneofValue = false
         if let current = self.hook {
@@ -534,7 +480,7 @@ extension Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: SwiftProtobuf.Message,
           self.hook = .lambdaEvmHook(v)
         }
       }()
-      case 5: try { try decoder.decodeSingularMessageField(value: &self._adminKey) }()
+      case 4: try { try decoder.decodeSingularMessageField(value: &self._adminKey) }()
       default: break
       }
     }
@@ -551,19 +497,11 @@ extension Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: SwiftProtobuf.Message,
     if self.hookID != 0 {
       try visitor.visitSingularInt64Field(value: self.hookID, fieldNumber: 2)
     }
-    switch self.hook {
-    case .pureEvmHook?: try {
-      guard case .pureEvmHook(let v)? = self.hook else { preconditionFailure() }
+    try { if case .lambdaEvmHook(let v)? = self.hook {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    }()
-    case .lambdaEvmHook?: try {
-      guard case .lambdaEvmHook(let v)? = self.hook else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-    }()
-    case nil: break
-    }
+    } }()
     try { if let v = self._adminKey {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
     } }()
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -573,42 +511,6 @@ extension Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: SwiftProtobuf.Message,
     if lhs.hookID != rhs.hookID {return false}
     if lhs.hook != rhs.hook {return false}
     if lhs._adminKey != rhs._adminKey {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension Com_Hedera_Hapi_Node_Hooks_PureEvmHook: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".PureEvmHook"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "spec"),
-  ]
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularMessageField(value: &self._spec) }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    try { if let v = self._spec {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    } }()
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: Com_Hedera_Hapi_Node_Hooks_PureEvmHook, rhs: Com_Hedera_Hapi_Node_Hooks_PureEvmHook) -> Bool {
-    if lhs._spec != rhs._spec {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

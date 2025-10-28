@@ -123,7 +123,7 @@ internal final class AccountUpdate: XCTestCase {
         }
     }
 
-    internal func test_CanaddHookToCreateToAccount() async throws {
+    internal func test_CanAddHookToCreateToAccount() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         // Given
@@ -258,15 +258,15 @@ internal final class AccountUpdate: XCTestCase {
                 .execute(testEnv.client)
                 .getReceipt(testEnv.client)
         ) { error in
-            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("Expected `.transactionPreCheckStatus`, got \(error.kind)")
+            guard case .receiptStatus(let status, transactionId: _) = error.kind else {
+                XCTFail("Expected `.receiptStatus`, got \(error.kind)")
                 return
             }
             XCTAssertEqual(status, .hookIdInUse)
         }
     }
 
-    internal func test_CanaddHookToCreateToAccountWithStorageUpdates() async throws {
+    internal func test_CanAddHookToCreateToAccountWithStorageUpdates() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         // Given
@@ -416,8 +416,8 @@ internal final class AccountUpdate: XCTestCase {
                 .execute(testEnv.client)
                 .getReceipt(testEnv.client)
         ) { error in
-            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("Expected `.transactionPreCheckStatus`, got \(error.kind)")
+            guard case .receiptStatus(let status, transactionId: _) = error.kind else {
+                XCTFail("Expected `.receiptStatus`, got \(error.kind)")
                 return
             }
             XCTAssertEqual(status, .hookNotFound)
@@ -463,8 +463,8 @@ internal final class AccountUpdate: XCTestCase {
                 .execute(testEnv.client)
                 .getReceipt(testEnv.client)
         ) { error in
-            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("Expected `.transactionPreCheckStatus`, got \(error.kind)")
+            guard case .receiptStatus(let status, transactionId: _) = error.kind else {
+                XCTFail("Expected `.receiptStatus`, got \(error.kind)")
                 return
             }
             XCTAssertEqual(status, .hookNotFound)

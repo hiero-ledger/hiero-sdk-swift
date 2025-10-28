@@ -1834,12 +1834,25 @@ public struct Proto_HookEntityId: Sendable {
     set {entityID = .accountID(newValue)}
   }
 
+  ///*
+  /// A contract using a hook.
+  public var contractID: Proto_ContractID {
+    get {
+      if case .contractID(let v)? = entityID {return v}
+      return Proto_ContractID()
+    }
+    set {entityID = .contractID(newValue)}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_EntityID: Equatable, Sendable {
     ///*
     /// An account using a hook.
     case accountID(Proto_AccountID)
+    ///*
+    /// A contract using a hook.
+    case contractID(Proto_ContractID)
 
   }
 
@@ -4657,6 +4670,7 @@ extension Proto_HookEntityId: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   public static let protoMessageName: String = _protobuf_package + ".HookEntityId"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "account_id"),
+    2: .standard(proto: "contract_id"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -4678,6 +4692,19 @@ extension Proto_HookEntityId: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
           self.entityID = .accountID(v)
         }
       }()
+      case 2: try {
+        var v: Proto_ContractID?
+        var hadOneofValue = false
+        if let current = self.entityID {
+          hadOneofValue = true
+          if case .contractID(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.entityID = .contractID(v)
+        }
+      }()
       default: break
       }
     }
@@ -4688,9 +4715,17 @@ extension Proto_HookEntityId: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    try { if case .accountID(let v)? = self.entityID {
+    switch self.entityID {
+    case .accountID?: try {
+      guard case .accountID(let v)? = self.entityID else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    } }()
+    }()
+    case .contractID?: try {
+      guard case .contractID(let v)? = self.entityID else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 

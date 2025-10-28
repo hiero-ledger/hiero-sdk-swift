@@ -4,267 +4,239 @@ import Foundation
 import Hiero
 
 /// Example demonstrating how to use hooks with transfer transactions.
-/// 
+///
 /// This example shows how to:
-/// 1. Create accounts
-/// 2. Create a hook call
-/// 3. Execute transfers with hooks
-/// 4. Handle different types of hook calls
+/// 1. Set up prerequisites - create tokens and NFTs
+/// 2. Demonstrate TransferTransaction API with hooks
+/// 3. Execute different types of transfers with hooks
 @main
 struct TransferWithHooksExample {
     static func main() async throws {
         // Initialize the client
         let client = Client.forTestnet()
-        
+
         // Create operator account
         let operatorKey = PrivateKey.generateEd25519()
-        let operatorId = try AccountId.fromString("0.0.1234") // Replace with your account ID
-        
+        let operatorId = try AccountId.fromString("0.0.1234")  // Replace with your account ID
+
         client.setOperator(operatorId, operatorKey)
+
+        print("Transfer Transaction Hooks Example Start!")
+
+        /*
+         * Step 1: Set up prerequisites - create tokens and NFTs
+         */
+        print("Setting up prerequisites...")
+
+        // Create hook contract bytecode (simplified for Swift example)
+        let hookBytecode = Data([
+            0x60, 0x80, 0x60, 0x40, 0x52, 0x34, 0x80, 0x15, 0x61, 0x00, 0x10, 0x57, 0x60, 0x00, 0x80, 0xfd,
+            0x5b, 0x50, 0x60, 0x04, 0x36, 0x10, 0x61, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60,
+            0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00,
+            0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35
+        ])
+
+        let hookContractResponse = try await ContractCreateTransaction()
+            .adminKey(.single(operatorKey.publicKey))
+            .gas(1_000_000)
+            .bytecode(hookBytecode)
+            .execute(client)
+
+        let hookContractReceipt = try await hookContractResponse.getReceipt(client)
+        guard let hookContractId = hookContractReceipt.contractId else {
+            print("Failed to create hook contract!")
+            return
+        }
+
+        print("Created hook contract: \(hookContractId)")
+
+        // Create hook details
+        var evmHookSpec = EvmHookSpec()
+        evmHookSpec.contractId = hookContractId
         
-        print("Transfer with Hooks Example")
-        print("==============================")
+        let lambdaHook = LambdaEvmHook(spec: evmHookSpec)
         
-        // Create test accounts
-        print("Creating test accounts...")
-        
+        let hookDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook,
+            hookId: 1,
+            lambdaEvmHook: lambdaHook
+        )
+
+        // Create sender account
         let senderKey = PrivateKey.generateEd25519()
         let senderResponse = try await AccountCreateTransaction()
             .keyWithoutAlias(.single(senderKey.publicKey))
             .initialBalance(10)
+            .addHook(hookDetails)
             .execute(client)
-        let senderReceipt = try await senderResponse.getReceipt(client)
-        let senderAccountId = senderReceipt.accountId!
         
+        let senderReceipt = try await senderResponse.getReceipt(client)
+        guard let senderAccountId = senderReceipt.accountId else {
+            print("Failed to create sender account!")
+            return
+        }
+
+        print("Created sender account: \(senderAccountId)")
+
+        // Create receiver account
         let receiverKey = PrivateKey.generateEd25519()
         let receiverResponse = try await AccountCreateTransaction()
             .keyWithoutAlias(.single(receiverKey.publicKey))
-            .initialBalance(5)
+            .maxAutomaticTokenAssociations(100)
+            .initialBalance(10)
+            .addHook(hookDetails)
             .execute(client)
+        
         let receiverReceipt = try await receiverResponse.getReceipt(client)
-        let receiverAccountId = receiverReceipt.accountId!
-        
-        print("Created sender account: \(senderAccountId)")
+        guard let receiverAccountId = receiverReceipt.accountId else {
+            print("Failed to create receiver account!")
+            return
+        }
+
         print("Created receiver account: \(receiverAccountId)")
-        
-        // Example 1: HBAR transfer with pre-transaction hook
-        print("Example 1: HBAR transfer with pre-transaction hook")
-        
-        var preTxHook = HookCall()
-        preTxHook = preTxHook.hookId(1)
-        var evmHookCall1 = EvmHookCall()
-        evmHookCall1 = evmHookCall1.data(Data([0x01, 0x02, 0x03])) // Hook call data
-        evmHookCall1 = evmHookCall1.gasLimit(100000) // Gas limit for hook execution
-        preTxHook = preTxHook.evmHookCall(evmHookCall1)
-        
-        let hbarTransferTx = TransferTransaction()
-            .hbarTransferWithPreTxHook(senderAccountId, 2, preTxHook)
-        
-        let hbarResponse = try await hbarTransferTx.execute(client)
-        let hbarReceipt = try await hbarResponse.getReceipt(client)
-        
-        print("HBAR transfer with hook completed: \(hbarReceipt.status)")
-        
-        // Example 2: HBAR transfer with pre-post-transaction hook
-        print("Example 2: HBAR transfer with pre-post-transaction hook")
-        
-        var prePostTxHook = HookCall()
-        prePostTxHook = prePostTxHook.hookId(2)
-        var evmHookCall2 = EvmHookCall()
-        evmHookCall2 = evmHookCall2.data(Data([0x04, 0x05, 0x06]))
-        evmHookCall2 = evmHookCall2.gasLimit(150000)
-        prePostTxHook = prePostTxHook.evmHookCall(evmHookCall2)
-        
-        let hbarPrePostTx = TransferTransaction()
-            .hbarTransferWithPrePostTxHook(senderAccountId, 1, prePostTxHook)
-        
-        let hbarPrePostResponse = try await hbarPrePostTx.execute(client)
-        let hbarPrePostReceipt = try await hbarPrePostResponse.getReceipt(client)
-        
-        print("HBAR transfer with pre-post hook completed: \(hbarPrePostReceipt.status)")
-        
-        // Example 3: Create a token and transfer with hooks
-        print("Example 3: Token transfer with hooks")
-        
-        let tokenId = try await TokenCreateTransaction()
-            .name("Hook Test Token")
-            .symbol("HTT")
+
+        // Create fungible token
+        print("Creating fungible token...")
+        let fungibleTokenResponse = try await TokenCreateTransaction()
+            .name("Example Fungible Token")
+            .symbol("EFT")
+            .tokenType(.fungibleCommon)
             .decimals(2)
-            .initialSupply(1000)
-            .treasuryAccountId(operatorId)
-            .adminKey(.single(operatorKey.publicKey))
+            .initialSupply(10000)
+            .treasuryAccountId(senderAccountId)
+            .adminKey(.single(senderKey.publicKey))
+            .supplyKey(.single(senderKey.publicKey))
             .execute(client)
-            .getReceipt(client)
-            .tokenId!
-        
-        print("Created token: \(tokenId)")
-        
-        // Associate accounts with the token
-        _ = try await TokenAssociateTransaction(accountId: senderAccountId, tokenIds: [tokenId])
-            .execute(client)
-            .getReceipt(client)
-        
-        _ = try await TokenAssociateTransaction(accountId: receiverAccountId, tokenIds: [tokenId])
-            .execute(client)
-            .getReceipt(client)
-        
-        print("Associated accounts with token")
-        
-        // Transfer tokens with hook
-        var tokenHook = HookCall()
-        tokenHook = tokenHook.hookId(3)
-        var evmHookCall3 = EvmHookCall()
-        evmHookCall3 = evmHookCall3.data(Data([0x07, 0x08, 0x09]))
-        evmHookCall3 = evmHookCall3.gasLimit(200000)
-        tokenHook = tokenHook.evmHookCall(evmHookCall3)
-        
-        let tokenTransferTx = TransferTransaction()
-            .tokenTransferWithPreTxHook(tokenId, senderAccountId, 100, tokenHook)
-        
-        let tokenResponse = try await tokenTransferTx.execute(client)
-        let tokenReceipt = try await tokenResponse.getReceipt(client)
-        
-        print("Token transfer with hook completed: \(tokenReceipt.status)")
-        
-        // Example 4: NFT transfer with hooks
-        print("Example 4: NFT transfer with hooks")
-        
-        let nftTokenId = try await TokenCreateTransaction()
-            .name("Hook Test NFT")
-            .symbol("HTNFT")
+
+        let fungibleTokenReceipt = try await fungibleTokenResponse.getReceipt(client)
+        guard let fungibleTokenId = fungibleTokenReceipt.tokenId else {
+            print("Failed to create fungible token!")
+            return
+        }
+
+        print("Created fungible token with ID: \(fungibleTokenId)")
+
+        // Create NFT token
+        print("Creating NFT token...")
+        let nftTokenResponse = try await TokenCreateTransaction()
+            .name("Example NFT Token")
+            .symbol("ENT")
             .tokenType(.nonFungibleUnique)
-            .treasuryAccountId(operatorId)
-            .adminKey(.single(operatorKey.publicKey))
-            .supplyKey(.single(operatorKey.publicKey))
+            .treasuryAccountId(senderAccountId)
+            .adminKey(.single(senderKey.publicKey))
+            .supplyKey(.single(senderKey.publicKey))
             .execute(client)
-            .getReceipt(client)
-            .tokenId!
-        
-        print("Created NFT token: \(nftTokenId)")
-        
-        // Associate accounts with the NFT token
-        _ = try await TokenAssociateTransaction(accountId: senderAccountId, tokenIds: [nftTokenId])
+
+        let nftTokenReceipt = try await nftTokenResponse.getReceipt(client)
+        guard let nftTokenId = nftTokenReceipt.tokenId else {
+            print("Failed to create NFT token!")
+            return
+        }
+
+        print("Created NFT token with ID: \(nftTokenId)")
+
+        // Mint NFT
+        print("Minting NFT...")
+        let nftMetadata = Data("Example NFT Metadata".utf8)
+        let mintResponse = try await TokenMintTransaction()
+            .tokenId(nftTokenId)
+            .metadata([nftMetadata])
             .execute(client)
-            .getReceipt(client)
-        
-        _ = try await TokenAssociateTransaction(accountId: receiverAccountId, tokenIds: [nftTokenId])
+
+        let mintReceipt = try await mintResponse.getReceipt(client)
+        guard let serialNumber = mintReceipt.serials?.first else {
+            print("Failed to mint NFT!")
+            return
+        }
+
+        let nftId = NftId(tokenId: nftTokenId, serial: serialNumber)
+        print("Minted NFT with ID: \(nftId)")
+
+        /*
+         * Step 2: Demonstrate TransferTransaction API with hooks (demonstration only)
+         */
+        print("\n=== TransferTransaction with Hooks API Demonstration ===")
+
+        // Create different hooks for different transfer types (for demonstration)
+        print("Creating hook call objects (demonstration)...")
+
+        // HBAR transfer with pre-tx allowance hook
+        var hbarEvmHookCall = EvmHookCall()
+        hbarEvmHookCall.data = Data([0x01, 0x02])
+        hbarEvmHookCall.gasLimit = 20000
+
+        let hbarHook = FungibleHookCall(
+            hookCall: HookCall(hookId: 1, evmHookCall: hbarEvmHookCall),
+            hookType: .preTxAllowanceHook
+        )
+
+        // NFT sender hook (pre-hook)
+        var nftSenderEvmHookCall = EvmHookCall()
+        nftSenderEvmHookCall.data = Data([0x03, 0x04])
+        nftSenderEvmHookCall.gasLimit = 20000
+
+        let nftSenderHook = NftHookCall(
+            hookCall: HookCall(hookId: 1, evmHookCall: nftSenderEvmHookCall),
+            hookType: .preHook
+        )
+
+        // NFT receiver hook (pre-hook)
+        var nftReceiverEvmHookCall = EvmHookCall()
+        nftReceiverEvmHookCall.data = Data([0x05, 0x06])
+        nftReceiverEvmHookCall.gasLimit = 20000
+
+        let nftReceiverHook = NftHookCall(
+            hookCall: HookCall(hookId: 1, evmHookCall: nftReceiverEvmHookCall),
+            hookType: .preHook
+        )
+
+        // Fungible token transfer with pre-post allowance hook
+        var fungibleTokenEvmHookCall = EvmHookCall()
+        fungibleTokenEvmHookCall.data = Data([0x07, 0x08])
+        fungibleTokenEvmHookCall.gasLimit = 20000
+
+        let fungibleTokenHook = FungibleHookCall(
+            hookCall: HookCall(hookId: 1, evmHookCall: fungibleTokenEvmHookCall),
+            hookType: .prePostTxAllowanceHook
+        )
+
+        // Build separate TransferTransactions with hooks (demonstration)
+        print("Building separate TransferTransactions with hooks...")
+
+        // Transaction 1: HBAR transfers with hook
+        print("\n1. Building HBAR TransferTransaction with hook...")
+        let hbarTransferResponse = try await TransferTransaction()
+            .hbarTransferWithHook(senderAccountId, Hbar(-1), hbarHook)
+            .hbarTransfer(receiverAccountId, Hbar(1))
             .execute(client)
-            .getReceipt(client)
-        
-        // Mint an NFT
-        let nftSerial = try await TokenMintTransaction(tokenId: nftTokenId)
-            .metadata([Data("Hook Test NFT Metadata".utf8)])
+
+        let hbarTransferReceipt = try await hbarTransferResponse.getReceipt(client)
+        print("HBAR transfer completed with status: \(hbarTransferReceipt.status)")
+
+        // Transaction 2: NFT transfer with sender and receiver hooks
+        print("\n2. Building NFT TransferTransaction with hooks...")
+        let nftTransferResponse = try await TransferTransaction()
+            .nftTransferWithHooks(nftId, senderAccountId, receiverAccountId, nftSenderHook, nftReceiverHook)
             .execute(client)
-            .getReceipt(client)
-            .serials?.first!
-        
-        print("Minted NFT with serial: \(nftSerial!)")
-        
-        // Transfer NFT to sender first
-        _ = try await TransferTransaction()
-            .nftTransfer(NftId(tokenId: nftTokenId, serial: nftSerial!), operatorId, senderAccountId)
+
+        let nftTransferReceipt = try await nftTransferResponse.getReceipt(client)
+        print("NFT transfer completed with status: \(nftTransferReceipt.status)")
+
+        // Transaction 3: Fungible token transfers with hook
+        print("\n3. Building Fungible Token TransferTransaction with hook...")
+        let fungibleTransferResponse = try await TransferTransaction()
+            .tokenTransferWithHook(fungibleTokenId, senderAccountId, -1000, fungibleTokenHook)
+            .tokenTransfer(fungibleTokenId, receiverAccountId, 1000)
             .execute(client)
-            .getReceipt(client)
-        
-        // Transfer NFT with sender hook
-        var senderHook = HookCall()
-        senderHook = senderHook.hookId(4)
-        var evmHookCall4 = EvmHookCall()
-        evmHookCall4 = evmHookCall4.data(Data([0x0A, 0x0B, 0x0C]))
-        evmHookCall4 = evmHookCall4.gasLimit(250000)
-        senderHook = senderHook.evmHookCall(evmHookCall4)
-        
-        let nftTransferTx = TransferTransaction()
-            .nftTransferWithSenderHooks(
-                NftId(tokenId: nftTokenId, serial: nftSerial!),
-                senderAccountId,
-                receiverAccountId,
-                preTxSenderHook: senderHook
-            )
-        
-        let nftResponse = try await nftTransferTx.execute(client)
-        let nftReceipt = try await nftResponse.getReceipt(client)
-        
-        print("NFT transfer with sender hook completed: \(nftReceipt.status)")
-        
-        // Example 5: NFT transfer with receiver hook
-        print("Example 5: NFT transfer with receiver hook")
-        
-        var receiverHook = HookCall()
-        receiverHook = receiverHook.hookId(5)
-        var evmHookCall5 = EvmHookCall()
-        evmHookCall5 = evmHookCall5.data(Data([0x0D, 0x0E, 0x0F]))
-        evmHookCall5 = evmHookCall5.gasLimit(300000)
-        receiverHook = receiverHook.evmHookCall(evmHookCall5)
-        
-        let nftReceiverTx = TransferTransaction()
-            .nftTransferWithReceiverHooks(
-                NftId(tokenId: nftTokenId, serial: nftSerial!),
-                receiverAccountId,
-                senderAccountId,
-                preTxReceiverHook: receiverHook
-            )
-        
-        let nftReceiverResponse = try await nftReceiverTx.execute(client)
-        let nftReceiverReceipt = try await nftReceiverResponse.getReceipt(client)
-        
-        print("NFT transfer with receiver hook completed: \(nftReceiverReceipt.status)")
-        
-        // Example 6: NFT transfer with all hooks
-        print("Example 6: NFT transfer with all hooks")
-        
-        var allSenderHook = HookCall()
-        allSenderHook = allSenderHook.hookId(6)
-        var evmHookCall6 = EvmHookCall()
-        evmHookCall6 = evmHookCall6.data(Data([0x10, 0x11, 0x12]))
-        evmHookCall6 = evmHookCall6.gasLimit(350000)
-        allSenderHook = allSenderHook.evmHookCall(evmHookCall6)
-        
-        var allReceiverHook = HookCall()
-        allReceiverHook = allReceiverHook.hookId(7)
-        var evmHookCall7 = EvmHookCall()
-        evmHookCall7 = evmHookCall7.data(Data([0x13, 0x14, 0x15]))
-        evmHookCall7 = evmHookCall7.gasLimit(400000)
-        allReceiverHook = allReceiverHook.evmHookCall(evmHookCall7)
-        
-        let nftAllHooksTx = TransferTransaction()
-            .nftTransferWithAllHooks(
-                NftId(tokenId: nftTokenId, serial: nftSerial!),
-                senderAccountId,
-                receiverAccountId,
-                preTxSenderHook: allSenderHook,
-                preTxReceiverHook: allReceiverHook
-            )
-        
-        let nftAllHooksResponse = try await nftAllHooksTx.execute(client)
-        let nftAllHooksReceipt = try await nftAllHooksResponse.getReceipt(client)
-        
-        print("NFT transfer with all hooks completed: \(nftAllHooksReceipt.status)")
-        
-        // Cleanup
-        print("Cleaning up...")
-        
-        _ = try await AccountDeleteTransaction()
-            .accountId(senderAccountId)
-            .transferAccountId(operatorId)
-            .execute(client)
-            .getReceipt(client)
-        
-        _ = try await AccountDeleteTransaction()
-            .accountId(receiverAccountId)
-            .transferAccountId(operatorId)
-            .execute(client)
-            .getReceipt(client)
-        
-        _ = try await TokenDeleteTransaction(tokenId: tokenId)
-            .execute(client)
-            .getReceipt(client)
-        
-        _ = try await TokenDeleteTransaction(tokenId: nftTokenId)
-            .execute(client)
-            .getReceipt(client)
-        
-        print("Cleanup completed")
-        print("Transfer with Hooks Example completed successfully!")
+
+        let fungibleTransferReceipt = try await fungibleTransferResponse.getReceipt(client)
+        print("Fungible token transfer completed with status: \(fungibleTransferReceipt.status)")
+
+        print("\nAll TransferTransactions executed successfully with the following hook calls:")
+        print("  - Transaction 1: HBAR transfer with pre-tx allowance hook")
+        print("  - Transaction 2: NFT transfer with sender and receiver hooks")
+        print("  - Transaction 3: Fungible token transfer with pre-post allowance hook")
+
+        print("Transfer Transaction Hooks Example Complete!")
     }
 }

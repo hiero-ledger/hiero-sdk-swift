@@ -37,7 +37,7 @@ extension EvmHookSpec: TryProtobufCodable {
     internal func toProtobuf() -> Protobuf {
         .with { proto in
             if let id = contractId {
-                proto.contractID = id.toProtobuf()
+                proto.bytecodeSource = .contractID(id.toProtobuf())
             }
         }
     }
