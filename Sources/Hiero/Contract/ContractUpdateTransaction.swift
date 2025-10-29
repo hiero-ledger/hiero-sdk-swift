@@ -32,6 +32,8 @@ public final class ContractUpdateTransaction: Transaction {
         self.stakedAccountId = stakedAccountId
         self.stakedNodeId = stakedNodeId
         self.declineStakingReward = declineStakingReward
+        self.hookCreationDetails = []
+        self.hooksToDelete = []
 
         super.init()
     }
@@ -75,6 +77,8 @@ public final class ContractUpdateTransaction: Transaction {
         self.stakedAccountId = stakedAccountId
         self.stakedNodeId = stakedNodeId
         self.declineStakingReward = data.hasDeclineReward ? data.declineReward.value : nil
+        self.hookCreationDetails = try data.hookCreationDetails.map { try HookCreationDetails.fromProtobuf($0) }
+        self.hooksToDelete = data.hookIdsToDelete
 
         try super.init(protobuf: proto)
     }
@@ -289,6 +293,46 @@ public final class ContractUpdateTransaction: Transaction {
         return self
     }
 
+    public var hookCreationDetails: [HookCreationDetails] {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    @discardableResult
+    public func addHookToCreate(_ hook: HookCreationDetails) -> Self {
+        self.hookCreationDetails.append(hook)
+
+        return self
+    }
+
+    @discardableResult
+    public func setHooksToCreate(_ hooks: [HookCreationDetails]) -> Self {
+        self.hookCreationDetails = hooks
+
+        return self
+    }
+
+    public var hooksToDelete: [Int64] {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    @discardableResult
+    public func addHookToDelete(_ hook: Int64) -> Self {
+        self.hooksToDelete.append(hook)
+
+        return self
+    }
+
+    @discardableResult
+    public func setHooksToDelete(_ hooks: [Int64]) -> Self {
+        self.hooksToDelete = hooks
+
+        return self
+    }
+
     internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction) async throws
         -> Proto_TransactionResponse
     {
@@ -344,6 +388,9 @@ extension ContractUpdateTransaction: ToProtobuf {
             if let contractMemo = contractMemo {
                 proto.memoWrapper = .init(contractMemo)
             }
+
+            proto.hookCreationDetails = hookCreationDetails.map { $0.toProtobuf() }
+            proto.hookIdsToDelete = hooksToDelete
         }
     }
 }

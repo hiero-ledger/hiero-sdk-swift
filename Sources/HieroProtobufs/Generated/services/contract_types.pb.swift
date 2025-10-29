@@ -33,6 +33,9 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 
 ///*
 /// Context of an internal call in an EVM transaction that is not otherwise externalized.<br/>
+/// This message does not say anything about whether an EVM transaction is itself a logical
+/// transaction in a Hiero transactional unit. It simply provides context on an internal
+/// message call within an EVM transaction.
 public struct Proto_InternalCallContext: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -56,7 +59,7 @@ public struct Proto_InternalCallContext: @unchecked Sendable {
 }
 
 ///*
-/// Results of executing EVM transaction.<br/>
+/// Results of executing a EVM transaction.<br/>
 public struct Proto_EvmTransactionResult: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -99,7 +102,8 @@ public struct Proto_EvmTransactionResult: @unchecked Sendable {
   public var gasUsed: UInt64 = 0
 
   ///*
-  /// If not already externalized, the context of the internal call producing this result.
+  /// If not already externalized in a transaction body, the context of the
+  /// internal call producing this result.
   public var internalCallContext: Proto_InternalCallContext {
     get {return _internalCallContext ?? Proto_InternalCallContext()}
     set {_internalCallContext = newValue}

@@ -282,6 +282,13 @@ public struct Proto_CryptoCreateTransactionBody: @unchecked Sendable {
     set {_uniqueStorage()._alias = newValue}
   }
 
+  ///*
+  /// Details of hooks to add immediately after creating this account.
+  public var hookCreationDetails: [Com_Hedera_Hapi_Node_Hooks_HookCreationDetails] {
+    get {return _storage._hookCreationDetails}
+    set {_uniqueStorage()._hookCreationDetails = newValue}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_StakedID: Equatable, Sendable {
@@ -331,6 +338,7 @@ extension Proto_CryptoCreateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
     16: .standard(proto: "staked_node_id"),
     17: .standard(proto: "decline_reward"),
     18: .same(proto: "alias"),
+    19: .standard(proto: "hook_creation_details"),
   ]
 
   fileprivate class _StorageClass {
@@ -349,6 +357,7 @@ extension Proto_CryptoCreateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
     var _stakedID: Proto_CryptoCreateTransactionBody.OneOf_StakedID?
     var _declineReward: Bool = false
     var _alias: Data = Data()
+    var _hookCreationDetails: [Com_Hedera_Hapi_Node_Hooks_HookCreationDetails] = []
 
     #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
@@ -378,6 +387,7 @@ extension Proto_CryptoCreateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
       _stakedID = source._stakedID
       _declineReward = source._declineReward
       _alias = source._alias
+      _hookCreationDetails = source._hookCreationDetails
     }
   }
 
@@ -431,6 +441,7 @@ extension Proto_CryptoCreateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
         }()
         case 17: try { try decoder.decodeSingularBoolField(value: &_storage._declineReward) }()
         case 18: try { try decoder.decodeSingularBytesField(value: &_storage._alias) }()
+        case 19: try { try decoder.decodeRepeatedMessageField(value: &_storage._hookCreationDetails) }()
         default: break
         }
       }
@@ -496,6 +507,9 @@ extension Proto_CryptoCreateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
       if !_storage._alias.isEmpty {
         try visitor.visitSingularBytesField(value: _storage._alias, fieldNumber: 18)
       }
+      if !_storage._hookCreationDetails.isEmpty {
+        try visitor.visitRepeatedMessageField(value: _storage._hookCreationDetails, fieldNumber: 19)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -520,6 +534,7 @@ extension Proto_CryptoCreateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
         if _storage._stakedID != rhs_storage._stakedID {return false}
         if _storage._declineReward != rhs_storage._declineReward {return false}
         if _storage._alias != rhs_storage._alias {return false}
+        if _storage._hookCreationDetails != rhs_storage._hookCreationDetails {return false}
         return true
       }
       if !storagesAreEqual {return false}

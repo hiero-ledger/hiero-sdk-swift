@@ -208,7 +208,9 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   /// This endpoint MUST use a valid port and SHALL be reachable over TLS.<br/>
   /// This field MAY be omitted if the node does not support gRPC-Web access.<br/>
   /// This field MUST be updated if the gRPC-Web endpoint changes.<br/>
-  /// This field SHALL enable frontend clients to avoid hard-coded proxy endpoints.
+  /// This field SHALL enable frontend clients to avoid hard-coded proxy endpoints.<br/>
+  /// This field MAY be set to `ServiceEndpoint.DEFAULT` to remove a previously-valid
+  /// web proxy.
   public var grpcProxyEndpoint: Proto_ServiceEndpoint {
     get {return _grpcProxyEndpoint ?? Proto_ServiceEndpoint()}
     set {_grpcProxyEndpoint = newValue}

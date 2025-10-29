@@ -216,29 +216,12 @@ extension Transaction {
             let value = try intoOnlyValue(value)
             return try BatchTransaction(protobuf: firstBody, value)
 
-        case .stateSignatureTransaction(let code):
-            throw HError.fromProtobuf("unrecognized: stateSignatureTransaction `\(code)`")
+        case .lambdaSstore(let value):
+            let value = try intoOnlyValue(value)
+            return try LambdaSStoreTransaction(protobuf: firstBody, value)
 
-        case .hintsPreprocessingVote(let code):
-            throw HError.fromProtobuf("unrecognized: hintsPreprocessingVote `\(code)`")
-
-        case .hintsKeyPublication(let code):
-            throw HError.fromProtobuf("unrecognized: hintsKeyPublication `\(code)`")
-
-        case .hintsPartialSignature(let code):
-            throw HError.fromProtobuf("unrecognized: hintsPartialSignature `\(code)`")
-
-        case .historyProofSignature(let code):
-            throw HError.fromProtobuf("unrecognized: historyProofSignature `\(code)`")
-
-        case .historyProofKeyPublication(let code):
-            throw HError.fromProtobuf("unrecognized: historyProofKeyPublication `\(code)`")
-
-        case .historyProofVote(let code):
-            throw HError.fromProtobuf("unrecognized: historyProofVote `\(code)`")
-
-        case .crsPublication(let code):
-            throw HError.fromProtobuf("unrecognized: crsPublication `\(code)`")
+        default:
+            throw HError.fromProtobuf("unrecognized code")
         }
     }
 }

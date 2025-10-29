@@ -36,7 +36,7 @@ extension Data {
             })
     }
 
-    internal init?<S: StringProtocol>(hexEncoded: S) {
+    public init?<S: StringProtocol>(hexEncoded: S) {
         let chars = Array(hexEncoded.utf8)
         // note: hex check is done character by character
         let count = chars.count
