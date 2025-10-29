@@ -33,7 +33,7 @@ struct TransferWithHooksExample {
             0x60, 0x80, 0x60, 0x40, 0x52, 0x34, 0x80, 0x15, 0x61, 0x00, 0x10, 0x57, 0x60, 0x00, 0x80, 0xfd,
             0x5b, 0x50, 0x60, 0x04, 0x36, 0x10, 0x61, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60,
             0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00,
-            0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35
+            0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35, 0x60, 0x00, 0x35,
         ])
 
         let hookContractResponse = try await ContractCreateTransaction()
@@ -53,9 +53,9 @@ struct TransferWithHooksExample {
         // Create hook details
         var evmHookSpec = EvmHookSpec()
         evmHookSpec.contractId = hookContractId
-        
+
         let lambdaHook = LambdaEvmHook(spec: evmHookSpec)
-        
+
         let hookDetails = HookCreationDetails(
             hookExtensionPoint: .accountAllowanceHook,
             hookId: 1,
@@ -69,7 +69,7 @@ struct TransferWithHooksExample {
             .initialBalance(10)
             .addHook(hookDetails)
             .execute(client)
-        
+
         let senderReceipt = try await senderResponse.getReceipt(client)
         guard let senderAccountId = senderReceipt.accountId else {
             print("Failed to create sender account!")
@@ -86,7 +86,7 @@ struct TransferWithHooksExample {
             .initialBalance(10)
             .addHook(hookDetails)
             .execute(client)
-        
+
         let receiverReceipt = try await receiverResponse.getReceipt(client)
         guard let receiverAccountId = receiverReceipt.accountId else {
             print("Failed to create receiver account!")

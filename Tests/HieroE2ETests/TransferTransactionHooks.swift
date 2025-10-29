@@ -211,7 +211,7 @@ internal final class TransferTransactionHooks: XCTestCase {
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
         let senderAccountId = try XCTUnwrap(senderReceipt.accountId)
-        
+
         var receiverLambdaEvmHook = LambdaEvmHook()
         receiverLambdaEvmHook.spec.contractId = lambdaId
 
@@ -270,7 +270,7 @@ internal final class TransferTransactionHooks: XCTestCase {
         )
 
         let nftId = NftId(tokenId: tokenId, serial: 1)
-    
+
         // When
         let transferTx = TransferTransaction()
             .nftTransferWithHooks(nftId, senderAccountId, receiverAccountId, senderCall, receiverCall)
