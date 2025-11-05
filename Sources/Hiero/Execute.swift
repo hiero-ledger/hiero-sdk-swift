@@ -3,6 +3,7 @@
 import Foundation
 import GRPC
 import HieroProtobufs
+import NIOCore
 import SwiftProtobuf
 
 internal protocol Execute {
@@ -83,6 +84,14 @@ private struct ExecuteContext {
     fileprivate let maxAttempts: Int
     // timeout for a single grpc request.
     fileprivate let grpcTimeout: Duration?
+    // Optional closure to update network from address book (for handling INVALID_NODE_ACCOUNT_ID)
+    fileprivate let updateNetworkFromAddressBook:
+        ((MirrorNetwork, UInt64, UInt64, ManagedNetwork, NIOCore.EventLoopGroup) async throws -> Void)?
+    fileprivate let managedNetwork: ManagedNetwork
+    fileprivate let mirrorNetwork: MirrorNetwork
+    fileprivate let shard: UInt64
+    fileprivate let realm: UInt64
+    fileprivate let eventLoop: NIOCore.EventLoopGroup
 }
 
 internal func executeAny<E: Execute & ValidateChecksums>(
@@ -136,7 +145,20 @@ internal func executeAny<E: Execute & ValidateChecksums>(
             network: client.net,
             backoffConfig: backoffBuilder,
             maxAttempts: backoff.maxAttempts,
-            grpcTimeout: nil
+            grpcTimeout: nil as Duration?,
+            updateNetworkFromAddressBook: { mirrorNetwork, shard, realm, managedNetwork, eventLoop in
+                let addressBook = try await NodeAddressBookQuery()
+                    .setFileId(FileId.getAddressBookFileIdFor(shard: shard, realm: realm))
+                    .executeChannel(mirrorNetwork.channel)
+                _ = managedNetwork.primary.readCopyUpdate { old in
+                    Network.withAddressBook(old, eventLoop.next(), addressBook)
+                }
+            },
+            managedNetwork: client.managedNetwork,
+            mirrorNetwork: client.mirrorNet,
+            shard: client.getShard(),
+            realm: client.getRealm(),
+            eventLoop: client.eventLoop
         ),
         executable: executable)
 }
@@ -214,6 +236,24 @@ private func executeAnyInner<E: Execute>(
                 // NOTE: this is a "busy" node
                 // try the next node in our allowed list, immediately
                 lastError = executable.makeErrorPrecheck(precheckStatus, transactionId)
+
+            case .invalidNodeAccount:
+                // Per HIP-1299: When INVALID_NODE_ACCOUNT is received, mark the node as unhealthy
+                // and query the address book to update the network with the correct node account IDs
+                ctx.network.markNodeUnhealthy(nodeIndex)
+                lastError = executable.makeErrorPrecheck(precheckStatus, transactionId)
+
+                // Update network from address book if the update function is available
+                if let updateNetwork = ctx.updateNetworkFromAddressBook {
+                    do {
+                        try await updateNetwork(
+                            ctx.mirrorNetwork, ctx.shard, ctx.realm, ctx.managedNetwork, ctx.eventLoop)
+                    } catch {
+                        // If address book query fails, log but continue with retry
+                        // The node will remain marked as unhealthy and will retry
+                    }
+                }
+                break inner
 
             case .transactionExpired
             where explicitTransactionId == nil
@@ -295,7 +335,16 @@ private struct NodeIndexesGeneratorMap: AsyncSequence, AsyncIteratorProtocol {
                     network: ctx.network,
                     backoffConfig: ctx.backoffConfig,
                     maxAttempts: ctx.maxAttempts,
-                    grpcTimeout: ctx.grpcTimeout
+                    grpcTimeout: ctx.grpcTimeout,
+                    updateNetworkFromAddressBook: nil
+                        as (
+                            (MirrorNetwork, UInt64, UInt64, ManagedNetwork, NIOCore.EventLoopGroup) async throws -> Void
+                        )?,
+                    managedNetwork: ctx.managedNetwork,
+                    mirrorNetwork: ctx.mirrorNetwork,
+                    shard: ctx.shard,
+                    realm: ctx.realm,
+                    eventLoop: ctx.eventLoop
                 ),
                 executable: request
             )

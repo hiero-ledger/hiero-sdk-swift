@@ -380,6 +380,10 @@ public final class Client: Sendable {
         networkInner.primary.load(ordering: .relaxed)
     }
 
+    internal var managedNetwork: ManagedNetwork {
+        networkInner
+    }
+
     internal var mirrorNet: MirrorNetwork {
         get { networkInner.mirror.load(ordering: .relaxed) }
         set(value) { networkInner.mirror.store(value, ordering: .relaxed) }

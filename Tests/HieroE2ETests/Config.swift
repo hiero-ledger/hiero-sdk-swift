@@ -174,6 +174,7 @@ internal struct TestEnvironment {
                 var network: [String: AccountId] = [String: AccountId]()
 
                 network[defaultLocalNodeAddress] = AccountId(num: 3)
+                network["127.0.0.1:51211"] = AccountId(num: 4)
 
                 let client = try Client.forNetwork(network)
 
