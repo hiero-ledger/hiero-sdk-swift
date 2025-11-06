@@ -602,6 +602,17 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
     set {_uniqueStorage()._data = .tokenAirdrop(newValue)}
   }
 
+  ///*
+  /// A list of maximum custom fees that the users are willing to pay.
+  /// <p>
+  /// This field is OPTIONAL.<br/>
+  /// If left empty, the users are accepting to pay any custom fee.<br/>
+  /// If used with a transaction type that does not support custom fee limits, the transaction will fail.
+  public var maxCustomFees: [Proto_CustomFeeLimit] {
+    get {return _storage._maxCustomFees}
+    set {_uniqueStorage()._maxCustomFees = newValue}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_Data: Equatable, Sendable {
@@ -878,12 +889,14 @@ extension Proto_SchedulableTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
     46: .same(proto: "tokenCancelAirdrop"),
     47: .same(proto: "tokenClaimAirdrop"),
     48: .same(proto: "tokenAirdrop"),
+    1001: .standard(proto: "max_custom_fees"),
   ]
 
   fileprivate class _StorageClass {
     var _transactionFee: UInt64 = 0
     var _memo: String = String()
     var _data: Proto_SchedulableTransactionBody.OneOf_Data?
+    var _maxCustomFees: [Proto_CustomFeeLimit] = []
 
     #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
@@ -901,6 +914,7 @@ extension Proto_SchedulableTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
       _transactionFee = source._transactionFee
       _memo = source._memo
       _data = source._data
+      _maxCustomFees = source._maxCustomFees
     }
   }
 
@@ -1519,6 +1533,7 @@ extension Proto_SchedulableTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
             _storage._data = .tokenAirdrop(v)
           }
         }()
+        case 1001: try { try decoder.decodeRepeatedMessageField(value: &_storage._maxCustomFees) }()
         default: break
         }
       }
@@ -1724,6 +1739,9 @@ extension Proto_SchedulableTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
       }()
       case nil: break
       }
+      if !_storage._maxCustomFees.isEmpty {
+        try visitor.visitRepeatedMessageField(value: _storage._maxCustomFees, fieldNumber: 1001)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -1736,6 +1754,7 @@ extension Proto_SchedulableTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
         if _storage._transactionFee != rhs_storage._transactionFee {return false}
         if _storage._memo != rhs_storage._memo {return false}
         if _storage._data != rhs_storage._data {return false}
+        if _storage._maxCustomFees != rhs_storage._maxCustomFees {return false}
         return true
       }
       if !storagesAreEqual {return false}

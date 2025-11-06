@@ -966,6 +966,26 @@ public struct Proto_TransactionBody: @unchecked Sendable {
   }
 
   ///*
+  /// A transaction body for updating the storage of a EVM lambda hook.
+  public var lambdaSstore: Com_Hedera_Hapi_Node_Hooks_LambdaSStoreTransactionBody {
+    get {
+      if case .lambdaSstore(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Hooks_LambdaSStoreTransactionBody()
+    }
+    set {_uniqueStorage()._data = .lambdaSstore(newValue)}
+  }
+
+  ///*
+  /// An internal-only transaction body for dispatching a hook CRUD operation.
+  public var hookDispatch: Com_Hedera_Hapi_Node_Hooks_HookDispatchTransactionBody {
+    get {
+      if case .hookDispatch(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Hooks_HookDispatchTransactionBody()
+    }
+    set {_uniqueStorage()._data = .hookDispatch(newValue)}
+  }
+
+  ///*
   /// A list of maximum custom fees that the users are willing to pay.
   /// <p>
   /// This field is OPTIONAL.<br/>
@@ -1265,6 +1285,12 @@ public struct Proto_TransactionBody: @unchecked Sendable {
     ///*
     /// A transaction body for handling a set of transactions atomically.
     case atomicBatch(Proto_AtomicBatchTransactionBody)
+    ///*
+    /// A transaction body for updating the storage of a EVM lambda hook.
+    case lambdaSstore(Com_Hedera_Hapi_Node_Hooks_LambdaSStoreTransactionBody)
+    ///*
+    /// An internal-only transaction body for dispatching a hook CRUD operation.
+    case hookDispatch(Com_Hedera_Hapi_Node_Hooks_HookDispatchTransactionBody)
 
   }
 
@@ -1425,6 +1451,8 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     71: .standard(proto: "history_proof_vote"),
     72: .standard(proto: "crs_publication"),
     74: .standard(proto: "atomic_batch"),
+    75: .standard(proto: "lambda_sstore"),
+    76: .standard(proto: "hook_dispatch"),
     1001: .standard(proto: "max_custom_fees"),
   ]
 
@@ -2292,6 +2320,32 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
             _storage._data = .atomicBatch(v)
           }
         }()
+        case 75: try {
+          var v: Com_Hedera_Hapi_Node_Hooks_LambdaSStoreTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .lambdaSstore(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .lambdaSstore(v)
+          }
+        }()
+        case 76: try {
+          var v: Com_Hedera_Hapi_Node_Hooks_HookDispatchTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .hookDispatch(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .hookDispatch(v)
+          }
+        }()
         case 1001: try { try decoder.decodeRepeatedMessageField(value: &_storage._maxCustomFees) }()
         default: break
         }
@@ -2573,9 +2627,21 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
       try { if let v = _storage._batchKey {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 73)
       } }()
-      try { if case .atomicBatch(let v)? = _storage._data {
+      switch _storage._data {
+      case .atomicBatch?: try {
+        guard case .atomicBatch(let v)? = _storage._data else { preconditionFailure() }
         try visitor.visitSingularMessageField(value: v, fieldNumber: 74)
-      } }()
+      }()
+      case .lambdaSstore?: try {
+        guard case .lambdaSstore(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 75)
+      }()
+      case .hookDispatch?: try {
+        guard case .hookDispatch(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 76)
+      }()
+      default: break
+      }
       if !_storage._maxCustomFees.isEmpty {
         try visitor.visitRepeatedMessageField(value: _storage._maxCustomFees, fieldNumber: 1001)
       }

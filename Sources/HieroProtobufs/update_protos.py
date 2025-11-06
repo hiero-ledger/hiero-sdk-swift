@@ -177,6 +177,9 @@ if __name__ == "__main__":
         "services/get_account_details.proto",
         "services/get_by_key.proto",
         "services/get_by_solidity_id.proto",
+        "services/hook_dispatch.proto",
+        "services/hook_types.proto",
+        "services/lambda_sstore.proto",
         "services/network_get_execution_time.proto",
         "services/network_get_version_info.proto",
         "services/network_service.proto",
@@ -253,8 +256,10 @@ if __name__ == "__main__":
         "services/state/history/history_types.proto",
         
         "platform/event/state_signature_transaction.proto",
+        "block/stream/chain_of_trust_proof.proto",
 
-        "mirror/mirror_network_service.proto"
+        "mirror/mirror_network_service.proto",
+        "mirror/fee.proto"
     ]
     
     successfully_copied = organize_proto_files(SOURCE_DIR, DEST_DIR, files_to_generate)

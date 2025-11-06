@@ -46,6 +46,8 @@ extension FeeDataType: TryProtobufCodable {
         case .scheduleCreateContractCall: self = .scheduleCreateContractCall
         case .topicCreateWithCustomFees: self = .topicCreateWithCustomFees
         case .submitMessageWithCustomFees: self = .submitMessageWithCustomFees
+        case .cryptoTransferWithHooks:
+            throw HError.fromProtobuf("cryptoTransferWithHooks fee data type is not supported")
         case .UNRECOGNIZED(let code):
             throw HError.fromProtobuf("unrecognized FeeDataType `\(code)`")
         }

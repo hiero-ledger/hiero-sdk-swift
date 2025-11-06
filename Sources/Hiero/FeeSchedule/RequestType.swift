@@ -372,6 +372,10 @@ public enum RequestType {
         case .historyProofVote: self = .historyProofVote
         case .crsPublication: self = .crsPublication
         case .atomicBatch: self = .atomicBatch
+        case .lambdaSstore:
+            throw HError.fromProtobuf("lambdaSstore transaction type is not supported")
+        case .hookDispatch:
+            throw HError.fromProtobuf("hookDispatch transaction type is not supported")
         case .UNRECOGNIZED(let code):
             throw HError.fromProtobuf("unrecognized RequestType: `\(code)`")
         }
