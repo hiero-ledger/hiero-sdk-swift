@@ -333,7 +333,7 @@ internal final class NodeUpdateTransaction: XCTestCase {
                 XCTFail("Expected receipt status error, got \(error.kind)")
                 return
             }
-            
+
             // Accept either INVALID_SIGNATURE or INVALID_NODE_ACCOUNT_ID
             // INVALID_NODE_ACCOUNT_ID can occur if the removal partially succeeds
             let validStatuses: [Status] = [.invalidSignature, .invalidNodeAccountID]

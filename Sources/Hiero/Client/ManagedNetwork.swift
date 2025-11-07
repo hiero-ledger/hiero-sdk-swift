@@ -38,7 +38,8 @@ internal actor NetworkUpdateTask: Sendable {
 
         if let updatePeriod {
             task = Self.makeTask(
-                eventLoop, managedNetwork, ManagedNetwork.networkFirstUpdateDelay, updatePeriod, shard, realm, plaintextOnly)
+                eventLoop, managedNetwork, ManagedNetwork.networkFirstUpdateDelay, updatePeriod, shard, realm,
+                plaintextOnly)
         }
     }
 
@@ -74,7 +75,7 @@ internal actor NetworkUpdateTask: Sendable {
                                 let plaintextEndpoints = address.serviceEndpoints.filter {
                                     $0.port == NodeConnection.consensusPlaintextPort
                                 }
-                                
+
                                 return NodeAddress(
                                     nodeId: address.nodeId,
                                     rsaPublicKey: address.rsaPublicKey,

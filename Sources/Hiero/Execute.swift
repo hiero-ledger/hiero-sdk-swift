@@ -151,7 +151,7 @@ internal func executeAny<E: Execute & ValidateChecksums>(
                 let addressBook = try await NodeAddressBookQuery()
                     .setFileId(FileId.getAddressBookFileIdFor(shard: shard, realm: realm))
                     .executeChannel(mirrorNetwork.channel)
-                
+
                 // Filter to plaintext-only endpoints if this is a plaintext-only client (e.g., forMirrorNetwork)
                 // Otherwise, use the full address book (Network.withAddressBook will prefer TLS, then fall back to plaintext)
                 let filtered: NodeAddressBook
@@ -161,7 +161,7 @@ internal func executeAny<E: Execute & ValidateChecksums>(
                             let plaintextEndpoints = address.serviceEndpoints.filter {
                                 $0.port == NodeConnection.consensusPlaintextPort
                             }
-                            
+
                             return NodeAddress(
                                 nodeId: address.nodeId,
                                 rsaPublicKey: address.rsaPublicKey,
@@ -174,7 +174,7 @@ internal func executeAny<E: Execute & ValidateChecksums>(
                 } else {
                     filtered = addressBook
                 }
-                
+
                 _ = managedNetwork.primary.readCopyUpdate { old in
                     Network.withAddressBook(old, eventLoop.next(), filtered)
                 }
@@ -281,14 +281,15 @@ private func executeAnyInner<E: Execute>(
                 if let updateNetwork = ctx.updateNetworkFromAddressBook {
                     do {
                         try await updateNetwork(
-                            ctx.mirrorNetwork, ctx.shard, ctx.realm, ctx.managedNetwork, ctx.eventLoop, ctx.plaintextOnly)
+                            ctx.mirrorNetwork, ctx.shard, ctx.realm, ctx.managedNetwork, ctx.eventLoop,
+                            ctx.plaintextOnly)
                     } catch {
                         // If address book query fails, log but continue with retry
                         // The node will remain marked as unhealthy and will retry
                     }
                 }
-                // Continue to the next node in the list (don't break inner)
-                // This allows the transaction to try the next explicitly provided node
+            // Continue to the next node in the list (don't break inner)
+            // This allows the transaction to try the next explicitly provided node
 
             case .transactionExpired
             where explicitTransactionId == nil
@@ -373,7 +374,8 @@ private struct NodeIndexesGeneratorMap: AsyncSequence, AsyncIteratorProtocol {
                     grpcTimeout: ctx.grpcTimeout,
                     updateNetworkFromAddressBook: nil
                         as (
-                            (MirrorNetwork, UInt64, UInt64, ManagedNetwork, NIOCore.EventLoopGroup, Bool) async throws -> Void
+                            (MirrorNetwork, UInt64, UInt64, ManagedNetwork, NIOCore.EventLoopGroup, Bool) async throws
+                                -> Void
                         )?,
                     managedNetwork: ctx.managedNetwork,
                     mirrorNetwork: ctx.mirrorNetwork,
