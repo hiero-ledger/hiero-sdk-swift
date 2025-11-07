@@ -258,6 +258,13 @@ internal final class Network: Sendable, AtomicReference {
         }
     }
 
+    /// Returns node indexes for the given node account IDs, filtering out unknown nodes instead of throwing
+    internal func nodeIndexesForIdsAllowingUnknown(_ nodeAccountIds: [AccountId]) -> [Int] {
+        nodeAccountIds.compactMap { id in
+            map[id]
+        }
+    }
+
     internal func healthyNodeIndexes() -> [Int] {
         let now = Timestamp.now
 
