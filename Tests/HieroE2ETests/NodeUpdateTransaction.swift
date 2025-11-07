@@ -20,7 +20,8 @@ internal final class NodeUpdateTransaction: XCTestCase {
         }
 
         let testEnv = try TestEnvironment.nonFree
-        let client = try await Client.forMirrorNetwork(["integration.mirrornode.hedera-ops.com:443"])
+
+        let client = try Client.forNetwork(testEnv.client.network)
         client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
 
         let receipt = try await Hiero.NodeUpdateTransaction()
@@ -40,7 +41,8 @@ internal final class NodeUpdateTransaction: XCTestCase {
         }
 
         let testEnv = try TestEnvironment.nonFree
-        let client = try await Client.forMirrorNetwork(["integration.mirrornode.hedera-ops.com:443"])
+
+        let client = try Client.forNetwork(testEnv.client.network)
         client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
 
         let receipt = try await Hiero.NodeUpdateTransaction()
@@ -59,7 +61,8 @@ internal final class NodeUpdateTransaction: XCTestCase {
         }
 
         let testEnv = try TestEnvironment.nonFree
-        let client = try await Client.forMirrorNetwork(["integration.mirrornode.hedera-ops.com:443"])
+
+        let client = try Client.forNetwork(testEnv.client.network)
         client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
 
         // Create a new account with a different key to use as operator
@@ -108,7 +111,8 @@ internal final class NodeUpdateTransaction: XCTestCase {
         }
 
         let testEnv = try TestEnvironment.nonFree
-        let client = try await Client.forMirrorNetwork(["integration.mirrornode.hedera-ops.com:443"])
+
+        let client = try Client.forNetwork(testEnv.client.network)
         client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
 
         // Create a new account with a different key to use as operator
@@ -156,7 +160,8 @@ internal final class NodeUpdateTransaction: XCTestCase {
         }
 
         let testEnv = try TestEnvironment.nonFree
-        let client = try await Client.forMirrorNetwork(["integration.mirrornode.hedera-ops.com:443"])
+
+        let client = try Client.forNetwork(testEnv.client.network)
         client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
 
         await assertThrowsHErrorAsync(
@@ -183,7 +188,8 @@ internal final class NodeUpdateTransaction: XCTestCase {
         }
 
         let testEnv = try TestEnvironment.nonFree
-        let client = try await Client.forMirrorNetwork(["integration.mirrornode.hedera-ops.com:443"])
+
+        let client = try Client.forNetwork(testEnv.client.network)
         client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
 
         let newAccountKey = PrivateKey.generateEd25519()
@@ -234,7 +240,8 @@ internal final class NodeUpdateTransaction: XCTestCase {
         }
 
         let testEnv = try TestEnvironment.nonFree
-        let client = try await Client.forMirrorNetwork(["integration.mirrornode.hedera-ops.com:443"])
+
+        let client = try Client.forNetwork(testEnv.client.network)
         client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
 
         // Create a new account to use as the new node account ID
@@ -297,7 +304,8 @@ internal final class NodeUpdateTransaction: XCTestCase {
         }
 
         let testEnv = try TestEnvironment.nonFree
-        let client = try await Client.forMirrorNetwork(["integration.mirrornode.hedera-ops.com:443"])
+
+        let client = try Client.forNetwork(testEnv.client.network)
         client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
 
         // Create a new account with a different key to use as operator (not admin key)
@@ -350,7 +358,8 @@ internal final class NodeUpdateTransaction: XCTestCase {
         }
 
         let testEnv = try TestEnvironment.nonFree
-        let client = try await Client.forMirrorNetwork(["integration.mirrornode.hedera-ops.com:443"])
+
+        let client = try Client.forNetwork(testEnv.client.network)
         client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
 
         // Disable the background network update task for this test

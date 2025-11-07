@@ -158,8 +158,8 @@ internal func executeAny<E: Execute & ValidateChecksums>(
                 if plaintextOnly {
                     filtered = NodeAddressBook(
                         nodeAddresses: addressBook.nodeAddresses.map { address in
-                            let plaintextEndpoints = address.serviceEndpoints.filter {
-                                $0.port == NodeConnection.consensusPlaintextPort
+                            let plaintextEndpoints = address.serviceEndpoints.filter { endpoint in
+                                endpoint.port == NodeConnection.consensusPlaintextPort
                             }
 
                             return NodeAddress(

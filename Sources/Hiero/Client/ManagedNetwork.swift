@@ -72,8 +72,8 @@ internal actor NetworkUpdateTask: Sendable {
                     if plaintextOnly {
                         filtered = NodeAddressBook(
                             nodeAddresses: addressBook.nodeAddresses.map { address in
-                                let plaintextEndpoints = address.serviceEndpoints.filter {
-                                    $0.port == NodeConnection.consensusPlaintextPort
+                                let plaintextEndpoints = address.serviceEndpoints.filter { endpoint in
+                                    endpoint.port == NodeConnection.consensusPlaintextPort
                                 }
 
                                 return NodeAddress(
@@ -89,8 +89,8 @@ internal actor NetworkUpdateTask: Sendable {
                         filtered = addressBook
                     }
 
-                    _ = managedNetwork.primary.readCopyUpdate {
-                        Network.withAddressBook($0, eventLoop.next(), filtered)
+                    _ = managedNetwork.primary.readCopyUpdate { network in
+                        Network.withAddressBook(network, eventLoop.next(), filtered)
                     }
 
                 } catch let error as HError {
