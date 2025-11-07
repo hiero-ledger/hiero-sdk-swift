@@ -30,14 +30,15 @@ internal final class ManagedNetwork: Sendable {
 internal actor NetworkUpdateTask: Sendable {
     internal init(
         eventLoop: NIOCore.EventLoopGroup, managedNetwork: ManagedNetwork, updatePeriod: UInt64?, shard: UInt64,
-        realm: UInt64
+        realm: UInt64, plaintextOnly: Bool = false
     ) {
         self.managedNetwork = managedNetwork
         self.eventLoop = eventLoop
+        self.plaintextOnly = plaintextOnly
 
         if let updatePeriod {
             task = Self.makeTask(
-                eventLoop, managedNetwork, ManagedNetwork.networkFirstUpdateDelay, updatePeriod, shard, realm)
+                eventLoop, managedNetwork, ManagedNetwork.networkFirstUpdateDelay, updatePeriod, shard, realm, plaintextOnly)
         }
     }
 
@@ -47,7 +48,8 @@ internal actor NetworkUpdateTask: Sendable {
         _ startDelay: Duration?,
         _ updatePeriod: UInt64,
         _ shard: UInt64,
-        _ realm: UInt64
+        _ realm: UInt64,
+        _ plaintextOnly: Bool
     ) -> Task<(), Error> {
         return Task {
             if let startDelay {
@@ -64,8 +66,30 @@ internal actor NetworkUpdateTask: Sendable {
                         FileId.getAddressBookFileIdFor(shard: shard, realm: realm)
                     ).executeChannel(mirror.channel)
 
+                    // Filter to plaintext-only endpoints if this is a plaintext-only client
+                    let filtered: NodeAddressBook
+                    if plaintextOnly {
+                        filtered = NodeAddressBook(
+                            nodeAddresses: addressBook.nodeAddresses.map { address in
+                                let plaintextEndpoints = address.serviceEndpoints.filter {
+                                    $0.port == NodeConnection.consensusPlaintextPort
+                                }
+                                
+                                return NodeAddress(
+                                    nodeId: address.nodeId,
+                                    rsaPublicKey: address.rsaPublicKey,
+                                    nodeAccountId: address.nodeAccountId,
+                                    tlsCertificateHash: address.tlsCertificateHash,
+                                    serviceEndpoints: plaintextEndpoints,
+                                    description: address.description)
+                            }
+                        )
+                    } else {
+                        filtered = addressBook
+                    }
+
                     _ = managedNetwork.primary.readCopyUpdate {
-                        Network.withAddressBook($0, eventLoop.next(), addressBook)
+                        Network.withAddressBook($0, eventLoop.next(), filtered)
                     }
 
                 } catch let error as HError {
@@ -85,12 +109,13 @@ internal actor NetworkUpdateTask: Sendable {
         self.task?.cancel()
 
         if let updatePeriod = duration {
-            self.task = Self.makeTask(eventLoop, managedNetwork, nil, updatePeriod, shard, realm)
+            self.task = Self.makeTask(eventLoop, managedNetwork, nil, updatePeriod, shard, realm, plaintextOnly)
         }
     }
 
     private let eventLoop: NIOCore.EventLoopGroup
     private let managedNetwork: ManagedNetwork
+    private let plaintextOnly: Bool
     private var task: Task<(), Error>?
 
     deinit {

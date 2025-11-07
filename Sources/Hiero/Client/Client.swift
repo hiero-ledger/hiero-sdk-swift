@@ -20,6 +20,8 @@ public final class Client: Sendable {
     private let backoffInner: NIOLockedValueBox<Backoff>
     private let shard: UInt64
     private let realm: UInt64
+    // Flag to indicate if this client should use only plaintext endpoints (for integration testing)
+    private let plaintextOnly: Bool
 
     private init(
         network: ManagedNetwork,
@@ -27,7 +29,8 @@ public final class Client: Sendable {
         networkUpdatePeriod: UInt64? = 86400 * 1_000_000_000,
         _ eventLoop: NIOCore.EventLoopGroup,
         shard: UInt64 = 0,
-        realm: UInt64 = 0
+        realm: UInt64 = 0,
+        plaintextOnly: Bool = false
     ) {
         self.eventLoop = eventLoop
         self.networkInner = network
@@ -41,12 +44,14 @@ public final class Client: Sendable {
             managedNetwork: network,
             updatePeriod: networkUpdatePeriod,
             shard: shard,
-            realm: realm
+            realm: realm,
+            plaintextOnly: plaintextOnly
         )
         self.networkUpdatePeriodInner = .init(networkUpdatePeriod)
         self.backoffInner = .init(Backoff())
         self.shard = shard
         self.realm = realm
+        self.plaintextOnly = plaintextOnly
     }
 
     /// Note: this operation is O(n)
@@ -76,6 +81,10 @@ public final class Client: Sendable {
 
     public func getRealm() -> UInt64 {
         return realm
+    }
+
+    internal func isPlaintextOnly() -> Bool {
+        return plaintextOnly
     }
 
     /// The maximum amount of time that will be spent on a request.
@@ -146,7 +155,8 @@ public final class Client: Sendable {
             ledgerId: nil,
             eventLoop,
             shard: shard,
-            realm: realm
+            realm: realm,
+            plaintextOnly: true  // forMirrorNetwork always uses plaintext endpoints
         )
 
         let addressBook = try await NodeAddressBookQuery()

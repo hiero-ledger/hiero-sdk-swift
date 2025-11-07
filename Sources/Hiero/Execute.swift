@@ -86,12 +86,13 @@ private struct ExecuteContext {
     fileprivate let grpcTimeout: Duration?
     // Optional closure to update network from address book (for handling INVALID_NODE_ACCOUNT_ID)
     fileprivate let updateNetworkFromAddressBook:
-        ((MirrorNetwork, UInt64, UInt64, ManagedNetwork, NIOCore.EventLoopGroup) async throws -> Void)?
+        ((MirrorNetwork, UInt64, UInt64, ManagedNetwork, NIOCore.EventLoopGroup, Bool) async throws -> Void)?
     fileprivate let managedNetwork: ManagedNetwork
     fileprivate let mirrorNetwork: MirrorNetwork
     fileprivate let shard: UInt64
     fileprivate let realm: UInt64
     fileprivate let eventLoop: NIOCore.EventLoopGroup
+    fileprivate let plaintextOnly: Bool
 }
 
 internal func executeAny<E: Execute & ValidateChecksums>(
@@ -146,19 +147,44 @@ internal func executeAny<E: Execute & ValidateChecksums>(
             backoffConfig: backoffBuilder,
             maxAttempts: backoff.maxAttempts,
             grpcTimeout: nil as Duration?,
-            updateNetworkFromAddressBook: { mirrorNetwork, shard, realm, managedNetwork, eventLoop in
+            updateNetworkFromAddressBook: { mirrorNetwork, shard, realm, managedNetwork, eventLoop, plaintextOnly in
                 let addressBook = try await NodeAddressBookQuery()
                     .setFileId(FileId.getAddressBookFileIdFor(shard: shard, realm: realm))
                     .executeChannel(mirrorNetwork.channel)
+                
+                // Filter to plaintext-only endpoints if this is a plaintext-only client (e.g., forMirrorNetwork)
+                // Otherwise, use the full address book (Network.withAddressBook will prefer TLS, then fall back to plaintext)
+                let filtered: NodeAddressBook
+                if plaintextOnly {
+                    filtered = NodeAddressBook(
+                        nodeAddresses: addressBook.nodeAddresses.map { address in
+                            let plaintextEndpoints = address.serviceEndpoints.filter {
+                                $0.port == NodeConnection.consensusPlaintextPort
+                            }
+                            
+                            return NodeAddress(
+                                nodeId: address.nodeId,
+                                rsaPublicKey: address.rsaPublicKey,
+                                nodeAccountId: address.nodeAccountId,
+                                tlsCertificateHash: address.tlsCertificateHash,
+                                serviceEndpoints: plaintextEndpoints,
+                                description: address.description)
+                        }
+                    )
+                } else {
+                    filtered = addressBook
+                }
+                
                 _ = managedNetwork.primary.readCopyUpdate { old in
-                    Network.withAddressBook(old, eventLoop.next(), addressBook)
+                    Network.withAddressBook(old, eventLoop.next(), filtered)
                 }
             },
             managedNetwork: client.managedNetwork,
             mirrorNetwork: client.mirrorNet,
             shard: client.getShard(),
             realm: client.getRealm(),
-            eventLoop: client.eventLoop
+            eventLoop: client.eventLoop,
+            plaintextOnly: client.isPlaintextOnly()
         ),
         executable: executable)
 }
@@ -178,7 +204,15 @@ private func executeAnyInner<E: Execute>(
             .operatorAccountId.map(TransactionId.generateFrom)
             ?? ctx.operatorAccountId.map(TransactionId.generateFrom)) : nil
 
-    let explicitNodeIndexes = try executable.nodeAccountIds.map(ctx.network.nodeIndexesForIds)
+    // Map explicit node account IDs to node indexes, filtering out unknown nodes instead of throwing
+    // This allows the INVALID_NODE_ACCOUNT flow to work: if a node account ID is not in our local map,
+    // we'll use default nodes, attempt the transaction, and potentially get INVALID_NODE_ACCOUNT from the server,
+    // which will trigger an address book update
+    let explicitNodeIndexes: [Int]? = executable.nodeAccountIds.flatMap { nodeAccountIds in
+        let indexes = ctx.network.nodeIndexesForIdsAllowingUnknown(nodeAccountIds)
+        // If all provided node account IDs are unknown, fall back to default node selection (nil)
+        return indexes.isEmpty ? nil : indexes
+    }
     var attempt = 0
 
     while true {
@@ -247,13 +281,14 @@ private func executeAnyInner<E: Execute>(
                 if let updateNetwork = ctx.updateNetworkFromAddressBook {
                     do {
                         try await updateNetwork(
-                            ctx.mirrorNetwork, ctx.shard, ctx.realm, ctx.managedNetwork, ctx.eventLoop)
+                            ctx.mirrorNetwork, ctx.shard, ctx.realm, ctx.managedNetwork, ctx.eventLoop, ctx.plaintextOnly)
                     } catch {
                         // If address book query fails, log but continue with retry
                         // The node will remain marked as unhealthy and will retry
                     }
                 }
-                break inner
+                // Continue to the next node in the list (don't break inner)
+                // This allows the transaction to try the next explicitly provided node
 
             case .transactionExpired
             where explicitTransactionId == nil
@@ -338,13 +373,14 @@ private struct NodeIndexesGeneratorMap: AsyncSequence, AsyncIteratorProtocol {
                     grpcTimeout: ctx.grpcTimeout,
                     updateNetworkFromAddressBook: nil
                         as (
-                            (MirrorNetwork, UInt64, UInt64, ManagedNetwork, NIOCore.EventLoopGroup) async throws -> Void
+                            (MirrorNetwork, UInt64, UInt64, ManagedNetwork, NIOCore.EventLoopGroup, Bool) async throws -> Void
                         )?,
                     managedNetwork: ctx.managedNetwork,
                     mirrorNetwork: ctx.mirrorNetwork,
                     shard: ctx.shard,
                     realm: ctx.realm,
-                    eventLoop: ctx.eventLoop
+                    eventLoop: ctx.eventLoop,
+                    plaintextOnly: ctx.plaintextOnly
                 ),
                 executable: request
             )
@@ -379,7 +415,14 @@ private func randomNodeIndexes(ctx: ExecuteContext, explicitNodeIndexes: [Int]?)
 
     let nodeSampleAmount = (explicitNodeIndexes != nil) ? nodeIndexes.count : (nodeIndexes.count + 2) / 3
 
-    let randomNodeIndexes = randomIndexes(upTo: nodeIndexes.count, amount: nodeSampleAmount).map { nodeIndexes[$0] }
+    // When explicit nodes are provided, use them in order (don't randomize)
+    // This allows testing scenarios like INVALID_NODE_ACCOUNT where you want to try nodes sequentially
+    let selectedIndexes: [Int]
+    if explicitNodeIndexes != nil {
+        selectedIndexes = nodeIndexes
+    } else {
+        selectedIndexes = randomIndexes(upTo: nodeIndexes.count, amount: nodeSampleAmount).map { nodeIndexes[$0] }
+    }
 
-    return NodeIndexesGeneratorMap(indecies: randomNodeIndexes, passthrough: explicitNodeIndexes != nil, ctx: ctx)
+    return NodeIndexesGeneratorMap(indecies: selectedIndexes, passthrough: explicitNodeIndexes != nil, ctx: ctx)
 }
