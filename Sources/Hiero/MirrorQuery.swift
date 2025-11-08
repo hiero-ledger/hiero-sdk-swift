@@ -161,7 +161,7 @@ private struct MirrorQuerySubscribeIterator<R: MirrorRequest>: AsyncIteratorProt
                     case .unavailable, .resourceExhausted, .aborted:
                         state = .start
                         let timeout = backoffInfinity.next()!
-                        try await Task.sleep(nanoseconds: UInt64(timeout * 1e9))
+                        try await Task.sleep(nanoseconds: timeout.nanoseconds)
 
                     case let code where request.shouldRetry(forStatus: code):
                         state = .start
@@ -174,7 +174,7 @@ private struct MirrorQuerySubscribeIterator<R: MirrorRequest>: AsyncIteratorProt
                                     )))
                         }
 
-                        try await Task.sleep(nanoseconds: UInt64(timeout * 1e9))
+                        try await Task.sleep(nanoseconds: timeout.nanoseconds)
 
                     case let code:
                         state = .finished

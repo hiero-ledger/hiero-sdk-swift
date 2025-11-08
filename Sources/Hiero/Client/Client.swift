@@ -82,7 +82,7 @@ public final class Client: Sendable {
         consensus: ConsensusNetwork,
         mirror: MirrorNetwork,
         ledgerId: LedgerId?,
-        networkUpdatePeriod: UInt64? = 86400 * 1_000_000_000,  // 24 hours in nanoseconds
+        networkUpdatePeriod: UInt64? = TimeInterval(86400).nanoseconds,  // 24 hours
         _ eventLoop: NIOCore.EventLoopGroup,
         shard: UInt64 = 0,
         realm: UInt64 = 0
@@ -502,7 +502,7 @@ public final class Client: Sendable {
     // MARK: - Checksum Validation
 
     /// Internal storage for auto-validate checksums flag
-    fileprivate var autoValidateChecksums: Bool {
+    private var autoValidateChecksums: Bool {
         get { self._autoValidateChecksums.load(ordering: .relaxed) }
         set(value) { self._autoValidateChecksums.store(value, ordering: .relaxed) }
     }

@@ -7,7 +7,7 @@ import SwiftProtobuf
 
 // MARK: - Execute Protocol
 
-/// Protocol for executing transactions and queries against the Hedera network.
+/// Protocol for executing transactions and queries against a Hiero network.
 ///
 /// This protocol defines the interface for any operation that can be submitted to
 /// the network, handling retries, node selection, and error recovery automatically.
@@ -133,19 +133,19 @@ extension Execute {
 /// Internal context for executing requests with retry logic.
 private struct ExecuteContext {
     /// Operator account ID, enables transaction ID regeneration on expiry if set
-    fileprivate let operatorAccountId: AccountId?
+    let operatorAccountId: AccountId?
 
     /// Consensus network for node selection and health tracking
-    fileprivate let network: ConsensusNetwork
+    let network: ConsensusNetwork
 
     /// Exponential backoff configuration for retries
-    fileprivate let backoffConfig: ExponentialBackoff
+    let backoffConfig: ExponentialBackoff
 
     /// Maximum number of attempts before giving up
-    fileprivate let maxAttempts: Int
+    let maxAttempts: Int
 
     /// Timeout for a single GRPC request (currently unused)
-    fileprivate let grpcTimeout: Duration?
+    let grpcTimeout: Duration?
 }
 
 // MARK: - Public Execute Functions
@@ -197,17 +197,6 @@ internal func executeAny<E: Execute & ValidateChecksums>(
         maxInterval: backoff.maxBackoff,
         maxElapsedTime: .limited(timeout)
     )
-
-    // let backoff = client.backoff();
-    // let mut backoff_builder = ExponentialBackoffBuilder::new();
-
-    // backoff_builder
-    //     .with_initial_interval(backoff.initial_backoff)
-    //     .with_max_interval(backoff.max_backoff);
-
-    // if let Some(timeout) = timeout.or(backoff.request_timeout) {
-    //     backoff_builder.with_max_elapsed_time(Some(timeout));
-    // }
 
     return try await executeAnyInner(
         ctx: ExecuteContext(
@@ -296,11 +285,11 @@ private func executeAnyInner<E: Execute>(
             throw HError.timedOut(String(describing: lastError))
         }
 
-        try await Task.sleep(nanoseconds: UInt64(timeout * 1e9))
+        try await Task.sleep(nanoseconds: timeout.nanoseconds)
     }
 }
 
-// MARK: - Helper Types
+// MARK: - Execution Result Type
 
 /// Result of attempting to execute a request on a node.
 private enum ExecutionResult<Response> {
@@ -317,7 +306,7 @@ private enum ExecutionResult<Response> {
     case regenerateTransactionAndRetry(HError)
 }
 
-// MARK: - Helper Functions
+// MARK: - Transaction ID Management
 
 /// Generates the initial transaction ID for a request.
 ///
@@ -367,6 +356,8 @@ private func regenerateTransactionId<E: Execute>(
     return .generateFrom(accountId)
 }
 
+// MARK: - Node Execution
+
 /// Executes a request on a specific node and returns the categorized result.
 ///
 /// Handles both GRPC-level errors and Hedera pre-check status errors,
@@ -410,6 +401,8 @@ private func executeOnNode<E: Execute>(
         ctx: ctx
     )
 }
+
+// MARK: - Error Handling
 
 /// Handles GRPC-level errors and determines retry strategy.
 ///
@@ -496,6 +489,8 @@ private func handlePrecheckStatus<E: Execute>(
         throw executable.makeErrorPrecheck(status, transactionId)
     }
 }
+
+// MARK: - Node Selection
 
 /// Generates a random selection of indexes without replacement.
 ///
@@ -596,10 +591,24 @@ private struct NodeIndexSequence: AsyncSequence, AsyncIteratorProtocol {
 ///
 /// When explicit nodes are provided, all are used without health checks.
 /// Otherwise, approximately 2/3 of healthy nodes are randomly selected and health-checked.
+///
+/// The 2/3 sampling ratio balances load distribution across nodes with limiting
+/// unnecessary network calls. For example, with 10 nodes, we'll try 7 of them
+/// (rounded up via `(10 + 2) / 3`).
+///
+/// - Parameters:
+///   - ctx: Execution context with network information
+///   - explicitNodeIndexes: Specific nodes to use, or nil for automatic selection
+/// - Returns: Async sequence of node indexes, with health checking when auto-selecting
 private func randomNodeIndexes(ctx: ExecuteContext, explicitNodeIndexes: [Int]?) -> NodeIndexSequence {
     let nodeIndexes = explicitNodeIndexes ?? ctx.network.healthyNodeIndexes()
 
-    let nodeSampleAmount = (explicitNodeIndexes != nil) ? nodeIndexes.count : (nodeIndexes.count + 2) / 3
+    // Select approximately 2/3 of nodes for execution attempts
+    // This balances load distribution with limiting unnecessary network overhead
+    let nodeSampleAmount =
+        (explicitNodeIndexes != nil)
+        ? nodeIndexes.count
+        : (nodeIndexes.count + 2) / 3  // Integer division: (n+2)/3 rounds up properly
 
     let randomNodeIndexes = randomIndexes(upTo: nodeIndexes.count, amount: nodeSampleAmount).map { nodeIndexes[$0] }
 

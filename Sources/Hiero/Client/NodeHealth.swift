@@ -53,8 +53,8 @@ internal enum NodeHealth: Sendable {
     /// Maximum consecutive failures before opening the circuit (5 failures)
     private static let maxConsecutiveFailures = 5
 
-    /// Duration to keep circuit open before testing recovery (5 minutes in nanoseconds)
-    private static let circuitOpenDurationNanos: UInt64 = 5 * 60 * 1_000_000_000
+    /// Duration to keep circuit open before testing recovery (5 minutes)
+    private static let circuitOpenDurationNanos: UInt64 = TimeInterval(5 * 60).nanoseconds
 
     /// Initial backoff interval for first failure (250 milliseconds)
     private static let initialBackoffInterval: TimeInterval = 0.25
@@ -62,8 +62,8 @@ internal enum NodeHealth: Sendable {
     /// Maximum backoff interval before circuit opens (30 minutes)
     private static let maxBackoffInterval: TimeInterval = 30 * 60
 
-    /// Duration to cache healthy node status (15 minutes in nanoseconds)
-    private static let healthyCacheDurationNanos: UInt64 = 15 * 60 * 1_000_000_000
+    /// Duration to cache healthy node status (15 minutes)
+    private static let healthyCacheDurationNanos: UInt64 = TimeInterval(15 * 60).nanoseconds
 
     // MARK: - Computed Properties
 
@@ -117,7 +117,7 @@ internal enum NodeHealth: Sendable {
         // Apply exponential backoff
         var backoff = self.backoff
         let backoffInterval = backoff.next()!
-        let healthyAt = now.adding(nanos: UInt64(backoffInterval * 1_000_000_000))
+        let healthyAt = now.adding(nanos: backoffInterval.nanoseconds)
 
         self = .unhealthy(
             backoffInterval: backoffInterval,
