@@ -21,12 +21,12 @@
 internal enum NetworkSpecification<Custom: Decodable>: Decodable, Sendable where Custom: Sendable {
     /// Use a predefined network by name (e.g., "mainnet", "testnet", "previewnet", "localhost")
     case predefined(String)
-    
+
     /// Use custom configuration data
     case custom(Custom)
-    
+
     // MARK: - Decoding
-    
+
     /// Decodes a network specification from JSON.
     ///
     /// Tries to decode as a string (network name) first, then as custom configuration.
@@ -35,19 +35,19 @@ internal enum NetworkSpecification<Custom: Decodable>: Decodable, Sendable where
     /// - Throws: DecodingError if neither format can be decoded
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        
+
         // Try decoding as string (network name) first
         if let name = try? container.decode(String.self) {
             self = .predefined(name)
             return
         }
-        
+
         // Try decoding as custom configuration
         if let custom = try? container.decode(Custom.self) {
             self = .custom(custom)
             return
         }
-        
+
         throw DecodingError.dataCorruptedError(
             in: container,
             debugDescription: "Expected either a network name (String) or custom configuration"
@@ -64,9 +64,9 @@ internal enum NetworkSpecification<Custom: Decodable>: Decodable, Sendable where
 internal struct ConsensusNodeMap: Decodable, Sendable {
     /// Map of node addresses to their account IDs
     internal let addresses: [String: AccountId]
-    
+
     // MARK: - Decoding
-    
+
     /// Decodes a consensus node map from JSON.
     ///
     /// Converts string-based account IDs to AccountId objects.
@@ -76,7 +76,7 @@ internal struct ConsensusNodeMap: Decodable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let stringMap = try container.decode([String: String].self)
-        
+
         do {
             self.addresses = try stringMap.mapValues { str throws -> AccountId in
                 try AccountId.init(parsing: str)

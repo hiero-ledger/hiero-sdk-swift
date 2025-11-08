@@ -508,17 +508,17 @@ private func handlePrecheckStatus<E: Execute>(
 /// - Returns: Array of randomly selected unique indexes
 internal func randomIndexes(upTo count: Int, amount: Int) -> [Int] {
     guard amount > 0 && count > 0 else { return [] }
-    
+
     var elements = Array(0..<count)
     var output: [Int] = []
     output.reserveCapacity(amount)
-    
+
     let sampleSize = min(amount, count)
-    
+
     for _ in 0..<sampleSize {
         let remainingCount = elements.count
         let randomIndex = Int.random(in: 0..<remainingCount)
-        
+
         // Swap the selected element to the end, then pop it
         elements.swapAt(randomIndex, remainingCount - 1)
         output.append(elements.popLast()!)

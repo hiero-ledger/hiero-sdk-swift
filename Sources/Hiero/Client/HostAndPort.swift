@@ -17,15 +17,15 @@ import NIOCore
 /// - `ChannelBalancer` - Connects to multiple HostAndPort targets
 internal struct HostAndPort: Hashable, Equatable {
     // MARK: - Properties
-    
+
     /// The hostname or IP address
     internal let host: String
-    
+
     /// The port number
     internal let port: UInt16
-    
+
     // MARK: - Transport Security
-    
+
     /// Determines the appropriate transport security configuration based on port number.
     ///
     /// - Parameters:
@@ -78,4 +78,3 @@ extension HostAndPort: LosslessStringConvertible {
         "\(host):\(port)"
     }
 }
-

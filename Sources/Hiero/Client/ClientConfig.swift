@@ -39,22 +39,22 @@
 /// - `Operator` - Transaction signing configuration
 internal struct ClientConfig: Decodable {
     // MARK: - Properties
-    
+
     /// Optional operator account for signing transactions
     internal let `operator`: Operator?
-    
+
     /// Network configuration - either a predefined name or custom address map
     internal let network: ConsensusNetworkSpecification
-    
+
     /// Mirror network configuration - either custom addresses or predefined name
     internal let mirrorNetwork: MirrorNetworkSpecification?
-    
+
     /// Shard number (default: 0)
     internal let shard: UInt64
-    
+
     /// Realm number (default: 0)
     internal let realm: UInt64
-    
+
     // MARK: - Coding Keys
 
     private enum CodingKeys: CodingKey {
@@ -64,12 +64,12 @@ internal struct ClientConfig: Decodable {
         case shard
         case realm
     }
-    
+
     private enum OperatorKeys: CodingKey {
         case accountId
         case privateKey
     }
-    
+
     // MARK: - Decoding
 
     /// Decodes client configuration from JSON.
@@ -87,12 +87,12 @@ internal struct ClientConfig: Decodable {
 
         // Decode operator (optional) - inline the logic
         if let operatorContainer = try? container.nestedContainer(
-            keyedBy: OperatorKeys.self, 
+            keyedBy: OperatorKeys.self,
             forKey: .operator
         ) {
             let accountIdStr = try operatorContainer.decode(String.self, forKey: .accountId)
             let privateKeyStr = try operatorContainer.decode(String.self, forKey: .privateKey)
-            
+
             // Parse account ID with error wrapping
             let accountId: AccountId
             do {
@@ -106,7 +106,7 @@ internal struct ClientConfig: Decodable {
                     )
                 )
             }
-            
+
             // Parse private key with error wrapping
             let privateKey: PrivateKey
             do {
@@ -120,7 +120,7 @@ internal struct ClientConfig: Decodable {
                     )
                 )
             }
-            
+
             `operator` = Operator(accountId: accountId, signer: .privateKey(privateKey))
         } else {
             `operator` = nil
@@ -131,10 +131,9 @@ internal struct ClientConfig: Decodable {
 
         // Decode mirror network specification (optional)
         mirrorNetwork = try container.decodeIfPresent(MirrorNetworkSpecification.self, forKey: .mirrorNetwork)
-        
+
         // Decode shard and realm (with defaults)
         shard = try container.decodeIfPresent(UInt64.self, forKey: .shard) ?? 0
         realm = try container.decodeIfPresent(UInt64.self, forKey: .realm) ?? 0
     }
 }
-

@@ -47,15 +47,15 @@ internal enum NodeHealth: Sendable {
     /// After the recovery period expires, the circuit transitions to half-open
     /// (unhealthy state with minimal backoff) to test recovery.
     case circuitOpen(reopenAt: Timestamp)
-    
+
     // MARK: - Constants
-    
+
     /// Maximum consecutive failures before opening the circuit (5 failures)
     private static let maxConsecutiveFailures = 5
-    
+
     /// Duration to keep circuit open before testing recovery (5 minutes)
     private static let circuitOpenDuration: TimeInterval = 5 * 60
-    
+
     // MARK: - Computed Properties
 
     /// The exponential backoff configuration for this node.
@@ -74,7 +74,7 @@ internal enum NodeHealth: Sendable {
 
         return backoff
     }
-    
+
     // MARK: - State Transitions
 
     /// Marks the node as unhealthy and calculates the next backoff interval.
@@ -87,7 +87,7 @@ internal enum NodeHealth: Sendable {
     /// - Parameter now: Current timestamp
     internal mutating func markUnhealthy(at now: Timestamp) {
         let consecutiveFailures: Int
-        
+
         switch self {
         case .unhealthy(_, _, let failures):
             consecutiveFailures = failures + 1
@@ -97,22 +97,22 @@ internal enum NodeHealth: Sendable {
         default:
             consecutiveFailures = 1
         }
-        
+
         // Open circuit after too many consecutive failures
         if consecutiveFailures >= Self.maxConsecutiveFailures {
             let reopenAt = now.adding(nanos: UInt64(Self.circuitOpenDuration * 1e9))
             self = .circuitOpen(reopenAt: reopenAt)
             return
         }
-        
+
         // Apply exponential backoff
         var backoff = self.backoff
         let backoffInterval = backoff.next()!
         let healthyAt = now.adding(nanos: UInt64(backoffInterval * 1e9))
 
         self = .unhealthy(
-            backoffInterval: backoffInterval, 
-            healthyAt: healthyAt, 
+            backoffInterval: backoffInterval,
+            healthyAt: healthyAt,
             consecutiveFailures: consecutiveFailures
         )
     }
@@ -125,7 +125,7 @@ internal enum NodeHealth: Sendable {
     internal mutating func markHealthy(at now: Timestamp) {
         self = .healthy(usedAt: now)
     }
-    
+
     // MARK: - Health Checks
 
     /// Checks if the node is currently considered healthy and available for use.
@@ -142,10 +142,10 @@ internal enum NodeHealth: Sendable {
         switch self {
         case .unused, .healthy:
             return true
-            
+
         case .unhealthy(_, let healthyAt, _):
             return now >= healthyAt
-            
+
         case .circuitOpen(let reopenAt):
             // Circuit transitions to half-open when recovery period expires
             return now >= reopenAt
@@ -160,21 +160,20 @@ internal enum NodeHealth: Sendable {
     /// - Returns: True if the node was recently contacted
     internal func recentlyPinged(at now: Timestamp) -> Bool {
         switch self {
-        case .healthy(let usedAt): 
+        case .healthy(let usedAt):
             // Healthy nodes are cached for 15 minutes
             return now < usedAt + .minutes(15)
-            
-        case .unhealthy(_, let healthyAt, _): 
+
+        case .unhealthy(_, let healthyAt, _):
             // Unhealthy nodes are avoided until backoff expires
             return now < healthyAt
-            
+
         case .circuitOpen(let reopenAt):
             // Open circuits are avoided until recovery period expires
             return now < reopenAt
-            
-        case .unused: 
+
+        case .unused:
             return false
         }
     }
 }
-

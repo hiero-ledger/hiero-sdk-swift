@@ -17,29 +17,29 @@ import NIOCore
 /// - `HostAndPort` - Represents individual node addresses
 internal struct NodeConnection: Sendable {
     // MARK: - Standard Ports
-    
+
     /// Standard consensus node plaintext port
     internal static let consensusPlaintextPort: UInt16 = 50211
-    
+
     /// Standard consensus node TLS port
     internal static let consensusTlsPort: UInt16 = 50212
-    
+
     /// Standard mirror node plaintext port
     internal static let mirrorPlaintextPort: UInt16 = 5600
-    
+
     /// Standard mirror node TLS port
     internal static let mirrorTlsPort: UInt16 = 443
-    
+
     // MARK: - Properties
-    
+
     /// All addresses for this node
     internal let addresses: Set<HostAndPort>
-    
+
     /// The GRPC channel for this node's connections
     internal let channel: ChannelBalancer
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new node connection with the specified addresses.
     ///
     /// - Parameters:
@@ -56,4 +56,3 @@ internal struct NodeConnection: Sendable {
         self.addresses = addresses
     }
 }
-

@@ -28,15 +28,15 @@ import SwiftProtobuf
 ///   Consider implementing timeout handling at a higher level.
 internal final class ChannelBalancer: GRPCChannel {
     // MARK: - Properties
-    
+
     /// The event loop for managing channel operations
     internal let eventLoop: EventLoop
-    
+
     /// Pool of GRPC channels available for load balancing
     private let channels: [any GRPCChannel]
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new channel balancer with the specified target/security pairs.
     ///
     /// - Parameters:
@@ -51,9 +51,9 @@ internal final class ChannelBalancer: GRPCChannel {
             try! GRPCChannelPool.with(target: target, transportSecurity: security, eventLoopGroup: eventLoop)
         }
     }
-    
+
     // MARK: - GRPCChannel Protocol
-    
+
     /// Creates a call using a randomly selected channel from the pool.
     internal func makeCall<Request, Response>(
         path: String,
@@ -64,9 +64,9 @@ internal final class ChannelBalancer: GRPCChannel {
         -> GRPC.Call<Request, Response> where Request: GRPC.GRPCPayload, Response: GRPC.GRPCPayload
     {
         return selectChannel().makeCall(
-            path: path, 
-            type: type, 
-            callOptions: callOptions, 
+            path: path,
+            type: type,
+            callOptions: callOptions,
             interceptors: interceptors
         )
     }
@@ -79,9 +79,9 @@ internal final class ChannelBalancer: GRPCChannel {
         interceptors: [GRPC.ClientInterceptor<Request, Response>]
     ) -> GRPC.Call<Request, Response> where Request: SwiftProtobuf.Message, Response: SwiftProtobuf.Message {
         return selectChannel().makeCall(
-            path: path, 
-            type: type, 
-            callOptions: callOptions, 
+            path: path,
+            type: type,
+            callOptions: callOptions,
             interceptors: interceptors
         )
     }
@@ -89,14 +89,14 @@ internal final class ChannelBalancer: GRPCChannel {
     /// Closes all channels in the pool.
     internal func close() -> NIOCore.EventLoopFuture<Void> {
         EventLoopFuture.reduce(
-            into: (), 
-            channels.map { $0.close() }, 
+            into: (),
+            channels.map { $0.close() },
             on: eventLoop
         ) { _, _ in }
     }
-    
+
     // MARK: - Private Methods
-    
+
     /// Randomly selects a channel from the pool for load balancing.
     ///
     /// - Returns: A randomly selected GRPC channel
@@ -104,4 +104,3 @@ internal final class ChannelBalancer: GRPCChannel {
         channels.randomElement()!
     }
 }
-

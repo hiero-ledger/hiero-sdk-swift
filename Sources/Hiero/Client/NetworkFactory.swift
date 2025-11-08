@@ -25,7 +25,7 @@ import NIOCore
 /// - `Client` - Uses factory to create networks from JSON config
 internal enum NetworkFactory {
     // MARK: - Consensus Network Creation
-    
+
     /// Creates a consensus network from a specification.
     ///
     /// - Parameters:
@@ -44,12 +44,12 @@ internal enum NetworkFactory {
         switch spec {
         case .predefined(let name):
             return try makeConsensusNetworkByName(name, eventLoop: eventLoop, shard: shard, realm: realm)
-            
+
         case .custom(let nodeMap):
             return try ConsensusNetwork(addresses: nodeMap.addresses, eventLoop: eventLoop.next())
         }
     }
-    
+
     /// Creates a consensus network from a predefined network name.
     ///
     /// - Parameters:
@@ -68,24 +68,25 @@ internal enum NetworkFactory {
         switch name.lowercased() {
         case "mainnet":
             return .mainnet(eventLoop)
-            
+
         case "testnet":
             return .testnet(eventLoop)
-            
+
         case "previewnet":
             return .previewnet(eventLoop)
-            
+
         case "localhost":
             let addresses: [String: AccountId] = ["127.0.0.1:50211": AccountId(num: 3)]
             return try ConsensusNetwork(addresses: addresses, eventLoop: eventLoop.next())
-            
+
         default:
-            throw HError.basicParse("Unknown network name '\(name)'. Valid names: mainnet, testnet, previewnet, localhost")
+            throw HError.basicParse(
+                "Unknown network name '\(name)'. Valid names: mainnet, testnet, previewnet, localhost")
         }
     }
-    
+
     // MARK: - Mirror Network Creation
-    
+
     /// Creates a mirror network from a specification.
     ///
     /// - Parameters:
@@ -101,16 +102,16 @@ internal enum NetworkFactory {
             // No mirror network specified - return empty mirror network
             return MirrorNetwork(targets: [], eventLoop: eventLoop)
         }
-        
+
         switch spec {
         case .predefined(let name):
             return try makeMirrorNetworkByName(name, eventLoop: eventLoop)
-            
+
         case .custom(let addresses):
             return MirrorNetwork(targets: addresses, eventLoop: eventLoop)
         }
     }
-    
+
     /// Creates a mirror network from a predefined network name.
     ///
     /// - Parameters:
@@ -125,23 +126,24 @@ internal enum NetworkFactory {
         switch name.lowercased() {
         case "mainnet":
             return .mainnet(eventLoop)
-            
+
         case "testnet":
             return .testnet(eventLoop)
-            
+
         case "previewnet":
             return .previewnet(eventLoop)
-            
+
         case "localhost":
             return .localhost(eventLoop)
-            
+
         default:
-            throw HError.basicParse("Unknown mirror network name '\(name)'. Valid names: mainnet, testnet, previewnet, localhost")
+            throw HError.basicParse(
+                "Unknown mirror network name '\(name)'. Valid names: mainnet, testnet, previewnet, localhost")
         }
     }
-    
+
     // MARK: - Ledger ID Helper
-    
+
     /// Determines the appropriate ledger ID for a network name.
     ///
     /// - Parameter name: Network name
@@ -159,4 +161,3 @@ internal enum NetworkFactory {
         }
     }
 }
-

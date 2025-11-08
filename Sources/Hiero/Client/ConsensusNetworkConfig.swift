@@ -26,10 +26,10 @@
 internal struct ConsensusNetworkConfig {
     /// Maps account IDs to their index positions
     internal let nodeIndexMap: [AccountId: Int]
-    
+
     /// Array of node account IDs
     internal let nodes: [AccountId]
-    
+
     /// Array of address sets for each node
     internal let addresses: [Set<String>]
 }
@@ -112,4 +112,3 @@ extension ConsensusNetworkConfig {
         9: ["6.previewnet.hedera.com", "34.125.23.49", "50.18.17.93", "20.150.136.89"],
     ]
 }
-

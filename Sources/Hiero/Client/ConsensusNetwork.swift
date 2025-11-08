@@ -15,29 +15,29 @@ import NIOCore
 /// strategies for optimal performance and reliability.
 internal final class ConsensusNetwork: Sendable, AtomicReference {
     // MARK: - Constants
-    
+
     /// Port priority for selecting service endpoints (lower values = higher priority)
     private static let portPriority: [UInt16: Int] = [
         NodeConnection.consensusTlsPort: 0,
-        NodeConnection.consensusPlaintextPort: 1
+        NodeConnection.consensusPlaintextPort: 1,
     ]
-    
+
     // MARK: - Properties
-    
+
     /// Maps account IDs to their index in the nodes array
     internal let nodeIndexMap: [AccountId: Int]
-    
+
     /// Array of all consensus node account IDs
     internal let nodes: [AccountId]
-    
+
     /// Health status tracking for each node
     private let nodeHealthStates: [NIOLockedValueBox<NodeHealth>]
-    
+
     /// GRPC connections to each node
     private let nodeConnections: [NodeConnection]
-    
+
     // MARK: - Initialization
-    
+
     /// Internal initializer for creating a consensus network.
     private init(
         map: [AccountId: Int],
@@ -76,11 +76,12 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
     internal convenience init(addresses: [String: AccountId], eventLoop: EventLoop) throws {
         let tmp = try Self.withAddresses(
             Self(map: [:], nodes: [], health: [], connections: []), addresses: addresses, eventLoop: eventLoop)
-        self.init(map: tmp.nodeIndexMap, nodes: tmp.nodes, health: tmp.nodeHealthStates, connections: tmp.nodeConnections)
+        self.init(
+            map: tmp.nodeIndexMap, nodes: tmp.nodes, health: tmp.nodeHealthStates, connections: tmp.nodeConnections)
     }
-    
+
     // MARK: - Computed Properties
-    
+
     /// Returns a dictionary of all network addresses mapped to their account IDs.
     internal var addresses: [String: AccountId] {
         Dictionary(
@@ -90,9 +91,9 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
             uniquingKeysWith: { first, _ in first }
         )
     }
-    
+
     // MARK: - Factory Methods
-    
+
     /// Creates a consensus network pre-configured for Hedera mainnet.
     internal static func mainnet(_ eventLoop: NIOCore.EventLoopGroup) -> Self {
         Self(config: ConsensusNetworkConfig.mainnet, eventLoop: eventLoop)
@@ -107,9 +108,9 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
     internal static func previewnet(_ eventLoop: NIOCore.EventLoopGroup) -> Self {
         Self(config: ConsensusNetworkConfig.previewnet, eventLoop: eventLoop)
     }
-    
+
     // MARK: - Network Updates
-    
+
     /// Converts a node address book to a network address dictionary.
     ///
     /// - Parameter addressBook: Array of node addresses from the address book
@@ -139,20 +140,21 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
     ///   - eventLoop: Event loop for new connections
     ///   - addressBook: The new node address book
     /// - Returns: An updated consensus network
-    internal static func withAddressBook(_ old: ConsensusNetwork, eventLoop: EventLoop, _ addressBook: NodeAddressBook) -> Self
+    internal static func withAddressBook(_ old: ConsensusNetwork, eventLoop: EventLoop, _ addressBook: NodeAddressBook)
+        -> Self
     {
         let addressBook = addressBook.nodeAddresses
 
         // Pre-allocate arrays to avoid reallocation during iteration
         var map: [AccountId: Int] = [:]
         map.reserveCapacity(addressBook.count)
-        
+
         var nodeIds: [AccountId] = []
         nodeIds.reserveCapacity(addressBook.count)
-        
+
         var health: [NIOLockedValueBox<NodeHealth>] = []
         health.reserveCapacity(addressBook.count)
-        
+
         var connections: [NodeConnection] = []
         connections.reserveCapacity(addressBook.count)
 
@@ -206,19 +208,20 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
     ///   - addresses: New address to account ID mappings
     ///   - eventLoop: Event loop for new connections
     /// - Returns: An updated consensus network
-    internal static func withAddresses(_ old: ConsensusNetwork, addresses: [String: AccountId], eventLoop: EventLoop) throws
+    internal static func withAddresses(_ old: ConsensusNetwork, addresses: [String: AccountId], eventLoop: EventLoop)
+        throws
         -> Self
     {
         // Pre-allocate arrays to avoid reallocation during iteration
         var map: [AccountId: Int] = [:]
         map.reserveCapacity(addresses.count)
-        
+
         var nodeIds: [AccountId] = []
         nodeIds.reserveCapacity(addresses.count)
-        
+
         var health: [NIOLockedValueBox<NodeHealth>] = []
         health.reserveCapacity(addresses.count)
-        
+
         var connections: [NodeConnection] = []
         connections.reserveCapacity(addresses.count)
 
@@ -258,9 +261,9 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
             connections: connections
         )
     }
-    
+
     // MARK: - Channel Access
-    
+
     /// Returns the channel and account ID for a node at the specified index.
     ///
     /// - Parameter nodeIndex: Index of the node in the nodes array
@@ -271,9 +274,9 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
 
         return (accountId, channel)
     }
-    
+
     // MARK: - Node Selection
-    
+
     /// Converts account IDs to their corresponding node indexes.
     ///
     /// - Parameter accountIds: Array of account IDs to look up
@@ -309,19 +312,19 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
     /// - Note: Optimized to minimize allocations by working with indexes directly.
     internal func selectHealthyNodeSample() -> [AccountId] {
         let healthyIndexes = self.healthyNodeIndexes()
-        
+
         // If no healthy nodes, sample from all nodes
         let sourceIndexes = healthyIndexes.isEmpty ? Array(0..<nodes.count) : healthyIndexes
-        
+
         let sampleSize = (sourceIndexes.count + 2) / 3
         let selectedIndexes = randomIndexes(upTo: sourceIndexes.count, amount: sampleSize)
-        
+
         // Map the sampled positions to actual node indexes, then to account IDs
         return selectedIndexes.map { nodes[sourceIndexes[$0]] }
     }
-    
+
     // MARK: - Health Management
-    
+
     /// Marks a node as unhealthy with exponential backoff.
     ///
     /// - Parameter index: Index of the node to mark unhealthy

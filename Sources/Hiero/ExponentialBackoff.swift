@@ -23,17 +23,17 @@ import Foundation
 /// licensed under MIT/Apache 2.0.
 internal struct ExponentialBackoff {
     // MARK: - Nested Types
-    
+
     /// Represents an optional time limit for backoff operations.
     ///
     /// Used to specify whether retries should continue indefinitely or stop after a maximum duration.
     internal enum Limit<T> {
         /// No time limit; retries continue indefinitely
         case unlimited
-        
+
         /// Stop retrying after the specified duration
         case limited(T)
-        
+
         /// Checks if the elapsed time has exceeded this limit.
         ///
         /// - Parameter elapsed: The elapsed time to check
@@ -45,60 +45,60 @@ internal struct ExponentialBackoff {
             return elapsed > maxElapsed
         }
     }
-    
+
     // MARK: - Default Values
-    
+
     /// Default maximum elapsed time before giving up (15 minutes)
     internal static let defaultMaxElapsedTime: TimeInterval = 900
-    
+
     /// Default initial backoff interval (0.5 seconds)
     internal static let defaultInitialInterval: TimeInterval = 0.5
-    
+
     /// Default maximum backoff interval (60 seconds)
     internal static let defaultMaxInterval: TimeInterval = 60
-    
+
     // MARK: - Configuration Properties
-    
+
     /// Initial backoff interval in seconds
     internal let initialInterval: TimeInterval
-    
+
     /// Factor for randomizing intervals (0.0 to 1.0)
     ///
     /// A factor of 0.5 means the actual interval can vary from 50% to 150% of the calculated value.
     /// This randomization helps prevent multiple clients from retrying simultaneously.
     internal let randomizationFactor: Double
-    
+
     /// Multiplier for increasing the interval on each retry
     ///
     /// Each subsequent retry interval is multiplied by this value until reaching `maxInterval`.
     /// A value of 1.5 means each retry waits 50% longer than the previous one.
     internal let multiplier: Double
-    
+
     /// Maximum backoff interval in seconds
     ///
     /// The backoff interval will not grow beyond this value, even with continued retries.
     internal let maxInterval: TimeInterval
-    
+
     /// Maximum total elapsed time before giving up
     ///
     /// When set to `.limited`, retries stop once this duration has elapsed since `startTime`.
     /// When set to `.unlimited`, retries continue indefinitely.
     internal let maxElapsedTime: Limit<TimeInterval>
-    
+
     // MARK: - Mutable State
-    
+
     /// Current backoff interval in seconds
     ///
     /// This value grows exponentially with each call to `next()`, up to `maxInterval`.
     internal var currentInterval: TimeInterval
-    
+
     /// Timestamp when this backoff sequence started
     ///
     /// Used to calculate elapsed time and determine if `maxElapsedTime` has been exceeded.
     internal var startTime: Date
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new exponential backoff calculator.
     ///
     /// - Parameters:
@@ -124,18 +124,18 @@ internal struct ExponentialBackoff {
         self.startTime = startTime
         self.currentInterval = initialInterval
     }
-    
+
     // MARK: - Computed Properties
-    
+
     /// The amount of time elapsed since this backoff sequence started.
     ///
     /// This value increases with each call and is used to determine if `maxElapsedTime` has been exceeded.
     internal var elapsedTime: TimeInterval {
         startTime.distance(to: Date())
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Calculates the next backoff interval.
     ///
     /// This method:
@@ -147,12 +147,12 @@ internal struct ExponentialBackoff {
     /// - Returns: The next backoff interval in seconds, or `nil` if max elapsed time exceeded
     internal mutating func next() -> TimeInterval? {
         let elapsed = self.elapsedTime
-        
+
         // Check if we've exceeded the maximum elapsed time
         if maxElapsedTime.hasExpired(elapsed) {
             return nil
         }
-        
+
         // Calculate randomized backoff interval
         let randomValue = Double.random(in: 0..<1)
         let interval = Self.calculateRandomizedInterval(
@@ -160,18 +160,18 @@ internal struct ExponentialBackoff {
             randomizationFactor: randomizationFactor,
             randomValue: randomValue
         )
-        
+
         // Prepare for next iteration by incrementing the interval
         incrementCurrentInterval()
-        
+
         // If the calculated interval would push us over the time limit, stop now
         if maxElapsedTime.hasExpired(elapsed + interval) {
             return nil
         }
-        
+
         return interval
     }
-    
+
     /// Resets the backoff state to start a new retry sequence.
     ///
     /// This resets both the current interval to the initial value and the start time to now.
@@ -180,9 +180,9 @@ internal struct ExponentialBackoff {
         startTime = Date()
         currentInterval = initialInterval
     }
-    
+
     // MARK: - Private Methods
-    
+
     /// Calculates a randomized interval within a range around the current interval.
     ///
     /// The randomization helps prevent the "thundering herd" problem where multiple
@@ -206,13 +206,13 @@ internal struct ExponentialBackoff {
         let delta = randomizationFactor * currentInterval
         let minInterval = currentInterval - delta
         let maxInterval = currentInterval + delta
-        
+
         // Calculate a random value from the range [minInterval, maxInterval]
         // The +1 nano ensures uniform distribution across discrete values
         let range = maxInterval - minInterval
         return minInterval + (randomValue * (range + 1e-9))
     }
-    
+
     /// Increments the current interval for the next retry.
     ///
     /// Multiplies the current interval by the multiplier, capping at `maxInterval`.
@@ -225,4 +225,3 @@ internal struct ExponentialBackoff {
         }
     }
 }
-

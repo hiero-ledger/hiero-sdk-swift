@@ -336,19 +336,19 @@ public final class Client: Sendable {
 
         // Use NetworkFactory to create networks from specifications
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
-        
+
         let consensus = try NetworkFactory.makeConsensusNetwork(
             spec: configData.network,
             eventLoop: eventLoop,
             shard: configData.shard,
             realm: configData.realm
         )
-        
+
         let mirror = try NetworkFactory.makeMirrorNetwork(
             spec: configData.mirrorNetwork,
             eventLoop: eventLoop
         )
-        
+
         // Determine ledger ID from network name if available
         let ledgerId: LedgerId?
         if case .predefined(let name) = configData.network {
@@ -356,7 +356,7 @@ public final class Client: Sendable {
         } else {
             ledgerId = nil
         }
-        
+
         let client = Self(
             consensus: consensus,
             mirror: mirror,
@@ -381,12 +381,12 @@ public final class Client: Sendable {
     /// - Throws: HError if network name is unknown
     public static func forName(_ name: String) throws -> Self {
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
-        
+
         // Use NetworkFactory for consistent network creation
         let consensus = try NetworkFactory.makeConsensusNetworkByName(name, eventLoop: eventLoop)
         let mirror = try NetworkFactory.makeMirrorNetworkByName(name, eventLoop: eventLoop)
         let ledgerId = NetworkFactory.ledgerIdForNetworkName(name)
-        
+
         return Self(
             consensus: consensus,
             mirror: mirror,
@@ -618,7 +618,8 @@ public final class Client: Sendable {
     public func setNetworkFromAddressBook(_ addressBook: NodeAddressBook) -> Self {
         _ = try? self._consensusNetwork.readCopyUpdate { old in
             try ConsensusNetwork.withAddresses(
-                old, addresses: ConsensusNetwork.addressMap(from: addressBook.nodeAddresses), eventLoop: self.eventLoop.next())
+                old, addresses: ConsensusNetwork.addressMap(from: addressBook.nodeAddresses),
+                eventLoop: self.eventLoop.next())
         }
 
         return self

@@ -25,29 +25,29 @@ import NIOCore
 /// - `NodeAddressBookQuery` - Fetches address book from network
 internal actor NetworkUpdateTask: Sendable {
     // MARK: - Constants
-    
+
     /// Delay before the first network update after initialization
     private static let networkFirstUpdateDelay: Duration = .seconds(10)
-    
+
     /// Nanoseconds per second for time calculations
     private static let nanosecondsPerSecond: UInt64 = 1_000_000_000
-    
+
     // MARK: - Properties
-    
+
     /// Event loop for network operations
     private let eventLoop: NIOCore.EventLoopGroup
-    
+
     /// Atomic reference to the consensus network being updated
     private let consensusNetwork: ManagedAtomic<ConsensusNetwork>
-    
+
     /// Atomic reference to the mirror network for address book queries
     private let mirrorNetwork: ManagedAtomic<MirrorNetwork>
-    
+
     /// The background task performing periodic updates
     private var updateTask: Task<(), Error>?
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new network update task.
     ///
     /// - Parameters:
@@ -58,10 +58,10 @@ internal actor NetworkUpdateTask: Sendable {
     ///   - shard: Shard number for address book file ID
     ///   - realm: Realm number for address book file ID
     internal init(
-        eventLoop: NIOCore.EventLoopGroup, 
+        eventLoop: NIOCore.EventLoopGroup,
         consensusNetwork: ManagedAtomic<ConsensusNetwork>,
         mirrorNetwork: ManagedAtomic<MirrorNetwork>,
-        updatePeriod: UInt64?, 
+        updatePeriod: UInt64?,
         shard: UInt64,
         realm: UInt64
     ) {
@@ -71,19 +71,19 @@ internal actor NetworkUpdateTask: Sendable {
 
         if let updatePeriod {
             updateTask = Self.makeTask(
-                eventLoop, 
+                eventLoop,
                 consensusNetwork,
                 mirrorNetwork,
-                Self.networkFirstUpdateDelay, 
-                updatePeriod, 
-                shard, 
+                Self.networkFirstUpdateDelay,
+                updatePeriod,
+                shard,
                 realm
             )
         }
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Updates the network update period, canceling the existing task and starting a new one if needed.
     ///
     /// - Parameters:
@@ -97,9 +97,9 @@ internal actor NetworkUpdateTask: Sendable {
             self.updateTask = Self.makeTask(eventLoop, consensusNetwork, mirrorNetwork, nil, updatePeriod, shard, realm)
         }
     }
-    
+
     // MARK: - Private Methods
-    
+
     /// Creates the background task that performs periodic network updates.
     private static func makeTask(
         _ eventLoop: NIOCore.EventLoopGroup,
@@ -132,16 +132,22 @@ internal actor NetworkUpdateTask: Sendable {
                     let newNetwork = consensusNetwork.readCopyUpdate {
                         ConsensusNetwork.withAddressBook($0, eventLoop: eventLoop.next(), addressBook)
                     }
-                    
+
                     // Log successful update with structured format
-                    print("[Hiero.NetworkUpdate] Consensus network updated successfully with \(newNetwork.nodes.count) nodes")
+                    print(
+                        "[Hiero.NetworkUpdate] Consensus network updated successfully with \(newNetwork.nodes.count) nodes"
+                    )
 
                 } catch let error as HError {
                     // Log error with structured format and context
-                    print("[Hiero.NetworkUpdate ERROR] Consensus network update failed: kind=\(error.kind), description=\(error.description)")
+                    print(
+                        "[Hiero.NetworkUpdate ERROR] Consensus network update failed: kind=\(error.kind), description=\(error.description)"
+                    )
                 } catch {
                     // Log unexpected error with structured format
-                    print("[Hiero.NetworkUpdate ERROR] Consensus network update failed with unexpected error: \(error.localizedDescription)")
+                    print(
+                        "[Hiero.NetworkUpdate ERROR] Consensus network update failed with unexpected error: \(error.localizedDescription)"
+                    )
                 }
 
                 // Wait for the remainder of the update period
@@ -152,11 +158,10 @@ internal actor NetworkUpdateTask: Sendable {
             }
         }
     }
-    
+
     // MARK: - Lifecycle
-    
+
     deinit {
         updateTask?.cancel()
     }
 }
-

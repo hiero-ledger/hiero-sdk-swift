@@ -14,7 +14,7 @@ import Foundation
 /// - `Client` - Uses this configuration for request retries
 internal struct Backoff {
     // MARK: - Initialization
-    
+
     /// Creates a new backoff configuration.
     ///
     /// - Parameters:
@@ -36,7 +36,7 @@ internal struct Backoff {
         self.requestTimeout = requestTimeout
         self.grpcTimeout = grpcTimeout
     }
-    
+
     // MARK: - Properties
 
     /// Maximum backoff delay between retries
