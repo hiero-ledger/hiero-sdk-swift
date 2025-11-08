@@ -45,12 +45,13 @@ internal struct HostAndPort: Hashable, Equatable {
 // MARK: - String Conversion
 
 extension HostAndPort: LosslessStringConvertible {
-    /// Creates a HostAndPort from a string like "host:port" or "host" (defaults to port 443).
+    /// Creates a HostAndPort from a string like "host:port" or "host" (defaults to HTTPS port 443).
     internal init?<S: StringProtocol>(_ description: S) {
         let (host, port) = description.splitOnce(on: ":") ?? (description[...], nil)
 
         guard let port = port else {
-            self = .init(host: String(host), port: 443)
+            // Default to standard HTTPS port when no port is specified
+            self = .init(host: String(host), port: NodeConnection.mirrorTlsPort)
             return
         }
 

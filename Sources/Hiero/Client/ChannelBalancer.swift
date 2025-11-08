@@ -101,6 +101,6 @@ internal final class ChannelBalancer: GRPCChannel {
     ///
     /// - Returns: A randomly selected GRPC channel
     private func selectChannel() -> any GRPCChannel {
-        channels.randomElement()!
+        channels.randomElement()!  // Safe: channels is non-empty (created in init)
     }
 }

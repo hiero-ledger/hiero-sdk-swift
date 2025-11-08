@@ -13,20 +13,25 @@ import Foundation
 /// - `ExponentialBackoff` - The underlying backoff algorithm implementation
 /// - `Client` - Uses this configuration for request retries
 internal struct Backoff {
+    // MARK: - Constants
+
+    /// Default maximum number of retry attempts before giving up
+    internal static let defaultMaxAttempts: Int = 10
+
     // MARK: - Initialization
 
     /// Creates a new backoff configuration.
     ///
     /// - Parameters:
-    ///   - maxBackoff: Maximum delay between retries
-    ///   - initialBackoff: Initial delay for first retry
-    ///   - maxAttempts: Maximum number of retry attempts
-    ///   - requestTimeout: Overall timeout for the entire request
+    ///   - maxBackoff: Maximum delay between retries (default: 60 seconds)
+    ///   - initialBackoff: Initial delay for first retry (default: 0.5 seconds)
+    ///   - maxAttempts: Maximum number of retry attempts (default: 10)
+    ///   - requestTimeout: Overall timeout for the entire request (default: nil = no timeout)
     ///   - grpcTimeout: Timeout for individual GRPC calls (currently unused)
     internal init(
         maxBackoff: TimeInterval = ExponentialBackoff.defaultMaxInterval,
         initialBackoff: TimeInterval = ExponentialBackoff.defaultInitialInterval,
-        maxAttempts: Int = 10,
+        maxAttempts: Int = Self.defaultMaxAttempts,
         requestTimeout: TimeInterval? = nil,
         grpcTimeout: TimeInterval? = nil
     ) {

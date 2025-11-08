@@ -53,18 +53,27 @@ internal enum NodeHealth: Sendable {
     /// Maximum consecutive failures before opening the circuit (5 failures)
     private static let maxConsecutiveFailures = 5
 
-    /// Duration to keep circuit open before testing recovery (5 minutes)
-    private static let circuitOpenDuration: TimeInterval = 5 * 60
+    /// Duration to keep circuit open before testing recovery (5 minutes in nanoseconds)
+    private static let circuitOpenDurationNanos: UInt64 = 5 * 60 * 1_000_000_000
+
+    /// Initial backoff interval for first failure (250 milliseconds)
+    private static let initialBackoffInterval: TimeInterval = 0.25
+
+    /// Maximum backoff interval before circuit opens (30 minutes)
+    private static let maxBackoffInterval: TimeInterval = 30 * 60
+
+    /// Duration to cache healthy node status (15 minutes in nanoseconds)
+    private static let healthyCacheDurationNanos: UInt64 = 15 * 60 * 1_000_000_000
 
     // MARK: - Computed Properties
 
     /// The exponential backoff configuration for this node.
     ///
-    /// Backoff intervals range from 0.25 seconds to 30 minutes, with no maximum elapsed time.
+    /// Backoff intervals range from 250ms to 30 minutes, with no maximum elapsed time.
     internal var backoff: ExponentialBackoff {
         var backoff = ExponentialBackoff(
-            initialInterval: 0.25,
-            maxInterval: 30 * 60,
+            initialInterval: Self.initialBackoffInterval,
+            maxInterval: Self.maxBackoffInterval,
             maxElapsedTime: .unlimited
         )
 
@@ -100,7 +109,7 @@ internal enum NodeHealth: Sendable {
 
         // Open circuit after too many consecutive failures
         if consecutiveFailures >= Self.maxConsecutiveFailures {
-            let reopenAt = now.adding(nanos: UInt64(Self.circuitOpenDuration * 1e9))
+            let reopenAt = now.adding(nanos: Self.circuitOpenDurationNanos)
             self = .circuitOpen(reopenAt: reopenAt)
             return
         }
@@ -108,7 +117,7 @@ internal enum NodeHealth: Sendable {
         // Apply exponential backoff
         var backoff = self.backoff
         let backoffInterval = backoff.next()!
-        let healthyAt = now.adding(nanos: UInt64(backoffInterval * 1e9))
+        let healthyAt = now.adding(nanos: UInt64(backoffInterval * 1_000_000_000))
 
         self = .unhealthy(
             backoffInterval: backoffInterval,
@@ -161,8 +170,8 @@ internal enum NodeHealth: Sendable {
     internal func recentlyPinged(at now: Timestamp) -> Bool {
         switch self {
         case .healthy(let usedAt):
-            // Healthy nodes are cached for 15 minutes
-            return now < usedAt + .minutes(15)
+            // Healthy nodes are cached for the configured duration
+            return now < usedAt.adding(nanos: Self.healthyCacheDurationNanos)
 
         case .unhealthy(_, let healthyAt, _):
             // Unhealthy nodes are avoided until backoff expires

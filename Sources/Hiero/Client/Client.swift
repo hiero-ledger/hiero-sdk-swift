@@ -8,7 +8,7 @@ import NIOCore
 
 // MARK: - Client
 
-/// Primary interface for interacting with the Hedera network.
+/// Primary interface for interacting with a Hiero network.
 ///
 /// The Client manages network connections, transaction submission, and query execution.
 /// It handles automatic retry logic, node selection, health tracking, and load balancing
@@ -82,7 +82,7 @@ public final class Client: Sendable {
         consensus: ConsensusNetwork,
         mirror: MirrorNetwork,
         ledgerId: LedgerId?,
-        networkUpdatePeriod: UInt64? = 86400 * 1_000_000_000,
+        networkUpdatePeriod: UInt64? = 86400 * 1_000_000_000,  // 24 hours in nanoseconds
         _ eventLoop: NIOCore.EventLoopGroup,
         shard: UInt64 = 0,
         realm: UInt64 = 0
@@ -92,9 +92,9 @@ public final class Client: Sendable {
         self._mirrorNetwork = .init(mirror)
         self._operator = .init(nil)
         self._ledgerId = .init(ledgerId)
-        self._autoValidateChecksums = .init(false)
-        self._regenerateTransactionId = .init(true)
-        self._maxTransactionFee = .init(0)
+        self._autoValidateChecksums = .init(false)  // Checksums disabled by default for performance
+        self._regenerateTransactionId = .init(true)  // Auto-regenerate expired transaction IDs by default
+        self._maxTransactionFee = .init(0)  // 0 = no fee limit (use network defaults)
         self.networkUpdateTask = NetworkUpdateTask(
             eventLoop: eventLoop,
             consensusNetwork: _consensusNetwork,
@@ -200,6 +200,7 @@ public final class Client: Sendable {
     /// - Throws: HError if addresses cannot be parsed
     public static func forNetwork(_ addresses: [String: AccountId], shard: UInt64 = 0, realm: UInt64 = 0) throws -> Self
     {
+        // Single event loop is sufficient for client operations
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
         return Self(
             consensus: try .init(addresses: addresses, eventLoop: eventLoop.next()),
@@ -227,6 +228,7 @@ public final class Client: Sendable {
         shard: UInt64 = 0,
         realm: UInt64 = 0
     ) async throws -> Self {
+        // Single event loop is sufficient for client operations
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
 
         let transportSecurity: GRPCChannelPool.Configuration.TransportSecurity =
@@ -279,6 +281,7 @@ public final class Client: Sendable {
     ///
     /// - Returns: A new client configured for mainnet
     public static func forMainnet() -> Self {
+        // Single event loop is sufficient for client operations
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
         return Self(
             consensus: .mainnet(eventLoop),
@@ -294,6 +297,7 @@ public final class Client: Sendable {
     ///
     /// - Returns: A new client configured for testnet
     public static func forTestnet() -> Self {
+        // Single event loop is sufficient for client operations
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
         return Self(
             consensus: .testnet(eventLoop),
@@ -309,6 +313,7 @@ public final class Client: Sendable {
     ///
     /// - Returns: A new client configured for previewnet
     public static func forPreviewnet() -> Self {
+        // Single event loop is sufficient for client operations
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
         return Self(
             consensus: .previewnet(eventLoop),
@@ -335,6 +340,7 @@ public final class Client: Sendable {
         }
 
         // Use NetworkFactory to create networks from specifications
+        // Single event loop is sufficient for client operations
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
 
         let consensus = try NetworkFactory.makeConsensusNetwork(
@@ -380,6 +386,7 @@ public final class Client: Sendable {
     /// - Returns: A new client configured for the named network
     /// - Throws: HError if network name is unknown
     public static func forName(_ name: String) throws -> Self {
+        // Single event loop is sufficient for client operations
         let eventLoop = PlatformSupport.makeEventLoopGroup(loopCount: 1)
 
         // Use NetworkFactory for consistent network creation

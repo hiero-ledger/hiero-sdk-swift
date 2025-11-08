@@ -6,7 +6,7 @@ import NIOCore
 
 // MARK: - Mirror Network
 
-/// Manages connections to Hedera mirror nodes for querying historical data.
+/// Manages connections to Hiero mirror nodes for querying historical data.
 ///
 /// Mirror nodes provide access to transaction history, account balances, and other
 /// data without requiring consensus. They're optimized for queries and can be load
@@ -17,16 +17,22 @@ internal final class MirrorNetwork: AtomicReference, Sendable {
     /// Standard mirror node endpoints for different Hedera networks
     private enum Endpoints {
         /// Mainnet mirror node endpoint
-        static let mainnet: Set<HostAndPort> = [.init(host: "mainnet-public.mirrornode.hedera.com", port: 443)]
+        static let mainnet: Set<HostAndPort> = [
+            .init(host: "mainnet-public.mirrornode.hedera.com", port: NodeConnection.mirrorTlsPort)
+        ]
 
         /// Testnet mirror node endpoint
-        static let testnet: Set<HostAndPort> = [.init(host: "testnet.mirrornode.hedera.com", port: 443)]
+        static let testnet: Set<HostAndPort> = [
+            .init(host: "testnet.mirrornode.hedera.com", port: NodeConnection.mirrorTlsPort)
+        ]
 
         /// Previewnet mirror node endpoint
-        static let previewnet: Set<HostAndPort> = [.init(host: "previewnet.mirrornode.hedera.com", port: 443)]
+        static let previewnet: Set<HostAndPort> = [
+            .init(host: "previewnet.mirrornode.hedera.com", port: NodeConnection.mirrorTlsPort)
+        ]
 
         /// Localhost mirror node for development
-        static let localhost: Set<HostAndPort> = [.init(host: "127.0.0.1", port: 5600)]
+        static let localhost: Set<HostAndPort> = [.init(host: "127.0.0.1", port: NodeConnection.mirrorPlaintextPort)]
     }
 
     // MARK: - Properties

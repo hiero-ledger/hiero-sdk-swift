@@ -208,7 +208,7 @@ internal struct ExponentialBackoff {
         let maxInterval = currentInterval + delta
 
         // Calculate a random value from the range [minInterval, maxInterval]
-        // The +1 nano ensures uniform distribution across discrete values
+        // Add epsilon to ensure maxInterval is included in the range
         let range = maxInterval - minInterval
         return minInterval + (randomValue * (range + 1e-9))
     }

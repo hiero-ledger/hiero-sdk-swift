@@ -24,6 +24,8 @@
 /// - `ConsensusNetwork` - Uses this config for initialization
 /// - `NetworkFactory` - Creates networks from specifications using these configs
 internal struct ConsensusNetworkConfig {
+    // MARK: - Properties
+
     /// Maps account IDs to their index positions
     internal let nodeIndexMap: [AccountId: Int]
 
@@ -32,31 +34,9 @@ internal struct ConsensusNetworkConfig {
 
     /// Array of address sets for each node
     internal let addresses: [Set<String>]
-}
 
-// MARK: - Dictionary Literal Conformance
+    // MARK: - Pre-configured Networks
 
-extension ConsensusNetworkConfig: ExpressibleByDictionaryLiteral {
-    /// Initializes a configuration from dictionary literal syntax.
-    ///
-    /// Example: `[AccountId(3): ["node1.example.com", "node2.example.com"]]`
-    internal init(dictionaryLiteral elements: (AccountId, Set<String>)...) {
-        var nodeIndexMap: [AccountId: Int] = [:]
-        var nodes: [AccountId] = []
-        var addresses: [Set<String>] = []
-        for (index, (key, value)) in elements.enumerated() {
-            nodeIndexMap[key] = index
-            nodes.append(key)
-            addresses.append(value)
-        }
-
-        self.init(nodeIndexMap: nodeIndexMap, nodes: nodes, addresses: addresses)
-    }
-}
-
-// MARK: - Pre-configured Networks
-
-extension ConsensusNetworkConfig {
     /// Pre-configured consensus network addresses for Hedera mainnet.
     internal static let mainnet: Self = [
         3: ["13.124.142.126", "15.164.44.66", "15.165.118.251", "34.239.82.6", "35.237.200.180"],
@@ -111,4 +91,24 @@ extension ConsensusNetworkConfig {
         8: ["5.previewnet.hedera.com", "34.106.247.65", "35.83.89.171", "13.78.232.192"],
         9: ["6.previewnet.hedera.com", "34.125.23.49", "50.18.17.93", "20.150.136.89"],
     ]
+}
+
+// MARK: - Dictionary Literal Conformance
+
+extension ConsensusNetworkConfig: ExpressibleByDictionaryLiteral {
+    /// Initializes a configuration from dictionary literal syntax.
+    ///
+    /// Example: `[AccountId(3): ["node1.example.com", "node2.example.com"]]`
+    internal init(dictionaryLiteral elements: (AccountId, Set<String>)...) {
+        var nodeIndexMap: [AccountId: Int] = [:]
+        var nodes: [AccountId] = []
+        var addresses: [Set<String>] = []
+        for (index, (key, value)) in elements.enumerated() {
+            nodeIndexMap[key] = index
+            nodes.append(key)
+            addresses.append(value)
+        }
+
+        self.init(nodeIndexMap: nodeIndexMap, nodes: nodes, addresses: addresses)
+    }
 }

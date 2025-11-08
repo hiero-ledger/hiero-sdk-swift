@@ -28,8 +28,12 @@ internal enum NetworkFactory {
 
     /// Creates a consensus network from a specification.
     ///
+    /// Consensus networks are required for all client operations. Unlike mirror networks,
+    /// this parameter is non-optional because you must have consensus nodes to submit
+    /// transactions and execute queries.
+    ///
     /// - Parameters:
-    ///   - spec: Network specification (predefined name or custom addresses)
+    ///   - spec: Network specification (predefined name or custom addresses) - required
     ///   - eventLoop: Event loop group for managing connections
     ///   - shard: Shard number for custom networks (default: 0)
     ///   - realm: Realm number for custom networks (default: 0)
@@ -89,10 +93,14 @@ internal enum NetworkFactory {
 
     /// Creates a mirror network from a specification.
     ///
+    /// Mirror networks are optional - if no specification is provided, an empty mirror network
+    /// is returned. This allows clients to operate with just consensus nodes for transactions
+    /// and queries, while mirror nodes remain available for historical data when configured.
+    ///
     /// - Parameters:
-    ///   - spec: Mirror network specification (predefined name or custom addresses)
+    ///   - spec: Optional mirror network specification (predefined name or custom addresses)
     ///   - eventLoop: Event loop group for managing connections
-    /// - Returns: Configured mirror network
+    /// - Returns: Configured mirror network, or empty mirror network if spec is nil
     /// - Throws: HError if network name is unknown
     static func makeMirrorNetwork(
         spec: MirrorNetworkSpecification?,
@@ -100,6 +108,7 @@ internal enum NetworkFactory {
     ) throws -> MirrorNetwork {
         guard let spec = spec else {
             // No mirror network specified - return empty mirror network
+            // Client can still operate with consensus nodes only
             return MirrorNetwork(targets: [], eventLoop: eventLoop)
         }
 

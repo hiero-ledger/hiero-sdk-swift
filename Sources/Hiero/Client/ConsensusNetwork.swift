@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Atomics
-import Foundation
 import GRPC
 import NIOConcurrencyHelpers
 import NIOCore
 
 // MARK: - Consensus Network
 
-/// Manages connections to consensus nodes on the Hedera network.
+/// Manages connections to consensus nodes on a Hiero network.
 ///
 /// The consensus network maintains a pool of node connections with health tracking
 /// and automatic failover. It supports dynamic network updates and node selection
@@ -52,9 +51,9 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
     }
 
     /// Creates a consensus network from configuration.
-    fileprivate convenience init(config: ConsensusNetworkConfig, eventLoop: NIOCore.EventLoopGroup) {
+    private convenience init(config: ConsensusNetworkConfig, eventLoop: NIOCore.EventLoopGroup) {
         let connections = config.addresses.map { addresses in
-            let addresses = Set(addresses.map { HostAndPort(host: $0, port: 50211) })
+            let addresses = Set(addresses.map { HostAndPort(host: $0, port: NodeConnection.consensusPlaintextPort) })
             return NodeConnection(eventLoop: eventLoop.next(), addresses: addresses)
         }
 
@@ -316,6 +315,7 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
         // If no healthy nodes, sample from all nodes
         let sourceIndexes = healthyIndexes.isEmpty ? Array(0..<nodes.count) : healthyIndexes
 
+        // Select approximately 2/3 of nodes (rounded up to ensure at least one node when count is 1 or 2)
         let sampleSize = (sourceIndexes.count + 2) / 3
         let selectedIndexes = randomIndexes(upTo: sourceIndexes.count, amount: sampleSize)
 
@@ -357,27 +357,5 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
     /// - Returns: True if the node is healthy
     internal func isNodeHealthy(at index: Int, now: Timestamp) -> Bool {
         nodeHealthStates[index].withLockedValue { $0 }.isHealthy(at: now)
-    }
-}
-
-// MARK: - Atomic Helpers
-
-extension ManagedAtomic {
-    /// Performs a read-copy-update operation atomically.
-    ///
-    /// This continuously retries until the update succeeds without interference from other threads.
-    ///
-    /// - Parameter body: Transformation function that creates the new value
-    /// - Returns: The new value that was successfully stored
-    internal func readCopyUpdate(_ body: (Value) throws -> Value) rethrows -> Value {
-        while true {
-            let old = load(ordering: .acquiring)
-            let new = try body(old)
-            let (success, _) = compareExchange(expected: old, desired: new, ordering: .acquiringAndReleasing)
-
-            if success {
-                return new
-            }
-        }
     }
 }
