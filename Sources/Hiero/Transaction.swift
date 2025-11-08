@@ -381,7 +381,7 @@ public class Transaction: ValidateChecksums {
             }
 
             self.`operator` = client.operator
-            self.nodeAccountIds = client.net.randomNodeIds()
+            self.nodeAccountIds = client.consensus.selectHealthyNodeSample()
         }
 
         self.maxTransactionFee = self.maxTransactionFee ?? client?.maxTransactionFee

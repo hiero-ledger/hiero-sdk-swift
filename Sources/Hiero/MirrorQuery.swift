@@ -105,16 +105,16 @@ private struct MirrorQuerySubscribeIterator<R: MirrorRequest>: AsyncIteratorProt
         self.request = request
         self.channel = channel
         self.state = .start
-        self.backoff = LegacyExponentialBackoff(maxElapsedTime: .limited(timeout))
-        self.backoffInfinity = LegacyExponentialBackoff(maxElapsedTime: .unlimited)
+        self.backoff = ExponentialBackoff(maxElapsedTime: .limited(timeout))
+        self.backoffInfinity = ExponentialBackoff(maxElapsedTime: .unlimited)
         self.context = .init()
     }
 
     private let request: R
     private let channel: GRPCChannel
     private var state: State
-    private var backoff: LegacyExponentialBackoff
-    private var backoffInfinity: LegacyExponentialBackoff
+    private var backoff: ExponentialBackoff
+    private var backoffInfinity: ExponentialBackoff
     private var context: R.Context
 
     enum State {

@@ -1,29 +1,63 @@
 // SPDX-License-Identifier: Apache-2.0
 
-extension Network {
-    internal struct Config {
-        internal let map: [AccountId: Int]
-        internal let nodes: [AccountId]
-        internal let addresses: [Set<String>]
-    }
+// MARK: - Consensus Network Configuration
+
+/// Configuration for initializing a consensus network with predefined nodes and addresses.
+///
+/// This struct provides static configurations for Hedera's public networks (mainnet, testnet,
+/// previewnet) with all known node addresses and account IDs. It supports dictionary literal
+/// syntax for easy custom network configuration.
+///
+/// ## Usage
+/// ```swift
+/// // Use predefined network
+/// let network = ConsensusNetwork(config: .mainnet, eventLoop: eventLoop)
+///
+/// // Create custom configuration
+/// let custom: ConsensusNetworkConfig = [
+///     AccountId(3): ["node1.example.com", "node2.example.com"],
+///     AccountId(4): ["node3.example.com"]
+/// ]
+/// ```
+///
+/// ## Related Types
+/// - `ConsensusNetwork` - Uses this config for initialization
+/// - `NetworkFactory` - Creates networks from specifications using these configs
+internal struct ConsensusNetworkConfig {
+    /// Maps account IDs to their index positions
+    internal let nodeIndexMap: [AccountId: Int]
+    
+    /// Array of node account IDs
+    internal let nodes: [AccountId]
+    
+    /// Array of address sets for each node
+    internal let addresses: [Set<String>]
 }
 
-extension Network.Config: ExpressibleByDictionaryLiteral {
+// MARK: - Dictionary Literal Conformance
+
+extension ConsensusNetworkConfig: ExpressibleByDictionaryLiteral {
+    /// Initializes a configuration from dictionary literal syntax.
+    ///
+    /// Example: `[AccountId(3): ["node1.example.com", "node2.example.com"]]`
     internal init(dictionaryLiteral elements: (AccountId, Set<String>)...) {
-        var map: [AccountId: Int] = [:]
+        var nodeIndexMap: [AccountId: Int] = [:]
         var nodes: [AccountId] = []
         var addresses: [Set<String>] = []
         for (index, (key, value)) in elements.enumerated() {
-            map[key] = index
+            nodeIndexMap[key] = index
             nodes.append(key)
             addresses.append(value)
         }
 
-        self.init(map: map, nodes: nodes, addresses: addresses)
+        self.init(nodeIndexMap: nodeIndexMap, nodes: nodes, addresses: addresses)
     }
 }
 
-extension Network.Config {
+// MARK: - Pre-configured Networks
+
+extension ConsensusNetworkConfig {
+    /// Pre-configured consensus network addresses for Hedera mainnet.
     internal static let mainnet: Self = [
         3: ["13.124.142.126", "15.164.44.66", "15.165.118.251", "34.239.82.6", "35.237.200.180"],
         4: ["3.130.52.236", "35.186.191.247"],
@@ -56,6 +90,7 @@ extension Network.Config {
         31: ["3.77.94.254", "34.107.78.179"],
     ]
 
+    /// Pre-configured consensus network addresses for Hedera testnet.
     internal static let testnet: Self = [
         3: ["0.testnet.hedera.com", "34.94.106.61", "50.18.132.211"],
         4: ["1.testnet.hedera.com", "35.237.119.55", "3.212.6.13"],
@@ -66,6 +101,7 @@ extension Network.Config {
         9: ["6.testnet.hedera.com", "34.133.197.230", "52.14.252.207"],
     ]
 
+    /// Pre-configured consensus network addresses for Hedera previewnet.
     internal static let previewnet: Self = [
         3: ["0.previewnet.hedera.com", "35.231.208.148", "3.211.248.172", "40.121.64.48"],
         4: ["1.previewnet.hedera.com", "35.199.15.177", "3.133.213.146", "40.70.11.202"],
@@ -76,3 +112,4 @@ extension Network.Config {
         9: ["6.previewnet.hedera.com", "34.125.23.49", "50.18.17.93", "20.150.136.89"],
     ]
 }
+
