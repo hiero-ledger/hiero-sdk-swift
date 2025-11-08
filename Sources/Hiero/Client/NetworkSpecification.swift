@@ -73,7 +73,7 @@ internal struct ConsensusNodeMap: Decodable, Sendable {
     ///
     /// - Parameter decoder: The decoder to read data from
     /// - Throws: DecodingError if addresses cannot be parsed or account IDs are invalid
-    init(from decoder: Decoder) throws {
+    internal init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let stringMap = try container.decode([String: String].self)
 
