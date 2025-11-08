@@ -256,8 +256,8 @@ public final class Client: Sendable {
         // Only take the plaintext nodes
         let filtered = NodeAddressBook(
             nodeAddresses: addressBook.nodeAddresses.map { address in
-                let plaintextEndpoints = address.serviceEndpoints.filter {
-                    $0.port == NodeConnection.consensusPlaintextPort
+                let plaintextEndpoints = address.serviceEndpoints.filter { endpoint in
+                    endpoint.port == NodeConnection.consensusPlaintextPort
                 }
 
                 return NodeAddress(

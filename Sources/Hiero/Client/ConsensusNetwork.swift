@@ -160,8 +160,8 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
         for (index, address) in addressBook.enumerated() {
             // Use dictionary for O(1) port priority lookup instead of O(n) array search
             let endpoints = address.serviceEndpoints
-                .sorted {
-                    Self.portPriority[$0.port] ?? Int.max < Self.portPriority[$1.port] ?? Int.max
+                .sorted { endpoint1, endpoint2 in
+                    Self.portPriority[endpoint1.port] ?? Int.max < Self.portPriority[endpoint2.port] ?? Int.max
                 }
 
             let selected = endpoints.first.flatMap { endpoint -> HostAndPort? in

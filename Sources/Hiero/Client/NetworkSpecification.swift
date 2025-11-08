@@ -33,7 +33,7 @@ internal enum NetworkSpecification<Custom: Decodable>: Decodable, Sendable where
     ///
     /// - Parameter decoder: The decoder to read data from
     /// - Throws: DecodingError if neither format can be decoded
-    init(from decoder: Decoder) throws {
+    internal init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
 
         // Try decoding as string (network name) first

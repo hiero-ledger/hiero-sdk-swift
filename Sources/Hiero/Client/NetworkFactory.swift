@@ -39,7 +39,7 @@ internal enum NetworkFactory {
     ///   - realm: Realm number for custom networks (default: 0)
     /// - Returns: Configured consensus network
     /// - Throws: HError if network name is unknown or addresses are invalid
-    static func makeConsensusNetwork(
+    internal static func makeConsensusNetwork(
         spec: ConsensusNetworkSpecification,
         eventLoop: EventLoopGroup,
         shard: UInt64 = 0,
@@ -63,7 +63,7 @@ internal enum NetworkFactory {
     ///   - realm: Realm number for localhost (default: 0)
     /// - Returns: Configured consensus network
     /// - Throws: HError if network name is unknown
-    static func makeConsensusNetworkByName(
+    internal static func makeConsensusNetworkByName(
         _ name: borrowing String,
         eventLoop: EventLoopGroup,
         shard: UInt64 = 0,
@@ -102,7 +102,7 @@ internal enum NetworkFactory {
     ///   - eventLoop: Event loop group for managing connections
     /// - Returns: Configured mirror network, or empty mirror network if spec is nil
     /// - Throws: HError if network name is unknown
-    static func makeMirrorNetwork(
+    internal static func makeMirrorNetwork(
         spec: MirrorNetworkSpecification?,
         eventLoop: EventLoopGroup
     ) throws -> MirrorNetwork {
@@ -128,7 +128,7 @@ internal enum NetworkFactory {
     ///   - eventLoop: Event loop group for managing connections
     /// - Returns: Configured mirror network
     /// - Throws: HError if network name is unknown
-    static func makeMirrorNetworkByName(
+    internal static func makeMirrorNetworkByName(
         _ name: borrowing String,
         eventLoop: EventLoopGroup
     ) throws -> MirrorNetwork {
@@ -157,7 +157,7 @@ internal enum NetworkFactory {
     ///
     /// - Parameter name: Network name
     /// - Returns: Ledger ID for the network, or nil for custom/localhost networks
-    static func ledgerIdForNetworkName(_ name: borrowing String) -> LedgerId? {
+    internal static func ledgerIdForNetworkName(_ name: borrowing String) -> LedgerId? {
         switch name.lowercased() {
         case "mainnet":
             return .mainnet
