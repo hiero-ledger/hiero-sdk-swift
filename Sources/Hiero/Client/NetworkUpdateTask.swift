@@ -23,7 +23,7 @@ import NIOCore
 /// - `ConsensusNetwork` - The network being updated
 /// - `MirrorNetwork` - Source of address book data
 /// - `NodeAddressBookQuery` - Fetches address book from network
-internal actor NetworkUpdateTask: Sendable {
+internal actor NetworkUpdateTask {
     // MARK: - Constants
 
     /// Delay before the first network update after initialization
@@ -71,13 +71,15 @@ internal actor NetworkUpdateTask: Sendable {
 
         if let updatePeriod {
             updateTask = Self.makeTask(
-                eventLoop,
-                consensusNetwork,
-                mirrorNetwork,
-                Self.networkFirstUpdateDelay,
-                updatePeriod,
-                shard,
-                realm
+                config: UpdateConfig(
+                    eventLoop: eventLoop,
+                    consensusNetwork: consensusNetwork,
+                    mirrorNetwork: mirrorNetwork,
+                    startDelay: Self.networkFirstUpdateDelay,
+                    updatePeriod: updatePeriod,
+                    shard: shard,
+                    realm: realm
+                )
             )
         }
     }
@@ -94,25 +96,63 @@ internal actor NetworkUpdateTask: Sendable {
         self.updateTask?.cancel()
 
         if let updatePeriod = duration {
-            self.updateTask = Self.makeTask(eventLoop, consensusNetwork, mirrorNetwork, nil, updatePeriod, shard, realm)
+            self.updateTask = Self.makeTask(
+                config: UpdateConfig(
+                    eventLoop: eventLoop,
+                    consensusNetwork: consensusNetwork,
+                    mirrorNetwork: mirrorNetwork,
+                    startDelay: nil,
+                    updatePeriod: updatePeriod,
+                    shard: shard,
+                    realm: realm
+                )
+            )
         }
+    }
+
+    // MARK: - Private Types
+
+    /// Configuration parameters for creating a network update task.
+    ///
+    /// This struct groups all parameters needed to configure and run the periodic
+    /// network update loop, avoiding the need for functions with many parameters.
+    private struct UpdateConfig {
+        /// Event loop for network operations
+        internal let eventLoop: NIOCore.EventLoopGroup
+
+        /// Atomic reference to the consensus network being updated
+        internal let consensusNetwork: ManagedAtomic<ConsensusNetwork>
+
+        /// Atomic reference to the mirror network for queries
+        internal let mirrorNetwork: ManagedAtomic<MirrorNetwork>
+
+        /// Optional delay before the first update (nil for immediate start)
+        internal let startDelay: Duration?
+
+        /// Interval between updates in nanoseconds
+        internal let updatePeriod: UInt64
+
+        /// Shard number for address book file ID
+        internal let shard: UInt64
+
+        /// Realm number for address book file ID
+        internal let realm: UInt64
     }
 
     // MARK: - Private Methods
 
     /// Creates the background task that performs periodic network updates.
-    private static func makeTask(
-        _ eventLoop: NIOCore.EventLoopGroup,
-        _ consensusNetwork: ManagedAtomic<ConsensusNetwork>,
-        _ mirrorNetwork: ManagedAtomic<MirrorNetwork>,
-        _ startDelay: Duration?,
-        _ updatePeriod: UInt64,
-        _ shard: UInt64,
-        _ realm: UInt64
-    ) -> Task<(), Error> {
+    ///
+    /// The task runs an infinite loop that fetches the network address book from the
+    /// mirror network and atomically updates the consensus network. Errors are logged
+    /// but don't terminate the loop.
+    ///
+    /// - Parameter config: Configuration containing all necessary parameters for updates
+    /// - Returns: A Task that can be canceled to stop the update loop
+    private static func makeTask(config: UpdateConfig) -> Task<(), Error> {
         Task {
             // Initial delay before first update
-            if let startDelay {
+            if let startDelay = config.startDelay {
                 let delayNanos = startDelay.seconds * Self.nanosecondsPerSecond
                 try await Task.sleep(nanoseconds: delayNanos)
             }
@@ -123,14 +163,14 @@ internal actor NetworkUpdateTask: Sendable {
 
                 do {
                     // Fetch address book from mirror network
-                    let mirror = mirrorNetwork.load(ordering: .relaxed)
+                    let mirror = config.mirrorNetwork.load(ordering: .relaxed)
                     let addressBook = try await NodeAddressBookQuery(
-                        FileId.getAddressBookFileIdFor(shard: shard, realm: realm)
+                        FileId.getAddressBookFileIdFor(shard: config.shard, realm: config.realm)
                     ).executeChannel(mirror.channel)
 
                     // Apply updates to consensus network atomically
-                    let newNetwork = consensusNetwork.readCopyUpdate {
-                        ConsensusNetwork.withAddressBook($0, eventLoop: eventLoop.next(), addressBook)
+                    let newNetwork = config.consensusNetwork.readCopyUpdate { old in
+                        ConsensusNetwork.withAddressBook(old, eventLoop: config.eventLoop.next(), addressBook)
                     }
 
                     // Log successful update with structured format
@@ -152,8 +192,8 @@ internal actor NetworkUpdateTask: Sendable {
 
                 // Wait for the remainder of the update period
                 let elapsed = (Timestamp.now - start).seconds * Self.nanosecondsPerSecond
-                if elapsed < updatePeriod {
-                    try await Task.sleep(nanoseconds: updatePeriod - elapsed)
+                if elapsed < config.updatePeriod {
+                    try await Task.sleep(nanoseconds: config.updatePeriod - elapsed)
                 }
             }
         }

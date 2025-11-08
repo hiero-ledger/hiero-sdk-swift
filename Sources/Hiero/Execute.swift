@@ -289,7 +289,7 @@ private func executeAnyInner<E: Execute>(
     }
 }
 
-// MARK: - Execution Result Type
+// MARK: - Helper Types
 
 /// Result of attempting to execute a request on a node.
 private enum ExecutionResult<Response> {
@@ -304,6 +304,33 @@ private enum ExecutionResult<Response> {
 
     /// Transaction expired and should be retried with a new transaction ID
     case regenerateTransactionAndRetry(HError)
+}
+
+/// Parameters for pre-check status handling.
+///
+/// This struct groups all parameters needed for handling pre-check status responses,
+/// avoiding the need for functions with many parameters and improving code clarity.
+private struct PrecheckParameters<E: Execute> {
+    /// The parsed pre-check status code from the response
+    internal let status: Status
+
+    /// The full GRPC response from the node
+    internal let response: E.GrpcResponse
+
+    /// Context data from request creation
+    internal let context: E.Context
+
+    /// Account ID of the node that processed the request
+    internal let nodeAccountId: AccountId
+
+    /// Transaction ID used for the request (if applicable)
+    internal let transactionId: TransactionId?
+
+    /// The transaction or query being executed
+    internal let executable: E
+
+    /// Execution context with network and backoff configuration
+    internal let ctx: ExecuteContext
 }
 
 // MARK: - Transaction ID Management
@@ -392,13 +419,15 @@ private func executeOnNode<E: Execute>(
     let precheckStatus = Status(rawValue: rawPrecheckStatus)
 
     return try handlePrecheckStatus(
-        precheckStatus,
-        response: response,
-        context: context,
-        nodeAccountId: nodeAccountId,
-        transactionId: transactionId,
-        executable: executable,
-        ctx: ctx
+        params: PrecheckParameters(
+            status: precheckStatus,
+            response: response,
+            context: context,
+            nodeAccountId: nodeAccountId,
+            transactionId: transactionId,
+            executable: executable,
+            ctx: ctx
+        )
     )
 }
 
@@ -443,38 +472,25 @@ private func handleGrpcError<Response>(
 /// - Custom retry statuses: Retry with backoff
 /// - Everything else: Throw error
 ///
-/// - Parameters:
-///   - status: Parsed pre-check status
-///   - response: GRPC response containing the status
-///   - context: Context data from request creation
-///   - nodeAccountId: Account ID of the node
-///   - transactionId: Transaction ID used for the request
-///   - executable: The transaction or query being executed
-///   - ctx: Execution context
+/// - Parameter params: Parameters containing status, response, context, and execution state
 /// - Returns: Execution result indicating success or retry strategy
 /// - Throws: HError for unrecoverable status codes
-private func handlePrecheckStatus<E: Execute>(
-    _ status: Status,
-    response: E.GrpcResponse,
-    context: E.Context,
-    nodeAccountId: AccountId,
-    transactionId: TransactionId?,
-    executable: E,
-    ctx: ExecuteContext
-) throws -> ExecutionResult<E.Response> {
-    switch status {
-    case .ok where executable.shouldRetry(forResponse: response):
-        return .retryWithBackoff(executable.makeErrorPrecheck(status, transactionId))
+private func handlePrecheckStatus<E: Execute>(params: PrecheckParameters<E>) throws -> ExecutionResult<E.Response> {
+    switch params.status {
+    case .ok where params.executable.shouldRetry(forResponse: params.response):
+        return .retryWithBackoff(params.executable.makeErrorPrecheck(params.status, params.transactionId))
 
     case .ok:
-        let response = try executable.makeResponse(response, context, nodeAccountId, transactionId)
+        let response = try params.executable.makeResponse(
+            params.response, params.context, params.nodeAccountId, params.transactionId)
         return .success(response)
 
     case .busy, .platformNotActive:
-        return .retryImmediately(executable.makeErrorPrecheck(status, transactionId))
+        return .retryImmediately(params.executable.makeErrorPrecheck(params.status, params.transactionId))
 
-    case .transactionExpired where executable.explicitTransactionId == nil && ctx.operatorAccountId != nil:
-        return .regenerateTransactionAndRetry(executable.makeErrorPrecheck(status, transactionId))
+    case .transactionExpired
+    where params.executable.explicitTransactionId == nil && params.ctx.operatorAccountId != nil:
+        return .regenerateTransactionAndRetry(params.executable.makeErrorPrecheck(params.status, params.transactionId))
 
     case .unrecognized(let value):
         throw HError(
@@ -482,11 +498,11 @@ private func handlePrecheckStatus<E: Execute>(
             description: "response status \(value) unrecognized"
         )
 
-    case let status where executable.shouldRetryPrecheck(forStatus: status):
-        return .retryWithBackoff(executable.makeErrorPrecheck(status, transactionId))
+    case let status where params.executable.shouldRetryPrecheck(forStatus: status):
+        return .retryWithBackoff(params.executable.makeErrorPrecheck(status, params.transactionId))
 
     default:
-        throw executable.makeErrorPrecheck(status, transactionId)
+        throw params.executable.makeErrorPrecheck(params.status, params.transactionId)
     }
 }
 
