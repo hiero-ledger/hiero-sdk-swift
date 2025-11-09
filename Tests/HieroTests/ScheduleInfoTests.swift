@@ -83,12 +83,12 @@ internal final class ScheduleInfoTests: XCTestCase {
     internal func testSerialize() throws {
         let info = try makeInfo()
 
-        assertSnapshot(matching: info, as: .description)
+        assertSnapshot(of: info, as: .description)
     }
 
     internal func testSerializeDeleted() throws {
         let info = try makeDeleteInfo()
 
-        assertSnapshot(matching: info, as: .description)
+        assertSnapshot(of: info, as: .description)
     }
 }

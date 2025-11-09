@@ -45,15 +45,15 @@ internal final class CustomFeeTests: XCTestCase {
     }
 
     internal func testSerializeFixed() throws {
-        assertSnapshot(matching: Self.customFixedFee, as: .description)
+        assertSnapshot(of: Self.customFixedFee, as: .description)
     }
 
     internal func testSerializeFractional() throws {
-        assertSnapshot(matching: Self.customFractionalFee, as: .description)
+        assertSnapshot(of: Self.customFractionalFee, as: .description)
     }
 
     internal func testSerializeRoyalty() throws {
-        assertSnapshot(matching: Self.customRoyaltyFee, as: .description)
+        assertSnapshot(of: Self.customRoyaltyFee, as: .description)
     }
 
     internal func testFixedFromToBytes() throws {
@@ -75,14 +75,14 @@ internal final class CustomFeeTests: XCTestCase {
     }
 
     internal func testFixedFromProtobuf() throws {
-        assertSnapshot(matching: try AnyCustomFee.fromProtobuf(Self.customFixedFee), as: .description)
+        assertSnapshot(of: try AnyCustomFee.fromProtobuf(Self.customFixedFee), as: .description)
     }
 
     internal func testFractionalFromProtobuf() throws {
-        assertSnapshot(matching: try AnyCustomFee.fromProtobuf(Self.customFractionalFee), as: .description)
+        assertSnapshot(of: try AnyCustomFee.fromProtobuf(Self.customFractionalFee), as: .description)
     }
 
     internal func testRoyaltyFromProtobuf() throws {
-        assertSnapshot(matching: try AnyCustomFee.fromProtobuf(Self.customRoyaltyFee), as: .description)
+        assertSnapshot(of: try AnyCustomFee.fromProtobuf(Self.customRoyaltyFee), as: .description)
     }
 }

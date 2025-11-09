@@ -33,7 +33,7 @@ internal final class TokenAirdropTransactionTests: XCTestCase {
 
     func testSerialize() throws {
         let tx = try Self.makeTransaction().makeProtoBody()
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     func testToFromBytes() throws {

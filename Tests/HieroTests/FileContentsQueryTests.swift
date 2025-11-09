@@ -12,7 +12,7 @@ internal final class FileContentsQueryTests: XCTestCase {
             .fileId(FileId.fromString("0.0.5005"))
             .toQueryProtobufWith(.init())
 
-        assertSnapshot(matching: query, as: .description)
+        assertSnapshot(of: query, as: .description)
     }
 
     internal func testGetSetFileId() throws {

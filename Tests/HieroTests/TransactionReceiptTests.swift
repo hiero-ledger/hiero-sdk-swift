@@ -38,6 +38,6 @@ internal final class TransactionReceiptTests: XCTestCase {
 
         XCTAssertEqual(receipt.toProtobuf(), copyReceipt.toProtobuf())
 
-        assertSnapshot(matching: receipt, as: .description)
+        assertSnapshot(of: receipt, as: .description)
     }
 }

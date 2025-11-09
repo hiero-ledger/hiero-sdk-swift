@@ -28,7 +28,7 @@ internal final class CustomFeeLimitTests: XCTestCase {
 
     internal func testSerialize() throws {
         let proto = Self.testCustomFeeLimit.toProtobuf()
-        assertSnapshot(matching: proto, as: .description)
+        assertSnapshot(of: proto, as: .description)
     }
 
     internal func testGetSetPayerId() {

@@ -23,20 +23,20 @@ internal final class ContractInfoTests: XCTestCase {
     }
 
     internal func testFromProtobuf() throws {
-        assertSnapshot(matching: try ContractInfo.fromProtobuf(Self.info), as: .description)
+        assertSnapshot(of: try ContractInfo.fromProtobuf(Self.info), as: .description)
     }
 
     internal func testToProtobuf() throws {
-        assertSnapshot(matching: try ContractInfo.fromProtobuf(Self.info).toProtobuf(), as: .description)
+        assertSnapshot(of: try ContractInfo.fromProtobuf(Self.info).toProtobuf(), as: .description)
     }
 
     internal func testFromBytes() throws {
-        assertSnapshot(matching: try ContractInfo.fromBytes(Self.info.serializedData()), as: .description)
+        assertSnapshot(of: try ContractInfo.fromBytes(Self.info.serializedData()), as: .description)
     }
 
     internal func testToBytes() throws {
         assertSnapshot(
-            matching: try ContractInfo.fromBytes(Self.info.serializedData()).toBytes().hexStringEncoded(),
+            of: try ContractInfo.fromBytes(Self.info.serializedData()).toBytes().hexStringEncoded(),
             as: .description)
     }
 }

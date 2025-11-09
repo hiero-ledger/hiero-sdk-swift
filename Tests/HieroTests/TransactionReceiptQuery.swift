@@ -20,6 +20,6 @@ internal final class TransactionReceiptQueryTests: XCTestCase {
             .transactionId(transactionId)
             .toQueryProtobufWith(.init())
 
-        assertSnapshot(matching: query, as: .description)
+        assertSnapshot(of: query, as: .description)
     }
 }

@@ -36,17 +36,17 @@ internal final class FeeSchedulesTests: XCTestCase {
     )
 
     internal func testSerialize() throws {
-        assertSnapshot(matching: feeSchedules, as: .description)
+        assertSnapshot(of: feeSchedules, as: .description)
     }
 
     internal func testToFromBytes() throws {
-        assertSnapshot(matching: try FeeSchedules.fromBytes(feeSchedules.toBytes()), as: .description)
+        assertSnapshot(of: try FeeSchedules.fromBytes(feeSchedules.toBytes()), as: .description)
     }
 
     internal func testSerializeDefault() throws {
         let schedules = FeeSchedules(current: nil, next: nil)
 
-        assertSnapshot(matching: schedules, as: .description)
+        assertSnapshot(of: schedules, as: .description)
     }
 
     internal func testToFromBytesDefault() throws {
@@ -54,7 +54,7 @@ internal final class FeeSchedulesTests: XCTestCase {
 
         let bytesSchedule = try FeeSchedules.fromBytes(schedules.toBytes())
 
-        assertSnapshot(matching: bytesSchedule, as: .description)
+        assertSnapshot(of: bytesSchedule, as: .description)
 
     }
 }

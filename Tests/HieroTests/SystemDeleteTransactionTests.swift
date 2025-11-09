@@ -34,7 +34,7 @@ internal final class SystemDeleteTransactionTests: XCTestCase {
     internal func testSerializeFile() throws {
         let tx = try Self.makeTransactionFile().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytesFile() throws {
@@ -48,7 +48,7 @@ internal final class SystemDeleteTransactionTests: XCTestCase {
     internal func testSerializeContract() throws {
         let tx = try Self.makeTransactionContract().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytesContract() throws {

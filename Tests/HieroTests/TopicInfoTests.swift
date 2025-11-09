@@ -49,18 +49,18 @@ internal final class TopicInfoTests: XCTestCase {
     internal func testFromBytes() throws {
         let info = try TopicInfo.fromBytes(Self.topicInfo.serializedData())
 
-        assertSnapshot(matching: info, as: .description)
+        assertSnapshot(of: info, as: .description)
     }
 
     internal func testFromProtobuf() throws {
         let pb = Self.topicInfo
         let info = try TopicInfo.fromProtobuf(pb)
 
-        assertSnapshot(matching: info, as: .description)
+        assertSnapshot(of: info, as: .description)
     }
 
     internal func testToProtobuf() throws {
         let info = try TopicInfo.fromProtobuf(Self.topicInfo).toProtobuf()
-        assertSnapshot(matching: info, as: .description)
+        assertSnapshot(of: info, as: .description)
     }
 }

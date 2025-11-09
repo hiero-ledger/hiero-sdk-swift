@@ -41,12 +41,12 @@ internal final class TransactionIdTests: XCTestCase {
     }
 
     internal func testSerialize() {
-        assertSnapshot(matching: try TransactionId.fromString("0.0.23847@1588539964.632521325"), as: .description)
+        assertSnapshot(of: try TransactionId.fromString("0.0.23847@1588539964.632521325"), as: .description)
     }
 
     internal func testSerialize2() {
         assertSnapshot(
-            matching: try TransactionId.fromString("0.0.23847@1588539964.632521325?scheduled/3"), as: .description)
+            of: try TransactionId.fromString("0.0.23847@1588539964.632521325?scheduled/3"), as: .description)
     }
 
     internal func testToFromPb() {

@@ -8,33 +8,33 @@ import XCTest
 
 internal final class DelegateContractIdTests: XCTestCase {
     internal func testFromString() throws {
-        assertSnapshot(matching: try DelegateContractId.fromString("0.0.5005"), as: .description)
+        assertSnapshot(of: try DelegateContractId.fromString("0.0.5005"), as: .description)
     }
 
     internal func testFromSolidityAddress() throws {
         assertSnapshot(
-            matching: try DelegateContractId.fromSolidityAddress("000000000000000000000000000000000000138D"),
+            of: try DelegateContractId.fromSolidityAddress("000000000000000000000000000000000000138D"),
             as: .description)
     }
 
     internal func testFromSolidityAddressWith0x() throws {
         assertSnapshot(
-            matching: try DelegateContractId.fromSolidityAddress("0x000000000000000000000000000000000000138D"),
+            of: try DelegateContractId.fromSolidityAddress("0x000000000000000000000000000000000000138D"),
             as: .description)
     }
 
     internal func testToBytes() throws {
         assertSnapshot(
-            matching: try DelegateContractId.fromString("0.0.5005").toBytes().hexStringEncoded(), as: .description)
+            of: try DelegateContractId.fromString("0.0.5005").toBytes().hexStringEncoded(), as: .description)
     }
 
     internal func testFromBytes() throws {
         assertSnapshot(
-            matching: try DelegateContractId.fromBytes(DelegateContractId.fromString("0.0.5005").toBytes()),
+            of: try DelegateContractId.fromBytes(DelegateContractId.fromString("0.0.5005").toBytes()),
             as: .description)
     }
 
     internal func testToSolidityAddress() throws {
-        assertSnapshot(matching: try DelegateContractId(5005).toSolidityAddress(), as: .description)
+        assertSnapshot(of: try DelegateContractId(5005).toSolidityAddress(), as: .description)
     }
 }

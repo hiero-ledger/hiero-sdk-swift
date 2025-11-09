@@ -24,19 +24,19 @@ internal final class FileInfoTests: XCTestCase {
     }
 
     internal func testFromProtobuf() throws {
-        assertSnapshot(matching: try FileInfo.fromProtobuf(Self.info), as: .description)
+        assertSnapshot(of: try FileInfo.fromProtobuf(Self.info), as: .description)
     }
 
     internal func testToProtobuf() throws {
-        assertSnapshot(matching: try FileInfo.fromProtobuf(Self.info).toProtobuf(), as: .description)
+        assertSnapshot(of: try FileInfo.fromProtobuf(Self.info).toProtobuf(), as: .description)
     }
 
     internal func testFromBytes() throws {
-        assertSnapshot(matching: try FileInfo.fromBytes(Self.info.serializedData()), as: .description)
+        assertSnapshot(of: try FileInfo.fromBytes(Self.info.serializedData()), as: .description)
     }
 
     internal func testToBytes() throws {
         assertSnapshot(
-            matching: try FileInfo.fromBytes(Self.info.serializedData()).toBytes().hexStringEncoded(), as: .description)
+            of: try FileInfo.fromBytes(Self.info.serializedData()).toBytes().hexStringEncoded(), as: .description)
     }
 }
