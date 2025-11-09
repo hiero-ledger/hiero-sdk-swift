@@ -20,12 +20,20 @@ import SwiftProtobuf
 /// - Complexity of maintaining accurate per-channel metrics
 /// - Race conditions in concurrent request tracking
 ///
+/// ## Timeout Handling
+/// This balancer does not enforce per-request timeouts. Timeout protection is
+/// provided at the execution layer via `ExponentialBackoff.maxElapsedTime` and
+/// `Backoff.requestTimeout`, which prevent indefinite hangs during retries.
+///
+/// - TODO: Implement GRPC-level timeouts using `Backoff.grpcTimeout`.
+///   To add this functionality, update `Execute.applyGrpcHeader()` to accept
+///   a timeout parameter and configure `CallOptions.timeLimit`. This would provide
+///   finer-grained timeout control for individual GRPC calls.
+///
 /// ## Related Types
 /// - `NodeConnection` - Uses ChannelBalancer for node-level load balancing
 /// - `MirrorNetwork` - Uses ChannelBalancer for mirror node distribution
-///
-/// - Warning: If a request to a non-existent host never returns, the system may hang.
-///   Consider implementing timeout handling at a higher level.
+/// - `Backoff` - Contains grpcTimeout field for future GRPC-level timeout support
 internal final class ChannelBalancer: GRPCChannel {
     // MARK: - Properties
 
@@ -42,12 +50,16 @@ internal final class ChannelBalancer: GRPCChannel {
     /// - Parameters:
     ///   - eventLoop: The event loop for channel operations
     ///   - targetSecurityPairs: Array of connection targets paired with their security configurations
+    ///
+    /// - Precondition: GRPC channel pool creation must succeed. If it fails, this is a
+    ///   programming error and the application should crash rather than continue with invalid state.
     internal init(
         eventLoop: EventLoop,
         targetSecurityPairs: [(GRPC.ConnectionTarget, GRPCChannelPool.Configuration.TransportSecurity)]
     ) {
         self.eventLoop = eventLoop
         self.channels = targetSecurityPairs.map { (target, security) in
+            // Crash intentionally if channel creation fails - no recovery possible at initialization
             try! GRPCChannelPool.with(target: target, transportSecurity: security, eventLoopGroup: eventLoop)
         }
     }

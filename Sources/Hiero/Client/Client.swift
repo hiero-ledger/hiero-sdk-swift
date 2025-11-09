@@ -334,7 +334,10 @@ public final class Client: Sendable {
     public static func fromConfig(_ config: String) throws -> Self {
         let configData: ClientConfig
         do {
-            configData = try JSONDecoder().decode(ClientConfig.self, from: config.data(using: .utf8)!)
+            guard let data = config.data(using: .utf8) else {
+                throw HError.basicParse("Invalid UTF-8 in configuration string")
+            }
+            configData = try JSONDecoder().decode(ClientConfig.self, from: data)
         } catch let error as DecodingError {
             throw HError.basicParse(String(describing: error))
         }

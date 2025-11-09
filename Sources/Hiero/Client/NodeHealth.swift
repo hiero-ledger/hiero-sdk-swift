@@ -116,7 +116,7 @@ internal enum NodeHealth: Sendable {
 
         // Apply exponential backoff
         var backoff = self.backoff
-        let backoffInterval = backoff.next()!
+        let backoffInterval = backoff.next()!  // Safe: backoff has unlimited max elapses time (never returns nil)
         let healthyAt = now.adding(nanos: backoffInterval.nanoseconds)
 
         self = .unhealthy(
