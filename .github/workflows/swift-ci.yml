@@ -56,8 +56,8 @@ jobs:
     name: Build and Test SDK on Linux
     strategy:
       matrix:
-        swift: ["5.9"]
-        os: [ubuntu-22.04]
+        swift: ["5.9", "5.10"]
+        os: [macos-13, macos-14]
     runs-on: hiero-client-sdk-linux-large
     env:
       SOLO_CLUSTER_NAME: solo
