@@ -1,6 +1,28 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import Foundation
 
+// MARK: - PEM (Privacy Enhanced Mail) Format
+//
+// PEM is a text-based encoding format for cryptographic keys and certificates.
+// It uses Base64 encoding wrapped with "-----BEGIN/END-----" markers.
+//
+// This implementation parses PEM-encoded private keys used by the Hiero SDK.
+
 extension CryptoNamespace {
+    /// PEM (Privacy Enhanced Mail) format parser for cryptographic keys.
+    ///
+    /// PEM format consists of:
+    /// ```
+    /// -----BEGIN <TYPE LABEL>-----
+    /// <Base64-encoded data>
+    /// -----END <TYPE LABEL>-----
+    /// ```
+    ///
+    /// Common type labels include:
+    /// - `PRIVATE KEY` (PKCS#8 unencrypted)
+    /// - `ENCRYPTED PRIVATE KEY` (PKCS#8 encrypted)
+    /// - `EC PRIVATE KEY` (SEC1 format)
     internal enum Pem {}
 }
 
@@ -16,9 +38,15 @@ extension CryptoNamespace.Pem {
     private static let beginLabel: String = "-----BEGIN "
     private static let endLabel: String = "-----END "
 
+    /// A parsed PEM document containing the decoded key data.
     internal struct Document {
+        /// The type label from the PEM header (e.g., "PRIVATE KEY").
         internal let typeLabel: String
+        
+        /// Optional headers from the PEM document (rarely used).
         internal let headers: [String: String]
+        
+        /// The decoded DER (Distinguished Encoding Rules) data.
         internal let der: Data
     }
 
@@ -74,7 +102,11 @@ extension CryptoNamespace.Pem {
         return headers
     }
 
-    // todo: use data instead of string
+    /// Parse a PEM-encoded string into a structured document.
+    ///
+    /// - Parameter message: The PEM-formatted string to parse.
+    /// - Returns: A `Document` containing the parsed type label, headers, and DER-encoded data.
+    /// - Throws: `HError.keyParse` if the PEM format is invalid.
     internal static func decode(_ message: String) throws -> Document {
         let fullMessage = message.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
         var message = fullMessage[...]

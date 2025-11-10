@@ -80,7 +80,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
     }
 
     fileprivate enum Kind {
-        case ed25519(CrossPlatformEd25519PrivateKey)
+        case ed25519(Ed25519PrivateKey)
         // todo use `secp256k1_bindings` directly, the key follows the requirements of `Sendable`
         // and the processing can be done more efficiently.
         case ecdsa(secp256k1.Signing.PrivateKey)
@@ -192,7 +192,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
     }
 
     internal static func ed25519(_ key: Curve25519.Signing.PrivateKey) -> Self {
-        let crossPlatformKey = try! CrossPlatformEd25519PrivateKey(rawRepresentation: key.rawRepresentation)
+        let crossPlatformKey = try! Ed25519PrivateKey(rawRepresentation: key.rawRepresentation)
         return Self(kind: .ed25519(crossPlatformKey))
     }
 
@@ -325,7 +325,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
                     throw HError.keyParse("invalid IV")
                 }
 
-                var md5 = CrossPlatformMD5()
+                var md5 = MD5Hasher()
 
                 md5.update(data: password.data(using: .utf8)!)
                 md5.update(data: iv[slicing: ..<8]!)
@@ -458,7 +458,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
             // Append the index bytes
             data.append(index.bigEndianBytes)
 
-            var hmac = HMAC<CrossPlatformSHA512>(key: SymmetricKey(data: chainCode.data))
+            var hmac = HMAC<SHA512Digest>(key: SymmetricKey(data: chainCode.data))
             hmac.update(data: data)
             let hmacResult = hmac.finalize()
             let il = Data(hmacResult.prefix(32))
@@ -497,7 +497,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
         case .ed25519(let key):
             let index = Bip32Utils.toHardenedIndex(index)
 
-            var hmac = HMAC<CrossPlatformSHA512>(key: SymmetricKey(data: chainCode.data))
+            var hmac = HMAC<SHA512Digest>(key: SymmetricKey(data: chainCode.data))
 
             hmac.update(data: [0])
             hmac.update(data: key.rawRepresentation)
@@ -561,7 +561,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
 
     // Extract the ECDSA private key from a seed.
     public static func fromSeedECDSAsecp256k1(_ seed: Data) -> Self {
-        var hmac = HMAC<CrossPlatformSHA512>(key: SymmetricKey(data: "Bitcoin seed".data(using: .utf8)!))
+        var hmac = HMAC<SHA512Digest>(key: SymmetricKey(data: "Bitcoin seed".data(using: .utf8)!))
         hmac.update(data: seed)
 
         let output = hmac.finalize().bytes
@@ -578,7 +578,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
     }
 
     public static func fromSeedED25519(_ seed: Data) -> Self {
-        var hmac = HMAC<CrossPlatformSHA512>(key: SymmetricKey(data: "ed25519 seed".data(using: .utf8)!))
+        var hmac = HMAC<SHA512Digest>(key: SymmetricKey(data: "ed25519 seed".data(using: .utf8)!))
 
         hmac.update(data: seed)
 
@@ -603,7 +603,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
     public static func fromMnemonic(_ mnemonic: Mnemonic, _ passphrase: String) -> Self {
         let seed = mnemonic.toSeed(passphrase: passphrase)
 
-        var hmac = HMAC<CrossPlatformSHA512>(key: SymmetricKey(data: "ed25519 seed".data(using: .utf8)!))
+        var hmac = HMAC<SHA512Digest>(key: SymmetricKey(data: "ed25519 seed".data(using: .utf8)!))
 
         hmac.update(data: seed)
 

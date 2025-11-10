@@ -73,7 +73,7 @@ public struct PublicKey: LosslessStringConvertible, ExpressibleByStringLiteral, 
     }
 
     fileprivate enum Kind {
-        case ed25519(CrossPlatformEd25519PublicKey)
+        case ed25519(Ed25519PublicKey)
         case ecdsa(secp256k1.Signing.PublicKey)
     }
 
@@ -96,7 +96,7 @@ public struct PublicKey: LosslessStringConvertible, ExpressibleByStringLiteral, 
         return bytes
     }
 
-    internal static func ed25519(_ key: CrossPlatformEd25519PublicKey) -> Self {
+    internal static func ed25519(_ key: Ed25519PublicKey) -> Self {
         Self(.ed25519(key))
     }
 
