@@ -105,19 +105,12 @@ jobs:
           which swift
           swift package --version
 
-      - name: Build SDK (release mode)
+      - name: Build SDK and TCK
         run: |
           echo "=========================================="
-          echo "Building Hiero SDK in release mode"
+          echo "Building Hiero SDK and Hiero TCK"
           echo "=========================================="
-          swift build -c release --verbose
-
-      - name: Build SDK (debug mode)
-        run: |
-          echo "=========================================="
-          echo "Building Hiero SDK in debug mode"
-          echo "=========================================="
-          swift build -c debug
+          swift build --verbose
 
       - name: Build tests (compile only, no execution)
         run: |
