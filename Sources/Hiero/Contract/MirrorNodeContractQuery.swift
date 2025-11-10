@@ -111,7 +111,25 @@ public class MirrorNodeContractQuery: ValidateChecksums {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         /// Send the request.
-        let (data, response) = try await URLSession.shared.data(for: request)
+        #if canImport(FoundationNetworking)
+            // Linux: Use callback-based API wrapped in continuation
+            let (data, response) = try await withCheckedThrowingContinuation { continuation in
+                URLSession.shared.dataTask(with: request) { data, response, error in
+                    if let error = error {
+                        continuation.resume(throwing: error)
+                        return
+                    }
+                    guard let data = data, let response = response else {
+                        continuation.resume(throwing: URLError(.badServerResponse))
+                        return
+                    }
+                    continuation.resume(returning: (data, response))
+                }.resume()
+            }
+        #else
+            // macOS/iOS: Use modern async/await API
+            let (data, response) = try await URLSession.shared.data(for: request)
+        #endif
 
         /// Make sure a good response was returned.
         guard let httpResponse = response as? HTTPURLResponse,
