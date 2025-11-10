@@ -113,7 +113,7 @@ public class MirrorNodeContractQuery: ValidateChecksums {
         /// Send the request.
         #if canImport(FoundationNetworking)
             // Linux: Use callback-based API wrapped in continuation
-            let (data, response) = try await withCheckedThrowingContinuation { continuation in
+            let (data, response): (Data, URLResponse) = try await withCheckedThrowingContinuation { continuation in
                 URLSession.shared.dataTask(with: request) { data, response, error in
                     if let error = error {
                         continuation.resume(throwing: error)
