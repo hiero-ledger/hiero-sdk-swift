@@ -31,6 +31,12 @@ private struct ContractJson: Decodable {
 
 public enum Resources {
     private static func getData(forUrl url: URL) async throws -> Data {
+        // For file:// URLs, use Data(contentsOf:) directly as it's more reliable across platforms
+        if url.isFileURL {
+            return try Data(contentsOf: url)
+        }
+        
+        // For remote URLs, use URLSession
         if #available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *) {
             // this version is different than the one above (this one has a `delegate: nil`), confusing I know
             return try await URLSession.shared.data(from: url).0

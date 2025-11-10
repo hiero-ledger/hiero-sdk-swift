@@ -107,11 +107,10 @@ jobs:
 
       - name: Build SDK and TCK
         run: |
-          swift build --verbose
+          swift build
 
-      - name: Build tests (compile only, no execution)
-        run: |
-          swift build --build-tests
+      - name: Run unit tests (HieroTests)
+        run: swift test --filter HieroTests
 
       - name: Prepare Hiero Solo
         id: solo
@@ -120,9 +119,6 @@ jobs:
           installMirrorNode: true
           mirrorNodeVersion: v0.142.0
           hieroVersion: v0.68.0
-
-      - name: Run unit tests (HieroTests)
-        run: swift test --filter HieroTests
 
       - name: Write .env for tests
         run: |
