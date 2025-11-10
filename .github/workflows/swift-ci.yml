@@ -34,9 +34,8 @@ jobs:
             libcurl4-openssl-dev libssl-dev
 
       - name: Setup Swift (toolchain)
-        uses: swift-actions/setup-swift@3aed395c5397f62deb91d8fe7af1418a9ae4d16f # v2.1.0
+        uses: SwiftyLab/setup-swift@v1
         with:
-          # Use same version as your test matrix unless you want to expand it
           swift-version: '5.9'
 
       - name: Build swift-format (Linux)

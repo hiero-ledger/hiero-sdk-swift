@@ -35,7 +35,7 @@ public enum Resources {
         if url.isFileURL {
             return try Data(contentsOf: url)
         }
-        
+
         // For remote URLs, use URLSession
         if #available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *) {
             // this version is different than the one above (this one has a `delegate: nil`), confusing I know
