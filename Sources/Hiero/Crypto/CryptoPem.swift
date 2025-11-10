@@ -42,10 +42,10 @@ extension CryptoNamespace.Pem {
     internal struct Document {
         /// The type label from the PEM header (e.g., "PRIVATE KEY").
         internal let typeLabel: String
-        
+
         /// Optional headers from the PEM document (rarely used).
         internal let headers: [String: String]
-        
+
         /// The decoded DER (Distinguished Encoding Rules) data.
         internal let der: Data
     }

@@ -181,7 +181,7 @@ internal struct MD5Hasher {
     internal typealias SHA512Digest = SHA512
     internal typealias HMAC<H: HashFunction> = Crypto.HMAC<H>
     internal typealias SymmetricKey = Crypto.SymmetricKey
-    
+
     // Direct type aliases for use throughout the SDK
     internal typealias Curve25519 = Crypto.Curve25519
     internal typealias P256 = Crypto.P256
@@ -189,7 +189,7 @@ internal struct MD5Hasher {
     internal typealias SHA512Digest = CryptoKit.SHA512
     internal typealias HMAC<H: HashFunction> = CryptoKit.HMAC<H>
     internal typealias SymmetricKey = CryptoKit.SymmetricKey
-    
+
     // Direct type aliases for use throughout the SDK
     internal typealias Curve25519 = CryptoKit.Curve25519
     internal typealias P256 = CryptoKit.P256
