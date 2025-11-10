@@ -67,6 +67,15 @@ public struct Proto_SignedTransaction: @unchecked Sendable {
   /// Clears the value of `sigMap`. Subsequent reads from it will return its default value.
   public mutating func clearSigMap() {self._sigMap = nil}
 
+  ///*
+  /// If false then the hash of this transaction is the SHA-384 hash of the
+  /// serialization of this SignedTransaction message as it arrived on the wire.
+  /// <p>
+  /// If true then the hash of this transaction is the SHA-384 hash of the
+  /// ascending field order serialization of the Transaction whose `bodyBytes`
+  /// and sigMap fields are deserialized from the contents of this message.
+  public var useSerializedTxMessageHashAlgorithm: Bool = false
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -83,6 +92,7 @@ extension Proto_SignedTransaction: SwiftProtobuf.Message, SwiftProtobuf._Message
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "bodyBytes"),
     2: .same(proto: "sigMap"),
+    3: .standard(proto: "use_serialized_tx_message_hash_algorithm"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -93,6 +103,7 @@ extension Proto_SignedTransaction: SwiftProtobuf.Message, SwiftProtobuf._Message
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBytesField(value: &self.bodyBytes) }()
       case 2: try { try decoder.decodeSingularMessageField(value: &self._sigMap) }()
+      case 3: try { try decoder.decodeSingularBoolField(value: &self.useSerializedTxMessageHashAlgorithm) }()
       default: break
       }
     }
@@ -109,12 +120,16 @@ extension Proto_SignedTransaction: SwiftProtobuf.Message, SwiftProtobuf._Message
     try { if let v = self._sigMap {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     } }()
+    if self.useSerializedTxMessageHashAlgorithm != false {
+      try visitor.visitSingularBoolField(value: self.useSerializedTxMessageHashAlgorithm, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Proto_SignedTransaction, rhs: Proto_SignedTransaction) -> Bool {
     if lhs.bodyBytes != rhs.bodyBytes {return false}
     if lhs._sigMap != rhs._sigMap {return false}
+    if lhs.useSerializedTxMessageHashAlgorithm != rhs.useSerializedTxMessageHashAlgorithm {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
