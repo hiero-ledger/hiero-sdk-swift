@@ -105,12 +105,12 @@ jobs:
           which swift
           swift package --version
 
-      - name: Build SDK and TCK
-        run: |
-          echo "=========================================="
-          echo "Building Hiero SDK and Hiero TCK"
-          echo "=========================================="
-          swift build --verbose
+      # - name: Build SDK and TCK
+      #   run: |
+      #     echo "=========================================="
+      #     echo "Building Hiero SDK and Hiero TCK"
+      #     echo "=========================================="
+      #     swift build --verbose
 
       - name: Build tests (compile only, no execution)
         run: |
@@ -126,11 +126,11 @@ jobs:
           installMirrorNode: true
           hieroVersion: v0.65.0
 
-      - name: Run unit tests (HieroTests)
-        run: swift test --filter HieroTests
+      # - name: Run unit tests (HieroTests)
+      #   run: swift test --filter HieroTests
       
-      # - name: Run integration tests (HieroE2ETests)
-      #   run: swift test --filter HieroE2ETests
+      - name: Run integration tests (HieroE2ETests)
+        run: swift test --filter HieroE2ETests
 
       # # ---------- Docker is preinstalled on ubuntu runners ----------
       # - name: Show Docker info
