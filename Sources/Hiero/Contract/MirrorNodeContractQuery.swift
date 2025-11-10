@@ -4,6 +4,10 @@ import Foundation
 import GRPC
 import HieroProtobufs
 
+#if canImport(FoundationNetworking)
+    import FoundationNetworking
+#endif
+
 /// MirrorNodeContractQuery returns a result from EVM execution such as cost-free execution of read-only smart
 /// contract queries, gas estimation, and transient simulations of read-write operations.
 public class MirrorNodeContractQuery: ValidateChecksums {
