@@ -303,7 +303,8 @@ public struct PublicKey: LosslessStringConvertible, ExpressibleByStringLiteral, 
             let isValid: Bool
             do {
                 isValid = try key.isValidSignature(
-                    .init(compactRepresentation: signature), for: Keccak256Digest(CryptoNamespace.Sha3.keccak256(message))!)
+                    .init(compactRepresentation: signature),
+                    for: Keccak256Digest(CryptoNamespace.Sha3.keccak256(message))!)
             } catch {
                 throw HError(kind: .signatureVerify, description: "invalid signature")
             }

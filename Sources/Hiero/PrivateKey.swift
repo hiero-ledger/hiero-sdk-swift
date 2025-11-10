@@ -333,7 +333,8 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
                 let passphrase = Data(md5.finalize().bytes)
 
                 do {
-                    decrypted = try CryptoNamespace.Aes.aes128CbcPadDecrypt(key: passphrase, iv: iv, message: document.der)
+                    decrypted = try CryptoNamespace.Aes.aes128CbcPadDecrypt(
+                        key: passphrase, iv: iv, message: document.der)
                 } catch {
                     throw HError.keyParse("Failed to decrypt message: \(error)")
                 }
@@ -423,7 +424,8 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
     public func sign(_ message: Data) -> Data {
         switch kind {
         case .ecdsa(let key):
-            return try! key.signature(for: Keccak256Digest(CryptoNamespace.Sha3.keccak256(message))!).compactRepresentation
+            return try! key.signature(for: Keccak256Digest(CryptoNamespace.Sha3.keccak256(message))!)
+                .compactRepresentation
         case .ed25519(let key):
             return try! key.signature(for: message)
         }

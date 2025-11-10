@@ -17,7 +17,7 @@ public struct CrossPlatformEd25519PrivateKey {
     #else
         private let key: CryptoKit.Curve25519.Signing.PrivateKey
     #endif
-    
+
     public init() {
         #if canImport(Crypto)
             self.key = Curve25519.Signing.PrivateKey()
@@ -25,7 +25,7 @@ public struct CrossPlatformEd25519PrivateKey {
             self.key = CryptoKit.Curve25519.Signing.PrivateKey()
         #endif
     }
-    
+
     public init(rawRepresentation: Data) throws {
         #if canImport(Crypto)
             self.key = try Curve25519.Signing.PrivateKey(rawRepresentation: rawRepresentation)
@@ -33,11 +33,11 @@ public struct CrossPlatformEd25519PrivateKey {
             self.key = try CryptoKit.Curve25519.Signing.PrivateKey(rawRepresentation: rawRepresentation)
         #endif
     }
-    
+
     public var rawRepresentation: Data {
         key.rawRepresentation
     }
-    
+
     public var publicKey: CrossPlatformEd25519PublicKey {
         #if canImport(Crypto)
             return CrossPlatformEd25519PublicKey(key: key.publicKey)
@@ -45,7 +45,7 @@ public struct CrossPlatformEd25519PrivateKey {
             return CrossPlatformEd25519PublicKey(key: key.publicKey)
         #endif
     }
-    
+
     public func signature(for data: Data) throws -> Data {
         #if canImport(Crypto)
             return try key.signature(for: data)
@@ -62,7 +62,7 @@ public struct CrossPlatformEd25519PublicKey {
     #else
         private let key: CryptoKit.Curve25519.Signing.PublicKey
     #endif
-    
+
     public init(rawRepresentation: Data) throws {
         #if canImport(Crypto)
             self.key = try Curve25519.Signing.PublicKey(rawRepresentation: rawRepresentation)
@@ -70,7 +70,7 @@ public struct CrossPlatformEd25519PublicKey {
             self.key = try CryptoKit.Curve25519.Signing.PublicKey(rawRepresentation: rawRepresentation)
         #endif
     }
-    
+
     internal init(key: Any) {
         #if canImport(Crypto)
             self.key = key as! Curve25519.Signing.PublicKey
@@ -78,11 +78,11 @@ public struct CrossPlatformEd25519PublicKey {
             self.key = key as! CryptoKit.Curve25519.Signing.PublicKey
         #endif
     }
-    
+
     public var rawRepresentation: Data {
         key.rawRepresentation
     }
-    
+
     public func isValidSignature(_ signature: Data, for data: Data) -> Bool {
         #if canImport(Crypto)
             return key.isValidSignature(signature, for: data)
@@ -99,7 +99,7 @@ public struct CrossPlatformMD5 {
     #else
         private var md5: CryptoKit.Insecure.MD5
     #endif
-    
+
     public init() {
         #if canImport(Crypto)
             self.md5 = Insecure.MD5()
@@ -107,7 +107,7 @@ public struct CrossPlatformMD5 {
             self.md5 = CryptoKit.Insecure.MD5()
         #endif
     }
-    
+
     public mutating func update(data: Data) {
         #if canImport(Crypto)
             md5.update(data: data)
@@ -115,7 +115,7 @@ public struct CrossPlatformMD5 {
             md5.update(data: data)
         #endif
     }
-    
+
     public func finalize() -> Data {
         #if canImport(Crypto)
             return Data(md5.finalize())

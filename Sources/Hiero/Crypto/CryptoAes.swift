@@ -39,7 +39,7 @@ enum CryptoAES {
     static func aes128CbcPadDecrypt(key: Data, iv: Data, message: Data) throws -> Data {
         precondition(key.count == 16, "bug: key size \(key.count) incorrect for AES-128")
         precondition(iv.count == 16, "bug: iv size incorrect for AES-128")
-        
+
         return try decrypt(message, key: key, iv: iv)
     }
 
