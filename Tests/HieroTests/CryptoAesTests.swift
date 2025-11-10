@@ -12,7 +12,7 @@ internal final class CryptoAesTests: XCTestCase {
         let bytesDer = PrivateKey.toBytesDer(Resources.privateKey)
         let iv = Data(hexEncoded: "0046A9EED8D16BE8BD6F0CAA6A197CE8")!
 
-        var hash = CrossPlatformMD5()
+        var hash = MD5Hasher()
 
         hash.update(data: Self.testPassphrase.data(using: .utf8)!)
         hash.update(data: iv[slicing: ..<8]!)
