@@ -178,7 +178,9 @@ internal struct TestEnvironment {
                 let client = try Client.forNetwork(network)
 
                 self.client = client.setMirrorNetwork([defaultLocalMirrorNodeAddress])
-                self.client.setNetworkUpdatePeriod(nil) // Disable network updates
+                Task {
+                    await client.setNetworkUpdatePeriod(nanoseconds: nil as UInt64?)
+                }
             default:
                 self.client = Client.forTestnet()
             }
