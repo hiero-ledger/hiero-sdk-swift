@@ -36,7 +36,7 @@ public struct TransactionId: Sendable, Equatable, Hashable, ExpressibleByStringL
         repeat {
             // Get the current time in nanoseconds and remove 10 seconds for time drift allowance.
             // This ensures transaction is within the allowed time window.
-            currentTime = UInt64(Date().timeIntervalSince1970 * 1_000_000_000) - nanosToRemove
+            currentTime = Date().timeIntervalSince1970.nanoseconds - nanosToRemove
 
             // Retrieve the last recorded time
             lastTime = monotonicTime.load(ordering: .relaxed)

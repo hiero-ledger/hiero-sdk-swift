@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-internal struct Operator {
+/// Operator account and signer for transaction authentication.
+///
+/// The operator is used to automatically sign transactions and generate transaction IDs.
+internal struct Operator: Sendable {
     internal let accountId: AccountId
     internal let signer: Signer
 
