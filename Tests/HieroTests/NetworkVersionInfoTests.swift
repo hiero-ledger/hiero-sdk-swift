@@ -10,7 +10,7 @@ internal final class NetworkVersionInfoTests: XCTestCase {
     private static let info: NetworkVersionInfo = NetworkVersionInfo(protobufVersion: "1.2.3", servicesVersion: "4.5.6")
 
     internal func testSerialize() {
-        assertSnapshot(matching: Self.info.toProtobuf(), as: .description)
+        assertSnapshot(of: Self.info.toProtobuf(), as: .description)
     }
 
     internal func testToFromBytes() throws {

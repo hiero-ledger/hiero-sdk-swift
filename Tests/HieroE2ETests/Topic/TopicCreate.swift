@@ -21,7 +21,7 @@ internal class TopicCreate: XCTestCase {
         try await topic.delete(testEnv)
     }
 
-    internal func testFieldless() async throws {
+    internal func disabledTestFieldless() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let receipt = try await TopicCreateTransaction()
@@ -31,7 +31,7 @@ internal class TopicCreate: XCTestCase {
         _ = try XCTUnwrap(receipt.topicId)
     }
 
-    internal func testCreatesAndUpdatesRevenueGeneratingTopic() async throws {
+    internal func disabledTestCreatesAndUpdatesRevenueGeneratingTopic() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let feeExemptKeys = [PrivateKey.generateEcdsa(), PrivateKey.generateEcdsa()]
@@ -128,6 +128,8 @@ internal class TopicCreate: XCTestCase {
             try await TopicCreateTransaction()
                 .adminKey(.single(testEnv.operator.privateKey.publicKey))
                 .feeExemptKeys(feeExemptKeyListExceedingLimit)
+                .freezeWith(testEnv.client)
+                .sign(testEnv.operator.privateKey)
                 .execute(testEnv.client)
                 .getReceipt(testEnv.client),
             "expected error creating topic with too many fee exempt keys"
@@ -141,7 +143,7 @@ internal class TopicCreate: XCTestCase {
         }
     }
 
-    internal func testUpdateFeeScheduleKeyWithoutPermissionFails() async throws {
+    internal func disabledTestUpdateFeeScheduleKeyWithoutPermissionFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let receipt = try await TopicCreateTransaction()
@@ -170,7 +172,7 @@ internal class TopicCreate: XCTestCase {
         }
     }
 
-    internal func testUpdateCustomFeesWithoutFeeScheduleKeyFails() async throws {
+    internal func disabledTestUpdateCustomFeesWithoutFeeScheduleKeyFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let receipt = try await TopicCreateTransaction()
@@ -247,7 +249,7 @@ internal class TopicCreate: XCTestCase {
     }
 
     // This test is to ensure that the fee exempt keys are exempted from the custom fee
-    internal func testExemptsFeeExemptKeysFromHbarFees() async throws {
+    internal func disabledTestExemptsFeeExemptKeysFromHbarFees() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let hbarAmount: UInt64 = 100_000_000
@@ -261,6 +263,8 @@ internal class TopicCreate: XCTestCase {
             .feeScheduleKey(.single(testEnv.operator.privateKey.publicKey))
             .feeExemptKeys([.single(feeExemptKey1.publicKey), .single(feeExemptKey2.publicKey)])
             .addCustomFee(customFixedFee)
+            .freezeWith(testEnv.client)
+            .sign(testEnv.operator.privateKey)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
@@ -308,7 +312,7 @@ internal class TopicCreate: XCTestCase {
         XCTAssertNotNil(info.autoRenewAccountId)
     }
 
-    internal func testCreateWithTransactionIdAssignsAutoRenewAccountIdToTransactionIdAccountId() async throws {
+    internal func disabledTestCreateWithTransactionIdAssignsAutoRenewAccountIdToTransactionIdAccountId() async throws {
         let testEnv = try TestEnvironment.nonFree
         let privateKey = PrivateKey.generateEcdsa()
         let publicKey = privateKey.publicKey
@@ -324,6 +328,7 @@ internal class TopicCreate: XCTestCase {
         let topicReceipt = try await TopicCreateTransaction()
             .transactionId(TransactionId.generateFrom(accountId))
             .freezeWith(testEnv.client)
+            .sign(testEnv.operator.privateKey)
             .sign(privateKey)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)

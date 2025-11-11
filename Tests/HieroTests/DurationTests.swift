@@ -36,6 +36,6 @@ internal final class DurationTests: XCTestCase {
 
         let duration = Duration.fromProtobuf(durationProto)
 
-        assertSnapshot(matching: duration, as: .description)
+        assertSnapshot(of: duration, as: .description)
     }
 }

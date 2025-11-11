@@ -11,7 +11,7 @@ internal class AccountInfoQueryTests: XCTestCase {
         let query = AccountInfoQuery(accountId: AccountId(num: 5005))
             .toQueryProtobufWith(.init())
 
-        assertSnapshot(matching: query, as: .description)
+        assertSnapshot(of: query, as: .description)
     }
 
     internal func testGetSetAccountId() {

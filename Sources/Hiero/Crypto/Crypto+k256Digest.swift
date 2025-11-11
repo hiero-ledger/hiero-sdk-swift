@@ -2,6 +2,6 @@
 
 import secp256k1
 
-extension Crypto {
+extension CryptoNamespace {
     internal typealias SecpDigest = Digest
 }

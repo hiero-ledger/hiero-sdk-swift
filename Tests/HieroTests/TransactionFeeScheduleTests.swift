@@ -24,31 +24,31 @@ internal final class TransactionFeeScheduleTests: XCTestCase {
 
     internal func testSerialize() throws {
         let schedule = try Self.makeSchedule()
-        assertSnapshot(matching: schedule, as: .description)
+        assertSnapshot(of: schedule, as: .description)
     }
 
     internal func testToProtobuf() throws {
         let scheduleProto = try Self.makeSchedule().toProtobuf()
 
-        assertSnapshot(matching: scheduleProto, as: .description)
+        assertSnapshot(of: scheduleProto, as: .description)
     }
 
     internal func testFromProtobuf() throws {
         let scheduleProto = try Self.makeSchedule().toProtobuf()
         let schedule = try TransactionFeeSchedule.fromProtobuf(scheduleProto)
 
-        assertSnapshot(matching: schedule, as: .description)
+        assertSnapshot(of: schedule, as: .description)
     }
 
     internal func testFromBytes() throws {
         let schedule = try TransactionFeeSchedule.fromBytes(try Self.makeSchedule().toBytes())
 
-        assertSnapshot(matching: schedule, as: .description)
+        assertSnapshot(of: schedule, as: .description)
     }
 
     internal func testToBytes() throws {
         let schedule = try Self.makeSchedule().toBytes().hexStringEncoded()
 
-        assertSnapshot(matching: schedule, as: .description)
+        assertSnapshot(of: schedule, as: .description)
     }
 }

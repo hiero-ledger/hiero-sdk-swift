@@ -12,6 +12,6 @@ internal final class ExchangeRatesTests: XCTestCase {
             Data(hexEncoded: "0a1008b0ea0110b6b4231a0608f0bade9006121008b0ea01108cef231a060880d7de9006")!
         )
 
-        assertSnapshot(matching: exchangeRates, as: .description)
+        assertSnapshot(of: exchangeRates, as: .description)
     }
 }

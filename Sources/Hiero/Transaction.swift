@@ -414,6 +414,8 @@ public class Transaction: ValidateChecksums {
             return try await SourceTransaction(inner: self, sources: sources).execute(client, timeout: timeout)
         }
 
+        try signWithOperator(client)
+
         return try await executeAny(client, self, timeout)
     }
 

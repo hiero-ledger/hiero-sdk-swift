@@ -303,7 +303,7 @@ private struct MnemonicV2V3Data: Equatable {
 }
 
 private func checksum(_ data: Data) -> UInt8 {
-    Crypto.Sha2.sha256(data)[0]
+    CryptoNamespace.Sha2.sha256(data)[0]
 }
 
 private func wordsToEntropyAndChecksum(_ words: [String]) -> (entropy: Data, checksum: UInt8) {

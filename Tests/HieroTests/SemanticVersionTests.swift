@@ -77,7 +77,7 @@ internal final class SemanticVersionTests: XCTestCase {
     }
 
     internal func testToProtobuf() {
-        assertSnapshot(matching: SemanticVersion("1.2.0-beta.10+d13fe780").toProtobuf(), as: .description)
+        assertSnapshot(of: SemanticVersion("1.2.0-beta.10+d13fe780").toProtobuf(), as: .description)
     }
 
     internal func testFromProtobuf() {
@@ -91,6 +91,6 @@ internal final class SemanticVersionTests: XCTestCase {
             }
         )
 
-        assertSnapshot(matching: semver, as: .description)
+        assertSnapshot(of: semver, as: .description)
     }
 }

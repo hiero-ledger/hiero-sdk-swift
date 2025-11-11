@@ -12,7 +12,7 @@ internal final class TokenNftInfoQueryTests: XCTestCase {
             .nftId("0.0.5005@101")
             .toQueryProtobufWith(.init())
 
-        assertSnapshot(matching: query, as: .description)
+        assertSnapshot(of: query, as: .description)
     }
 
     internal func testProperties() {

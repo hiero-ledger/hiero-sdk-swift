@@ -76,28 +76,28 @@ internal final class ScheduleIdTests: XCTestCase {
 
     internal func testFromSolidityAddress() {
         assertSnapshot(
-            matching: try ScheduleId.fromSolidityAddress("000000000000000000000000000000000000138D"),
+            of: try ScheduleId.fromSolidityAddress("000000000000000000000000000000000000138D"),
             as: .description
         )
     }
 
     internal func testFromSolidityAddress0x() {
         assertSnapshot(
-            matching: try ScheduleId.fromSolidityAddress("0x000000000000000000000000000000000000138D"),
+            of: try ScheduleId.fromSolidityAddress("0x000000000000000000000000000000000000138D"),
             as: .description
         )
     }
 
     internal func testFromBytes() {
         assertSnapshot(
-            matching: try ScheduleId.fromBytes(ScheduleId(num: 5005).toBytes()),
+            of: try ScheduleId.fromBytes(ScheduleId(num: 5005).toBytes()),
             as: .description
         )
     }
 
     internal func testToSolidityAddress() {
         assertSnapshot(
-            matching: try ScheduleId(num: 5005).toSolidityAddress(),
+            of: try ScheduleId(num: 5005).toSolidityAddress(),
             as: .lines
         )
     }

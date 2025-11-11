@@ -105,16 +105,11 @@ public struct Com_Hedera_Hapi_Node_State_History_History: @unchecked Sendable {
 }
 
 ///*
-/// A proof that some address book history belongs to the ledger id's
-/// chain of trust.
-public struct Com_Hedera_Hapi_Node_State_History_HistoryProof: @unchecked Sendable {
+/// A proof that some address book history belongs to the ledger id's chain of trust.
+public struct Com_Hedera_Hapi_Node_State_History_HistoryProof: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
-
-  ///*
-  /// The hash of the source address book.
-  public var sourceAddressBookHash: Data = Data()
 
   ///*
   /// The proof keys for the target address book, needed to keep
@@ -134,14 +129,24 @@ public struct Com_Hedera_Hapi_Node_State_History_HistoryProof: @unchecked Sendab
   public mutating func clearTargetHistory() {self._targetHistory = nil}
 
   ///*
-  /// The proof of chain of trust from the ledger id.
-  public var proof: Data = Data()
+  /// The proof of chain of trust from the ledger id to the target
+  /// history's metadata. Maybe replaced from a NodeSignatures list
+  /// with a recursive proof when one becomes available.
+  public var chainOfTrustProof: Com_Hedera_Hapi_Block_Stream_ChainOfTrustProof {
+    get {return _chainOfTrustProof ?? Com_Hedera_Hapi_Block_Stream_ChainOfTrustProof()}
+    set {_chainOfTrustProof = newValue}
+  }
+  /// Returns true if `chainOfTrustProof` has been explicitly set.
+  public var hasChainOfTrustProof: Bool {return self._chainOfTrustProof != nil}
+  /// Clears the value of `chainOfTrustProof`. Subsequent reads from it will return its default value.
+  public mutating func clearChainOfTrustProof() {self._chainOfTrustProof = nil}
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
 
   fileprivate var _targetHistory: Com_Hedera_Hapi_Node_State_History_History? = nil
+  fileprivate var _chainOfTrustProof: Com_Hedera_Hapi_Block_Stream_ChainOfTrustProof? = nil
 }
 
 ///*
@@ -527,10 +532,9 @@ extension Com_Hedera_Hapi_Node_State_History_History: SwiftProtobuf.Message, Swi
 extension Com_Hedera_Hapi_Node_State_History_HistoryProof: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".HistoryProof"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "source_address_book_hash"),
-    2: .standard(proto: "target_proof_keys"),
-    3: .standard(proto: "target_history"),
-    4: .same(proto: "proof"),
+    1: .standard(proto: "target_proof_keys"),
+    2: .standard(proto: "target_history"),
+    3: .standard(proto: "chain_of_trust_proof"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -539,10 +543,9 @@ extension Com_Hedera_Hapi_Node_State_History_HistoryProof: SwiftProtobuf.Message
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.sourceAddressBookHash) }()
-      case 2: try { try decoder.decodeRepeatedMessageField(value: &self.targetProofKeys) }()
-      case 3: try { try decoder.decodeSingularMessageField(value: &self._targetHistory) }()
-      case 4: try { try decoder.decodeSingularBytesField(value: &self.proof) }()
+      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.targetProofKeys) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._targetHistory) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._chainOfTrustProof) }()
       default: break
       }
     }
@@ -553,26 +556,22 @@ extension Com_Hedera_Hapi_Node_State_History_HistoryProof: SwiftProtobuf.Message
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    if !self.sourceAddressBookHash.isEmpty {
-      try visitor.visitSingularBytesField(value: self.sourceAddressBookHash, fieldNumber: 1)
-    }
     if !self.targetProofKeys.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.targetProofKeys, fieldNumber: 2)
+      try visitor.visitRepeatedMessageField(value: self.targetProofKeys, fieldNumber: 1)
     }
     try { if let v = self._targetHistory {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._chainOfTrustProof {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     } }()
-    if !self.proof.isEmpty {
-      try visitor.visitSingularBytesField(value: self.proof, fieldNumber: 4)
-    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Com_Hedera_Hapi_Node_State_History_HistoryProof, rhs: Com_Hedera_Hapi_Node_State_History_HistoryProof) -> Bool {
-    if lhs.sourceAddressBookHash != rhs.sourceAddressBookHash {return false}
     if lhs.targetProofKeys != rhs.targetProofKeys {return false}
     if lhs._targetHistory != rhs._targetHistory {return false}
-    if lhs.proof != rhs.proof {return false}
+    if lhs._chainOfTrustProof != rhs._chainOfTrustProof {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

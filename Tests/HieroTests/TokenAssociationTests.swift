@@ -13,7 +13,7 @@ internal final class TokenAssociationTests: XCTestCase {
 
         let association = try TokenAssociation.fromBytes(bytes)
 
-        assertSnapshot(matching: association, as: .description)
+        assertSnapshot(of: association, as: .description)
     }
 
     internal func testFromProtobuf() throws {

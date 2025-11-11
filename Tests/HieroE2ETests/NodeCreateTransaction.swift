@@ -14,7 +14,7 @@ internal class NodeCreate: XCTestCase {
     //
     // Temporarily disabled to prevent failed local-node calls
     //
-    internal func testCreateNewNetworkNode() async throws {
+    internal func testDABCreateNewNetworkNode() async throws {
         if shouldSkipTest {
             throw XCTSkip("Temporarily disabled to prevent failed local-node calls")
         }

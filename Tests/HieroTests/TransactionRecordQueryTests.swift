@@ -22,6 +22,6 @@ internal final class TransactionRecordQueryTests: XCTestCase {
             .includeDuplicates(true)
             .toQueryProtobufWith(.init())
 
-        assertSnapshot(matching: query, as: .description)
+        assertSnapshot(of: query, as: .description)
     }
 }

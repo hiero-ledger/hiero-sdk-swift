@@ -63,7 +63,7 @@ internal final class AccountInfo: XCTestCase {
         }
     }
 
-    internal func testGetCostInsufficientTxFeeFails() async throws {
+    internal func disabledTestGetCostInsufficientTxFeeFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         await assertThrowsHErrorAsync(

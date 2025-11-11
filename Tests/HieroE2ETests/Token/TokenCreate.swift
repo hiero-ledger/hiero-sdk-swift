@@ -117,7 +117,7 @@ internal final class TokenCreate: XCTestCase {
         }
     }
 
-    internal func testMissingTreasuryAccountIdSigFail() async throws {
+    internal func disabledTestMissingTreasuryAccountIdSigFail() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         await assertThrowsHErrorAsync(

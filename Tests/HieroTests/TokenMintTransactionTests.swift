@@ -34,7 +34,7 @@ internal final class TokenMintTransactionTests: XCTestCase {
     internal func testSerialize() throws {
         let tx = try Self.makeTransaction().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytes() throws {
@@ -48,7 +48,7 @@ internal final class TokenMintTransactionTests: XCTestCase {
     internal func testSerializeMetadata() throws {
         let tx = try Self.makeMetadataTransaction().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytesMetadata() throws {

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import HieroProtobufs
-import Network
 import SnapshotTesting
 import SwiftProtobuf
 import XCTest
@@ -44,7 +43,7 @@ internal final class NodeUpdateTransactionTests: XCTestCase {
     internal func testSerialize() throws {
         let tx = try Self.makeTransaction().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytes() throws {

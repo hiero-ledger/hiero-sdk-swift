@@ -15,7 +15,7 @@ internal final class CryptoPemTests: XCTestCase {
             -----END PRIVATE KEY-----
             """
 
-        let doc = try Crypto.Pem.decode(pemString)
+        let doc = try CryptoNamespace.Pem.decode(pemString)
 
         XCTAssertEqual(doc.typeLabel, "PRIVATE KEY")
     }
@@ -28,7 +28,7 @@ internal final class CryptoPemTests: XCTestCase {
             -----END PRIVATE KEY-----
             """
 
-        XCTAssertThrowsError(try Crypto.Pem.decode(pemString))
+        XCTAssertThrowsError(try CryptoNamespace.Pem.decode(pemString))
     }
 
     internal func testShortLineFail() throws {
@@ -39,7 +39,7 @@ internal final class CryptoPemTests: XCTestCase {
             -----END PRIVATE KEY-----
             """
 
-        XCTAssertThrowsError(try Crypto.Pem.decode(pemString))
+        XCTAssertThrowsError(try CryptoNamespace.Pem.decode(pemString))
     }
 
     internal func testNonBase64CharacterFail() throws {
@@ -50,7 +50,7 @@ internal final class CryptoPemTests: XCTestCase {
             -----END PRIVATE KEY-----
             """
 
-        XCTAssertThrowsError(try Crypto.Pem.decode(pemString))
+        XCTAssertThrowsError(try CryptoNamespace.Pem.decode(pemString))
     }
 
     internal func testBadHeaderFail() throws {
@@ -61,7 +61,7 @@ internal final class CryptoPemTests: XCTestCase {
             -----END PRIVATE KEY-----
             """
 
-        XCTAssertThrowsError(try Crypto.Pem.decode(pemString))
+        XCTAssertThrowsError(try CryptoNamespace.Pem.decode(pemString))
     }
 
     internal func testBadFooterFail() throws {
@@ -72,7 +72,7 @@ internal final class CryptoPemTests: XCTestCase {
             -----END PRIVATE KEYS-----
             """
 
-        XCTAssertThrowsError(try Crypto.Pem.decode(pemString))
+        XCTAssertThrowsError(try CryptoNamespace.Pem.decode(pemString))
     }
 
     internal func testBase64CharacterFail() throws {
@@ -83,6 +83,6 @@ internal final class CryptoPemTests: XCTestCase {
             -----END PRIVATE KEY-----
             """
 
-        XCTAssertThrowsError(try Crypto.Pem.decode(pemString))
+        XCTAssertThrowsError(try CryptoNamespace.Pem.decode(pemString))
     }
 }

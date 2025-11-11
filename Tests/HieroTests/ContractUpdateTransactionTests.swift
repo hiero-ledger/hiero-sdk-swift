@@ -57,13 +57,13 @@ internal final class ContractUpdateTransactionTests: XCTestCase {
     internal func testSerialize() throws {
         let tx = try Self.updateTransaction().toProtobuf()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testSerialize2() throws {
         let tx = try Self.updateTransaction2().toProtobuf()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytes() throws {

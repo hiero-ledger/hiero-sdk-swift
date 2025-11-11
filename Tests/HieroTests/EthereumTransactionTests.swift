@@ -24,7 +24,7 @@ internal final class EthereumTransactionTests: XCTestCase {
     }
 
     internal func testSerialize() throws {
-        assertSnapshot(matching: try Self.createTransaction().makeProtoBody(), as: .description)
+        assertSnapshot(of: try Self.createTransaction().makeProtoBody(), as: .description)
     }
 
     internal func testToFromBytes() throws {

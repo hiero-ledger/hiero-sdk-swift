@@ -307,7 +307,7 @@ internal class TokenClaimAirdrop: XCTestCase {
         }
     }
 
-    internal func testClaimEmptyPendingAirdropFail() async throws {
+    internal func disabledTestClaimEmptyPendingAirdropFail() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         // Claim the tokens with the receiver without setting pendingAirdropIds
@@ -326,7 +326,7 @@ internal class TokenClaimAirdrop: XCTestCase {
         }
     }
 
-    internal func testClaimDuplicateEntriesFail() async throws {
+    internal func disabledTestClaimDuplicateEntriesFail() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         // Create a token

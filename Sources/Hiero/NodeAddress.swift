@@ -2,7 +2,6 @@
 
 import Foundation
 import HieroProtobufs
-import Network
 
 public struct SocketAddressV4: LosslessStringConvertible {
     // name is is to match the other SDKs.

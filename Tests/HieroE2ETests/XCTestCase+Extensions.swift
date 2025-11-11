@@ -19,41 +19,27 @@ extension XCTestCase {
     internal func assertThrowsHErrorAsync<T>(
         _ expression: @autoclosure () async throws -> T,
         _ message: @autoclosure () -> String = "",
-        source: XCTSourceCodeContext = .init(),
+        file: StaticString = #file,
+        line: UInt = #line,
         _ errorHandler: (_ error: HError) -> Void = { _ in }
     ) async {
         do {
             _ = try await expression()
 
-            // XCTFail("abc")
-
             let message = message()
 
-            var compactDescription: String = "\(#function) failed: did not throw an error"
+            var compactDescription: String = "assertThrowsHErrorAsync failed: did not throw an error"
 
             if !message.isEmpty {
                 compactDescription += " - \(message)"
             }
 
-            self.record(
-                XCTIssue(
-                    type: .assertionFailure,
-                    compactDescription: compactDescription,
-                    sourceCodeContext: source
-                )
-            )
+            XCTFail(compactDescription, file: file, line: line)
 
         } catch let error as HError {
             errorHandler(error)
         } catch {
-            self.record(
-                XCTIssue(
-                    type: .assertionFailure,
-                    compactDescription: "\(#function) failed: did not throw a HError: \(error)",
-                    sourceCodeContext: source,
-                    associatedError: error
-                )
-            )
+            XCTFail("assertThrowsHErrorAsync failed: did not throw a HError: \(error)", file: file, line: line)
         }
     }
 }

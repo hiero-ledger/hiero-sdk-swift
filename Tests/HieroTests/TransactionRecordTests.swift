@@ -78,12 +78,12 @@ internal final class TransactionRecordTests: XCTestCase {
     internal func testSerialize() throws {
         let record = try createRecord("very random bytes".data(using: .utf8)!, nil)
 
-        assertSnapshot(matching: record, as: .description)
+        assertSnapshot(of: record, as: .description)
     }
 
     internal func testSerialize2() throws {
         let record = try createRecord(nil, 4)
 
-        assertSnapshot(matching: record, as: .description)
+        assertSnapshot(of: record, as: .description)
     }
 }
