@@ -175,7 +175,7 @@ internal actor NetworkUpdateTask {
 
                     // Log successful update with structured format
                     print(
-                        "[Hiero.NetworkUpdate] Consensus network updated successfully with \(newNetwork.nodes.count) nodes"
+                        "[Hiero.NetworkUpdate] Consensus network updated successfully"
                     )
 
                 } catch let error as HError {
