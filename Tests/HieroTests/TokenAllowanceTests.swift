@@ -18,19 +18,19 @@ internal final class TokenAllowanceTests: XCTestCase {
     internal func testSerialize() throws {
         let allowance = Self.makeAllowance()
 
-        assertSnapshot(matching: allowance, as: .description)
+        assertSnapshot(of: allowance, as: .description)
     }
 
     internal func testFromProtobuf() throws {
         let allowanceProto = Self.makeAllowance().toProtobuf()
         let allowance = try TokenAllowance.fromProtobuf(allowanceProto)
 
-        assertSnapshot(matching: allowance, as: .description)
+        assertSnapshot(of: allowance, as: .description)
     }
 
     internal func testToProtobuf() throws {
         let allowanceProto = Self.makeAllowance().toProtobuf()
 
-        assertSnapshot(matching: allowanceProto, as: .description)
+        assertSnapshot(of: allowanceProto, as: .description)
     }
 }

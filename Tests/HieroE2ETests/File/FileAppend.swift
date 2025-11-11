@@ -55,7 +55,7 @@ internal final class FileAppend: XCTestCase {
         let contents = try await FileContentsQuery().fileId(file.fileId).execute(testEnv.client)
 
         // marginally better to do a snapshot here, even though it's uncolored, at least there's a lot less text being shown.
-        await assertSnapshotAsync(matching: String(data: contents.contents, encoding: .utf8)!, as: .lines)
+        await assertSnapshotAsync(of: String(data: contents.contents, encoding: .utf8)!, as: .lines)
 
         let info = try await FileInfoQuery(fileId: file.fileId).execute(testEnv.client)
 
@@ -87,7 +87,7 @@ internal final class FileAppend: XCTestCase {
         let contents = try await FileContentsQuery().fileId(file.fileId).execute(testEnv.client)
 
         // marginally better to do a snapshot here, even though it's uncolored, at least there's a lot less text being shown.
-        await assertSnapshotAsync(matching: String(data: contents.contents, encoding: .utf8)!, as: .lines)
+        await assertSnapshotAsync(of: String(data: contents.contents, encoding: .utf8)!, as: .lines)
 
         let info = try await FileInfoQuery(fileId: file.fileId).execute(testEnv.client)
 

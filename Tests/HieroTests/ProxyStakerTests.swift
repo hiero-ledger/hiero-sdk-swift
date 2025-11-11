@@ -13,10 +13,10 @@ internal final class ProxyStakerTests: XCTestCase {
     }
 
     internal func testFromProtobuf() throws {
-        assertSnapshot(matching: try ProxyStaker.fromProtobuf(Self.proxyStaker), as: .description)
+        assertSnapshot(of: try ProxyStaker.fromProtobuf(Self.proxyStaker), as: .description)
     }
 
     internal func testToProtobuf() throws {
-        assertSnapshot(matching: try ProxyStaker.fromProtobuf(Self.proxyStaker).toProtobuf(), as: .description)
+        assertSnapshot(of: try ProxyStaker.fromProtobuf(Self.proxyStaker).toProtobuf(), as: .description)
     }
 }

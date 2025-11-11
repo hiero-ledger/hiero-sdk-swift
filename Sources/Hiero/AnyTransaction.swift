@@ -63,6 +63,8 @@ internal enum ServicesTransactionDataList {
     case hintsPartialSignature([Com_Hedera_Hapi_Services_Auxiliary_Hints_HintsPartialSignatureTransactionBody])
     case crsPublication([Com_Hedera_Hapi_Services_Auxiliary_Hints_CrsPublicationTransactionBody])
     case atomicBatch([Proto_AtomicBatchTransactionBody])
+    case lambdaSstore([Com_Hedera_Hapi_Node_Hooks_LambdaSStoreTransactionBody])
+    case hookDispatch([Com_Hedera_Hapi_Node_Hooks_HookDispatchTransactionBody])
 
     internal mutating func append(_ transaction: Proto_TransactionBody.OneOf_Data) throws {
         switch (self, transaction) {
@@ -298,6 +300,14 @@ internal enum ServicesTransactionDataList {
             array.append(data)
             self = .atomicBatch(array)
 
+        case (.lambdaSstore(var array), .lambdaSstore(let data)):
+            array.append(data)
+            self = .lambdaSstore(array)
+
+        case (.hookDispatch(var array), .hookDispatch(let data)):
+            array.append(data)
+            self = .hookDispatch(array)
+
         default:
             throw HError.fromProtobuf("mismatched transaction types")
         }
@@ -370,6 +380,8 @@ extension ServicesTransactionDataList: TryFromProtobuf {
         case .tokenCancelAirdrop(let data): value = .tokenCancelAirdrop([data])
         case .tokenClaimAirdrop(let data): value = .tokenClaimAirdrop([data])
         case .atomicBatch(let data): value = .atomicBatch([data])
+        case .lambdaSstore(let data): value = .lambdaSstore([data])
+        case .hookDispatch(let data): value = .hookDispatch([data])
         case .stateSignatureTransaction:
             throw HError.fromProtobuf("Unsupported transaction `StateSignatureTransaction`")
         case .hintsPreprocessingVote:

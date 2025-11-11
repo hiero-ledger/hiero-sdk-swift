@@ -11,7 +11,7 @@ internal final class ContractCreate: XCTestCase {
 
         let receipt = try await ContractCreateTransaction()
             .adminKey(.single(testEnv.operator.privateKey.publicKey))
-            .gas(200000)
+            .gas(2_000_000)
             .constructorParameters(ContractFunctionParameters().addString("Hello from Hiero."))
             .bytecodeFileId(bytecode.fileId)
             .contractMemo("[e2e::ContractCreateTransaction]")
@@ -42,7 +42,7 @@ internal final class ContractCreate: XCTestCase {
         let bytecode = try await File.forContent(ContractHelpers.bytecode, testEnv)
 
         let receipt = try await ContractCreateTransaction()
-            .gas(200000)
+            .gas(2_000_000)
             .constructorParameters(ContractFunctionParameters().addString("Hello from Hiero."))
             .bytecodeFileId(bytecode.fileId)
             .contractMemo("[e2e::ContractCreateTransaction]")

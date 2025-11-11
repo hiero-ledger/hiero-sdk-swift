@@ -17,7 +17,7 @@ internal class ContractCallQueryTests: XCTestCase {
     internal func testSerialize() throws {
         let query = Self.makeQuery().toQueryProtobufWith(.init())
 
-        assertSnapshot(matching: query, as: .description)
+        assertSnapshot(of: query, as: .description)
     }
 
     internal func testFunctionParameters() throws {
@@ -25,7 +25,7 @@ internal class ContractCallQueryTests: XCTestCase {
             .functionParameters(Self.parameters.toBytes())
             .toQueryProtobufWith(.init())
 
-        assertSnapshot(matching: query, as: .description)
+        assertSnapshot(of: query, as: .description)
     }
 
     internal func testGetSetContractId() {

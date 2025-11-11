@@ -37,7 +37,7 @@ internal final class TokenWipeTransactionTests: XCTestCase {
     internal func testSerializeFungible() throws {
         let tx = try Self.makeTransaction().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytesFungieble() throws {
@@ -51,7 +51,7 @@ internal final class TokenWipeTransactionTests: XCTestCase {
     internal func testSerializeNft() throws {
         let tx = try Self.makeTransactionNft().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytesNft() throws {

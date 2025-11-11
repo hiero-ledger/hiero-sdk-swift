@@ -32,7 +32,7 @@ internal final class ScheduleCreateTransactionTests: XCTestCase {
     internal func testSerialize() throws {
         let tx = try Self.makeTransaction().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytes() throws {

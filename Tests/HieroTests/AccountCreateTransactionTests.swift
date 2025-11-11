@@ -66,7 +66,7 @@ internal class AccountCreateTransactionTests: XCTestCase {
     internal func testSerialize() throws {
         let tx = try Self.makeTransaction().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytes() throws {
@@ -79,7 +79,7 @@ internal class AccountCreateTransactionTests: XCTestCase {
     internal func testSerialize2() throws {
         let tx = try Self.makeTransaction2().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytes2() throws {

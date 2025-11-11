@@ -35,10 +35,10 @@ internal actor NetworkUpdateTask: Sendable {
         self.managedNetwork = managedNetwork
         self.eventLoop = eventLoop
 
-        if let updatePeriod {
-            task = Self.makeTask(
-                eventLoop, managedNetwork, ManagedNetwork.networkFirstUpdateDelay, updatePeriod, shard, realm)
-        }
+        // if let updatePeriod {
+        //     task = Self.makeTask(
+        //         eventLoop, managedNetwork, ManagedNetwork.networkFirstUpdateDelay, updatePeriod, shard, realm)
+        // }
     }
 
     private static func makeTask(

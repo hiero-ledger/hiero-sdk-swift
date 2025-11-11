@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import CryptoKit
 import Foundation
 import HieroProtobufs
 import SwiftASN1
@@ -74,7 +73,7 @@ public struct PublicKey: LosslessStringConvertible, ExpressibleByStringLiteral, 
     }
 
     fileprivate enum Kind {
-        case ed25519(CryptoKit.Curve25519.Signing.PublicKey)
+        case ed25519(Ed25519PublicKey)
         case ecdsa(secp256k1.Signing.PublicKey)
     }
 
@@ -97,7 +96,7 @@ public struct PublicKey: LosslessStringConvertible, ExpressibleByStringLiteral, 
         return bytes
     }
 
-    internal static func ed25519(_ key: CryptoKit.Curve25519.Signing.PublicKey) -> Self {
+    internal static func ed25519(_ key: Ed25519PublicKey) -> Self {
         Self(.ed25519(key))
     }
 
@@ -179,7 +178,9 @@ public struct PublicKey: LosslessStringConvertible, ExpressibleByStringLiteral, 
 
         switch info.algorithm.oid {
         case .NamedCurves.secp256k1,
-            .AlgorithmIdentifier.idEcPublicKey where info.algorithm.parametersOID == .NamedCurves.secp256k1:
+            .AlgorithmIdentifier.idEcPublicKey
+        where info.algorithm.parametersOID == ASN1ObjectIdentifier.NamedCurves.secp256k1:
+
             guard info.subjectPublicKey.paddingBits == 0 else {
                 throw HError.keyParse("Invalid padding for secp256k1 spki")
             }
@@ -302,7 +303,8 @@ public struct PublicKey: LosslessStringConvertible, ExpressibleByStringLiteral, 
             let isValid: Bool
             do {
                 isValid = try key.isValidSignature(
-                    .init(compactRepresentation: signature), for: Keccak256Digest(Crypto.Sha3.keccak256(message))!)
+                    .init(compactRepresentation: signature),
+                    for: Keccak256Digest(CryptoNamespace.Sha3.keccak256(message))!)
             } catch {
                 throw HError(kind: .signatureVerify, description: "invalid signature")
             }
@@ -349,7 +351,7 @@ public struct PublicKey: LosslessStringConvertible, ExpressibleByStringLiteral, 
         let output = key.toBytes(format: .uncompressed)
 
         // note(important): sec1 uncompressed point
-        let hash = Crypto.Sha3.keccak256(output[1...])
+        let hash = CryptoNamespace.Sha3.keccak256(output[1...])
 
         return try! EvmAddress(Data(hash.dropFirst(12)))
 

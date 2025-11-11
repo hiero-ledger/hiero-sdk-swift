@@ -20,6 +20,6 @@ internal final class TokenNftAllowanceTests: XCTestCase {
     internal func testSerialize() throws {
         let allowance = try makeAllowance()
 
-        assertSnapshot(matching: allowance, as: .description)
+        assertSnapshot(of: allowance, as: .description)
     }
 }

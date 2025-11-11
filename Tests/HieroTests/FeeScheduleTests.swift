@@ -25,22 +25,22 @@ internal final class FeeScheduleTests: XCTestCase {
             ], expirationTime: Timestamp(seconds: 1_554_158_542, subSecondNanos: 0))
 
     internal func testSerialize() throws {
-        assertSnapshot(matching: feeSchedule, as: .description)
+        assertSnapshot(of: feeSchedule, as: .description)
     }
 
     internal func testToFromBytes() throws {
-        assertSnapshot(matching: try FeeSchedule.fromBytes(feeSchedule.toBytes()), as: .description)
+        assertSnapshot(of: try FeeSchedule.fromBytes(feeSchedule.toBytes()), as: .description)
     }
 
     internal func testFromProtobuf() throws {
         let feeSchedule = try FeeSchedule.fromProtobuf(feeSchedule.toProtobuf())
 
-        assertSnapshot(matching: feeSchedule, as: .description)
+        assertSnapshot(of: feeSchedule, as: .description)
     }
 
     internal func testToProtobuf() throws {
         let protoFeeSchedule = feeSchedule.toProtobuf()
 
-        assertSnapshot(matching: protoFeeSchedule, as: .description)
+        assertSnapshot(of: protoFeeSchedule, as: .description)
     }
 }

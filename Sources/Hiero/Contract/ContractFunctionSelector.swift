@@ -261,7 +261,7 @@ private struct KeccakHasher {
     }
 
     mutating func finalize() -> Data {
-        let output = Crypto.Sha3.keccak256(buffer!)
+        let output = CryptoNamespace.Sha3.keccak256(buffer!)
         buffer = nil
 
         return output

@@ -24,38 +24,38 @@ internal final class StakingInfoTests: XCTestCase {
     }
 
     internal func testFromProtobufAccount() throws {
-        assertSnapshot(matching: try StakingInfo.fromProtobuf(Self.stakingInfoAccount), as: .description)
+        assertSnapshot(of: try StakingInfo.fromProtobuf(Self.stakingInfoAccount), as: .description)
     }
 
     internal func testToProtobufAccount() throws {
-        assertSnapshot(matching: try StakingInfo.fromProtobuf(Self.stakingInfoAccount).toProtobuf(), as: .description)
+        assertSnapshot(of: try StakingInfo.fromProtobuf(Self.stakingInfoAccount).toProtobuf(), as: .description)
     }
 
     internal func testFromProtobufNode() throws {
-        assertSnapshot(matching: try StakingInfo.fromProtobuf(Self.stakingInfoNode), as: .description)
+        assertSnapshot(of: try StakingInfo.fromProtobuf(Self.stakingInfoNode), as: .description)
     }
 
     internal func testToProtobufNode() throws {
-        assertSnapshot(matching: try StakingInfo.fromProtobuf(Self.stakingInfoNode).toProtobuf(), as: .description)
+        assertSnapshot(of: try StakingInfo.fromProtobuf(Self.stakingInfoNode).toProtobuf(), as: .description)
     }
 
     internal func testFromBytesAccount() throws {
-        assertSnapshot(matching: try StakingInfo.fromBytes(Self.stakingInfoAccount.serializedData()), as: .description)
+        assertSnapshot(of: try StakingInfo.fromBytes(Self.stakingInfoAccount.serializedData()), as: .description)
     }
 
     internal func testToBytesAccount() throws {
         assertSnapshot(
-            matching: try StakingInfo.fromBytes(Self.stakingInfoAccount.serializedData()).toBytes().hexStringEncoded(),
+            of: try StakingInfo.fromBytes(Self.stakingInfoAccount.serializedData()).toBytes().hexStringEncoded(),
             as: .description)
     }
 
     internal func testFromBytesNode() throws {
-        assertSnapshot(matching: try StakingInfo.fromBytes(Self.stakingInfoNode.serializedData()), as: .description)
+        assertSnapshot(of: try StakingInfo.fromBytes(Self.stakingInfoNode.serializedData()), as: .description)
     }
 
     internal func testToBytesNode() throws {
         assertSnapshot(
-            matching: try StakingInfo.fromBytes(Self.stakingInfoNode.serializedData()).toBytes().hexStringEncoded(),
+            of: try StakingInfo.fromBytes(Self.stakingInfoNode.serializedData()).toBytes().hexStringEncoded(),
             as: .description)
     }
 }

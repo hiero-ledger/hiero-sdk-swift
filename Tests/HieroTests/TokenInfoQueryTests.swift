@@ -12,7 +12,7 @@ internal final class TokenInfoQueryTests: XCTestCase {
             .tokenId("4.2.0")
             .toQueryProtobufWith(.init())
 
-        assertSnapshot(matching: query, as: .description)
+        assertSnapshot(of: query, as: .description)
     }
 
     internal func testGetSetTokenId() {

@@ -39,7 +39,7 @@ internal final class TokenBurnTransactionTests: XCTestCase {
     internal func testSerialize() throws {
         let tx = try Self.createTransaction().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytes() throws {
@@ -52,7 +52,7 @@ internal final class TokenBurnTransactionTests: XCTestCase {
     internal func testSerializeNft() throws {
         let tx = try Self.createTransactionNft().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytesNft() throws {

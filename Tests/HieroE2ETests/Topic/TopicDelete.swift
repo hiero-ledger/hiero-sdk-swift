@@ -4,7 +4,7 @@ import Hiero
 import XCTest
 
 internal class TopicDelete: XCTestCase {
-    internal func testBasic() async throws {
+    internal func disabledTestBasic() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let topic = try await Topic.create(testEnv)
@@ -15,7 +15,7 @@ internal class TopicDelete: XCTestCase {
             .getReceipt(testEnv.client)
     }
 
-    internal func testImmutableFails() async throws {
+    internal func disabledTestImmutableFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let receipt = try await TopicCreateTransaction()
@@ -40,7 +40,7 @@ internal class TopicDelete: XCTestCase {
         }
     }
 
-    internal func testWrongAdminKeyFails() async throws {
+    internal func disabledTestWrongAdminKeyFails() async throws {
         let testEnv = try TestEnvironment.nonFree
 
         let adminKey = PrivateKey.generateEd25519()

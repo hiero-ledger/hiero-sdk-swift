@@ -38,15 +38,15 @@ internal final class AssessedCustomFeeTests: XCTestCase {
 
         XCTAssertEqual(original, new)
 
-        assertSnapshot(matching: original, as: .description)
+        assertSnapshot(of: original, as: .description)
     }
 
     internal func testFromProtobuf() {
-        assertSnapshot(matching: try AssessedCustomFee.fromProtobuf(Self.feeProto), as: .description)
+        assertSnapshot(of: try AssessedCustomFee.fromProtobuf(Self.feeProto), as: .description)
     }
 
     internal func testToProtobuf() {
-        assertSnapshot(matching: try AssessedCustomFee.fromProtobuf(Self.feeProto).toProtobuf(), as: .description)
+        assertSnapshot(of: try AssessedCustomFee.fromProtobuf(Self.feeProto).toProtobuf(), as: .description)
     }
 
     internal func testToBytes() {

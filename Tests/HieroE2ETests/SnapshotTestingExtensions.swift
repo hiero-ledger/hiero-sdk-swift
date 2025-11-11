@@ -13,7 +13,7 @@ import XCTest
 ///   - line: The line number on which failure occurred. Defaults to the line number on which this function was called.
 @MainActor
 public func assertSnapshotAsync<Value, Format>(
-    matching value: @autoclosure () throws -> Value,
+    of value: @autoclosure () throws -> Value,
     as snapshotting: Snapshotting<Value, Format>,
     named name: String? = nil,
     record recording: Bool = false,
@@ -23,7 +23,7 @@ public func assertSnapshotAsync<Value, Format>(
     line: UInt = #line
 ) {
     assertSnapshot(
-        matching: try value(),
+        of: try value(),
         as: snapshotting,
         named: name,
         record: recording,

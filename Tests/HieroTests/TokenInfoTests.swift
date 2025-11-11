@@ -64,7 +64,7 @@ internal final class TokenInfoTests: XCTestCase {
     internal func testSerialize() throws {
         let info = try TokenInfo.fromBytes(Self.tokenInfo.toBytes())
 
-        assertSnapshot(matching: info, as: .description)
+        assertSnapshot(of: info, as: .description)
     }
 
     internal func testFromProtobuf() throws {
@@ -72,11 +72,11 @@ internal final class TokenInfoTests: XCTestCase {
 
         let info = try TokenInfo.fromProtobuf(pb)
 
-        assertSnapshot(matching: info, as: .description)
+        assertSnapshot(of: info, as: .description)
     }
 
     internal func testToProtobuf() {
         let info = Self.tokenInfo.toProtobuf()
-        assertSnapshot(matching: info, as: .description)
+        assertSnapshot(of: info, as: .description)
     }
 }

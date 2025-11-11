@@ -30,7 +30,7 @@ internal final class FileUpdateTransactionTests: XCTestCase {
     internal func testSerialize() throws {
         let tx = try Self.createTransaction().makeProtoBody()
 
-        assertSnapshot(matching: tx, as: .description)
+        assertSnapshot(of: tx, as: .description)
     }
 
     internal func testToFromBytes() throws {

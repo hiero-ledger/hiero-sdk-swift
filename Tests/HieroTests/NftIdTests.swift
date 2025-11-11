@@ -22,11 +22,11 @@ internal final class NftIdTests: XCTestCase {
     }
 
     internal func testFromString() throws {
-        assertSnapshot(matching: try NftId.fromString("0.0.5005@1234"), as: .description)
+        assertSnapshot(of: try NftId.fromString("0.0.5005@1234"), as: .description)
     }
 
     internal func testFromString2() throws {
-        assertSnapshot(matching: try NftId.fromString("0.0.5005/1234"), as: .description)
+        assertSnapshot(of: try NftId.fromString("0.0.5005/1234"), as: .description)
     }
 
     internal func testfromStringWithChecksumOnMainnet() throws {
@@ -47,12 +47,12 @@ internal final class NftIdTests: XCTestCase {
     internal func testFromBytes() throws {
         let nftId = TokenId(5005).nft(574489).toBytes()
 
-        assertSnapshot(matching: try NftId.fromBytes(nftId), as: .description)
+        assertSnapshot(of: try NftId.fromBytes(nftId), as: .description)
     }
 
     internal func testToBytes() throws {
         let nftId = TokenId(5005).nft(4920)
 
-        assertSnapshot(matching: nftId.toBytes().hexStringEncoded(), as: .description)
+        assertSnapshot(of: nftId.toBytes().hexStringEncoded(), as: .description)
     }
 }

@@ -21,12 +21,12 @@ internal final class TokenNftInfoTests: XCTestCase {
     internal func testSerialize() throws {
         let info = try TokenNftInfo.fromBytes(Self.makeInfo(spenderAccountId: "8.9.10").toBytes())
 
-        assertSnapshot(matching: info, as: .description)
+        assertSnapshot(of: info, as: .description)
     }
 
     internal func testSerializeNoSpender() throws {
         let info = try TokenNftInfo.fromBytes(Self.makeInfo(spenderAccountId: nil).toBytes())
 
-        assertSnapshot(matching: info, as: .description)
+        assertSnapshot(of: info, as: .description)
     }
 }
