@@ -107,6 +107,14 @@ jobs:
         run: |
           swift build
 
+      - name: Write .env for unit tests
+        run: |
+          umask 077
+          {
+            echo "HIERO_PROFILE=ciUnit"
+          } > .env
+          cat .env
+
       - name: Run unit tests (HieroTests)
         run: swift test --filter HieroTests
 
@@ -118,14 +126,13 @@ jobs:
           mirrorNodeVersion: v0.142.0
           hieroVersion: v0.68.0
 
-      - name: Write .env for tests
+      - name: Write .env for integration tests
         run: |
           umask 077
           {
-            echo "TEST_NETWORK_NAME=localhost"
-            echo "TEST_RUN_NONFREE=1"
-            echo "TEST_OPERATOR_ID=0.0.2"
-            echo "TEST_OPERATOR_KEY=302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137"
+            echo "HIERO_PROFILE=ciIntegration"
+            echo "HIERO_OPERATOR_ID=0.0.2"
+            echo "HIERO_OPERATOR_KEY=302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137"
           } > .env
           cat .env
       

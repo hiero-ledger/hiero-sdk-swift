@@ -158,22 +158,33 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "HieroTests",
+            name: "HieroTestSupport",
             dependencies: [
                 "Hiero",
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
-            ],
-            exclude: ["__Snapshots__"]
-        ),
-        .testTarget(
-            name: "HieroE2ETests",
-            dependencies: [
-                "Hiero",
+                "HieroProtobufs",
                 .product(name: "SwiftDotenv", package: "swift-dotenv"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
-                "HieroExampleUtilities",
             ],
-            exclude: ["File/__Snapshots__"]
+            path: "Tests/HieroTestSupport",
+            exclude: ["AUDIT.md"]
+        ),
+        .testTarget(
+            name: "HieroUnitTests",
+            dependencies: [
+                "Hiero",
+                "HieroTestSupport",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+            ],
+            exclude: ["__Snapshots__", "AUDIT.md"]
+        ),
+        .testTarget(
+            name: "HieroIntegrationTests",
+            dependencies: [
+                "Hiero",
+                "HieroTestSupport",
+                .product(name: "SwiftDotenv", package: "swift-dotenv"),
+                "HieroExampleUtilities",
+            ]
         ),
     ] + exampleTargets
 )
