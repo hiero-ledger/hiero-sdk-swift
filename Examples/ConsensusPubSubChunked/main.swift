@@ -31,7 +31,7 @@ internal enum Program {
         try await Task.sleep(nanoseconds: 1_000_000_000 * 10)
 
         _ = Task {
-            let bigContents = try await HieroExampleUtilities.Resources.bigContents
+            let bigContents = HieroExampleUtilities.Resources.bigContents
 
             print(
                 "about to prepare a transaction to send a message of \(bigContents.count) bytes"

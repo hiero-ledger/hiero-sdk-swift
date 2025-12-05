@@ -1,0 +1,127 @@
+// SPDX-License-Identifier: Apache-2.0
+
+import HieroTestSupport
+import XCTest
+
+@testable import Hiero
+
+internal final class KeyUnitTests: HieroUnitTestCase {
+    internal func test_FromProtoKeyEd25519() throws {
+        let keyBytes = Data(hexEncoded: "0011223344556677889900112233445566778899001122334455667788990011")!
+
+        let keyProto = Proto_Key.with { proto in
+            proto.key = .ed25519(keyBytes)
+        }
+
+        let key = try PublicKey.fromProtobuf(keyProto)
+
+        XCTAssert(key.isEd25519())
+        XCTAssertEqual(key.toBytesRaw(), keyBytes)
+    }
+
+    internal func test_FromProtoKeyEcdsa() throws {
+        let keyBytes = Data(hexEncoded: "3a21034e0441201f2bf9c7d9873c2a9dc3fd451f64b7c05e17e4d781d916e3a11dfd99")!
+
+        let keyProto = try Proto_Key.init(serializedBytes: keyBytes)
+
+        let key = try PublicKey.fromProtobuf(keyProto)
+
+        XCTAssert(key.isEcdsa())
+        XCTAssertEqual(Key.single(key).toBytes(), keyBytes)
+    }
+
+    internal func test_FromProtoKeyKeyList() throws {
+        let keyBytes1 = Data(hexEncoded: "0011223344556677889900112233445566778899001122334455667788990011")!
+        let keyBytes2 = Data(hexEncoded: "aa11223344556677889900112233445566778899001122334455667788990011")!
+
+        let keyProto1 = Proto_Key.with { proto in
+            proto.key = .ed25519(keyBytes1)
+        }
+
+        let keyProto2 = Proto_Key.with { proto in
+            proto.key = .ed25519(keyBytes2)
+        }
+
+        let keysArray = [keyProto1, keyProto2]
+
+        let keyProto = Proto_Key.with { proto in
+            proto.keyList = .with { proto in
+                proto.keys = keysArray
+            }
+        }
+
+        let keys = try Key.fromProtobuf(keyProto)
+
+        var keyList: KeyList = KeyList.init()
+
+        switch keys {
+        case .keyList(let key):
+            keyList = key
+        default:
+            fatalError("Expected keylist")
+        }
+
+        XCTAssertEqual(keyList.count, keysArray.count)
+
+        let actual = keyList.toProtobuf()
+
+        XCTAssertEqual(actual.keys[0].ed25519.bytes, keyBytes1.bytes)
+        XCTAssertEqual(actual.keys[1].ed25519.bytes, keyBytes2.bytes)
+    }
+
+    internal func test_FromProtoKeyThresholdKey() throws {
+        let keyBytes1 = Data(hexEncoded: "0011223344556677889900112233445566778899001122334455667788990011")!
+        let keyBytes2 = Data(hexEncoded: "aa11223344556677889900112233445566778899001122334455667788990011")!
+
+        let keyProto1 = Proto_Key.with { proto in
+            proto.key = .ed25519(keyBytes1)
+        }
+
+        let keyProto2 = Proto_Key.with { proto in
+            proto.key = .ed25519(keyBytes2)
+        }
+
+        let keysArray = [keyProto1, keyProto2]
+
+        let keyListProto = Proto_KeyList.with { proto in
+            proto.keys = keysArray
+        }
+
+        let thresholdKeyProto = Proto_ThresholdKey.with { proto in
+            proto.threshold = 1
+            proto.keys = keyListProto
+        }
+
+        let keyProto = Proto_Key.with { proto in
+            proto.thresholdKey = thresholdKeyProto
+        }
+
+        let key = try Key.fromProtobuf(keyProto)
+
+        var keyList = KeyList.init()
+        // var thresholdKeyProto2 = Proto_ThresholdKey.init()
+
+        switch key {
+        case .keyList(let key):
+            keyList = key
+        default:
+            fatalError("Expected keylist")
+        }
+
+        XCTAssertEqual(keyList.count, keysArray.count)
+
+        let thresholdKey = key
+        let actual = thresholdKey.toProtobuf().thresholdKey
+
+        XCTAssertEqual(actual.threshold, 1)
+        XCTAssertEqual(actual.keys.keys[0].ed25519.bytes, keyBytes1.bytes)
+        XCTAssertEqual(actual.keys.keys[1].ed25519.bytes, keyBytes2.bytes)
+    }
+
+    internal func test_UnsupportedKeyFails() throws {
+        let key = Proto_Key.with { proto in
+            proto.key = .rsa3072(Data([0, 1, 2]))
+        }
+        XCTAssertThrowsError(try Key.fromProtobuf(key))
+    }
+}

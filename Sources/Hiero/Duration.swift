@@ -29,7 +29,7 @@ extension Duration: ProtobufCodable {
     internal typealias Protobuf = Proto_Duration
 
     internal init(protobuf proto: Protobuf) {
-        seconds = UInt64(proto.seconds)
+        seconds = UInt64(bitPattern: proto.seconds)
     }
 
     internal func toProtobuf() -> Protobuf {

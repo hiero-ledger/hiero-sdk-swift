@@ -71,7 +71,7 @@ extension CustomFixedFee: TryProtobufCodable {
 
     internal init(protobuf proto: Protobuf) throws {
         self.init(
-            UInt64(proto.fixedFee.amount),
+            UInt64(bitPattern: proto.fixedFee.amount),
             proto.hasFeeCollectorAccountID
                 ? try AccountId.fromProtobuf(proto.feeCollectorAccountID) : nil,
             proto.fixedFee.hasDenominatingTokenID

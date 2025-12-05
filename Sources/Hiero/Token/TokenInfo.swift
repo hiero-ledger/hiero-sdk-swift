@@ -183,7 +183,7 @@ extension TokenInfo: TryProtobufCodable {
             tokenMemo: proto.memo,
             tokenType: try .fromProtobuf(proto.tokenType),
             supplyType: try .fromProtobuf(proto.supplyType),
-            maxSupply: UInt64(proto.maxSupply),
+            maxSupply: UInt64(bitPattern: proto.maxSupply),
             customFees: try .fromProtobuf(proto.customFees),
             pauseKey: try .fromProtobuf(pauseKey),
             pauseStatus: pauseStatus,
