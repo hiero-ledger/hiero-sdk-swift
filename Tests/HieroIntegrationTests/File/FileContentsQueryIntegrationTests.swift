@@ -5,7 +5,7 @@ import HieroTestSupport
 import XCTest
 
 internal final class FileContentsQueryIntegrationTests: HieroIntegrationTestCase {
-    
+
     private let testContent = "[swift::e2e::fileContents]"
 
     // MARK: - Tests
@@ -60,7 +60,8 @@ internal final class FileContentsQueryIntegrationTests: HieroIntegrationTestCase
         let cost = try await query.getCost(testEnv.client)
 
         // When
-        let contents = try await query
+        let contents =
+            try await query
             .paymentAmount(cost)
             .execute(testEnv.client)
 

@@ -63,7 +63,9 @@ internal class TokenAirdropTransactionIntegrationTests: HieroIntegrationTestCase
         let operatorBalance = try await AccountBalanceQuery()
             .accountId(testEnv.operator.accountId)
             .execute(testEnv.client)
-        XCTAssertEqual(operatorBalance.tokenBalances[fungibleTokenId]!, TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount))
+        XCTAssertEqual(
+            operatorBalance.tokenBalances[fungibleTokenId]!,
+            TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount))
         XCTAssertEqual(operatorBalance.tokenBalances[nftTokenId]!, UInt64(TestConstants.testMintedNfts) - 2)
     }
 
@@ -194,7 +196,9 @@ internal class TokenAirdropTransactionIntegrationTests: HieroIntegrationTestCase
             .accountId(testEnv.operator.accountId)
             .execute(testEnv.client)
 
-        XCTAssertEqual(operatorBalance.tokenBalances[fungibleTokenId]!, TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount))
+        XCTAssertEqual(
+            operatorBalance.tokenBalances[fungibleTokenId]!,
+            TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount))
         XCTAssertEqual(operatorBalance.tokenBalances[nftTokenId]!, UInt64(TestConstants.testMintedNfts) - 2)
     }
 
@@ -288,8 +292,11 @@ internal class TokenAirdropTransactionIntegrationTests: HieroIntegrationTestCase
             .execute(testEnv.client)
 
         XCTAssertEqual(
-            operatorBalance.tokenBalances[customFeeTokenId]!, TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount) + 1)
-        XCTAssertEqual(operatorBalance.tokenBalances[tokenId]!, TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount))
+            operatorBalance.tokenBalances[customFeeTokenId]!,
+            TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount) + 1)
+        XCTAssertEqual(
+            operatorBalance.tokenBalances[tokenId]!,
+            TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount))
     }
 
     internal func test_AirdropTokensWithReceiverSigRequiredFungible() async throws {

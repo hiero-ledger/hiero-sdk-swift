@@ -12,7 +12,8 @@ internal final class TokenAllowanceUnitTests: HieroUnitTestCase {
 
     private static func makeAllowance() -> TokenAllowance {
         TokenAllowance(
-            tokenId: TestConstants.tokenId, ownerAccountId: TestConstants.accountId, spenderAccountId: testSpenderAccountId,
+            tokenId: TestConstants.tokenId, ownerAccountId: TestConstants.accountId,
+            spenderAccountId: testSpenderAccountId,
             amount: 4)
     }
 

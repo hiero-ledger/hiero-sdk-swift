@@ -28,7 +28,8 @@ internal final class StakingInfoUnitTests: HieroUnitTestCase {
     }
 
     internal func test_ToProtobufAccount() throws {
-        SnapshotTesting.assertSnapshot(of: try StakingInfo.fromProtobuf(Self.stakingInfoAccount).toProtobuf(), as: .description)
+        SnapshotTesting.assertSnapshot(
+            of: try StakingInfo.fromProtobuf(Self.stakingInfoAccount).toProtobuf(), as: .description)
     }
 
     internal func test_FromProtobufNode() throws {
@@ -36,11 +37,13 @@ internal final class StakingInfoUnitTests: HieroUnitTestCase {
     }
 
     internal func test_ToProtobufNode() throws {
-        SnapshotTesting.assertSnapshot(of: try StakingInfo.fromProtobuf(Self.stakingInfoNode).toProtobuf(), as: .description)
+        SnapshotTesting.assertSnapshot(
+            of: try StakingInfo.fromProtobuf(Self.stakingInfoNode).toProtobuf(), as: .description)
     }
 
     internal func test_FromBytesAccount() throws {
-        SnapshotTesting.assertSnapshot(of: try StakingInfo.fromBytes(Self.stakingInfoAccount.serializedData()), as: .description)
+        SnapshotTesting.assertSnapshot(
+            of: try StakingInfo.fromBytes(Self.stakingInfoAccount.serializedData()), as: .description)
     }
 
     internal func test_ToBytesAccount() throws {
@@ -50,7 +53,8 @@ internal final class StakingInfoUnitTests: HieroUnitTestCase {
     }
 
     internal func test_FromBytesNode() throws {
-        SnapshotTesting.assertSnapshot(of: try StakingInfo.fromBytes(Self.stakingInfoNode.serializedData()), as: .description)
+        SnapshotTesting.assertSnapshot(
+            of: try StakingInfo.fromBytes(Self.stakingInfoNode.serializedData()), as: .description)
     }
 
     internal func test_ToBytesNode() throws {

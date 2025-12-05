@@ -93,7 +93,9 @@ internal class TokenClaimAirdropTransactionIntegrationTests: HieroIntegrationTes
             .accountId(testEnv.operator.accountId)
             .execute(testEnv.client)
 
-        XCTAssertEqual(operatorBalance.tokenBalances[fungibleTokenId]!, TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount))
+        XCTAssertEqual(
+            operatorBalance.tokenBalances[fungibleTokenId]!,
+            TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount))
         XCTAssertEqual(operatorBalance.tokenBalances[nftTokenId]!, UInt64(TestConstants.testMintedNfts) - 2)
     }
 
@@ -204,7 +206,8 @@ internal class TokenClaimAirdropTransactionIntegrationTests: HieroIntegrationTes
             .execute(testEnv.client)
 
         XCTAssertEqual(
-            operatorBalance.tokenBalances[fungibleTokenId], TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount) * 2)
+            operatorBalance.tokenBalances[fungibleTokenId],
+            TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount) * 2)
         XCTAssertEqual(operatorBalance.tokenBalances[nftTokenId], UInt64(TestConstants.testMintedNfts) - 4)
     }
 
@@ -307,7 +310,9 @@ internal class TokenClaimAirdropTransactionIntegrationTests: HieroIntegrationTes
             .accountId(testEnv.operator.accountId)
             .execute(testEnv.client)
 
-        XCTAssertEqual(operatorBalance.tokenBalances[fungibleTokenId], TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount))
+        XCTAssertEqual(
+            operatorBalance.tokenBalances[fungibleTokenId],
+            TestConstants.testFungibleInitialBalance - UInt64(TestConstants.testAmount))
         XCTAssertEqual(operatorBalance.tokenBalances[nftTokenId], UInt64(TestConstants.testMintedNfts) - 2)
     }
 

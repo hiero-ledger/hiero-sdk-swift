@@ -94,7 +94,8 @@ public func assertReceiptStatus<T>(
         line: line
     ) { error in
         guard case .receiptStatus(let status, transactionId: _) = error.kind else {
-            let failMessage = "Expected receiptStatus error, got \(error.kind)"
+            let failMessage =
+                "Expected receiptStatus error, got \(error.kind)"
                 + (msg.isEmpty ? "" : " - \(msg)")
             XCTFail(failMessage, file: file, line: line)
             return
@@ -138,7 +139,8 @@ public func assertPrecheckStatus<T>(
         line: line
     ) { error in
         guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
-            let failMessage = "Expected transactionPreCheckStatus error, got \(error.kind)"
+            let failMessage =
+                "Expected transactionPreCheckStatus error, got \(error.kind)"
                 + (msg.isEmpty ? "" : " - \(msg)")
             XCTFail(failMessage, file: file, line: line)
             return

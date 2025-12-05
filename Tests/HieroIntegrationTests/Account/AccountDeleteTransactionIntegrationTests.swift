@@ -7,7 +7,8 @@ import XCTest
 internal final class AccountDeleteTransactionIntegrationTests: HieroIntegrationTestCase {
     internal func test_CreateThenDelete() async throws {
         // Given
-        let (accountId, key) = try await createSimpleUnmanagedAccount(initialBalance: TestConstants.testSmallHbarBalance)
+        let (accountId, key) = try await createSimpleUnmanagedAccount(
+            initialBalance: TestConstants.testSmallHbarBalance)
 
         // When
         _ = try await AccountDeleteTransaction()

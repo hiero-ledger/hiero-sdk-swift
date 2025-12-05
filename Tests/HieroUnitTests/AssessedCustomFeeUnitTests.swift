@@ -46,7 +46,8 @@ internal final class AssessedCustomFeeUnitTests: HieroUnitTestCase {
     }
 
     internal func test_ToProtobuf() {
-        SnapshotTesting.assertSnapshot(of: try AssessedCustomFee.fromProtobuf(Self.feeProto).toProtobuf(), as: .description)
+        SnapshotTesting.assertSnapshot(
+            of: try AssessedCustomFee.fromProtobuf(Self.feeProto).toProtobuf(), as: .description)
     }
 
     internal func test_ToBytes() {

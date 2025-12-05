@@ -7,7 +7,8 @@ import XCTest
 internal final class AccountAllowanceApproveTransactionIntegrationTests: HieroIntegrationTestCase {
     internal func test_Spend() async throws {
         // Given
-        let (aliceAccountId, aliceKey) = try await createTestAccount(initialBalance: TestConstants.testMediumHbarBalance)
+        let (aliceAccountId, aliceKey) = try await createTestAccount(
+            initialBalance: TestConstants.testMediumHbarBalance)
         let (bobAccountId, bobKey) = try await createTestAccount(initialBalance: TestConstants.testMediumHbarBalance)
 
         // When

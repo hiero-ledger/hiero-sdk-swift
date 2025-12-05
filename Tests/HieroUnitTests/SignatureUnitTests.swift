@@ -17,7 +17,9 @@ internal final class SignatureUnitTests: HieroUnitTestCase {
 
         let bodyBytes = try new.maxTransactionFee(10).transactionValidDuration(Duration.seconds(119))
             .transactionMemo("Frosted flakes").hbarTransfer(AccountId(2), 2).hbarTransfer(AccountId(101), -2)
-            .transactionId(TestConstants.transactionId).nodeAccountIds(TestConstants.nodeAccountIds).freeze().sign(Self.firstPrivateKey)
+            .transactionId(TestConstants.transactionId).nodeAccountIds(TestConstants.nodeAccountIds).freeze().sign(
+                Self.firstPrivateKey
+            )
             .sign(Self.secondPrivateKey)
             .toBytes()
 

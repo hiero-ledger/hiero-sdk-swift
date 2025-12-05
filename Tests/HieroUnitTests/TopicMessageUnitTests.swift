@@ -22,7 +22,8 @@ internal class TopicMessageUnitTests: HieroUnitTestCase {
         let topicMessageChunkArr: [TopicMessageChunk] = [topicMessageChunk, topicMessageChunk, topicMessageChunk]
 
         let topicMessage = TopicMessage(
-            consensusTimestamp: TestConstants.validStart, contents: Self.testContents, runningHash: Self.testRunningHash,
+            consensusTimestamp: TestConstants.validStart, contents: Self.testContents,
+            runningHash: Self.testRunningHash,
             runningHashVersion: 0, sequenceNumber: Self.testSequenceNumber, transaction: Self.testTxId,
             chunks: topicMessageChunkArr)
 

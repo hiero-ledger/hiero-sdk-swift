@@ -42,7 +42,8 @@ internal final class TransactionIdUnitTests: HieroUnitTestCase {
     }
 
     internal func test_Serialize() {
-        SnapshotTesting.assertSnapshot(of: try TransactionId.fromString("0.0.23847@1588539964.632521325"), as: .description)
+        SnapshotTesting.assertSnapshot(
+            of: try TransactionId.fromString("0.0.23847@1588539964.632521325"), as: .description)
     }
 
     internal func test_Serialize2() {

@@ -5,7 +5,7 @@ import HieroTestSupport
 import XCTest
 
 internal final class FileUpdateTransactionIntegrationTests: HieroIntegrationTestCase {
-    
+
     private let testContent = "[swift::e2e::fileUpdate]"
 
     // MARK: - Tests

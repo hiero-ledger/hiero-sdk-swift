@@ -235,7 +235,8 @@ extension HieroIntegrationTestCase {
             String(describing: info.accountId), String(describing: info.contractId),
             "Account ID should match contract ID", file: file, line: line
         )
-        XCTAssertEqual(info.adminKey, .contractId(contractId), "Admin key should be contract ID", file: file, line: line)
+        XCTAssertEqual(
+            info.adminKey, .contractId(contractId), "Admin key should be contract ID", file: file, line: line)
         XCTAssertEqual(info.storage, storage, "Storage mismatch", file: file, line: line)
     }
 }

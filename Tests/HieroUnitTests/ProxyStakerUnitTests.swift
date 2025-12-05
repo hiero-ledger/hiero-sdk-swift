@@ -17,6 +17,7 @@ internal final class ProxyStakerUnitTests: HieroUnitTestCase {
     }
 
     internal func test_ToProtobuf() throws {
-        SnapshotTesting.assertSnapshot(of: try ProxyStaker.fromProtobuf(Self.proxyStaker).toProtobuf(), as: .description)
+        SnapshotTesting.assertSnapshot(
+            of: try ProxyStaker.fromProtobuf(Self.proxyStaker).toProtobuf(), as: .description)
     }
 }

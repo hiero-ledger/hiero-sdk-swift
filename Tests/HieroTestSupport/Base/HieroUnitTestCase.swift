@@ -3,16 +3,14 @@
 import Foundation
 import Hiero
 import HieroProtobufs
+/// Re-export HieroProtobufs for protobuf types in tests
+@_exported import HieroProtobufs
 import SnapshotTesting
+/// Re-export SnapshotTesting so tests only need to import HieroTestSupport
+@_exported import SnapshotTesting
 import XCTest
 
 // MARK: - Re-exports for convenience
-
-/// Re-export SnapshotTesting so tests only need to import HieroTestSupport
-@_exported import SnapshotTesting
-
-/// Re-export HieroProtobufs for protobuf types in tests
-@_exported import HieroProtobufs
 
 /// Base class for unit tests (no network required).
 ///

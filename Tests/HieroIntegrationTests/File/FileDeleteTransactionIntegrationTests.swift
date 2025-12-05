@@ -5,7 +5,7 @@ import HieroTestSupport
 import XCTest
 
 internal final class FileDeleteTransactionIntegrationTests: HieroIntegrationTestCase {
-    
+
     private let testContent = "[swift::e2e::fileDelete]"
 
     // MARK: - Tests

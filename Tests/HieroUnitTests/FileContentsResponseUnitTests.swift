@@ -23,6 +23,7 @@ internal final class FileContentsResponseUnitTests: HieroUnitTestCase {
     }
 
     internal func test_ToProtobuf() throws {
-        SnapshotTesting.assertSnapshot(of: FileContentsResponse.fromProtobuf(Self.response).toProtobuf(), as: .description)
+        SnapshotTesting.assertSnapshot(
+            of: FileContentsResponse.fromProtobuf(Self.response).toProtobuf(), as: .description)
     }
 }

@@ -84,7 +84,8 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
 
         // Then
         let info = try await AccountInfoQuery(accountId: accountId).execute(testEnv.client)
-        assertAccountInfoWithEvmAddress(info, accountId: accountId, key: .single(adminKey.publicKey), evmAddress: evmAddress)
+        assertAccountInfoWithEvmAddress(
+            info, accountId: accountId, key: .single(adminKey.publicKey), evmAddress: evmAddress)
     }
 
     internal func test_AliasFromAdminKeyWithReceiverSigRequired() async throws {
@@ -104,7 +105,8 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
 
         // Then
         let info = try await AccountInfoQuery(accountId: accountId).execute(testEnv.client)
-        assertAccountInfoWithEvmAddress(info, accountId: accountId, key: .single(adminKey.publicKey), evmAddress: evmAddress)
+        assertAccountInfoWithEvmAddress(
+            info, accountId: accountId, key: .single(adminKey.publicKey), evmAddress: evmAddress)
     }
 
     internal func test_AliasFromAdminKeyWithReceiverSigRequiredMissingSignatureFails()

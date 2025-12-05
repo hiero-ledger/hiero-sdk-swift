@@ -11,7 +11,8 @@ internal final class AccountInfoQueryIntegrationTests: HieroIntegrationTestCase 
             .execute(testEnv.client)
 
         // Then
-        assertAccountInfo(info, accountId: testEnv.operator.accountId, key: .single(testEnv.operator.privateKey.publicKey))
+        assertAccountInfo(
+            info, accountId: testEnv.operator.accountId, key: .single(testEnv.operator.privateKey.publicKey))
         XCTAssertGreaterThan(info.balance, 0)
         XCTAssertEqual(info.proxyReceived, 0)
     }
