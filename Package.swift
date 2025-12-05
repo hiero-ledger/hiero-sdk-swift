@@ -165,8 +165,7 @@ let package = Package(
                 .product(name: "SwiftDotenv", package: "swift-dotenv"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ],
-            path: "Tests/HieroTestSupport",
-            exclude: ["AUDIT.md"]
+            path: "Tests/HieroTestSupport"
         ),
         .testTarget(
             name: "HieroUnitTests",
@@ -175,7 +174,7 @@ let package = Package(
                 "HieroTestSupport",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ],
-            exclude: ["__Snapshots__", "AUDIT.md"]
+            exclude: ["__Snapshots__"]
         ),
         .testTarget(
             name: "HieroIntegrationTests",
