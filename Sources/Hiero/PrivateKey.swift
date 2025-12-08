@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import BigInt
-import CommonCrypto
-import CryptoKit
 import Foundation
 import SwiftASN1
 import secp256k1
 
-internal struct Keccak256Digest: Crypto.SecpDigest {
+internal struct Keccak256Digest: CryptoNamespace.SecpDigest {
     internal init?(_ bytes: Data) {
         guard bytes.count == Self.byteCount else {
             return nil
@@ -82,7 +80,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
     }
 
     fileprivate enum Kind {
-        case ed25519(CryptoKit.Curve25519.Signing.PrivateKey)
+        case ed25519(Ed25519PrivateKey)
         // todo use `secp256k1_bindings` directly, the key follows the requirements of `Sendable`
         // and the processing can be done more efficiently.
         case ecdsa(secp256k1.Signing.PrivateKey)
@@ -172,7 +170,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
         }
 
         switch info.parameters?.namedCurve {
-        case .NamedCurves.secp256k1:
+        case .some(ASN1ObjectIdentifier.NamedCurves.secp256k1):
             try self.init(ecdsaBytes: Data(info.privateKey.bytes))
         case .some(let oid):
             throw HError.keyParse("unsupported key algorithm: \(oid)")
@@ -194,7 +192,8 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
     }
 
     internal static func ed25519(_ key: Curve25519.Signing.PrivateKey) -> Self {
-        Self(kind: .ed25519(key))
+        let crossPlatformKey = try! Ed25519PrivateKey(rawRepresentation: key.rawRepresentation)
+        return Self(kind: .ed25519(crossPlatformKey))
     }
 
     internal static func ecdsa(_ key: secp256k1.Signing.PrivateKey) -> Self {
@@ -269,7 +268,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
 
     /// Parse a `PrivateKey` from a [PEM](https://www.rfc-editor.org/rfc/rfc7468#section-10) encoded string.
     public static func fromPem(_ pem: String) throws -> Self {
-        let document = try Crypto.Pem.decode(pem)
+        let document = try CryptoNamespace.Pem.decode(pem)
 
         switch document.typeLabel {
         case "PRIVATE KEY": return try fromBytesDer(document.der)
@@ -281,7 +280,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
 
     /// Parse a `PrivateKey` from a password protected [PEM](https://www.rfc-editor.org/rfc/rfc7468#section-11) encoded string.
     public static func fromPem(_ pem: String, _ password: String) throws -> Self {
-        let document = try Crypto.Pem.decode(pem)
+        let document = try CryptoNamespace.Pem.decode(pem)
 
         switch document.typeLabel {
         case "ENCRYPTED PRIVATE KEY":
@@ -326,7 +325,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
                     throw HError.keyParse("invalid IV")
                 }
 
-                var md5 = CryptoKit.Insecure.MD5()
+                var md5 = MD5Hasher()
 
                 md5.update(data: password.data(using: .utf8)!)
                 md5.update(data: iv[slicing: ..<8]!)
@@ -334,7 +333,8 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
                 let passphrase = Data(md5.finalize().bytes)
 
                 do {
-                    decrypted = try Crypto.Aes.aes128CbcPadDecrypt(key: passphrase, iv: iv, message: document.der)
+                    decrypted = try CryptoNamespace.Aes.aes128CbcPadDecrypt(
+                        key: passphrase, iv: iv, message: document.der)
                 } catch {
                     throw HError.keyParse("Failed to decrypt message: \(error)")
                 }
@@ -424,7 +424,8 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
     public func sign(_ message: Data) -> Data {
         switch kind {
         case .ecdsa(let key):
-            return try! key.signature(for: Keccak256Digest(Crypto.Sha3.keccak256(message))!).compactRepresentation
+            return try! key.signature(for: Keccak256Digest(CryptoNamespace.Sha3.keccak256(message))!)
+                .compactRepresentation
         case .ed25519(let key):
             return try! key.signature(for: message)
         }
@@ -457,9 +458,11 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
             // Append the index bytes
             data.append(index.bigEndianBytes)
 
-            let hmac = HMAC<SHA512>.authenticationCode(for: data, using: SymmetricKey(data: chainCode.data))
-            let il = Data(hmac.prefix(32))
-            let newChainCode = Data(hmac.suffix(32))
+            var hmac = HMAC<SHA512Digest>(key: SymmetricKey(data: chainCode.data))
+            hmac.update(data: data)
+            let hmacResult = hmac.finalize()
+            let il = Data(hmacResult.prefix(32))
+            let newChainCode = Data(hmacResult.suffix(32))
 
             let parentPrivateKeyBigInt = BigInt(priv.hexStringEncoded(), radix: 16)!
             let ilBigInt = BigInt(il.hexStringEncoded(), radix: 16)!
@@ -494,7 +497,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
         case .ed25519(let key):
             let index = Bip32Utils.toHardenedIndex(index)
 
-            var hmac = CryptoKit.HMAC<CryptoKit.SHA512>(key: .init(data: chainCode.data))
+            var hmac = HMAC<SHA512Digest>(key: SymmetricKey(data: chainCode.data))
 
             hmac.update(data: [0])
             hmac.update(data: key.rawRepresentation)
@@ -504,7 +507,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
             let (data, chainCode) = (output[..<32], output[32...])
 
             return Self(
-                kind: .ed25519(try! .init(rawRepresentation: data)),
+                kind: .ed25519(try! .init(rawRepresentation: Data(data))),
                 chainCode: Data(chainCode)
             )
         }
@@ -558,7 +561,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
 
     // Extract the ECDSA private key from a seed.
     public static func fromSeedECDSAsecp256k1(_ seed: Data) -> Self {
-        var hmac = HMAC<SHA512>(key: .init(data: "Bitcoin seed".data(using: .utf8)!))
+        var hmac = HMAC<SHA512Digest>(key: SymmetricKey(data: "Bitcoin seed".data(using: .utf8)!))
         hmac.update(data: seed)
 
         let output = hmac.finalize().bytes
@@ -575,7 +578,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
     }
 
     public static func fromSeedED25519(_ seed: Data) -> Self {
-        var hmac = HMAC<SHA512>(key: .init(data: "ed25519 seed".data(using: .utf8)!))
+        var hmac = HMAC<SHA512Digest>(key: SymmetricKey(data: "ed25519 seed".data(using: .utf8)!))
 
         hmac.update(data: seed)
 
@@ -584,7 +587,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
         let (data, chainCode) = (output[..<32], output[32...])
 
         var key = Self(
-            kind: .ed25519(try! .init(rawRepresentation: data)),
+            kind: .ed25519(try! .init(rawRepresentation: Data(data))),
             chainCode: Data(chainCode)
         )
 
@@ -600,7 +603,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
     public static func fromMnemonic(_ mnemonic: Mnemonic, _ passphrase: String) -> Self {
         let seed = mnemonic.toSeed(passphrase: passphrase)
 
-        var hmac = HMAC<SHA512>(key: .init(data: "ed25519 seed".data(using: .utf8)!))
+        var hmac = HMAC<SHA512Digest>(key: SymmetricKey(data: "ed25519 seed".data(using: .utf8)!))
 
         hmac.update(data: seed)
 
@@ -609,7 +612,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
         let (data, chainCode) = (output[..<32], output[32...])
 
         var key = Self(
-            kind: .ed25519(try! .init(rawRepresentation: data)),
+            kind: .ed25519(try! .init(rawRepresentation: Data(data))),
             chainCode: Data(chainCode)
         )
 

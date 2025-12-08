@@ -278,6 +278,12 @@ public enum RequestType {
     /// Atomic batch transaction
     case atomicBatch
 
+    /// Lambda SStore transaction
+    case lambdaSstore
+
+    /// Hook dispatch transaction
+    case hookDispatch
+
     // swiftlint:disable:next function_body_length
     internal init?(protobuf proto: Proto_HederaFunctionality) throws {
         switch proto {
@@ -372,6 +378,8 @@ public enum RequestType {
         case .historyProofVote: self = .historyProofVote
         case .crsPublication: self = .crsPublication
         case .atomicBatch: self = .atomicBatch
+        case .lambdaSstore: self = .lambdaSstore
+        case .hookDispatch: self = .hookDispatch
         case .UNRECOGNIZED(let code):
             throw HError.fromProtobuf("unrecognized RequestType: `\(code)`")
         }
@@ -469,6 +477,8 @@ public enum RequestType {
         case .historyProofVote: return .historyProofVote
         case .crsPublication: return .crsPublication
         case .atomicBatch: return .atomicBatch
+        case .lambdaSstore: return .lambdaSstore
+        case .hookDispatch: return .hookDispatch
         }
     }
 }

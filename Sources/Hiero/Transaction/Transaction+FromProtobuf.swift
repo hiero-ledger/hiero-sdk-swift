@@ -216,6 +216,12 @@ extension Transaction {
             let value = try intoOnlyValue(value)
             return try BatchTransaction(protobuf: firstBody, value)
 
+        case .lambdaSstore(let code):
+            throw HError.fromProtobuf("unrecognized: lambdaSstore `\(code)`")
+
+        case .hookDispatch(let code):
+            throw HError.fromProtobuf("unrecognized: hookDispatch `\(code)`")
+
         case .stateSignatureTransaction(let code):
             throw HError.fromProtobuf("unrecognized: stateSignatureTransaction `\(code)`")
 

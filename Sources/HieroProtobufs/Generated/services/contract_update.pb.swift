@@ -276,6 +276,20 @@ public struct Proto_ContractUpdateTransactionBody: @unchecked Sendable {
   /// Clears the value of `declineReward`. Subsequent reads from it will return its default value.
   public mutating func clearDeclineReward() {_uniqueStorage()._declineReward = nil}
 
+  ///*
+  /// The ids the hooks to delete from the contract.
+  public var hookIdsToDelete: [Int64] {
+    get {return _storage._hookIdsToDelete}
+    set {_uniqueStorage()._hookIdsToDelete = newValue}
+  }
+
+  ///*
+  /// The hooks to create for the contract.
+  public var hookCreationDetails: [Com_Hedera_Hapi_Node_Hooks_HookCreationDetails] {
+    get {return _storage._hookCreationDetails}
+    set {_uniqueStorage()._hookCreationDetails = newValue}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// This should be condensed to just a field instead of a oneof and field 9 reserved.
@@ -351,6 +365,8 @@ extension Proto_ContractUpdateTransactionBody: SwiftProtobuf.Message, SwiftProto
     13: .standard(proto: "staked_account_id"),
     14: .standard(proto: "staked_node_id"),
     15: .standard(proto: "decline_reward"),
+    16: .standard(proto: "hook_ids_to_delete"),
+    17: .standard(proto: "hook_creation_details"),
   ]
 
   fileprivate class _StorageClass {
@@ -365,6 +381,8 @@ extension Proto_ContractUpdateTransactionBody: SwiftProtobuf.Message, SwiftProto
     var _autoRenewAccountID: Proto_AccountID? = nil
     var _stakedID: Proto_ContractUpdateTransactionBody.OneOf_StakedID?
     var _declineReward: SwiftProtobuf.Google_Protobuf_BoolValue? = nil
+    var _hookIdsToDelete: [Int64] = []
+    var _hookCreationDetails: [Com_Hedera_Hapi_Node_Hooks_HookCreationDetails] = []
 
     #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
@@ -390,6 +408,8 @@ extension Proto_ContractUpdateTransactionBody: SwiftProtobuf.Message, SwiftProto
       _autoRenewAccountID = source._autoRenewAccountID
       _stakedID = source._stakedID
       _declineReward = source._declineReward
+      _hookIdsToDelete = source._hookIdsToDelete
+      _hookCreationDetails = source._hookCreationDetails
     }
   }
 
@@ -459,6 +479,8 @@ extension Proto_ContractUpdateTransactionBody: SwiftProtobuf.Message, SwiftProto
           }
         }()
         case 15: try { try decoder.decodeSingularMessageField(value: &_storage._declineReward) }()
+        case 16: try { try decoder.decodeRepeatedInt64Field(value: &_storage._hookIdsToDelete) }()
+        case 17: try { try decoder.decodeRepeatedMessageField(value: &_storage._hookCreationDetails) }()
         default: break
         }
       }
@@ -520,6 +542,12 @@ extension Proto_ContractUpdateTransactionBody: SwiftProtobuf.Message, SwiftProto
       try { if let v = _storage._declineReward {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 15)
       } }()
+      if !_storage._hookIdsToDelete.isEmpty {
+        try visitor.visitPackedInt64Field(value: _storage._hookIdsToDelete, fieldNumber: 16)
+      }
+      if !_storage._hookCreationDetails.isEmpty {
+        try visitor.visitRepeatedMessageField(value: _storage._hookCreationDetails, fieldNumber: 17)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -540,6 +568,8 @@ extension Proto_ContractUpdateTransactionBody: SwiftProtobuf.Message, SwiftProto
         if _storage._autoRenewAccountID != rhs_storage._autoRenewAccountID {return false}
         if _storage._stakedID != rhs_storage._stakedID {return false}
         if _storage._declineReward != rhs_storage._declineReward {return false}
+        if _storage._hookIdsToDelete != rhs_storage._hookIdsToDelete {return false}
+        if _storage._hookCreationDetails != rhs_storage._hookCreationDetails {return false}
         return true
       }
       if !storagesAreEqual {return false}

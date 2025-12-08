@@ -381,7 +381,7 @@ public class Transaction: ValidateChecksums {
             }
 
             self.`operator` = client.operator
-            self.nodeAccountIds = client.net.randomNodeIds()
+            self.nodeAccountIds = client.consensus.selectHealthyNodeSample()
         }
 
         self.maxTransactionFee = self.maxTransactionFee ?? client?.maxTransactionFee
@@ -413,6 +413,8 @@ public class Transaction: ValidateChecksums {
         if let sources = sources {
             return try await SourceTransaction(inner: self, sources: sources).execute(client, timeout: timeout)
         }
+
+        try signWithOperator(client)
 
         return try await executeAny(client, self, timeout)
     }
