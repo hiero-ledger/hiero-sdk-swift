@@ -219,7 +219,7 @@ public struct FixedFee: CustomFee, Equatable, ValidateChecksums {
         let denominatingTokenId = proto.hasDenominatingTokenID ? proto.denominatingTokenID : nil
 
         self.init(
-            amount: UInt64(proto.amount),
+            amount: UInt64(bitPattern: proto.amount),
             denominatingTokenId: .fromProtobuf(denominatingTokenId),
             feeCollectorAccountId: feeCollectorAccountId,
             allCollectorsAreExempt: allCollectorsAreExempt
@@ -323,8 +323,8 @@ public struct FractionalFee: CustomFee, Equatable, ValidateChecksums {
     ) {
         denominator = proto.fractionalAmount.denominator
         numerator = proto.fractionalAmount.numerator
-        minimumAmount = UInt64(proto.minimumAmount)
-        maximumAmount = UInt64(proto.maximumAmount)
+        minimumAmount = UInt64(bitPattern: proto.minimumAmount)
+        maximumAmount = UInt64(bitPattern: proto.maximumAmount)
         assessmentMethod = .init(netOfTransfers: proto.netOfTransfers)
         self.feeCollectorAccountId = feeCollectorAccountId
         self.allCollectorsAreExempt = allCollectorsAreExempt

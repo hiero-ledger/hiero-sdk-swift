@@ -84,49 +84,44 @@ $  task example name=CreateAccount
 ```
 
 ### Testing
-See [HieroTests](./Tests/HieroTests) and [HieroE2ETests](./Tests/HieroE2ETests)
 
-Before running the integration tests (e2e)– an operator key, operator account id, and a network name must be set in an `.env` file. Unit tests do not require `.env` to be executed.
+See [Tests/README.md](./Tests/README.md) for comprehensive testing documentation.
 
-```bash
-# Account that will pay query and transaction fees
-TEST_OPERATOR_ID=
-# Default private key to use to sign for all transactions and queries
-TEST_OPERATOR_KEY=
-# Network names: `"localhost"`, `"testnet"`, `"previewnet"`, `"mainnet"`
-TEST_NETWORK_NAME=
-```
+**Quick Start:**
 
 ```bash
-# Run all unit and e2e tests
-$  swift test
+# Unit tests (no network required)
+swift test --filter HieroUnitTests
 
-# Run specific tests
-$  swift test --filter <subclass>/<testMethod>
+# Integration tests (requires .env configuration)
+swift test --filter HieroIntegrationTests
 
-# e.g. AccountCreateTransactionTests/testSerialize (unit test)
-$  swift test --filter AccountCreateTransactionTests/testSerialize
+# All tests
+swift test
 
-# e.g. AccountCreate/testInitialBalanceAndKey (e2e test) 
-$  swift test --filter AccountCreate/testInitialBalanceAndKey
+# Specific test
+swift test --filter AccountCreateTransactionUnitTests/test_Serialize
 ```
 
-The networks testnet, previewnet, and mainnet are the related and publicly available [Hedera networks](https://docs.hedera.com/hedera/networks).
+**Environment Setup for Integration Tests:**
 
-
-### Local Environment Testing
-
-You can run tests through your localhost using the `hiero-local-node` service.
-For instructions on how to set up and run local node, follow the steps in the [git repository](https://github.com/hiero-ledger/hiero-local-node).
-Once the local node is running in Docker, the appropriate `.env` values must be set:
+Create a `.env` file in the project root:
 
 ```bash
-TEST_OPERATOR_ID=0.0.2
-TEST_OPERATOR_KEY=3030020100300706052b8104000a042204205bc004059ffa2943965d306f2c44d266255318b3775bacfec42a77ca83e998f2
-TEST_NETWORK_NAME=localhost
+HIERO_OPERATOR_ID=0.0.1234
+HIERO_OPERATOR_KEY=302e020100300506032b657004220420...
+HIERO_ENVIRONMENT_TYPE=testnet
 ```
 
-Lastly, run the tests using `swift test`
+**Local Node Testing:**
+
+For testing against [hiero-local-node](https://github.com/hiero-ledger/hiero-local-node):
+
+```bash
+HIERO_OPERATOR_ID=0.0.2
+HIERO_OPERATOR_KEY=3030020100300706052b8104000a042204205bc004059ffa2943965d306f2c44d266255318b3775bacfec42a77ca83e998f2
+HIERO_ENVIRONMENT_TYPE=local
+```
 
 ## Contribute
 
