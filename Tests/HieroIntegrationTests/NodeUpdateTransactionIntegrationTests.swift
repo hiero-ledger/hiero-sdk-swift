@@ -67,7 +67,8 @@ internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTest
 
     internal func test_DAB_NodeUpdateTransactionCanChangeNodeAccountIdInvalidSignature() async throws {
         // Given
-        let (newOperatorAccountId, newOperatorKey) = try await createTestAccount(initialBalance: TestConstants.testMediumHbarBalance)
+        let (newOperatorAccountId, newOperatorKey) = try await createTestAccount(
+            initialBalance: TestConstants.testMediumHbarBalance)
 
         // Change the operator to the new account
         _ = testEnv.client.setOperator(newOperatorAccountId, newOperatorKey)
@@ -129,7 +130,8 @@ internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTest
     internal func test_DAB_NodeUpdateTransactionCanChangeNodeAccountIdMissingAdminKeySignature() async throws {
         // Given
         let (newAccountId, newAccountKey) = try await createTestAccount()
-        let (nonAdminOperatorId, nonAdminOperatorKey) = try await createTestAccount(initialBalance: TestConstants.testMediumHbarBalance)
+        let (nonAdminOperatorId, nonAdminOperatorKey) = try await createTestAccount(
+            initialBalance: TestConstants.testMediumHbarBalance)
 
         _ = testEnv.client.setOperator(nonAdminOperatorId, nonAdminOperatorKey)
 
@@ -154,7 +156,8 @@ internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTest
     internal func test_DAB_NodeUpdateTransactionCannotRemoveAccountIdWithoutAdminKey() async throws {
         // Given
         let (newAccountId, _) = try await createTestAccount(initialBalance: TestConstants.testMediumHbarBalance)
-        let (newOperatorAccountId, newOperatorKey) = try await createTestAccount(initialBalance: TestConstants.testMediumHbarBalance)
+        let (newOperatorAccountId, newOperatorKey) = try await createTestAccount(
+            initialBalance: TestConstants.testMediumHbarBalance)
 
         _ = testEnv.client.setOperator(newOperatorAccountId, newOperatorKey)
 
@@ -175,8 +178,10 @@ internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTest
 
     internal func disabledTestNodeUpdateTransactionCanChangeNodeAccountUpdateAddressbookAndRetry() async throws {
         // Given
-        let (newOperatorAccountId, newOperatorKey) = try await createTestAccount(initialBalance: TestConstants.testMediumHbarBalance)
-        let (newAccountId, newAccountKey) = try await createTestAccount(initialBalance: TestConstants.testMediumHbarBalance)
+        let (newOperatorAccountId, newOperatorKey) = try await createTestAccount(
+            initialBalance: TestConstants.testMediumHbarBalance)
+        let (newAccountId, newAccountKey) = try await createTestAccount(
+            initialBalance: TestConstants.testMediumHbarBalance)
 
         _ = testEnv.client.setOperator(newOperatorAccountId, newOperatorKey)
 
