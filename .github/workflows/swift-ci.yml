@@ -107,8 +107,10 @@ jobs:
         run: |
           swift build
 
-      - name: Run unit tests (HieroTests)
-        run: swift test --filter HieroTests
+      - name: Run unit tests (HieroUnitTests)
+        env:
+          HIERO_PROFILE: ciUnit
+        run: swift test --filter HieroUnitTests
 
       - name: Prepare Hiero Solo
         id: solo
@@ -117,17 +119,10 @@ jobs:
           installMirrorNode: true
           mirrorNodeVersion: v0.142.0
           hieroVersion: v0.68.0
-
-      - name: Write .env for tests
-        run: |
-          umask 077
-          {
-            echo "TEST_NETWORK_NAME=localhost"
-            echo "TEST_RUN_NONFREE=1"
-            echo "TEST_OPERATOR_ID=0.0.2"
-            echo "TEST_OPERATOR_KEY=302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137"
-          } > .env
-          cat .env
       
-      - name: Run integration tests (HieroE2ETests)
-        run: swift test --filter HieroE2ETests
+      - name: Run integration tests (HieroIntegrationTests)
+        env:
+          HIERO_PROFILE: ciIntegration
+          HIERO_OPERATOR_ID: 0.0.2
+          HIERO_OPERATOR_KEY: 302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137
+        run: swift test --filter HieroIntegrationTests

@@ -1,0 +1,43 @@
+// SPDX-License-Identifier: Apache-2.0
+
+import HieroTestSupport
+import SnapshotTesting
+import XCTest
+
+import struct HieroProtobufs.Proto_ContractGetInfoResponse
+import struct HieroProtobufs.Proto_Key
+
+@testable import Hiero
+
+internal final class ContractInfoUnitTests: HieroUnitTestCase {
+    private static let info: Proto_ContractGetInfoResponse.ContractInfo = .with { proto in
+        proto.contractID = ContractId(num: 1).toProtobuf()
+        proto.accountID = AccountId(num: 5006).toProtobuf()
+        proto.expirationTime = .with { proto in
+            proto.seconds = 1_554_158_728
+        }
+        proto.contractAccountID = "3"
+        proto.autoRenewPeriod = Duration.days(5).toProtobuf()
+        proto.balance = 8
+        proto.ledgerID = LedgerId.testnet.bytes
+        proto.memo = "flook"
+    }
+
+    internal func test_FromProtobuf() throws {
+        SnapshotTesting.assertSnapshot(of: try ContractInfo.fromProtobuf(Self.info), as: .description)
+    }
+
+    internal func test_ToProtobuf() throws {
+        SnapshotTesting.assertSnapshot(of: try ContractInfo.fromProtobuf(Self.info).toProtobuf(), as: .description)
+    }
+
+    internal func test_FromBytes() throws {
+        SnapshotTesting.assertSnapshot(of: try ContractInfo.fromBytes(Self.info.serializedData()), as: .description)
+    }
+
+    internal func test_ToBytes() throws {
+        SnapshotTesting.assertSnapshot(
+            of: try ContractInfo.fromBytes(Self.info.serializedData()).toBytes().hexStringEncoded(),
+            as: .description)
+    }
+}
