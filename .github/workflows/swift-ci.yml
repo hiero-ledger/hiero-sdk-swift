@@ -187,10 +187,15 @@ jobs:
         with:
           installMirrorNode: true
           hieroVersion: v0.68.4
+          dualMode: true
       
       - name: Run DAB-related integration tests
         env:
           HIERO_PROFILE: ciIntegration
           HIERO_OPERATOR_ID: 0.0.2
           HIERO_OPERATOR_KEY: 302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137
+          HIERO_ENVIRONMENT_TYPE: custom
+          HIERO_CONSENSUS_NODES: 127.0.0.1:50211,127.0.0.1:51211
+          HIERO_CONSENSUS_NODE_ACCOUNT_IDS: 0.0.3,0.0.4
+          HIERO_MIRROR_NODES: 127.0.0.1:5600
         run: swift test --filter "DAB*"
