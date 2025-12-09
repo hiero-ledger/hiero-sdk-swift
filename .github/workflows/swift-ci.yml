@@ -117,6 +117,7 @@ jobs:
         uses: hiero-ledger/hiero-solo-action@fbca3e7a99ce9aa8a250563a81187abe115e0dad # v0.16.0
         with:
           installMirrorNode: true
+          mirrorNodeVersion: v0.142.0
           hieroVersion: v0.68.4
       
       - name: Run integration tests (HieroIntegrationTests)
@@ -187,6 +188,7 @@ jobs:
         with:
           installMirrorNode: true
           hieroVersion: v0.68.4
+          mirrorNodeVersion: v0.142.0
           dualMode: true
       
       - name: Run DAB-related integration tests

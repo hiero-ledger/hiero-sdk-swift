@@ -63,9 +63,11 @@ public class DotenvLoader {
                         }
                     }
 
+                    EnvironmentVariables.printAllTestVariables()
                     return
                 } catch {
                     print("Failed to load .env from \(envPath): \(error)")
+                    EnvironmentVariables.printAllTestVariables()
                     return
                 }
             }
@@ -78,6 +80,7 @@ public class DotenvLoader {
         }
 
         print("No .env file found, using environment variables directly")
+        EnvironmentVariables.printAllTestVariables()
     }
 
     private static func setEnvironmentVariable(from env: Environment, key: String) {
