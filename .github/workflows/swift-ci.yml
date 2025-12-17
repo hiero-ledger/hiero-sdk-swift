@@ -119,79 +119,9 @@ jobs:
           installMirrorNode: true
           mirrorNodeVersion: v0.142.0
           hieroVersion: v0.68.4
-      
-      - name: Run integration tests (HieroIntegrationTests)
-        env:
-          HIERO_PROFILE: ciIntegration
-          HIERO_OPERATOR_ID: 0.0.2
-          HIERO_OPERATOR_KEY: 302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137
-        run: swift test --filter HieroIntegrationTests
-
-  test-dab:
-    name: Build and Test SDK with DAB
-    strategy:
-      matrix:
-        swift: ["5.9", "5.10"]
-    runs-on: hiero-client-sdk-linux-large
-    env:
-      SOLO_CLUSTER_NAME: solo
-      SOLO_NAMESPACE: solo
-      SOLO_CLUSTER_SETUP_NAMESPACE: solo-cluster
-      SOLO_DEPLOYMENT: solo-deployment
-      KIND_IMAGE: kindest/node:v1.32.2   # pin to a stable image
-
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f
-        with:
-          egress-policy: audit
-
-      - name: Setup Swift
-        uses: SwiftyLab/setup-swift@4bbb093f8c68d1dee1caa8b67c681a3f8fe70a91 # v1.12.0
-        with:
-          swift-version: ${{ matrix.swift }}
-
-      - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-
-      - name: Cache SPM build dir
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
-        with:
-          path: .build
-          key: ${{ runner.os }}-${{ matrix.swift }}-spm-${{ github.job }}-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.swift }}-spm-
-
-      - name: Install system dependencies for Swift/gRPC
-        run: |
-          set -euxo pipefail
-          sudo apt-get update
-          sudo apt-get install -y \
-            git curl jq coreutils ca-certificates \
-            clang libicu-dev libxml2-dev libsqlite3-dev zlib1g-dev \
-            libcurl4-openssl-dev libssl-dev pkg-config \
-            protobuf-compiler
-
-      - name: Verify Swift installation
-        run: |
-          swift --version
-          which swift
-          swift package --version
-
-      - name: Build SDK
-        run: |
-          swift build
-
-      - name: Prepare Hiero Solo
-        id: solo
-        uses: hiero-ledger/hiero-solo-action@fbca3e7a99ce9aa8a250563a81187abe115e0dad # v0.16.0
-        with:
-          installMirrorNode: true
-          hieroVersion: v0.68.4
-          mirrorNodeVersion: v0.142.0
           dualMode: true
       
-      - name: Run DAB-related integration tests
+      - name: Run integration tests (HieroIntegrationTests)
         env:
           HIERO_PROFILE: ciIntegration
           HIERO_OPERATOR_ID: 0.0.2
@@ -200,4 +130,4 @@ jobs:
           HIERO_CONSENSUS_NODES: 127.0.0.1:50211,127.0.0.1:51211
           HIERO_CONSENSUS_NODE_ACCOUNT_IDS: 0.0.3,0.0.4
           HIERO_MIRROR_NODES: 127.0.0.1:5600
-        run: swift test --filter "DAB*"
+        run: swift test --filter HieroIntegrationTests
