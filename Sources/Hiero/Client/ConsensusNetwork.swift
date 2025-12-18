@@ -291,6 +291,14 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
         }
     }
 
+    /// Converts account IDs to their corresponding node indexes, skipping unknown account IDs.
+    ///
+    /// - Parameter accountIds: Array of account IDs to look up
+    /// - Returns: Array of node indexes for known account IDs only
+    internal func nodeIndexesForIdsAllowingUnknown(_ accountIds: [AccountId]) -> [Int] {
+        accountIds.compactMap { nodeIndexMap[$0] }
+    }
+
     /// Returns indexes of all currently healthy nodes.
     internal func healthyNodeIndexes() -> [Int] {
         let now = Timestamp.now

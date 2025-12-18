@@ -66,6 +66,9 @@ public final class Client: Sendable {
     /// Realm number for this client's network (backing storage)
     private let _realm: UInt64
 
+    /// Flag to indicate if this client should use only plaintext endpoints (for integration testing)
+    private let _plaintextOnly: Bool
+
     // MARK: - Initialization
 
     /// Primary designated initializer.
@@ -85,7 +88,8 @@ public final class Client: Sendable {
         networkUpdatePeriod: UInt64? = TimeInterval(86400).nanoseconds,  // 24 hours
         _ eventLoop: NIOCore.EventLoopGroup,
         shard: UInt64 = 0,
-        realm: UInt64 = 0
+        realm: UInt64 = 0,
+        plaintextOnly: Bool = false
     ) {
         self.eventLoop = eventLoop
         self._consensusNetwork = .init(consensus)
@@ -101,12 +105,14 @@ public final class Client: Sendable {
             mirrorNetwork: _mirrorNetwork,
             updatePeriod: networkUpdatePeriod,
             shard: shard,
-            realm: realm
+            realm: realm,
+            plaintext: plaintextOnly
         )
         self._networkUpdatePeriod = .init(networkUpdatePeriod)
         self._backoff = .init(Backoff())
         self._shard = shard
         self._realm = realm
+        self._plaintextOnly = plaintextOnly
     }
 
     // MARK: - Internal Accessors
@@ -135,6 +141,26 @@ public final class Client: Sendable {
         }
 
         return .fromTinybars(value)
+    }
+
+    /// Whether this client should use only plaintext endpoints.
+    internal var plaintextOnly: Bool {
+        _plaintextOnly
+    }
+
+    /// Shard number for this client's network (internal accessor)
+    internal var shard: UInt64 {
+        _shard
+    }
+
+    /// Realm number for this client's network (internal accessor)
+    internal var realm: UInt64 {
+        _realm
+    }
+
+    /// Internal accessor for the actual MirrorNetwork object (not just addresses)
+    internal var mirrorNetworkObject: MirrorNetwork {
+        _mirrorNetwork.load(ordering: .relaxed)
     }
 
     // MARK: - Public Accessors
@@ -246,7 +272,8 @@ public final class Client: Sendable {
             ledgerId: nil,
             eventLoop,
             shard: shard,
-            realm: realm
+            realm: realm,
+            plaintextOnly: true  // forMirrorNetwork always uses plaintext endpoints
         )
 
         let addressBook = try await NodeAddressBookQuery()

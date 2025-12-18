@@ -4,26 +4,6 @@ import SwiftDotenv
 /// Handles loading environment variables from .env files.
 /// This loads once per test process, regardless of how many test cases run.
 public class DotenvLoader {
-    /// All Hiero test environment variables
-    private static let environmentVariableKeys = [
-        "HIERO_OPERATOR_ID",
-        "HIERO_OPERATOR_KEY",
-        "HIERO_PROFILE",
-        "HIERO_NETWORK_NAME",
-        "HIERO_CONSENSUS_NODES",
-        "HIERO_CONSENSUS_NODE_ACCOUNT_IDS",
-        "HIERO_MIRROR_NODES",
-        "HIERO_VERBOSE",
-        "HIERO_MAX_DURATION",
-        "HIERO_PARALLEL",
-        "HIERO_ENABLE_CLEANUP",
-        "HIERO_CLEANUP_ACCOUNTS",
-        "HIERO_CLEANUP_TOKENS",
-        "HIERO_CLEANUP_FILES",
-        "HIERO_CLEANUP_TOPICS",
-        "HIERO_CLEANUP_CONTRACTS",
-    ]
-
     /// Ensures .env is loaded exactly once per process
     private static let loaded: Void = {
         loadDotenvFile()
@@ -46,26 +26,15 @@ public class DotenvLoader {
                     let env = try Dotenv.load(path: envPath)
 
                     // Set all environment variables from .env
-                    // This is necessary because ProcessInfo.processInfo.environment is read-only
-                    for key in environmentVariableKeys {
+                    // Uses EnvironmentVariables.keys as the single source of truth
+                    for key in EnvironmentVariables.keys {
                         setEnvironmentVariable(from: env, key: key)
                     }
 
-                    // Print loaded variables if verbose logging is enabled
-                    if EnvironmentVariables.verboseLogging {
-                        print("Loaded environment variables from \(envPath):")
-                        for key in environmentVariableKeys {
-                            if let value = env[key]?.stringValue {
-                                // Redact sensitive values
-                                let displayValue = key.contains("KEY") ? "***" : value
-                                print("  \(key) = \(displayValue)")
-                            }
-                        }
-                    }
-
+                    EnvironmentVariables.printAllTestVariables()
                     return
                 } catch {
-                    print("Failed to load .env from \(envPath): \(error)")
+                    // Failed to load .env, fall through to use environment variables directly
                     return
                 }
             }
@@ -78,6 +47,7 @@ public class DotenvLoader {
         }
 
         print("No .env file found, using environment variables directly")
+        EnvironmentVariables.printAllTestVariables()
     }
 
     private static func setEnvironmentVariable(from env: Environment, key: String) {
