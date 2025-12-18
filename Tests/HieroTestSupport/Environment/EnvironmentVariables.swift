@@ -139,9 +139,7 @@ public struct EnvironmentVariables {
         let testVars = env.filter { $0.key.hasPrefix("HIERO_") }
         print("=== Test Environment Variables ===")
         for (key, value) in testVars.sorted(by: { $0.key < $1.key }) {
-            // Redact sensitive values
-            let displayValue = key.contains("KEY") ? "***REDACTED***" : value
-            print("\(key) = \(displayValue)")
+            print("\(key) = \(value)")
         }
         print("==================================")
     }
