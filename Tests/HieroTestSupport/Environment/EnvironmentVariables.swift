@@ -133,15 +133,34 @@ public struct EnvironmentVariables {
         env[key] != nil
     }
 
-    // MARK: - Debug: Print All Test Variables
+    // MARK: - All Environment Variable Keys
+
+    /// All known Hiero test environment variable keys
+    /// This is the single source of truth for all supported environment variables
+    public static let keys = [
+        "HIERO_OPERATOR_ID",
+        "HIERO_OPERATOR_KEY",
+        "HIERO_PROFILE",
+        "HIERO_ENVIRONMENT_TYPE",
+        "HIERO_CONSENSUS_NODES",
+        "HIERO_CONSENSUS_NODE_ACCOUNT_IDS",
+        "HIERO_MIRROR_NODES",
+        "HIERO_VERBOSE",
+        "HIERO_MAX_DURATION",
+        "HIERO_PARALLEL",
+        "HIERO_ENABLE_CLEANUP",
+        "HIERO_CLEANUP_ACCOUNTS",
+        "HIERO_CLEANUP_TOKENS",
+        "HIERO_CLEANUP_FILES",
+        "HIERO_CLEANUP_TOPICS",
+        "HIERO_CLEANUP_CONTRACTS",
+    ]
 
     public static func printAllTestVariables() {
         let testVars = env.filter { $0.key.hasPrefix("HIERO_") }
         print("=== Test Environment Variables ===")
         for (key, value) in testVars.sorted(by: { $0.key < $1.key }) {
-            // Redact sensitive values
-            let displayValue = key.contains("KEY") ? "***REDACTED***" : value
-            print("\(key) = \(displayValue)")
+            print("\(key) = \(value)")
         }
         print("==================================")
     }

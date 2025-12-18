@@ -3,6 +3,7 @@
 import Foundation
 import GRPC
 import HieroProtobufs
+import NIOCore
 import SwiftProtobuf
 
 // MARK: - Execute Protocol
@@ -146,6 +147,10 @@ private struct ExecuteContext {
 
     /// Timeout for a single GRPC request (currently unused)
     let grpcTimeout: Duration?
+
+    /// Closure to update network from address book (for handling INVALID_NODE_ACCOUNT_ID)
+
+    let updateNetworkFromAddressBook: (() async throws -> Void)?
 }
 
 // MARK: - Public Execute Functions
@@ -204,7 +209,37 @@ internal func executeAny<E: Execute & ValidateChecksums>(
             network: client.consensus,
             backoffConfig: backoffBuilder,
             maxAttempts: backoff.maxAttempts,
-            grpcTimeout: nil
+            grpcTimeout: nil as Duration?,
+            updateNetworkFromAddressBook: {
+                let addressBook = try await NodeAddressBookQuery()
+                    .setFileId(FileId.getAddressBookFileIdFor(shard: client.shard, realm: client.realm))
+                    .executeChannel(client.mirrorNetworkObject.channel)
+
+                // Filter to plaintext-only endpoints if this is a plaintext-only client (e.g., forMirrorNetwork)
+                // Otherwise, use the full address book (Network.withAddressBook will prefer TLS, then fall back to plaintext)
+                let filtered: NodeAddressBook
+                if client.plaintextOnly {
+                    filtered = NodeAddressBook(
+                        nodeAddresses: addressBook.nodeAddresses.map { address in
+                            let plaintextEndpoints = address.serviceEndpoints.filter { endpoint in
+                                endpoint.port == NodeConnection.consensusPlaintextPort
+                            }
+
+                            return NodeAddress(
+                                nodeId: address.nodeId,
+                                rsaPublicKey: address.rsaPublicKey,
+                                nodeAccountId: address.nodeAccountId,
+                                tlsCertificateHash: address.tlsCertificateHash,
+                                serviceEndpoints: plaintextEndpoints,
+                                description: address.description)
+                        }
+                    )
+                } else {
+                    filtered = addressBook
+                }
+
+                client.setNetworkFromAddressBook(filtered)
+            }
         ),
         executable: executable)
 }
@@ -238,7 +273,10 @@ private func executeAnyInner<E: Execute>(
         operatorAccountId: ctx.operatorAccountId
     )
 
-    let explicitNodeIndexes = try executable.nodeAccountIds.map { try ctx.network.nodeIndexes(for: $0) }
+    let explicitNodeIndexes: [Int]? = executable.nodeAccountIds.flatMap { nodeAccountIds in
+        let indexes = ctx.network.nodeIndexesForIdsAllowingUnknown(nodeAccountIds)
+        return indexes.isEmpty ? nil : indexes
+    }
     var attempt = 0
 
     while true {
@@ -322,6 +360,9 @@ private struct PrecheckParameters<E: Execute> {
 
     /// Account ID of the node that processed the request
     internal let nodeAccountId: AccountId
+
+    /// Index of the node that processed the request
+    internal let nodeIndex: Int
 
     /// Transaction ID used for the request (if applicable)
     internal let transactionId: TransactionId?
@@ -418,12 +459,13 @@ private func executeOnNode<E: Execute>(
     let rawPrecheckStatus = try E.responsePrecheckStatus(response)
     let precheckStatus = Status(rawValue: rawPrecheckStatus)
 
-    return try handlePrecheckStatus(
+    return try await handlePrecheckStatus(
         params: PrecheckParameters(
             status: precheckStatus,
             response: response,
             context: context,
             nodeAccountId: nodeAccountId,
+            nodeIndex: nodeIndex,
             transactionId: transactionId,
             executable: executable,
             ctx: ctx
@@ -475,7 +517,8 @@ private func handleGrpcError<Response>(
 /// - Parameter params: Parameters containing status, response, context, and execution state
 /// - Returns: Execution result indicating success or retry strategy
 /// - Throws: HError for unrecoverable status codes
-private func handlePrecheckStatus<E: Execute>(params: PrecheckParameters<E>) throws -> ExecutionResult<E.Response> {
+private func handlePrecheckStatus<E: Execute>(params: PrecheckParameters<E>) async throws -> ExecutionResult<E.Response>
+{
     switch params.status {
     case .ok where params.executable.shouldRetry(forResponse: params.response):
         return .retryWithBackoff(params.executable.makeErrorPrecheck(params.status, params.transactionId))
@@ -486,6 +529,23 @@ private func handlePrecheckStatus<E: Execute>(params: PrecheckParameters<E>) thr
         return .success(response)
 
     case .busy, .platformNotActive:
+        return .retryImmediately(params.executable.makeErrorPrecheck(params.status, params.transactionId))
+
+    case .invalidNodeAccount:
+        // Per HIP-1299: When INVALID_NODE_ACCOUNT is received, mark the node as unhealthy
+        // and query the address book to update the network with the correct node account IDs
+        params.ctx.network.markNodeUnhealthy(at: params.nodeIndex)
+
+        // Update network from address book if the update function is available
+        if let updateNetwork = params.ctx.updateNetworkFromAddressBook {
+            do {
+                try await updateNetwork()
+            } catch {
+                // If address book query fails, log but continue with retry
+                // The node will remain marked as unhealthy and will retry
+            }
+        }
+
         return .retryImmediately(params.executable.makeErrorPrecheck(params.status, params.transactionId))
 
     case .transactionExpired
@@ -594,7 +654,8 @@ private struct NodeIndexSequence: AsyncSequence, AsyncIteratorProtocol {
                 network: context.network,
                 backoffConfig: context.backoffConfig,
                 maxAttempts: context.maxAttempts,
-                grpcTimeout: context.grpcTimeout
+                grpcTimeout: context.grpcTimeout,
+                updateNetworkFromAddressBook: nil
             ),
             executable: request
         )
@@ -626,7 +687,14 @@ private func randomNodeIndexes(ctx: ExecuteContext, explicitNodeIndexes: [Int]?)
         ? nodeIndexes.count
         : (nodeIndexes.count + 2) / 3  // Integer division: (n+2)/3 rounds up properly
 
-    let randomNodeIndexes = randomIndexes(upTo: nodeIndexes.count, amount: nodeSampleAmount).map { nodeIndexes[$0] }
+    // When explicit nodes are provided, use them in order (don't randomize)
+    // This allows testing scenarios like INVALID_NODE_ACCOUNT where you want to try nodes sequentially
+    let selectedIndexes: [Int]
+    if explicitNodeIndexes != nil {
+        selectedIndexes = nodeIndexes
+    } else {
+        selectedIndexes = randomIndexes(upTo: nodeIndexes.count, amount: nodeSampleAmount).map { nodeIndexes[$0] }
+    }
 
-    return NodeIndexSequence(indexes: randomNodeIndexes, passthrough: explicitNodeIndexes != nil, ctx: ctx)
+    return NodeIndexSequence(indexes: selectedIndexes, passthrough: explicitNodeIndexes != nil, ctx: ctx)
 }

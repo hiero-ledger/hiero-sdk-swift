@@ -43,6 +43,9 @@ internal actor NetworkUpdateTask {
     /// Atomic reference to the mirror network for address book queries
     private let mirrorNetwork: ManagedAtomic<MirrorNetwork>
 
+    /// Whether to use only plaintext endpoints
+    private let plaintext: Bool
+
     /// The background task performing periodic updates
     private var updateTask: Task<(), Error>?
 
@@ -63,11 +66,13 @@ internal actor NetworkUpdateTask {
         mirrorNetwork: ManagedAtomic<MirrorNetwork>,
         updatePeriod: UInt64?,
         shard: UInt64,
-        realm: UInt64
+        realm: UInt64,
+        plaintext: Bool = false
     ) {
         self.consensusNetwork = consensusNetwork
         self.mirrorNetwork = mirrorNetwork
         self.eventLoop = eventLoop
+        self.plaintext = plaintext
 
         if let updatePeriod {
             updateTask = Self.makeTask(
@@ -78,7 +83,8 @@ internal actor NetworkUpdateTask {
                     startDelay: Self.networkFirstUpdateDelay,
                     updatePeriod: updatePeriod,
                     shard: shard,
-                    realm: realm
+                    realm: realm,
+                    plaintext: plaintext
                 )
             )
         }
@@ -104,7 +110,8 @@ internal actor NetworkUpdateTask {
                     startDelay: nil,
                     updatePeriod: updatePeriod,
                     shard: shard,
-                    realm: realm
+                    realm: realm,
+                    plaintext: plaintext
                 )
             )
         }
@@ -137,6 +144,9 @@ internal actor NetworkUpdateTask {
 
         /// Realm number for address book file ID
         internal let realm: UInt64
+
+        /// Whether to use only plaintext endpoints
+        internal let plaintext: Bool
     }
 
     // MARK: - Private Methods
@@ -168,15 +178,34 @@ internal actor NetworkUpdateTask {
                         FileId.getAddressBookFileIdFor(shard: config.shard, realm: config.realm)
                     ).executeChannel(mirror.channel)
 
-                    // Apply updates to consensus network atomically
-                    let newNetwork = config.consensusNetwork.readCopyUpdate { old in
-                        ConsensusNetwork.withAddressBook(old, eventLoop: config.eventLoop.next(), addressBook)
+                    // Filter to plaintext-only endpoints if this is a plaintext-only client
+                    let filtered: NodeAddressBook
+                    if config.plaintext {
+                        filtered = NodeAddressBook(
+                            nodeAddresses: addressBook.nodeAddresses.map { address in
+                                let plaintextEndpoints = address.serviceEndpoints.filter { endpoint in
+                                    endpoint.port == NodeConnection.consensusPlaintextPort
+                                }
+
+                                return NodeAddress(
+                                    nodeId: address.nodeId,
+                                    rsaPublicKey: address.rsaPublicKey,
+                                    nodeAccountId: address.nodeAccountId,
+                                    tlsCertificateHash: address.tlsCertificateHash,
+                                    serviceEndpoints: plaintextEndpoints,
+                                    description: address.description)
+                            }
+                        )
+                    } else {
+                        filtered = addressBook
+                    }
+
+                    _ = config.consensusNetwork.readCopyUpdate { network in
+                        ConsensusNetwork.withAddressBook(network, eventLoop: config.eventLoop.next(), filtered)
                     }
 
                     // Log successful update with structured format
-                    print(
-                        "[Hiero.NetworkUpdate] Consensus network updated successfully"
-                    )
+                    print("[Hiero.NetworkUpdate] Consensus network updated successfully")
 
                 } catch let error as HError {
                     // Log error with structured format and context

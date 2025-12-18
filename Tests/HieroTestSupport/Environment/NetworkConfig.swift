@@ -7,7 +7,6 @@ import Hiero
 public struct NetworkConfig {
     public let nodes: [String: AccountId]
     public let mirrorNodes: [String]
-    public let networkUpdatePeriod: UInt64?
 
     /// Whether to use Client.forMirrorNetwork (inferred from configuration)
     public var useMirrorNodeAddressBook: Bool {
@@ -24,7 +23,6 @@ public struct NetworkConfig {
     ) {
         self.nodes = nodes
         self.mirrorNodes = mirrorNodes
-        self.networkUpdatePeriod = networkUpdatePeriod
     }
 
     /// Create network configuration from environment type
@@ -74,8 +72,7 @@ public struct NetworkConfig {
 
         return NetworkConfig(
             nodes: nodes,
-            mirrorNodes: finalMirrorNodes,
-            networkUpdatePeriod: nil
+            mirrorNodes: finalMirrorNodes
         )
     }
 }
