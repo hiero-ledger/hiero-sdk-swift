@@ -35,15 +35,16 @@ public struct IntegrationTestEnvironment {
             case .mainnet:
                 client = Client.forMainnet()
 
-            case .testnet, .custom:
+            case .testnet:
                 client = Client.forTestnet()
 
             case .previewnet:
                 client = Client.forPreviewnet()
 
-            case .local:
+            case .local, .custom:
+                // For local and custom environments, use the configured nodes
                 guard !config.network.nodes.isEmpty else {
-                    throw TestEnvironmentError.invalidConfiguration("Local network requires node configuration")
+                    throw TestEnvironmentError.invalidConfiguration("\(config.type) network requires node configuration")
                 }
                 client = try Client.forNetwork(config.network.nodes)
                 if !config.network.mirrorNodes.isEmpty {
