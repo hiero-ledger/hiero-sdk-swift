@@ -41,7 +41,7 @@ jobs:
       - name: Build swift-format
         run: |
           set -euxo pipefail
-          git clone --depth=1 https://github.com/apple/swift-format.git .swift-format-src
+          git clone --depth=1 --branch release/5.9 https://github.com/apple/swift-format.git .swift-format-src
           pushd .swift-format-src
           swift build -c release
           echo "$PWD/.build/release" >> $GITHUB_PATH
