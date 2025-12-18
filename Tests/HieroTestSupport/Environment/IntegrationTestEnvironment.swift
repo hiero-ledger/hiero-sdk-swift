@@ -49,17 +49,14 @@ public struct IntegrationTestEnvironment {
                 if !config.network.mirrorNodes.isEmpty {
                     _ = client.setMirrorNetwork(config.network.mirrorNodes)
                 }
-
-                if let updatePeriod = config.network.networkUpdatePeriod {
-                    await client.setNetworkUpdatePeriod(nanoseconds: updatePeriod)
-                } else {
-                    await client.setNetworkUpdatePeriod(nanoseconds: nil as UInt64?)
-                }
             }
         }
 
         // Set operator
         client.setOperator(operatorConfig.accountId, operatorConfig.privateKey)
+
+        // Turn off network updates
+        await client.setNetworkUpdatePeriod(nanoseconds: nil as UInt64?)
 
         return IntegrationTestEnvironment(
             client: client,
