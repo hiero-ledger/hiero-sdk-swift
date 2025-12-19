@@ -82,8 +82,8 @@ extension HieroIntegrationTestCase {
             await resourceManager.registerPauseKey(pauseKey, for: tokenId)
         }
 
-        await resourceManager.registerCleanup(priority: .tokens) {
-            [client = useAdminClient ? testEnv.adminClient : testEnv.client] in
+        await resourceManager.registerCleanup(priority: .tokens) { [self] in
+            let client = useAdminClient ? self.testEnv.adminClient : self.testEnv.client
             try await Self.cleanupToken(
                 tokenId: tokenId,
                 adminKeys: adminKeys,
