@@ -21,19 +21,22 @@ import SwiftProtobuf
 /// - Race conditions in concurrent request tracking
 ///
 /// ## Timeout Handling
-/// This balancer does not enforce per-request timeouts. Timeout protection is
-/// provided at the execution layer via `ExponentialBackoff.maxElapsedTime` and
-/// `Backoff.requestTimeout`, which prevent indefinite hangs during retries.
+/// Per-request gRPC timeouts are enforced at the execution layer via `CallOptions.timeLimit`,
+/// configured using the client's `grpcDeadline` setting (default: 10 seconds). This provides
+/// finer-grained timeout control for individual gRPC calls.
 ///
-/// - TODO: Implement GRPC-level timeouts using `Backoff.grpcTimeout`.
-///   To add this functionality, update `Execute.applyGrpcHeader()` to accept
-///   a timeout parameter and configure `CallOptions.timeLimit`. This would provide
-///   finer-grained timeout control for individual GRPC calls.
+/// When a gRPC request exceeds the deadline:
+/// - The SDK aborts the request
+/// - Marks the node as temporarily unhealthy
+/// - Rotates to the next healthy node automatically
+///
+/// Additionally, overall operation timeouts are managed via `ExponentialBackoff.maxElapsedTime`
+/// and `Backoff.requestTimeout` (default: 2 minutes), which prevent indefinite hangs during retries.
 ///
 /// ## Related Types
 /// - `NodeConnection` - Uses ChannelBalancer for node-level load balancing
 /// - `MirrorNetwork` - Uses ChannelBalancer for mirror node distribution
-/// - `Backoff` - Contains grpcTimeout field for future GRPC-level timeout support
+/// - `Client` - Contains `grpcDeadline` and `requestTimeout` configuration
 internal final class ChannelBalancer: GRPCChannel {
     // MARK: - Properties
 

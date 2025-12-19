@@ -74,9 +74,10 @@ internal protocol Execute {
     /// - Parameters:
     ///   - channel: GRPC channel to the target node
     ///   - request: The GRPC request to execute
+    ///   - deadline: Timeout for this gRPC call in seconds
     /// - Returns: GRPC response from the node
     /// - Throws: GRPCStatus or other errors during execution
-    func execute(_ channel: GRPCChannel, _ request: GrpcRequest) async throws -> GrpcResponse
+    func execute(_ channel: GRPCChannel, _ request: GrpcRequest, _ deadline: TimeInterval) async throws -> GrpcResponse
 
     /// Creates the final response from a successful GRPC response.
     ///
@@ -108,6 +109,9 @@ internal protocol Execute {
     /// - Returns: Status code as Int32
     /// - Throws: HError if status cannot be extracted
     static func responsePrecheckStatus(_ response: GrpcResponse) throws -> Int32
+
+    /// Per-request gRPC deadline override. If nil, uses client's default.
+    var grpcDeadline: TimeInterval? { get }
 }
 
 // MARK: - Execute Protocol Defaults
@@ -123,10 +127,18 @@ extension Execute {
         false
     }
 
-    /// Applies standard GRPC headers including SDK version.
-    internal func applyGrpcHeader() -> CallOptions {
-        return CallOptions(customMetadata: ["x-user-agent": "hiero-sdk-swift/" + VersionInfo.version])
+    /// Applies standard GRPC headers including SDK version and deadline.
+    ///
+    /// - Parameter deadline: Timeout for this gRPC call in seconds
+    /// - Returns: CallOptions configured with headers and deadline
+    internal func applyGrpcHeader(deadline: TimeInterval) -> CallOptions {
+        var options = CallOptions(customMetadata: ["x-user-agent": "hiero-sdk-swift/" + VersionInfo.version])
+        options.timeLimit = .timeout(.seconds(Int64(deadline)))
+        return options
     }
+
+    /// Default: use client's grpcDeadline (return nil to defer to client)
+    internal var grpcDeadline: TimeInterval? { nil }
 }
 
 // MARK: - Execute Context
@@ -145,11 +157,10 @@ private struct ExecuteContext {
     /// Maximum number of attempts before giving up
     let maxAttempts: Int
 
-    /// Timeout for a single GRPC request (currently unused)
-    let grpcTimeout: Duration?
+    /// Maximum timeout for a single gRPC request
+    let grpcDeadline: TimeInterval
 
     /// Closure to update network from address book (for handling INVALID_NODE_ACCOUNT_ID)
-
     let updateNetworkFromAddressBook: (() async throws -> Void)?
 }
 
@@ -174,7 +185,7 @@ internal func executeAny<E: Execute & ValidateChecksums>(
 )
     async throws -> E.Response
 {
-    let timeout = timeout ?? ExponentialBackoff.defaultMaxElapsedTime
+    let timeout = timeout ?? client.backoff.requestTimeout ?? Backoff.defaultRequestTimeout
 
     if client.isAutoValidateChecksumsEnabled() {
         try executable.validateChecksums(on: client)
@@ -203,13 +214,16 @@ internal func executeAny<E: Execute & ValidateChecksums>(
         maxElapsedTime: .limited(timeout)
     )
 
+    // Use per-request grpcDeadline if set, otherwise use client's default
+    let grpcDeadline = executable.grpcDeadline ?? client.grpcDeadline
+
     return try await executeAnyInner(
         ctx: ExecuteContext(
             operatorAccountId: operatorAccountId,
             network: client.consensus,
             backoffConfig: backoffBuilder,
             maxAttempts: backoff.maxAttempts,
-            grpcTimeout: nil as Duration?,
+            grpcDeadline: grpcDeadline,
             updateNetworkFromAddressBook: {
                 let addressBook = try await NodeAddressBookQuery()
                     .setFileId(FileId.getAddressBookFileIdFor(shard: client.shard, realm: client.realm))
@@ -449,7 +463,7 @@ private func executeOnNode<E: Execute>(
 
     let response: E.GrpcResponse
     do {
-        response = try await executable.execute(channel, request)
+        response = try await executable.execute(channel, request, ctx.grpcDeadline)
     } catch let error as GRPCStatus {
         return try handleGrpcError(error, nodeIndex: nodeIndex, ctx: ctx)
     }
@@ -477,7 +491,8 @@ private func executeOnNode<E: Execute>(
 
 /// Handles GRPC-level errors and determines retry strategy.
 ///
-/// Marks nodes as unhealthy when they return unavailable or resource exhausted errors.
+/// Marks nodes as unhealthy when they return unavailable, resource exhausted,
+/// or deadline exceeded errors.
 ///
 /// - Parameters:
 ///   - error: The GRPC status error
@@ -496,9 +511,10 @@ private func handleGrpcError<Response>(
     )
 
     switch error.code {
-    case .unavailable, .resourceExhausted:
+    case .unavailable, .resourceExhausted, .deadlineExceeded:
         ctx.network.markNodeUnhealthy(at: nodeIndex)
         return .retryImmediately(hError)
+
     default:
         throw hError
     }
@@ -654,7 +670,7 @@ private struct NodeIndexSequence: AsyncSequence, AsyncIteratorProtocol {
                 network: context.network,
                 backoffConfig: context.backoffConfig,
                 maxAttempts: context.maxAttempts,
-                grpcTimeout: context.grpcTimeout,
+                grpcDeadline: context.grpcDeadline,
                 updateNetworkFromAddressBook: nil
             ),
             executable: request

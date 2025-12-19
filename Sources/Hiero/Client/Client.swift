@@ -69,6 +69,9 @@ public final class Client: Sendable {
     /// Flag to indicate if this client should use only plaintext endpoints (for integration testing)
     private let _plaintextOnly: Bool
 
+    /// Maximum timeout for a single gRPC request (backing storage)
+    private let _grpcDeadline: NIOLockedValueBox<TimeInterval>
+
     // MARK: - Initialization
 
     /// Primary designated initializer.
@@ -113,6 +116,7 @@ public final class Client: Sendable {
         self._shard = shard
         self._realm = realm
         self._plaintextOnly = plaintextOnly
+        self._grpcDeadline = .init(10.0)  // 10 seconds default
     }
 
     // MARK: - Internal Accessors
@@ -177,12 +181,59 @@ public final class Client: Sendable {
 
     // MARK: - Retry Configuration
 
+    /// Maximum timeout for a single gRPC request before it's considered failed.
+    ///
+    /// When a gRPC request exceeds this deadline:
+    /// - The SDK aborts the request
+    /// - Marks the node as temporarily unhealthy
+    /// - Rotates to the next healthy node automatically
+    ///
+    /// Default is 10 seconds. This can be overridden per-transaction or per-query.
+    ///
+    /// Use `setGrpcDeadline(_:)` to modify this value.
+    public var grpcDeadline: TimeInterval {
+        _grpcDeadline.withLockedValue { $0 }
+    }
+
+    /// Sets the maximum timeout for a single gRPC request.
+    ///
+    /// - Parameter grpcDeadline: Timeout in seconds (default: 10 seconds)
+    /// - Returns: Self for method chaining
+    /// - Throws: `HError.illegalState` if `grpcDeadline` is greater than `requestTimeout`
+    @discardableResult
+    public func setGrpcDeadline(_ grpcDeadline: TimeInterval) throws -> Self {
+        if let timeout = requestTimeout, grpcDeadline > timeout {
+            throw HError.illegalState(
+                "grpcDeadline (\(grpcDeadline)s) must be <= requestTimeout (\(timeout)s)"
+            )
+        }
+        _grpcDeadline.withLockedValue { $0 = grpcDeadline }
+        return self
+    }
+
     /// Maximum time spent on a single request including all retries.
     ///
-    /// Setting this to nil removes the timeout limit.
+    /// Default is 2 minutes.
+    ///
+    /// Use `setRequestTimeout(_:)` to modify this value.
     public var requestTimeout: TimeInterval? {
-        get { backoff.requestTimeout }
-        set(value) { _backoff.withLockedValue { $0.requestTimeout = value } }
+        backoff.requestTimeout
+    }
+
+    /// Sets the maximum time spent on a single request including all retries.
+    ///
+    /// - Parameter requestTimeout: Timeout in seconds, or nil to remove the limit
+    /// - Returns: Self for method chaining
+    /// - Throws: `HError.illegalState` if `requestTimeout` is less than `grpcDeadline`
+    @discardableResult
+    public func setRequestTimeout(_ requestTimeout: TimeInterval?) throws -> Self {
+        if let timeout = requestTimeout, timeout < grpcDeadline {
+            throw HError.illegalState(
+                "requestTimeout (\(timeout)s) must be >= grpcDeadline (\(grpcDeadline)s)"
+            )
+        }
+        _backoff.withLockedValue { $0.requestTimeout = requestTimeout }
+        return self
     }
 
     /// Maximum number of attempts for a request before giving up.

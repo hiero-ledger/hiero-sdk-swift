@@ -131,11 +131,13 @@ public final class ContractExecuteTransaction: Transaction {
         try super.validateChecksums(on: ledgerId)
     }
 
-    internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction) async throws
+    internal override func transactionExecute(
+        _ channel: GRPCChannel, _ request: Proto_Transaction, _ deadline: TimeInterval
+    ) async throws
         -> Proto_TransactionResponse
     {
         try await Proto_SmartContractServiceAsyncClient(channel: channel).contractCallMethod(
-            request, callOptions: applyGrpcHeader())
+            request, callOptions: applyGrpcHeader(deadline: deadline))
     }
 
     internal override func toTransactionDataProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody.OneOf_Data {
