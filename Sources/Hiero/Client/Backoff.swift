@@ -18,6 +18,9 @@ internal struct Backoff {
     /// Default maximum number of retry attempts before giving up
     internal static let defaultMaxAttempts: Int = 10
 
+    /// Default request timeout (2 minutes)
+    internal static let defaultRequestTimeout: TimeInterval = 120.0
+
     // MARK: - Initialization
 
     /// Creates a new backoff configuration.
@@ -26,13 +29,13 @@ internal struct Backoff {
     ///   - maxBackoff: Maximum delay between retries (default: 60 seconds)
     ///   - initialBackoff: Initial delay for first retry (default: 0.5 seconds)
     ///   - maxAttempts: Maximum number of retry attempts (default: 10)
-    ///   - requestTimeout: Overall timeout for the entire request (default: nil = no timeout)
-    ///   - grpcTimeout: Timeout for individual GRPC calls (currently unused)
+    ///   - requestTimeout: Overall timeout for the entire request including retries (default: 2 minutes)
+    ///   - grpcTimeout: Timeout for individual GRPC calls (deprecated, use Client.grpcDeadline instead)
     internal init(
         maxBackoff: TimeInterval = ExponentialBackoff.defaultMaxInterval,
         initialBackoff: TimeInterval = ExponentialBackoff.defaultInitialInterval,
         maxAttempts: Int = Self.defaultMaxAttempts,
-        requestTimeout: TimeInterval? = nil,
+        requestTimeout: TimeInterval? = Self.defaultRequestTimeout,
         grpcTimeout: TimeInterval? = nil
     ) {
         self.maxBackoff = maxBackoff
@@ -53,9 +56,9 @@ internal struct Backoff {
     /// Maximum number of retry attempts
     internal var maxAttempts: Int
 
-    /// Overall timeout for the entire request including retries
+    /// Overall timeout for the entire request including retries (default: 2 minutes)
     internal var requestTimeout: TimeInterval?
 
-    /// Timeout for individual GRPC calls (currently unused)
+    /// Timeout for individual GRPC calls (deprecated, use Client.grpcDeadline instead)
     internal var grpcTimeout: TimeInterval?
 }

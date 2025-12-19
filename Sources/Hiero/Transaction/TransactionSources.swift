@@ -430,8 +430,10 @@ extension SourceTransactionExecuteView: Execute {
         return (transaction, transactionHash)
     }
 
-    internal func execute(_ channel: GRPCChannel, _ request: GrpcRequest) async throws -> GrpcResponse {
-        try await inner.transactionExecute(channel, request)
+    internal func execute(_ channel: GRPCChannel, _ request: GrpcRequest, _ deadline: TimeInterval) async throws
+        -> GrpcResponse
+    {
+        try await inner.transactionExecute(channel, request, deadline)
     }
 
     internal func makeResponse(

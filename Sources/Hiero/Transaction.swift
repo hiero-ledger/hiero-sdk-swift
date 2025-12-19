@@ -36,8 +36,8 @@ public class Transaction: ValidateChecksums {
         fatalError("Method `Transaction.toTransactionDataProtobuf` must be overridden by `\(type(of: self))`")
     }
 
-    internal func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction) async throws
-        -> Proto_TransactionResponse
+    internal func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction, _ deadline: TimeInterval)
+        async throws -> Proto_TransactionResponse
     {
         fatalError("Method `Transaction.transactionExecute` must be overridden by `\(type(of: self))`")
     }
@@ -129,6 +129,28 @@ public class Transaction: ValidateChecksums {
     public final func regenerateTransactionId(_ regenerateTransactionId: Bool) -> Self {
         self.regenerateTransactionId = regenerateTransactionId
 
+        return self
+    }
+
+    /// Per-transaction gRPC deadline override.
+    ///
+    /// When set, this overrides the client's global `grpcDeadline` for this transaction only.
+    /// Useful for transactions that may require more or less time than the default.
+    ///
+    /// If `nil`, the client's `grpcDeadline` will be used.
+    public final var grpcDeadline: TimeInterval? {
+        willSet {
+            ensureNotFrozen(fieldName: "grpcDeadline")
+        }
+    }
+
+    /// Sets a per-transaction gRPC deadline override.
+    ///
+    /// - Parameter deadline: Timeout in seconds
+    /// - Returns: Self for method chaining
+    @discardableResult
+    public final func grpcDeadline(_ deadline: TimeInterval) -> Self {
+        self.grpcDeadline = deadline
         return self
     }
 
@@ -675,8 +697,10 @@ extension Transaction: Execute {
         return self.makeRequestInner(chunkInfo: .single(transactionId: transactionId, nodeAccountId: nodeAccountId))
     }
 
-    internal func execute(_ channel: any GRPCChannel, _ request: GrpcRequest) async throws -> GrpcResponse {
-        try await transactionExecute(channel, request)
+    internal func execute(_ channel: any GRPCChannel, _ request: GrpcRequest, _ deadline: TimeInterval) async throws
+        -> GrpcResponse
+    {
+        try await transactionExecute(channel, request, deadline)
     }
 }
 
