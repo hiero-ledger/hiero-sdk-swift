@@ -64,7 +64,9 @@ public final class AccountBalanceQuery: Query<AccountBalance> {
         }
     }
 
-    internal override func queryExecute(_ channel: GRPCChannel, _ request: Proto_Query, _ deadline: TimeInterval) async throws -> Proto_Response {
+    internal override func queryExecute(_ channel: GRPCChannel, _ request: Proto_Query, _ deadline: TimeInterval)
+        async throws -> Proto_Response
+    {
         try await Proto_CryptoServiceAsyncClient(channel: channel).cryptoGetBalance(
             request, callOptions: applyGrpcHeader(deadline: deadline))
     }

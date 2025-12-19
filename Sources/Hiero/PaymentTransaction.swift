@@ -33,7 +33,9 @@ internal final class PaymentTransaction: Transaction {
         )
     }
 
-    internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction, _ deadline: TimeInterval) async throws
+    internal override func transactionExecute(
+        _ channel: GRPCChannel, _ request: Proto_Transaction, _ deadline: TimeInterval
+    ) async throws
         -> Proto_TransactionResponse
     {
         try await Proto_CryptoServiceAsyncClient(channel: channel).cryptoTransfer(

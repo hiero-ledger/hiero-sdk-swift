@@ -33,8 +33,11 @@ public final class TokenInfoQuery: Query<TokenInfo> {
         }
     }
 
-    internal override func queryExecute(_ channel: GRPCChannel, _ request: Proto_Query, _ deadline: TimeInterval) async throws -> Proto_Response {
-        try await Proto_TokenServiceAsyncClient(channel: channel).getTokenInfo(request, callOptions: applyGrpcHeader(deadline: deadline))
+    internal override func queryExecute(_ channel: GRPCChannel, _ request: Proto_Query, _ deadline: TimeInterval)
+        async throws -> Proto_Response
+    {
+        try await Proto_TokenServiceAsyncClient(channel: channel).getTokenInfo(
+            request, callOptions: applyGrpcHeader(deadline: deadline))
     }
 
     internal override func makeQueryResponse(_ response: Proto_Response.OneOf_Response) throws -> Response {

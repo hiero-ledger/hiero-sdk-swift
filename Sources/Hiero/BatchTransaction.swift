@@ -52,11 +52,15 @@ public final class BatchTransaction: Transaction {
         return transactions.map { $0.transactionId! }
     }
 
-    internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction, _ deadline: TimeInterval) async throws
+    internal override func transactionExecute(
+        _ channel: GRPCChannel, _ request: Proto_Transaction, _ deadline: TimeInterval
+    ) async throws
         -> Proto_TransactionResponse
     {
-        try await Proto_UtilServiceNIOClient(channel: channel).atomicBatch(request, callOptions: applyGrpcHeader(deadline: deadline))
-            .response.get()
+        try await Proto_UtilServiceNIOClient(channel: channel).atomicBatch(
+            request, callOptions: applyGrpcHeader(deadline: deadline)
+        )
+        .response.get()
     }
 
     internal override func toTransactionDataProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody.OneOf_Data {

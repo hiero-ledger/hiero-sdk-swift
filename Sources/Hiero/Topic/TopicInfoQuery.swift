@@ -33,7 +33,9 @@ public final class TopicInfoQuery: Query<TopicInfo> {
         }
     }
 
-    internal override func queryExecute(_ channel: GRPCChannel, _ request: Proto_Query, _ deadline: TimeInterval) async throws -> Proto_Response {
+    internal override func queryExecute(_ channel: GRPCChannel, _ request: Proto_Query, _ deadline: TimeInterval)
+        async throws -> Proto_Response
+    {
         try await Proto_ConsensusServiceAsyncClient(channel: channel).getTopicInfo(
             request, callOptions: applyGrpcHeader(deadline: deadline))
     }

@@ -64,7 +64,9 @@ public final class TokenAssociateTransaction: Transaction {
         try super.validateChecksums(on: ledgerId)
     }
 
-    internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction, _ deadline: TimeInterval) async throws
+    internal override func transactionExecute(
+        _ channel: GRPCChannel, _ request: Proto_Transaction, _ deadline: TimeInterval
+    ) async throws
         -> Proto_TransactionResponse
     {
         try await Proto_TokenServiceAsyncClient(channel: channel).associateTokens(
