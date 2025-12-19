@@ -20,10 +20,17 @@ extension HieroIntegrationTestCase {
     /// Use this when you need full control over the schedule lifecycle or when testing
     /// scenarios where cleanup would interfere with the test.
     ///
-    /// - Parameter transaction: Pre-configured `ScheduleCreateTransaction` (before execute)
+    /// - Parameters:
+    ///   - transaction: Pre-configured `ScheduleCreateTransaction` (before execute)
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created schedule ID
-    public func createUnmanagedSchedule(_ transaction: ScheduleCreateTransaction) async throws -> ScheduleId {
-        let receipt = try await transaction.execute(testEnv.client).getReceipt(testEnv.client)
+    public func createUnmanagedSchedule(_ transaction: ScheduleCreateTransaction, useAdminClient: Bool = false)
+        async throws -> ScheduleId
+    {
+        let receipt =
+            try await transaction
+            .execute(useAdminClient ? testEnv.adminClient : testEnv.client)
+            .getReceipt(useAdminClient ? testEnv.adminClient : testEnv.client)
         return try XCTUnwrap(receipt.scheduleId)
     }
 
@@ -60,12 +67,14 @@ extension HieroIntegrationTestCase {
     /// - Parameters:
     ///   - transaction: Pre-configured `ScheduleCreateTransaction` (before execute)
     ///   - adminKey: Private key for schedule deletion
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created schedule ID
     public func createSchedule(
         _ transaction: ScheduleCreateTransaction,
-        adminKey: PrivateKey
+        adminKey: PrivateKey,
+        useAdminClient: Bool = false
     ) async throws -> ScheduleId {
-        try await createSchedule(transaction, adminKeys: [adminKey])
+        try await createSchedule(transaction, adminKeys: [adminKey], useAdminClient: useAdminClient)
     }
 
     /// Creates a schedule and registers it for automatic cleanup (multiple keys).
@@ -73,12 +82,14 @@ extension HieroIntegrationTestCase {
     /// - Parameters:
     ///   - transaction: Pre-configured `ScheduleCreateTransaction` (before execute)
     ///   - adminKeys: Private keys required for schedule deletion
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created schedule ID
     public func createSchedule(
         _ transaction: ScheduleCreateTransaction,
-        adminKeys: [PrivateKey]
+        adminKeys: [PrivateKey],
+        useAdminClient: Bool = false
     ) async throws -> ScheduleId {
-        let scheduleId = try await createUnmanagedSchedule(transaction)
+        let scheduleId = try await createUnmanagedSchedule(transaction, useAdminClient: useAdminClient)
         await registerSchedule(scheduleId, adminKeys: adminKeys)
         return scheduleId
     }

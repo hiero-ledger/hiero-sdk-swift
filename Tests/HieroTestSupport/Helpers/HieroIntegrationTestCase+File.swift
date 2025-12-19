@@ -20,10 +20,17 @@ extension HieroIntegrationTestCase {
     /// Use this when you need full control over the file lifecycle or when testing
     /// scenarios where cleanup would interfere with the test.
     ///
-    /// - Parameter transaction: Pre-configured `FileCreateTransaction` (before execute)
+    /// - Parameters:
+    ///   - transaction: Pre-configured `FileCreateTransaction` (before execute)
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created file ID
-    public func createUnmanagedFile(_ transaction: FileCreateTransaction) async throws -> FileId {
-        let receipt = try await transaction.execute(testEnv.client).getReceipt(testEnv.client)
+    public func createUnmanagedFile(_ transaction: FileCreateTransaction, useAdminClient: Bool = false) async throws
+        -> FileId
+    {
+        let receipt =
+            try await transaction
+            .execute(useAdminClient ? testEnv.adminClient : testEnv.client)
+            .getReceipt(useAdminClient ? testEnv.adminClient : testEnv.client)
         return try XCTUnwrap(receipt.fileId)
     }
 
@@ -60,12 +67,14 @@ extension HieroIntegrationTestCase {
     /// - Parameters:
     ///   - transaction: Pre-configured `FileCreateTransaction` (before execute)
     ///   - key: Private key for file deletion
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created file ID
     public func createFile(
         _ transaction: FileCreateTransaction,
-        key: PrivateKey
+        key: PrivateKey,
+        useAdminClient: Bool = false
     ) async throws -> FileId {
-        try await createFile(transaction, keys: [key])
+        try await createFile(transaction, keys: [key], useAdminClient: useAdminClient)
     }
 
     /// Creates a file and registers it for automatic cleanup (multiple keys).
@@ -73,12 +82,14 @@ extension HieroIntegrationTestCase {
     /// - Parameters:
     ///   - transaction: Pre-configured `FileCreateTransaction` (before execute)
     ///   - keys: Private keys required for file deletion
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created file ID
     public func createFile(
         _ transaction: FileCreateTransaction,
-        keys: [PrivateKey]
+        keys: [PrivateKey],
+        useAdminClient: Bool = false
     ) async throws -> FileId {
-        let fileId = try await createUnmanagedFile(transaction)
+        let fileId = try await createUnmanagedFile(transaction, useAdminClient: useAdminClient)
         await registerFile(fileId, keys: keys)
         return fileId
     }
@@ -89,14 +100,17 @@ extension HieroIntegrationTestCase {
     ///
     /// This is the primary convenience method for creating files in tests.
     ///
-    /// - Parameter contents: String content for the file
+    /// - Parameters:
+    ///   - contents: String content for the file
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created file ID
-    public func createTestFile(contents: String) async throws -> FileId {
+    public func createTestFile(contents: String, useAdminClient: Bool = false) async throws -> FileId {
         try await createFile(
             FileCreateTransaction()
                 .keys([.single(testEnv.operator.privateKey.publicKey)])
                 .contents(contents.data(using: .utf8)!),
-            key: testEnv.operator.privateKey
+            key: testEnv.operator.privateKey,
+            useAdminClient: useAdminClient
         )
     }
 

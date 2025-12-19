@@ -20,10 +20,17 @@ extension HieroIntegrationTestCase {
     /// Use this when you need full control over the topic lifecycle or when testing
     /// scenarios where cleanup would interfere with the test (e.g., immutable topics).
     ///
-    /// - Parameter transaction: Pre-configured `TopicCreateTransaction` (before execute)
+    /// - Parameters:
+    ///   - transaction: Pre-configured `TopicCreateTransaction` (before execute)
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created topic ID
-    public func createUnmanagedTopic(_ transaction: TopicCreateTransaction) async throws -> TopicId {
-        let receipt = try await transaction.execute(testEnv.client).getReceipt(testEnv.client)
+    public func createUnmanagedTopic(_ transaction: TopicCreateTransaction, useAdminClient: Bool = false) async throws
+        -> TopicId
+    {
+        let receipt =
+            try await transaction
+            .execute(useAdminClient ? testEnv.adminClient : testEnv.client)
+            .getReceipt(useAdminClient ? testEnv.adminClient : testEnv.client)
         return try XCTUnwrap(receipt.topicId)
     }
 
@@ -60,12 +67,14 @@ extension HieroIntegrationTestCase {
     /// - Parameters:
     ///   - transaction: Pre-configured `TopicCreateTransaction` (before execute)
     ///   - adminKey: Private key for topic deletion
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created topic ID
     public func createTopic(
         _ transaction: TopicCreateTransaction,
-        adminKey: PrivateKey
+        adminKey: PrivateKey,
+        useAdminClient: Bool = false
     ) async throws -> TopicId {
-        try await createTopic(transaction, adminKeys: [adminKey])
+        try await createTopic(transaction, adminKeys: [adminKey], useAdminClient: useAdminClient)
     }
 
     /// Creates a topic and registers it for automatic cleanup (multiple keys).
@@ -73,12 +82,14 @@ extension HieroIntegrationTestCase {
     /// - Parameters:
     ///   - transaction: Pre-configured `TopicCreateTransaction` (before execute)
     ///   - adminKeys: Private keys required for topic deletion
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created topic ID
     public func createTopic(
         _ transaction: TopicCreateTransaction,
-        adminKeys: [PrivateKey]
+        adminKeys: [PrivateKey],
+        useAdminClient: Bool = false
     ) async throws -> TopicId {
-        let topicId = try await createUnmanagedTopic(transaction)
+        let topicId = try await createUnmanagedTopic(transaction, useAdminClient: useAdminClient)
         await registerTopic(topicId, adminKeys: adminKeys)
         return topicId
     }
@@ -89,13 +100,15 @@ extension HieroIntegrationTestCase {
     ///
     /// This is the primary convenience method for creating topics in tests.
     ///
+    /// - Parameter useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created topic ID
-    public func createStandardTopic() async throws -> TopicId {
+    public func createStandardTopic(useAdminClient: Bool = false) async throws -> TopicId {
         try await createTopic(
             TopicCreateTransaction()
                 .adminKey(.single(testEnv.operator.privateKey.publicKey))
                 .topicMemo(TestConstants.standardTopicMemo),
-            adminKey: testEnv.operator.privateKey
+            adminKey: testEnv.operator.privateKey,
+            useAdminClient: useAdminClient
         )
     }
 
@@ -103,19 +116,22 @@ extension HieroIntegrationTestCase {
     ///
     /// Note: This creates an unmanaged topic since immutable topics cannot be cleaned up.
     ///
+    /// - Parameter useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created topic ID
-    public func createImmutableTopic() async throws -> TopicId {
-        try await createUnmanagedTopic(TopicCreateTransaction())
+    public func createImmutableTopic(useAdminClient: Bool = false) async throws -> TopicId {
+        try await createUnmanagedTopic(TopicCreateTransaction(), useAdminClient: useAdminClient)
     }
 
     /// Creates a topic with operator admin key but no memo.
     ///
+    /// - Parameter useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created topic ID
-    public func createTopicWithOperatorAdmin() async throws -> TopicId {
+    public func createTopicWithOperatorAdmin(useAdminClient: Bool = false) async throws -> TopicId {
         try await createTopic(
             TopicCreateTransaction()
                 .adminKey(.single(testEnv.operator.privateKey.publicKey)),
-            adminKey: testEnv.operator.privateKey
+            adminKey: testEnv.operator.privateKey,
+            useAdminClient: useAdminClient
         )
     }
 
