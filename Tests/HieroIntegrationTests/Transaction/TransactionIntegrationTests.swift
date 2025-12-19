@@ -10,8 +10,8 @@ internal class TransactionIntegrationTests: HieroIntegrationTestCase {
 
     /// HIP-1300 defines ~6KB as the maximum size for a transaction for a normal account
     /// and ~130KB for an admin account. We use 8KB as the testable transaction size
-    //  otherwise the test would take too long to run. This is a compromise between test
-    // speed and test coverage.
+    /// otherwise the test would take too long to run. This is a compromise between test
+    /// speed and test coverage.
     private let testableTransactionSize = 8_000
 
     internal func test_CreateTransactionWithLargeSignaturesUsingAdminAccount() async throws {

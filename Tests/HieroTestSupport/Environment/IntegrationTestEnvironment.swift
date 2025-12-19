@@ -4,11 +4,14 @@ import Foundation
 import Hiero
 import XCTest
 
-/// Integration test environment with client and configuration
+/// Integration test environment with client and configuration.
 public struct IntegrationTestEnvironment {
 
+    /// The client used for regular operations.
     public let client: Client
+    /// The client used for admin operations.
     public let adminClient: Client
+    /// The operator account ID and private key.
     public let `operator`: (accountId: AccountId, privateKey: PrivateKey)
 
     private init(client: Client, adminClient: Client, operator: (accountId: AccountId, privateKey: PrivateKey)) {
