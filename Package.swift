@@ -106,9 +106,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/vapor/vapor.git", .upToNextMajor(from: "4.101.3")),
-        .package(url: "https://github.com/attaswift/BigInt.git", .upToNextMajor(from: "5.2.0")),
-        // Currently, only used for keccak256
-        .package(url: "https://github.com/krzyzanowskim/OpenSSL-Package.git", .upToNextMajor(from: "3.3.2000")),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", from: "1.8.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.0.0")),
     ],
@@ -140,8 +137,6 @@ let package = Package(
                 .product(name: "GRPC", package: "grpc-swift"),
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "secp256k1", package: "secp256k1.swift"),
-                .product(name: "BigInt", package: "BigInt"),
-                .product(name: "OpenSSL", package: "OpenSSL-Package"),
                 .product(name: "CryptoSwift", package: "CryptoSwift"),
                 .product(name: "Crypto", package: "swift-crypto"),
             ]

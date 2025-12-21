@@ -20,7 +20,7 @@ internal final class CryptoAesUnitTests: HieroUnitTestCase {
 
         let password = Data(hash.finalize().bytes)
 
-        let decrypted = try CryptoNamespace.Aes.aes128CbcPadDecrypt(key: password, iv: iv, message: bytesDer())
+        let decrypted = try Aes.aes128CbcPadDecrypt(key: password, iv: iv, message: bytesDer())
 
         XCTAssertEqual(
             decrypted.hexStringEncoded(),

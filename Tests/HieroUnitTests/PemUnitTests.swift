@@ -15,7 +15,7 @@ internal final class CryptoPemUnitTests: HieroUnitTestCase {
             -----END PRIVATE KEY-----
             """
 
-        let doc = try CryptoNamespace.Pem.decode(pemString)
+        let doc = try Pem.decode(pemString)
 
         XCTAssertEqual(doc.typeLabel, "PRIVATE KEY")
     }
@@ -28,7 +28,7 @@ internal final class CryptoPemUnitTests: HieroUnitTestCase {
             -----END PRIVATE KEY-----
             """
 
-        XCTAssertThrowsError(try CryptoNamespace.Pem.decode(pemString))
+        XCTAssertThrowsError(try Pem.decode(pemString))
     }
 
     internal func test_ShortLineFail() throws {
@@ -39,7 +39,7 @@ internal final class CryptoPemUnitTests: HieroUnitTestCase {
             -----END PRIVATE KEY-----
             """
 
-        XCTAssertThrowsError(try CryptoNamespace.Pem.decode(pemString))
+        XCTAssertThrowsError(try Pem.decode(pemString))
     }
 
     internal func test_NonBase64CharacterFail() throws {
@@ -50,7 +50,7 @@ internal final class CryptoPemUnitTests: HieroUnitTestCase {
             -----END PRIVATE KEY-----
             """
 
-        XCTAssertThrowsError(try CryptoNamespace.Pem.decode(pemString))
+        XCTAssertThrowsError(try Pem.decode(pemString))
     }
 
     internal func test_BadHeaderFail() throws {
@@ -61,7 +61,7 @@ internal final class CryptoPemUnitTests: HieroUnitTestCase {
             -----END PRIVATE KEY-----
             """
 
-        XCTAssertThrowsError(try CryptoNamespace.Pem.decode(pemString))
+        XCTAssertThrowsError(try Pem.decode(pemString))
     }
 
     internal func test_BadFooterFail() throws {
@@ -72,7 +72,7 @@ internal final class CryptoPemUnitTests: HieroUnitTestCase {
             -----END PRIVATE KEYS-----
             """
 
-        XCTAssertThrowsError(try CryptoNamespace.Pem.decode(pemString))
+        XCTAssertThrowsError(try Pem.decode(pemString))
     }
 
     internal func test_Base64CharacterFail() throws {
@@ -83,6 +83,6 @@ internal final class CryptoPemUnitTests: HieroUnitTestCase {
             -----END PRIVATE KEY-----
             """
 
-        XCTAssertThrowsError(try CryptoNamespace.Pem.decode(pemString))
+        XCTAssertThrowsError(try Pem.decode(pemString))
     }
 }

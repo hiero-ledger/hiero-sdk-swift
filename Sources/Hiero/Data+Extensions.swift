@@ -2,6 +2,15 @@
 
 import Foundation
 
+// MARK: - Data Extensions
+//
+// Utility extensions for working with binary data, including:
+// - Hex encoding/decoding
+// - Safe slicing operations
+// - Random data generation
+
+// MARK: - Hex Encoding Helpers
+
 private func hexVal(_ char: UInt8) -> UInt8? {
     // this would be a very clean function if swift had a way of doing ascii-charcter literals, but it can't.
     let ascii0: UInt8 = 0x30
@@ -23,11 +32,19 @@ private func hexVal(_ char: UInt8) -> UInt8? {
 }
 
 extension Data {
-    // this copies
+    // MARK: - Hex Encoding
+
+    /// Safely extract a subrange of data, returning nil if the range is invalid.
+    ///
+    /// - Parameter range: The range to extract.
+    /// - Returns: The subdata, or nil if the range is out of bounds.
     internal func safeSubdata(in range: Range<Self.Index>) -> Data? {
         return contains(range: range) ? self.subdata(in: range) : nil
     }
 
+    /// Encode data as a lowercase hexadecimal string.
+    ///
+    /// - Returns: The hex-encoded string (e.g., "deadbeef").
     internal func hexStringEncoded() -> String {
         String(
             reduce(into: "".unicodeScalars) { result, value in
@@ -36,6 +53,10 @@ extension Data {
             })
     }
 
+    /// Initialize data from a hexadecimal string.
+    ///
+    /// - Parameter hexEncoded: The hex string to decode (e.g., "deadbeef").
+    /// - Returns: The decoded data, or nil if the string is invalid hex.
     internal init?<S: StringProtocol>(hexEncoded: S) {
         let chars = Array(hexEncoded.utf8)
         // note: hex check is done character by character
@@ -62,9 +83,10 @@ extension Data {
     }
 
     private static let hexAlphabet = Array("0123456789abcdef".unicodeScalars)
-}
 
-extension Data {
+    // MARK: - Unsafe Byte Access
+
+    /// Access the data's bytes as a typed buffer pointer.
     internal func withUnsafeTypedBytes<R>(_ body: (UnsafeBufferPointer<UInt8>) throws -> R) rethrows -> R {
         try self.withUnsafeBytes { pointer in
             try body(pointer.bindMemory(to: UInt8.self))
@@ -78,39 +100,23 @@ extension Data {
             try body(pointer.bindMemory(to: UInt8.self))
         }
     }
-}
 
-extension Data {
+    // MARK: - Random Data Generation
+
+    /// Generate cryptographically random data.
+    ///
+    /// - Parameter length: The number of random bytes to generate.
+    /// - Returns: Random data of the specified length.
     internal static func randomData(withLength length: Int) -> Self {
         Self((0..<length).map { _ in UInt8.random(in: 0...0xff) })
     }
-}
 
-extension Data {
-    func leftPadded(to size: Int) -> Data {
-        if self.count >= size { return self }
-        return Data(repeating: 0, count: size - self.count) + self
-    }
-}
+    // MARK: - Slicing Operations
 
-extension Data {
-    internal func hexEncodedString() -> String {
-        self.map { String(format: "%02x", $0) }.joined()
-    }
-}
-
-extension Data {
-    func ensureSize(_ size: Int) -> Data {
-        if self.count > size {
-            return self.suffix(size)
-        } else if self.count < size {
-            return Data(repeating: 0, count: size - self.count) + self
-        }
-        return self
-    }
-}
-
-extension Data {
+    /// Split data at a specific index.
+    ///
+    /// - Parameter middle: The index at which to split.
+    /// - Returns: A tuple of (prefix, suffix), or nil if the index is out of bounds.
     internal func split(at middle: Index) -> (SubSequence, SubSequence)? {
         guard let index = index(startIndex, offsetBy: middle, limitedBy: endIndex) else {
             return nil

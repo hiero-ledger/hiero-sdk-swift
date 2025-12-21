@@ -4,7 +4,7 @@ import Foundation
 
 public struct TransactionHash: CustomStringConvertible {
     internal init(hashing data: Data) {
-        self.data = CryptoNamespace.Sha2.sha384(data)
+        self.data = Sha2.sha384(data)
     }
 
     public let data: Data
