@@ -7,7 +7,7 @@ import XCTest
 
 internal final class CryptoKeccakUnitTests: HieroUnitTestCase {
     internal func test_Keccak256Hash() throws {
-        let input = "testingKeccak256".data(using: .utf8)!
+        let input = Data("testingKeccak256".utf8)
 
         let hash = Keccak.keccak256(input)
 
@@ -16,7 +16,7 @@ internal final class CryptoKeccakUnitTests: HieroUnitTestCase {
     }
 
     internal func test_Keccak256HashDigest() throws {
-        let input = "testingKeccak256Digest".data(using: .utf8)!
+        let input = Data("testingKeccak256Digest".utf8)
 
         let hash = Keccak.digest(.keccak256, input)
 

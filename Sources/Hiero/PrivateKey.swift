@@ -45,8 +45,8 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
 {
     // MARK: Private Properties
 
-    /// The secp256k1 curve order (for ECDSA key derivation).
     // swiftlint:disable:next force_unwrapping
+    /// The secp256k1 curve order (for ECDSA key derivation).
     private let secp256k1Order = BigInt(
         unsignedBEBytes: Data(hexEncoded: "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141")!)
 
@@ -695,7 +695,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
     /// - Parameter seed: The 64-byte BIP-39 seed.
     /// - Returns: The derived ECDSA private key with chain code.
     public static func fromSeedECDSAsecp256k1(_ seed: Data) -> Self {
-        var hmac = HMAC<SHA512Hash>(key: SymmetricKey(data: "Bitcoin seed".data(using: .utf8)!))
+        var hmac = HMAC<SHA512Hash>(key: SymmetricKey(data: Data("Bitcoin seed".utf8)))
         hmac.update(data: seed)
 
         let output = hmac.finalize().bytes
@@ -712,7 +712,7 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
     /// - Parameter seed: The 64-byte BIP-39 seed.
     /// - Returns: The derived Ed25519 private key with chain code.
     public static func fromSeedED25519(_ seed: Data) -> Self {
-        var hmac = HMAC<SHA512Hash>(key: SymmetricKey(data: "ed25519 seed".data(using: .utf8)!))
+        var hmac = HMAC<SHA512Hash>(key: SymmetricKey(data: Data("ed25519 seed".utf8)))
         hmac.update(data: seed)
 
         let output = hmac.finalize().bytes

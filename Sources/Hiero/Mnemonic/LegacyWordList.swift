@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
+// swiftlint:disable file_length
+
 /// Legacy word list (4096 words) for older Hedera wallet mnemonics.
 ///
 /// This word list supports the legacy 22-word mnemonic format used by
@@ -8,9 +10,6 @@
 ///
 /// - Warning: This format is deprecated. Use BIP-39 (12/24 word) mnemonics
 ///   for new implementations.
-
-// swiftlint:disable file_length
-
 internal let legacyWordList: MnemonicWordList = """
     aback
     abbey

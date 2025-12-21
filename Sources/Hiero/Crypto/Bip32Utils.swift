@@ -17,7 +17,7 @@
 
 internal enum Bip32Utils {
     /// Bitmask for the hardened index flag (bit 31).
-    static let hardenedMask: Int32 = 1 << 31
+    internal static let hardenedMask: Int32 = 1 << 31
 
     /// Convert an index to a hardened index.
     ///
@@ -26,7 +26,7 @@ internal enum Bip32Utils {
     ///
     /// - Parameter index: The base index (0 to 2^31-1).
     /// - Returns: The hardened index with bit 31 set.
-    static func toHardenedIndex(_ index: UInt32) -> Int32 {
+    internal static func toHardenedIndex(_ index: UInt32) -> Int32 {
         let index = Int32(bitPattern: index)
         return index | hardenedMask
     }
@@ -35,7 +35,7 @@ internal enum Bip32Utils {
     ///
     /// - Parameter index: The index to check.
     /// - Returns: `true` if the index has bit 31 set (hardened), `false` otherwise.
-    static func isHardenedIndex(_ index: UInt32) -> Bool {
+    internal static func isHardenedIndex(_ index: UInt32) -> Bool {
         let index = Int32(bitPattern: index)
         return (index & hardenedMask) != 0
     }
