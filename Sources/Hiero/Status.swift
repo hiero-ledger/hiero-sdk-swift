@@ -964,13 +964,13 @@ public enum Status: Equatable {
     case tokenHasNoMetadataOrSupplyKey  // = 360
 
     /// The list of `PendingAirdropId`s is empty and MUST NOT be empty.
-    case emptyPendingAirdropIDList  // = 361
+    case emptyPendingAirdropIdList  // = 361
 
     /// A `PendingAirdropId` is repeated in a `claim` or `cancel` transaction.
-    case pendingAirdropIDRepeated  // = 362
+    case pendingAirdropIdRepeated  // = 362
 
     /// The number of `PendingAirdropId` values in the list exceeds the maximum allowable number.
-    case pendingAirdropIDListTooLong  // = 363
+    case pendingAirdropIdListTooLong  // = 363
 
     /// A pending airdrop already exists for the specified NFT.
     case pendingNftAirdropAlreadyExists  // = 364
@@ -982,7 +982,7 @@ public enum Status: Equatable {
     case throttledAtConsensus  // = 366
 
     /// The provided pending airdrop id is invalid.<br/> This pending airdrop MAY already be claimed or cancelled. <p> The client SHOULD query a mirror node to determine the current status of the pending airdrop.
-    case invalidPendingAirdropID  // = 367
+    case invalidPendingAirdropId  // = 367
 
     /// The token to be airdropped has a fallback royalty fee and cannot be sent or claimed via an airdrop transaction.
     case tokenAirdropWithFallbackRoyalty  // = 368
@@ -1496,13 +1496,13 @@ public enum Status: Equatable {
         case 358: self = .emptyTokenReferenceList
         case 359: self = .updateNodeAccountNotAllowed
         case 360: self = .tokenHasNoMetadataOrSupplyKey
-        case 361: self = .emptyPendingAirdropIDList
-        case 362: self = .pendingAirdropIDRepeated
-        case 363: self = .pendingAirdropIDListTooLong
+        case 361: self = .emptyPendingAirdropIdList
+        case 362: self = .pendingAirdropIdRepeated
+        case 363: self = .pendingAirdropIdListTooLong
         case 364: self = .pendingNftAirdropAlreadyExists
         case 365: self = .accountHasPendingAirdrops
         case 366: self = .throttledAtConsensus
-        case 367: self = .invalidPendingAirdropID
+        case 367: self = .invalidPendingAirdropId
         case 368: self = .tokenAirdropWithFallbackRoyalty
         case 369: self = .invalidTokenInPendingAirdrop
         case 370: self = .scheduleExpiryIsBusy
@@ -1890,13 +1890,13 @@ public enum Status: Equatable {
         case .emptyTokenReferenceList: return 358
         case .updateNodeAccountNotAllowed: return 359
         case .tokenHasNoMetadataOrSupplyKey: return 360
-        case .emptyPendingAirdropIDList: return 361
-        case .pendingAirdropIDRepeated: return 362
-        case .pendingAirdropIDListTooLong: return 363
+        case .emptyPendingAirdropIdList: return 361
+        case .pendingAirdropIdRepeated: return 362
+        case .pendingAirdropIdListTooLong: return 363
         case .pendingNftAirdropAlreadyExists: return 364
         case .accountHasPendingAirdrops: return 365
         case .throttledAtConsensus: return 366
-        case .invalidPendingAirdropID: return 367
+        case .invalidPendingAirdropId: return 367
         case .tokenAirdropWithFallbackRoyalty: return 368
         case .invalidTokenInPendingAirdrop: return 369
         case .scheduleExpiryIsBusy: return 370
@@ -2287,13 +2287,13 @@ extension Status: CaseIterable {
         .emptyTokenReferenceList,
         .updateNodeAccountNotAllowed,
         .tokenHasNoMetadataOrSupplyKey,
-        .emptyPendingAirdropIDList,
-        .pendingAirdropIDRepeated,
-        .pendingAirdropIDListTooLong,
+        .emptyPendingAirdropIdList,
+        .pendingAirdropIdRepeated,
+        .pendingAirdropIdListTooLong,
         .pendingNftAirdropAlreadyExists,
         .accountHasPendingAirdrops,
         .throttledAtConsensus,
-        .invalidPendingAirdropID,
+        .invalidPendingAirdropId,
         .tokenAirdropWithFallbackRoyalty,
         .invalidTokenInPendingAirdrop,
         .scheduleExpiryIsBusy,
