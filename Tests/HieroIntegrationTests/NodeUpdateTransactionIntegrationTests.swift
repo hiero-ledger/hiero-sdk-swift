@@ -6,34 +6,34 @@ import XCTest
 
 internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTestCase {
 
-    internal func test_DAB_NodeUpdateTransactionCanExecute() async throws {
+    internal func test_NodeUpdateTransactionCanExecute() async throws {
         // Given / When
         let receipt = try await NodeUpdateTransaction()
             .nodeId(0)
             .description("testUpdated")
             .declineRewards(true)
             .grpcWebProxyEndpoint(Endpoint(port: 123456, domainName: "testWebUpdated.com"))
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
+            .execute(testEnv.adminClient)
+            .getReceipt(testEnv.adminClient)
 
         // Then
         XCTAssertEqual(receipt.nodeId, 0)
     }
 
-    internal func test_DAB_NodeUpdateTransactionCanChangeNodeAccountIdToTheSameAccount() async throws {
+    internal func test_NodeUpdateTransactionCanChangeNodeAccountIdToTheSameAccount() async throws {
         // Given / When
         let receipt = try await NodeUpdateTransaction()
             .nodeId(0)
             .description("testUpdated")
             .accountId(AccountId(num: 3))
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
+            .execute(testEnv.adminClient)
+            .getReceipt(testEnv.adminClient)
 
         // Then
         XCTAssertEqual(receipt.status, .success)
     }
 
-    internal func test_DAB_NodeUpdateTransactionCanChangeNodeAccountId() async throws {
+    internal func test_NodeUpdateTransactionCanChangeNodeAccountId() async throws {
         // Given
         let (accountId, accountKey) = try await createTestAccount(initialBalance: TestConstants.testMediumHbarBalance)
 
@@ -42,10 +42,10 @@ internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTest
             .nodeAccountIds([AccountId(num: 3)])
             .nodeId(0)
             .accountId(accountId)
-            .freezeWith(testEnv.client)
+            .freezeWith(testEnv.adminClient)
             .sign(accountKey)
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
+            .execute(testEnv.adminClient)
+            .getReceipt(testEnv.adminClient)
 
         // Then
         XCTAssertEqual(receipt.status, .success)
@@ -56,26 +56,22 @@ internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTest
                 .nodeAccountIds([AccountId(num: 4)])
                 .nodeId(0)
                 .accountId(AccountId(num: 3))
-                .freezeWith(testEnv.client)
+                .freezeWith(testEnv.adminClient)
                 .sign(accountKey)
-                .execute(testEnv.client)
-                .getReceipt(testEnv.client)
+                .execute(testEnv.adminClient)
+                .getReceipt(testEnv.adminClient)
 
             XCTAssertEqual(receipt.status, .success, "Node update transaction failed to reset node account ID")
         }
     }
 
-    internal func test_DAB_NodeUpdateTransactionCanChangeNodeAccountIdInvalidSignature() async throws {
+    internal func test_NodeUpdateTransactionCanChangeNodeAccountIdInvalidSignature() async throws {
         // Given
         let (newOperatorAccountId, newOperatorKey) = try await createTestAccount(
             initialBalance: TestConstants.testMediumHbarBalance)
 
-        // Change the operator to the new account
-        _ = testEnv.client.setOperator(newOperatorAccountId, newOperatorKey)
-
-        addTeardownBlock { [self] in
-            _ = testEnv.client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
-        }
+        let client = testEnv.client
+        client.setOperator(newOperatorAccountId, newOperatorKey)
 
         // Attempt to update node account ID without proper signatures
         await assertReceiptStatus(
@@ -83,27 +79,27 @@ internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTest
                 .nodeId(0)
                 .description("testUpdated")
                 .accountId(AccountId(num: 3))
-                .execute(testEnv.client)
-                .getReceipt(testEnv.client),
+                .execute(client)
+                .getReceipt(client),
             .invalidSignature
         )
     }
 
-    internal func test_DAB_NodeUpdateTransactionCanChangeNodeAccountIdToNonExistentAccountId() async throws {
+    internal func test_NodeUpdateTransactionCanChangeNodeAccountIdToNonExistentAccountId() async throws {
         // Given / When / Then
         await assertReceiptStatus(
             try await NodeUpdateTransaction()
                 .nodeId(0)
                 .description("testUpdated")
                 .accountId(AccountId(num: 9_999_999))
-                .freezeWith(testEnv.client)
-                .execute(testEnv.client)
-                .getReceipt(testEnv.client),
+                .freezeWith(testEnv.adminClient)
+                .execute(testEnv.adminClient)
+                .getReceipt(testEnv.adminClient),
             .invalidSignature
         )
     }
 
-    internal func test_DAB_NodeUpdateTransactionCanChangeNodeAccountIdToDeletedAccountId() async throws {
+    internal func test_NodeUpdateTransactionCanChangeNodeAccountIdToDeletedAccountId() async throws {
         // Given
         let (accountId, accountKey) = try await createSimpleUnmanagedAccount()
         _ = try await AccountDeleteTransaction()
@@ -119,25 +115,22 @@ internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTest
                 .nodeId(0)
                 .description("testUpdated")
                 .accountId(accountId)
-                .freezeWith(testEnv.client)
+                .freezeWith(testEnv.adminClient)
                 .sign(accountKey)
-                .execute(testEnv.client)
-                .getReceipt(testEnv.client),
+                .execute(testEnv.adminClient)
+                .getReceipt(testEnv.adminClient),
             .accountDeleted
         )
     }
 
-    internal func test_DAB_NodeUpdateTransactionCanChangeNodeAccountIdMissingAdminKeySignature() async throws {
+    internal func test_NodeUpdateTransactionCanChangeNodeAccountIdMissingAdminKeySignature() async throws {
         // Given
         let (newAccountId, newAccountKey) = try await createTestAccount()
         let (nonAdminOperatorId, nonAdminOperatorKey) = try await createTestAccount(
             initialBalance: TestConstants.testMediumHbarBalance)
 
-        _ = testEnv.client.setOperator(nonAdminOperatorId, nonAdminOperatorKey)
-
-        addTeardownBlock { [self] in
-            _ = testEnv.client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
-        }
+        let client = testEnv.client
+        client.setOperator(nonAdminOperatorId, nonAdminOperatorKey)
 
         // When / Then
         await assertReceiptStatus(
@@ -145,33 +138,30 @@ internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTest
                 .nodeId(0)
                 .description("testUpdated")
                 .accountId(newAccountId)
-                .freezeWith(testEnv.client)
+                .freezeWith(client)
                 .sign(newAccountKey)  // Only sign with account key, not node admin key
-                .execute(testEnv.client)
-                .getReceipt(testEnv.client),
+                .execute(client)
+                .getReceipt(client),
             .invalidSignature
         )
     }
 
-    internal func test_DAB_NodeUpdateTransactionCannotRemoveAccountIdWithoutAdminKey() async throws {
+    internal func test_NodeUpdateTransactionCannotRemoveAccountIdWithoutAdminKey() async throws {
         // Given
         let (newAccountId, _) = try await createTestAccount(initialBalance: TestConstants.testMediumHbarBalance)
         let (newOperatorAccountId, newOperatorKey) = try await createTestAccount(
             initialBalance: TestConstants.testMediumHbarBalance)
 
-        _ = testEnv.client.setOperator(newOperatorAccountId, newOperatorKey)
-
-        addTeardownBlock { [self] in
-            _ = testEnv.client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
-        }
+        let client = testEnv.client
+        client.setOperator(newOperatorAccountId, newOperatorKey)
 
         // When / Then
         await assertReceiptStatus(
             try await NodeUpdateTransaction()
                 .nodeId(0)
                 .accountId(newAccountId)
-                .execute(testEnv.client)
-                .getReceipt(testEnv.client),
+                .execute(client)
+                .getReceipt(client),
             .invalidSignature
         )
     }

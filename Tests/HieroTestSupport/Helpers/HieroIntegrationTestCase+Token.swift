@@ -20,10 +20,17 @@ extension HieroIntegrationTestCase {
     /// Use this when you need full control over the token lifecycle or when testing
     /// scenarios where cleanup would interfere with the test.
     ///
-    /// - Parameter transaction: Pre-configured `TokenCreateTransaction` (before execute)
+    /// - Parameters:
+    ///   - transaction: Pre-configured `TokenCreateTransaction` (before execute)
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created token ID
-    public func createUnmanagedToken(_ transaction: TokenCreateTransaction) async throws -> TokenId {
-        let receipt = try await transaction.execute(testEnv.client).getReceipt(testEnv.client)
+    public func createUnmanagedToken(_ transaction: TokenCreateTransaction, useAdminClient: Bool = false) async throws
+        -> TokenId
+    {
+        let receipt =
+            try await transaction
+            .execute(useAdminClient ? testEnv.adminClient : testEnv.client)
+            .getReceipt(useAdminClient ? testEnv.adminClient : testEnv.client)
         return try XCTUnwrap(receipt.tokenId)
     }
 
@@ -37,14 +44,18 @@ extension HieroIntegrationTestCase {
     ///   - supplyKey: Optional key for burning tokens before deletion
     ///   - wipeKey: Optional key for wiping tokens from accounts
     ///   - pauseKey: Optional key for unpausing tokens before deletion
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     public func registerToken(
         _ tokenId: TokenId,
         adminKey: PrivateKey,
         supplyKey: PrivateKey? = nil,
         wipeKey: PrivateKey? = nil,
-        pauseKey: PrivateKey? = nil
+        pauseKey: PrivateKey? = nil,
+        useAdminClient: Bool = false
     ) async {
-        await registerToken(tokenId, adminKeys: [adminKey], supplyKey: supplyKey, wipeKey: wipeKey, pauseKey: pauseKey)
+        await registerToken(
+            tokenId, adminKeys: [adminKey], supplyKey: supplyKey, wipeKey: wipeKey, pauseKey: pauseKey,
+            useAdminClient: useAdminClient)
     }
 
     /// Registers an existing token for automatic cleanup at test teardown (multiple admin keys).
@@ -55,12 +66,14 @@ extension HieroIntegrationTestCase {
     ///   - supplyKey: Optional key for burning tokens before deletion
     ///   - wipeKey: Optional key for wiping tokens from accounts
     ///   - pauseKey: Optional key for unpausing tokens before deletion
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     public func registerToken(
         _ tokenId: TokenId,
         adminKeys: [PrivateKey],
         supplyKey: PrivateKey? = nil,
         wipeKey: PrivateKey? = nil,
-        pauseKey: PrivateKey? = nil
+        pauseKey: PrivateKey? = nil,
+        useAdminClient: Bool = false
     ) async {
         if let wipeKey = wipeKey {
             await resourceManager.registerWipeKey(wipeKey, for: tokenId)
@@ -69,7 +82,8 @@ extension HieroIntegrationTestCase {
             await resourceManager.registerPauseKey(pauseKey, for: tokenId)
         }
 
-        await resourceManager.registerCleanup(priority: .tokens) { [client = testEnv.client] in
+        await resourceManager.registerCleanup(priority: .tokens) { [self] in
+            let client = useAdminClient ? self.testEnv.adminClient : self.testEnv.client
             try await Self.cleanupToken(
                 tokenId: tokenId,
                 adminKeys: adminKeys,
@@ -94,13 +108,15 @@ extension HieroIntegrationTestCase {
     ///   - supplyKey: Supply key for burning. If nil, auto-generated.
     ///   - wipeKey: Wipe key for cleanup. If nil, auto-generated.
     ///   - pauseKey: Pause key. If nil, token won't have pause capability.
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created token ID
     public func createToken(
         _ transaction: TokenCreateTransaction,
         adminKey: PrivateKey? = nil,
         supplyKey: PrivateKey? = nil,
         wipeKey: PrivateKey? = nil,
-        pauseKey: PrivateKey? = nil
+        pauseKey: PrivateKey? = nil,
+        useAdminClient: Bool = false
     ) async throws -> TokenId {
         var tx = transaction
 
@@ -125,7 +141,7 @@ extension HieroIntegrationTestCase {
             tx = tx.sign(effectiveAdminKey)
         }
 
-        let tokenId = try await createUnmanagedToken(tx)
+        let tokenId = try await createUnmanagedToken(tx, useAdminClient: useAdminClient)
         await registerToken(
             tokenId,
             adminKey: effectiveAdminKey,
@@ -145,11 +161,13 @@ extension HieroIntegrationTestCase {
     ///   - treasuryAccountId: Account to receive initial supply
     ///   - treasuryKey: Key to sign the transaction
     ///   - initialSupply: Initial token supply (default: 10)
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created token ID
     public func createBasicFungibleToken(
         treasuryAccountId: AccountId,
         treasuryKey: PrivateKey,
-        initialSupply: UInt64 = TestConstants.testSmallInitialSupply
+        initialSupply: UInt64 = TestConstants.testSmallInitialSupply,
+        useAdminClient: Bool = false
     ) async throws -> TokenId {
         try await createToken(
             TokenCreateTransaction()
@@ -157,7 +175,8 @@ extension HieroIntegrationTestCase {
                 .symbol(TestConstants.tokenSymbol)
                 .treasuryAccountId(treasuryAccountId)
                 .initialSupply(initialSupply)
-                .sign(treasuryKey)
+                .sign(treasuryKey),
+            useAdminClient: useAdminClient
         )
     }
 
@@ -167,11 +186,13 @@ extension HieroIntegrationTestCase {
     ///   - treasuryAccountId: Account to receive initial supply
     ///   - treasuryKey: Key to sign the transaction
     ///   - initialSupply: Initial token supply (default: 1,000,000)
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: Tuple of token ID and supply key
     public func createFungibleTokenWithSupplyKey(
         treasuryAccountId: AccountId,
         treasuryKey: PrivateKey,
-        initialSupply: UInt64 = TestConstants.testFungibleInitialBalance
+        initialSupply: UInt64 = TestConstants.testFungibleInitialBalance,
+        useAdminClient: Bool = false
     ) async throws -> (tokenId: TokenId, supplyKey: PrivateKey) {
         let supplyKey = PrivateKey.generateEd25519()
         let tokenId = try await createToken(
@@ -182,7 +203,8 @@ extension HieroIntegrationTestCase {
                 .initialSupply(initialSupply)
                 .supplyKey(.single(supplyKey.publicKey))
                 .sign(treasuryKey),
-            supplyKey: supplyKey
+            supplyKey: supplyKey,
+            useAdminClient: useAdminClient
         )
         return (tokenId, supplyKey)
     }
@@ -192,10 +214,12 @@ extension HieroIntegrationTestCase {
     /// - Parameters:
     ///   - treasuryAccountId: Account to be the treasury
     ///   - treasuryKey: Key to sign the transaction
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: Tuple of token ID and supply key
     public func createNftWithSupplyKey(
         treasuryAccountId: AccountId,
-        treasuryKey: PrivateKey
+        treasuryKey: PrivateKey,
+        useAdminClient: Bool = false
     ) async throws -> (tokenId: TokenId, supplyKey: PrivateKey) {
         let supplyKey = PrivateKey.generateEd25519()
         let tokenId = try await createToken(
@@ -207,7 +231,8 @@ extension HieroIntegrationTestCase {
                 .expirationTime(.now + .minutes(5))
                 .tokenType(.nonFungibleUnique)
                 .sign(treasuryKey),
-            supplyKey: supplyKey
+            supplyKey: supplyKey,
+            useAdminClient: useAdminClient
         )
         return (tokenId, supplyKey)
     }
@@ -220,17 +245,19 @@ extension HieroIntegrationTestCase {
     ///   - tokenId: Token to associate
     ///   - accountId: Account to associate with
     ///   - key: Account key for signing
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     public func associateToken(
         _ tokenId: TokenId,
         with accountId: AccountId,
-        key: PrivateKey
+        key: PrivateKey,
+        useAdminClient: Bool = false
     ) async throws {
         _ = try await TokenAssociateTransaction()
             .accountId(accountId)
             .tokenIds([tokenId])
             .sign(key)
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
+            .execute(useAdminClient ? testEnv.adminClient : testEnv.client)
+            .getReceipt(useAdminClient ? testEnv.adminClient : testEnv.client)
     }
 
     // MARK: - Token Assertions
