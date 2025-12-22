@@ -189,60 +189,59 @@ def parse_swift_status_codes(swift_path: str, verbose: bool = False) -> Dict[int
     return codes
 
 
+def _extract_doc_comment(lines: List[str], case_line_idx: int) -> Tuple[List[str], int]:
+    """Extract doc comment lines preceding a case declaration."""
+    comment_lines = []
+    comment_start = case_line_idx
+    j = case_line_idx - 1
+    
+    while j >= 0:
+        prev_line = lines[j].strip()
+        if prev_line.startswith('///'):
+            comment_lines.insert(0, prev_line[3:].strip())
+            comment_start = j
+            j -= 1
+        elif prev_line == '' or prev_line.startswith('case '):
+            break
+        else:
+            break
+    
+    return comment_lines, comment_start
+
+
+def _parse_swift_case_comment(lines: List[str], match: re.Match, line_idx: int) -> SwiftStatusCode:
+    """Parse a Swift case declaration and its associated comment."""
+    swift_name = match.group(1)
+    code = int(match.group(2))
+    
+    comment_lines, comment_start = _extract_doc_comment(lines, line_idx)
+    full_comment = ' '.join(comment_lines)
+    deprecated = full_comment.startswith('[Deprecated]')
+    clean_comment = full_comment[len('[Deprecated]'):].strip() if deprecated else full_comment
+    
+    return SwiftStatusCode(
+        swift_name=swift_name,
+        code=code,
+        comment=clean_comment,
+        deprecated=deprecated,
+        line_start=comment_start,
+        line_end=line_idx
+    )
+
+
 def parse_swift_comments(swift_path: str, verbose: bool = False) -> Dict[int, SwiftStatusCode]:
     """Parse Status.swift to extract comments for each status code."""
     with open(swift_path, 'r') as f:
         lines = f.readlines()
     
     codes: Dict[int, SwiftStatusCode] = {}
-    
-    # Pattern for case declaration with code comment
     case_pattern = r'^\s*case\s+(\w+)\s*//\s*=\s*(\d+)'
     
-    i = 0
-    while i < len(lines):
-        line = lines[i]
+    for i, line in enumerate(lines):
         match = re.match(case_pattern, line)
-        
         if match:
-            swift_name = match.group(1)
-            code = int(match.group(2))
-            
-            # Look backwards for doc comment
-            comment_lines = []
-            comment_start = i
-            j = i - 1
-            
-            while j >= 0:
-                prev_line = lines[j].strip()
-                if prev_line.startswith('///'):
-                    comment_text = prev_line[3:].strip()
-                    comment_lines.insert(0, comment_text)
-                    comment_start = j
-                    j -= 1
-                elif prev_line == '' or prev_line.startswith('case '):
-                    break
-                else:
-                    break
-            
-            full_comment = ' '.join(comment_lines)
-            deprecated = full_comment.startswith('[Deprecated]')
-            
-            # Remove [Deprecated] prefix for comparison
-            clean_comment = full_comment
-            if deprecated:
-                clean_comment = full_comment[len('[Deprecated]'):].strip()
-            
-            codes[code] = SwiftStatusCode(
-                swift_name=swift_name,
-                code=code,
-                comment=clean_comment,
-                deprecated=deprecated,
-                line_start=comment_start,
-                line_end=i
-            )
-        
-        i += 1
+            swift_code = _parse_swift_case_comment(lines, match, i)
+            codes[swift_code.code] = swift_code
     
     if verbose:
         print(f"Parsed comments for {len(codes)} status codes")
@@ -487,83 +486,93 @@ def update_swift_file(swift_path: str, missing_codes: List[StatusCode],
     return _write_file_with_backup(swift_path, content, verbose)
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description='Synchronize Status.swift with response_code.proto'
-    )
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Preview changes without modifying files')
-    parser.add_argument('--verbose', '-v', action='store_true',
-                        help='Show detailed output')
-    
-    args = parser.parse_args()
-    
+def _get_file_paths() -> Tuple[str, str]:
+    """Get the proto and Swift file paths."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     proto_path = os.path.normpath(os.path.join(script_dir, 'Protos', 'services', 'response_code.proto'))
     swift_path = os.path.normpath(os.path.join(script_dir, '..', 'Hiero', 'Status.swift'))
+    return proto_path, swift_path
+
+
+def _validate_files(proto_path: str, swift_path: str) -> None:
+    """Validate that required files exist, exit if not."""
+    if not os.path.exists(proto_path):
+        print(f"Error: Proto file not found: {proto_path}")
+        sys.exit(1)
+    if not os.path.exists(swift_path):
+        print(f"Error: Swift file not found: {swift_path}")
+        sys.exit(1)
+
+
+def _report_changes(missing: List[StatusCode], 
+                    comment_updates: List[Tuple[StatusCode, SwiftStatusCode]]) -> None:
+    """Print report of changes to be made."""
+    if missing:
+        print(f"Found {len(missing)} missing status code(s):")
+        for code in missing:
+            print(f"  - {proto_to_swift_case(code.name)} ({code.code})")
+        print()
+    if comment_updates:
+        print(f"Found {len(comment_updates)} comment/deprecated update(s):")
+        for proto_code, swift_code in comment_updates:
+            print(f"  - {swift_code.swift_name} ({proto_code.code})")
+        print()
+
+
+def _print_success(missing: List[StatusCode], 
+                   comment_updates: List[Tuple[StatusCode, SwiftStatusCode]], 
+                   dry_run: bool) -> None:
+    """Print success message based on changes made."""
+    if dry_run:
+        print("\n[DRY RUN] No files were modified.")
+        return
+    changes = []
+    if missing:
+        changes.append(f"{len(missing)} new status code(s)")
+    if comment_updates:
+        changes.append(f"{len(comment_updates)} comment update(s)")
+    print(f"\n✓ Status.swift updated successfully with {', '.join(changes)}!")
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Synchronize Status.swift with response_code.proto')
+    parser.add_argument('--dry-run', action='store_true', help='Preview changes without modifying files')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Show detailed output')
+    args = parser.parse_args()
+    
+    proto_path, swift_path = _get_file_paths()
     
     print("Synchronizing Status.swift with response_code.proto...")
     if args.dry_run:
         print("[DRY RUN MODE]")
     print()
     
-    if not os.path.exists(proto_path):
-        print(f"Error: Proto file not found: {proto_path}")
-        sys.exit(1)
-    
-    if not os.path.exists(swift_path):
-        print(f"Error: Swift file not found: {swift_path}")
-        sys.exit(1)
+    _validate_files(proto_path, swift_path)
     
     proto_codes = parse_proto_file(proto_path, args.verbose)
     swift_codes = parse_swift_status_codes(swift_path, args.verbose)
     swift_comments = parse_swift_comments(swift_path, args.verbose)
     
     print(f"Proto file: {len(proto_codes)} status codes")
-    print(f"Swift file: {len(swift_codes)} status codes")
-    print()
+    print(f"Swift file: {len(swift_codes)} status codes\n")
     
-    # Find missing codes
     missing = find_missing_codes(proto_codes, swift_codes)
-    
-    # Find comment/deprecated updates
     comment_updates = find_comment_updates(proto_codes, swift_comments, args.verbose)
     
     if not missing and not comment_updates:
-        print("✓ Status.swift is in sync with response_code.proto")
-        print("No updates needed.")
+        print("✓ Status.swift is in sync with response_code.proto\nNo updates needed.")
         sys.exit(0)
     
-    # Report missing codes
-    if missing:
-        print(f"Found {len(missing)} missing status code(s):")
-        for code in missing:
-            print(f"  - {proto_to_swift_case(code.name)} ({code.code})")
-        print()
-    
-    # Report comment updates
-    if comment_updates:
-        print(f"Found {len(comment_updates)} comment/deprecated update(s):")
-        for proto_code, swift_code in comment_updates:
-            print(f"  - {swift_code.swift_name} ({proto_code.code})")
-        print()
+    _report_changes(missing, comment_updates)
     
     success = update_swift_file(swift_path, missing, comment_updates, args.dry_run, args.verbose)
     
     if success:
-        if args.dry_run:
-            print("\n[DRY RUN] No files were modified.")
-        else:
-            changes = []
-            if missing:
-                changes.append(f"{len(missing)} new status code(s)")
-            if comment_updates:
-                changes.append(f"{len(comment_updates)} comment update(s)")
-            print(f"\n✓ Status.swift updated successfully with {', '.join(changes)}!")
+        _print_success(missing, comment_updates, args.dry_run)
         sys.exit(0)
-    else:
-        print("\n✗ Failed to update Status.swift")
-        sys.exit(1)
+    
+    print("\n✗ Failed to update Status.swift")
+    sys.exit(1)
 
 
 if __name__ == "__main__":
