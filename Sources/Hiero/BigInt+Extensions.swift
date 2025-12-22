@@ -1,35 +1,39 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import Foundation
 import NumberKit
 
+// MARK: - BigInt Byte Conversion Extensions
+//
+// Extensions for converting between NumberKit's BigInt and byte representations.
+// Used for cryptographic operations that require arbitrary-precision integers.
+
 extension BigInt {
+    /// Initialize a BigInt from unsigned big-endian bytes.
+    ///
+    /// Interprets the bytes as an unsigned integer in big-endian order
+    /// (most significant byte first).
+    ///
+    /// - Parameter bytes: The big-endian byte representation.
     internal init(unsignedBEBytes bytes: Data) {
         self.init(0)
 
-        // yes, this is a stupid algorithm, but it's all I've got.
-        // for a number like: 0x3d31_7dd0
-        // `self` follows the pattern:
-        // 0x00 (pre loop)
-        // 0x00 -> 0x3d (first iteration)
-        // 0x3d00 -> 0x3d31 (2nd)
-        // 0x3d_3100 -> 0x3d_317d (3rd)
-        // 0x3d31_7d00 -> 0x3d_7dd0 (4th)
         for byte in bytes {
             self <<= 8
             self += Self(byte)
         }
     }
 
+    /// Initialize a BigInt from signed big-endian bytes (two's complement).
+    ///
+    /// Interprets the bytes as a signed integer in big-endian order
+    /// using two's complement representation.
+    ///
+    /// - Parameter bytes: The big-endian byte representation.
     internal init(signedBEBytes bytes: Data) {
         self.init(0)
 
-        // this algorithm is even more stupid than the previous one!
-        // for a number like: 0x82c0_ffee
-        // `self` follows the pattern:
-        // 0x00 (0 - pre everything)
-        // 0x00 -> 0x82 (-126 - first byte)
-        // 0x8200 -> 0x82c0 (-32064 - first iteration)
-        // 0x82_c000 -> 0x82_c0ff (2nd iteration)
-        // 0x82c0_ff00 -> 0x82c0_ffee (-2101280786 - 3rd iteration)
+        // Handle sign bit from first byte
         if let byte = bytes.first {
             self += Self(Int8(bitPattern: byte))
         }
@@ -40,10 +44,16 @@ extension BigInt {
         }
     }
 
+    /// Convert to big-endian byte representation.
+    ///
+    /// - Returns: The big-endian bytes (most significant byte first).
     internal func toBigEndianBytes() -> Data {
         Data(words.reversed().flatMap { $0.bigEndianBytes })
     }
 
+    /// Convert to little-endian byte representation.
+    ///
+    /// - Returns: The little-endian bytes (least significant byte first).
     internal func toLittleEndianBytes() -> Data {
         Data(words.flatMap { $0.littleEndianBytes })
     }

@@ -28,15 +28,6 @@
       }
     },
     {
-      "identity" : "bigint",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/attaswift/BigInt.git",
-      "state" : {
-        "revision" : "99c4b9fb0f52dc9182aee106b07c3d205583b98c",
-        "version" : "5.6.0"
-      }
-    },
-    {
       "identity" : "console-kit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/console-kit.git",
@@ -70,15 +61,6 @@
       "state" : {
         "revision" : "3498e60218e6003894ff95192d756e238c01f44e",
         "version" : "4.7.1"
-      }
-    },
-    {
-      "identity" : "openssl-package",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/krzyzanowskim/OpenSSL-Package.git",
-      "state" : {
-        "revision" : "71dbe0b4514cdaad95961470db72e8231f5943a6",
-        "version" : "3.3.3001"
       }
     },
     {

@@ -9,7 +9,7 @@ internal final class CryptoSha2UnitTests: HieroUnitTestCase {
     internal func test_Sha256Hash() throws {
         let input = "testingSha256".data(using: .utf8)!
 
-        let sha = CryptoNamespace.Sha2.sha256(input)
+        let sha = Sha2.sha256(input)
 
         XCTAssertEqual(sha.hexStringEncoded(), "635cd23293b70af14655d9de9b84c403ab2668d5acd0bd38b5c8e79b50e5992a")
         XCTAssertEqual(sha.count, 32)
@@ -18,7 +18,7 @@ internal final class CryptoSha2UnitTests: HieroUnitTestCase {
     internal func test_Sha384Hash() throws {
         let input = "testingSha384".data(using: .utf8)!
 
-        let sha = CryptoNamespace.Sha2.sha384(input)
+        let sha = Sha2.sha384(input)
 
         XCTAssertEqual(
             sha.hexStringEncoded(),
@@ -29,7 +29,7 @@ internal final class CryptoSha2UnitTests: HieroUnitTestCase {
     internal func test_Sha256HashDigest() throws {
         let input = "testingSha256digest".data(using: .utf8)!
 
-        let sha = CryptoNamespace.Sha2.digest(CryptoNamespace.Sha2.sha256, input)
+        let sha = Sha2.digest(Sha2.sha256, input)
 
         XCTAssertEqual(
             sha.hexStringEncoded(),
@@ -40,7 +40,7 @@ internal final class CryptoSha2UnitTests: HieroUnitTestCase {
     internal func test_Sha384HashDigest() throws {
         let input = "testingSha384digest".data(using: .utf8)!
 
-        let sha = CryptoNamespace.Sha2.digest(CryptoNamespace.Sha2.sha384, input)
+        let sha = Sha2.digest(Sha2.sha384, input)
 
         XCTAssertEqual(
             sha.hexStringEncoded(),
@@ -51,7 +51,7 @@ internal final class CryptoSha2UnitTests: HieroUnitTestCase {
     internal func test_Sha512HashDigest() throws {
         let input = "testingSha512digest".data(using: .utf8)!
 
-        let sha = CryptoNamespace.Sha2.digest(CryptoNamespace.Sha2.sha512, input)
+        let sha = Sha2.digest(Sha2.sha512, input)
 
         XCTAssertEqual(
             sha.hexStringEncoded(),
