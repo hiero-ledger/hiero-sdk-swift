@@ -469,24 +469,17 @@ internal class TokenCancelAirdropTransactionIntegrationTests: HieroIntegrationTe
                 .addPendingAirdropId(record.pendingAirdropRecords[0].pendingAirdropId)
                 .execute(testEnv.client)
                 .getRecord(testEnv.client),
-            .invalidPendingAirdropId
+            .invalidPendingAirdropID
         )
     }
 
     internal func test_CancelEmptyPendingAirdropFail() async throws {
         // Given / When / Then
-        await assertThrowsHErrorAsync(
+        await assertPrecheckStatus(
             try await TokenCancelAirdropTransaction()
-                .execute(testEnv.client)
-                .getRecord(testEnv.client),
-            "expected error Cancel token"
-        ) { error in
-            guard case .responseStatusUnrecognized = error.kind else {
-                XCTFail("`\(error.kind)` is not `.responseStatusUnrecognized`")
-                return
-            }
-            XCTAssertEqual(error.kind, .responseStatusUnrecognized)
-        }
+                .execute(testEnv.client),
+            .emptyPendingAirdropIDList
+        )
     }
 
     internal func test_CancelDuplicateEntriesFail() async throws {
@@ -515,19 +508,12 @@ internal class TokenCancelAirdropTransactionIntegrationTests: HieroIntegrationTe
             .getRecord(testEnv.client)
 
         // When / Then
-        await assertThrowsHErrorAsync(
+        await assertPrecheckStatus(
             try await TokenCancelAirdropTransaction()
                 .addPendingAirdropId(record.pendingAirdropRecords[0].pendingAirdropId)
                 .addPendingAirdropId(record.pendingAirdropRecords[0].pendingAirdropId)
-                .execute(testEnv.client)
-                .getRecord(testEnv.client),
-            "expected error Claiming token"
-        ) { error in
-            guard case .responseStatusUnrecognized = error.kind else {
-                XCTFail("`\(error.kind)` is not `.responseStatusUnrecognized`")
-                return
-            }
-            XCTAssertEqual(error.kind, .responseStatusUnrecognized)
-        }
+                .execute(testEnv.client),
+            .pendingAirdropIDRepeated
+        )
     }
 }

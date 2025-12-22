@@ -16,19 +16,16 @@ public enum Status: Equatable {
     /// Payer account does not exist.
     case payerAccountNotFound  // = 2
 
-    /// Node Account provided does not match the node account of the node the transaction was submitted
-    /// to.
+    /// Node Account provided does not match the node account of the node the transaction was submitted to.
     case invalidNodeAccount  // = 3
 
-    /// Pre-Check error when TransactionValidStart + transactionValidDuration is less than current
-    /// consensus time.
+    /// Pre-Check error when TransactionValidStart + transactionValidDuration is less than current consensus time.
     case transactionExpired  // = 4
 
     /// Transaction start time is greater than current consensus time
     case invalidTransactionStart  // = 5
 
-    /// The given transactionValidDuration was either non-positive, or greater than the maximum
-    /// valid duration of 180 secs.
+    /// The given transactionValidDuration was either non-positive, or greater than the maximum valid duration of 180 secs.
     case invalidTransactionDuration  // = 6
 
     /// The transaction signature is not valid
@@ -43,8 +40,7 @@ public enum Status: Equatable {
     /// The payer account has insufficient cryptocurrency to pay the transaction fee
     case insufficientPayerBalance  // = 10
 
-    /// This transaction ID is a duplicate of one that was submitted to this node or reached consensus
-    /// in the last 180 seconds (receipt period)
+    /// This transaction ID is a duplicate of one that was submitted to this node or reached consensus in the last 180 seconds (receipt period)
     case duplicateTransaction  // = 11
 
     /// If API is throttled out
@@ -74,8 +70,7 @@ public enum Status: Equatable {
     /// The solidity id is invalid or entity with this solidity id does not exist
     case invalidSolidityID  // = 20
 
-    /// The responding node has submitted the transaction to the network. Its final status is still
-    /// unknown.
+    /// The responding node has submitted the transaction to the network. Its final status is still unknown.
     case unknown  // = 21
 
     /// The transaction succeeded
@@ -117,8 +112,7 @@ public enum Status: Equatable {
     /// For any contract execution related error not handled by specific error codes listed above.
     case contractExecutionException  // = 34
 
-    /// In Query validation, account with +ve(amount) value should be Receiving node account, the
-    /// receiver account should be only one account in the list
+    /// In Query validation, account with +ve(amount) value should be Receiving node account, the receiver account should be only one account in the list
     case invalidReceivingNodeAccount  // = 35
 
     /// Header is missing in Query request
@@ -166,13 +160,10 @@ public enum Status: Equatable {
     /// Invalid transaction body provided
     case invalidTransactionBody  // = 50
 
-    /// the type of key (base ed25519 key, KeyList, or ThresholdKey) does not match the type of
-    /// signature (base ed25519 signature, SignatureList, or ThresholdKeySignature)
+    /// the type of key (base ed25519 key, KeyList, or ThresholdKey) does not match the type of signature (base ed25519 signature, SignatureList, or ThresholdKeySignature)
     case invalidSignatureTypeMismatchingKey  // = 51
 
-    /// the number of key (KeyList, or ThresholdKey) does not match that of signature (SignatureList,
-    /// or ThresholdKeySignature). e.g. if a keyList has 3 base keys, then the corresponding
-    /// signatureList should also have 3 base signatures.
+    /// the number of key (KeyList, or ThresholdKey) does not match that of signature (SignatureList, or ThresholdKeySignature). e.g. if a keyList has 3 base keys, then the corresponding signatureList should also have 3 base signatures.
     case invalidSignatureCountMismatchingKey  // = 52
 
     /// the livehash body is empty
@@ -244,19 +235,16 @@ public enum Status: Equatable {
     /// attempting to set negative balance value for crypto account
     case settingNegativeAccountBalance  // = 75
 
-    /// when deleting smart contract that has crypto balance either transfer account or transfer smart
-    /// contract is required
+    /// when deleting smart contract that has crypto balance either transfer account or transfer smart contract is required
     case obtainerRequired  // = 76
 
-    /// when deleting smart contract that has crypto balance you can not use the same contract id as
-    /// transferContractId as the one being deleted
+    /// when deleting smart contract that has crypto balance you can not use the same contract id as transferContractId as the one being deleted
     case obtainerSameContractID  // = 77
 
     /// transferAccountId or transferContractId specified for contract delete does not exist
     case obtainerDoesNotExist  // = 78
 
-    /// attempting to modify (update or delete a immutable smart contract, i.e. one created without a
-    /// admin key)
+    /// attempting to modify (update or delete a immutable smart contract, i.e. one created without a admin key)
     case modifyingImmutableContract  // = 79
 
     /// Unexpected exception thrown by file system functions
@@ -265,8 +253,7 @@ public enum Status: Equatable {
     /// the duration is not a subset of [MINIMUM_AUTORENEW_DURATION,MAXIMUM_AUTORENEW_DURATION]
     case autorenewDurationNotInRange  // = 81
 
-    /// Decoding the smart contract binary to a byte array failed. Check that the input is a valid hex
-    /// string.
+    /// Decoding the smart contract binary to a byte array failed. Check that the input is a valid hex string.
     case errorDecodingBytestring  // = 82
 
     /// File to create a smart contract was of length zero
@@ -278,14 +265,13 @@ public enum Status: Equatable {
     /// Attempt to set negative initial balance
     case invalidInitialBalance  // = 85
 
-    /// [Deprecated]. attempt to set negative receive record threshold
+    /// [Deprecated] Attempt to set negative receive record threshold
     case invalidReceiveRecordThreshold  // = 86
 
-    /// [Deprecated]. attempt to set negative send record threshold
+    /// [Deprecated] Attempt to set negative send record threshold
     case invalidSendRecordThreshold  // = 87
 
-    /// Special Account Operations should be performed by only Genesis account, return this code if it
-    /// is not Genesis Account
+    /// Special Account Operations should be performed by only Genesis account, return this code if it is not Genesis Account
     case accountIsNotGenesisAccount  // = 88
 
     /// The fee payer account doesn't have permission to submit such Transaction
@@ -324,12 +310,7 @@ public enum Status: Equatable {
     /// Entities with Entity ID below 1000 are not allowed to be deleted
     case entityNotAllowedToDelete  // = 100
 
-    /// Violating one of these rules: 1) treasury account can update all entities below 0.0.1000, 2)
-    /// account 0.0.50 can update all entities from 0.0.51 - 0.0.80, 3) Network Function Master Account
-    /// A/c 0.0.50 - Update all Network Function accounts & perform all the Network Functions listed
-    /// below, 4) Network Function Accounts: i) A/c 0.0.55 - Update Address Book files (0.0.101/102,
-    /// ii) A/c 0.0.56 - Update Fee schedule (0.0.111, iii) A/c 0.0.57 - Update Exchange Rate
-    /// (0.0.112).
+    /// Violating one of these rules: 1) treasury account can update all entities below 0.0.1000, 2) account 0.0.50 can update all entities from 0.0.51 - 0.0.80, 3) Network Function Master Account A/c 0.0.50 - Update all Network Function accounts & perform all the Network Functions listed below, 4) Network Function Accounts: i) A/c 0.0.55 - Update Address Book files (0.0.101/102), ii) A/c 0.0.56 - Update Fee schedule (0.0.111), iii) A/c 0.0.57 - Update Exchange Rate (0.0.112).
     case authorizationFailed  // = 101
 
     /// Fee Schedule Proto uploaded but not valid (append or update is required)
@@ -349,6 +330,7 @@ public enum Status: Equatable {
 
     /// Transfer Account should not be same as Account to be deleted
     case transferAccountSameAsDeleteAccount  // = 107
+
     case totalLedgerBalanceInvalid  // = 108
 
     /// The expiration date/time on a smart contract may not be reduced
@@ -384,9 +366,7 @@ public enum Status: Equatable {
     /// An adminKey was not specified on the topic, so there must not be an autoRenewAccount.
     case autorenewAccountNotAllowed  // = 160
 
-    /// The topic has expired, was not automatically renewed, and is in a 7 day grace period before the
-    /// topic will be deleted unrecoverably. This error response code will not be returned until
-    /// autoRenew functionality is supported by HAPI.
+    /// The topic has expired, was not automatically renewed, and is in a 7 day grace period before the topic will be deleted unrecoverably. This error response code will not be returned until autoRenew functionality is supported by HAPI.
     case topicExpired  // = 162
 
     /// chunk number must be from 1 to total (chunks) inclusive.
@@ -593,7 +573,7 @@ public enum Status: Equatable {
     /// A custom fractional fee set a denominator of zero
     case fractionDividesByZero  // = 230
 
-    /// The transaction payer could not afford a custom fee
+    /// [Deprecated] The transaction payer could not afford a custom fee
     case insufficientPayerBalanceForCustomFee  // = 231
 
     /// More than 10 custom fees were specified
@@ -692,8 +672,7 @@ public enum Status: Equatable {
     /// Already existing automatic associations are more than the new maximum automatic associations.
     case existingAutomaticAssociationsExceedGivenLimit  // = 263
 
-    /// Cannot set the number of automatic associations for an account more than the maximum allowed
-    /// token associations <tt>tokens.maxPerAccount</tt>.
+    /// Cannot set the number of automatic associations for an account more than the maximum allowed token associations <tt>tokens.maxPerAccount</tt>.
     case requestedNumAutomaticAssociationsExceedsAssociationLimit  // = 264
 
     /// Token is paused. This Token cannot be a part of any kind of Transaction until unpaused.
@@ -717,35 +696,28 @@ public enum Status: Equatable {
     /// A FREEZE_ABORT transaction was handled with no scheduled freeze.
     case noFreezeIsScheduled  // = 271
 
-    /// The update file hash when handling a FREEZE_UPGRADE transaction differs from the file
-    /// hash at the time of handling the PREPARE_UPGRADE transaction.
+    /// The update file hash when handling a FREEZE_UPGRADE transaction differs from the file hash at the time of handling the PREPARE_UPGRADE transaction.
     case updateFileHashChangedSincePrepareUpgrade  // = 272
 
     /// The given freeze start time was in the (consensus) past.
     case freezeStartTimeMustBeFuture  // = 273
 
-    /// The prepared update file cannot be updated or appended until either the upgrade has
-    /// been completed, or a FREEZE_ABORT has been handled.
+    /// The prepared update file cannot be updated or appended until either the upgrade has been completed, or a FREEZE_ABORT has been handled.
     case preparedUpdateFileIsImmutable  // = 274
 
-    /// Once a freeze is scheduled, it must be aborted before any other type of freeze can
-    /// can be performed.
+    /// Once a freeze is scheduled, it must be aborted before any other type of freeze can can be performed.
     case freezeAlreadyScheduled  // = 275
 
-    /// If an NMT upgrade has been prepared, the following operation must be a FREEZE_UPGRADE.
-    /// (To issue a FREEZE_ONLY, submit a FREEZE_ABORT first.)
+    /// If an NMT upgrade has been prepared, the following operation must be a FREEZE_UPGRADE. (To issue a FREEZE_ONLY, submit a FREEZE_ABORT first.)
     case freezeUpgradeInProgress  // = 276
 
-    /// If an NMT upgrade has been prepared, the subsequent FREEZE_UPGRADE transaction must
-    /// confirm the id of the file to be used in the upgrade.
+    /// If an NMT upgrade has been prepared, the subsequent FREEZE_UPGRADE transaction must confirm the id of the file to be used in the upgrade.
     case updateFileIDDoesNotMatchPrepared  // = 277
 
-    /// If an NMT upgrade has been prepared, the subsequent FREEZE_UPGRADE transaction must
-    /// confirm the hash of the file to be used in the upgrade.
+    /// If an NMT upgrade has been prepared, the subsequent FREEZE_UPGRADE transaction must confirm the hash of the file to be used in the upgrade.
     case updateFileHashDoesNotMatchPrepared  // = 278
 
-    /// Consensus throttle did not allow execution of this transaction. System is throttled at
-    /// consensus level.
+    /// Consensus throttle did not allow execution of this transaction. System is throttled at consensus level.
     case consensusGasExhausted  // = 279
 
     /// A precompiled contract succeeded, but was later reverted.
@@ -754,13 +726,10 @@ public enum Status: Equatable {
     /// All contract storage allocated to the current price regime has been consumed.
     case maxStorageInPriceRegimeHasBeenUsed  // = 281
 
-    /// An alias used in a CryptoTransfer transaction is not the serialization of a primitive Key
-    /// message--that is, a Key with a single Ed25519 or ECDSA(secp256k1) public key and no
-    /// unknown protobuf fields.
+    /// An alias used in a CryptoTransfer transaction is not the serialization of a primitive Key message--that is, a Key with a single Ed25519 or ECDSA(secp256k1) public key and no unknown protobuf fields.
     case invalidAliasKey  // = 282
 
-    /// A fungible token transfer expected a different number of decimals than the involved
-    /// type actually has.
+    /// A fungible token transfer expected a different number of decimals than the involved type actually has.
     case unexpectedTokenDecimals  // = 283
 
     /// [Deprecated] The proxy account id is invalid or does not exist.
@@ -775,12 +744,10 @@ public enum Status: Equatable {
     /// The alias already set on an account cannot be updated using CryptoUpdate transaction.
     case aliasIsImmutable  // = 287
 
-    /// An approved allowance specifies a spender account that is the same as the hbar/token
-    /// owner account.
+    /// An approved allowance specifies a spender account that is the same as the hbar/token owner account.
     case spenderAccountSameAsOwner  // = 288
 
-    /// The establishment or adjustment of an approved allowance cause the token allowance
-    /// to exceed the token maximum supply.
+    /// The establishment or adjustment of an approved allowance cause the token allowance to exceed the token maximum supply.
     case amountExceedsTokenMaxSupply  // = 289
 
     /// The specified amount for an approved allowance cannot be negative.
@@ -795,15 +762,13 @@ public enum Status: Equatable {
     /// The transfer amount exceeds the current approved allowance for the spender account.
     case amountExceedsAllowance  // = 293
 
-    /// The payer account of an approveAllowances or adjustAllowance transaction is attempting
-    /// to go beyond the maximum allowed number of allowances.
+    /// The payer account of an approveAllowances or adjustAllowance transaction is attempting to go beyond the maximum allowed number of allowances.
     case maxAllowancesExceeded  // = 294
 
     /// No allowances have been specified in the approval transaction.
     case emptyAllowances  // = 295
 
-    /// [Deprecated] Spender is repeated more than once in Crypto or Token or NFT allowance lists in a single
-    /// CryptoApproveAllowance transaction.
+    /// [Deprecated] Spender is repeated more than once in Crypto or Token or NFT allowance lists in a single CryptoApproveAllowance transaction.
     case spenderAccountRepeatedInAllowances  // = 296
 
     /// [Deprecated] Serial numbers are repeated in nft allowance for a single spender account
@@ -821,7 +786,7 @@ public enum Status: Equatable {
     /// The account id specified as the spender is invalid or does not exist.
     case invalidAllowanceSpenderID  // = 301
 
-    /// [Deprecated] If the CryptoDeleteAllowance transaction has repeated crypto or token or Nft allowances to delete.
+    /// [Deprecated] [Deprecated] If the CryptoDeleteAllowance transaction has repeated crypto or token or Nft allowances to delete.
     case repeatedAllowancesToDelete  // = 302
 
     /// If the account Id specified as the delegating spender is invalid or does not exist.
@@ -830,8 +795,7 @@ public enum Status: Equatable {
     /// The delegating Spender cannot grant approveForAll allowance on a NFT token type for another spender.
     case delegatingSpenderCannotGrantApproveForAll  // = 304
 
-    /// The delegating Spender cannot grant allowance on a NFT serial for another spender as it doesnt not have approveForAll
-    /// granted on token-owner.
+    /// The delegating Spender cannot grant allowance on a NFT serial for another spender as it doesnt not have approveForAll granted on token-owner.
     case delegatingSpenderDoesNotHaveApproveForAll  // = 305
 
     /// The scheduled transaction could not be created because it's expiration_time was too far in the future.
@@ -867,18 +831,16 @@ public enum Status: Equatable {
     /// A selfdestruct or ContractDelete targeted a contract with non-zero token balances.
     case contractHasNonZeroTokenBalances  // = 316
 
-    /// A contract referenced by a transaction is "detached"; that is, expired and lacking any
-    /// hbar funds for auto-renewal payment---but still within its post-expiry grace period.
+    /// A contract referenced by a transaction is "detached"; that is, expired and lacking any hbar funds for auto-renewal payment---but still within its post-expiry grace period.
     case contractExpiredAndPendingRemoval  // = 317
 
-    /// A ContractUpdate requested removal of a contract's auto-renew account, but that contract has
-    /// no auto-renew account.
+    /// A ContractUpdate requested removal of a contract's auto-renew account, but that contract has no auto-renew account.
     case contractHasNoAutoRenewAccount  // = 318
 
     /// A delete transaction submitted via HAPI set permanent_removal=true
     case permanentRemovalRequiresSystemInitiation  // = 319
 
-    /// A CryptoCreate or ContractCreate used the deprecated proxyAccountID field.
+    /// [Deprecated] A CryptoCreate or ContractCreate used the deprecated proxyAccountID field.
     case proxyAccountIDFieldIsDeprecated  // = 320
 
     /// An account set the staked_account_id to itself in CryptoUpdate or ContractUpdate transactions.
@@ -899,20 +861,16 @@ public enum Status: Equatable {
     /// The full prefix signature for precompile is not valid
     case invalidFullPrefixSignatureForPrecompile  // = 326
 
-    /// The combined balances of a contract and its auto-renew account (if any) did not cover
-    /// the rent charged for net new storage used in a transaction.
+    /// The combined balances of a contract and its auto-renew account (if any) did not cover the rent charged for net new storage used in a transaction.
     case insufficientBalancesForStorageRent  // = 327
 
-    /// A contract transaction tried to use more than the allowed number of child records, via
-    /// either system contract records or internal contract creations.
+    /// A contract transaction tried to use more than the allowed number of child records, via either system contract records or internal contract creations.
     case maxChildRecordsExceeded  // = 328
 
-    /// The combined balances of a contract and its auto-renew account (if any) or balance of an account did not cover
-    /// the auto-renewal fees in a transaction.
+    /// The combined balances of a contract and its auto-renew account (if any) or balance of an account did not cover the auto-renewal fees in a transaction.
     case insufficientBalancesForRenewalFees  // = 329
 
-    /// A transaction's protobuf message includes unknown fields; could mean that a client
-    /// expects not-yet-released functionality to be available.
+    /// A transaction's protobuf message includes unknown fields; could mean that a client expects not-yet-released functionality to be available.
     case transactionHasUnknownFields  // = 330
 
     /// The account cannot be modified. Account's key is not set
@@ -921,11 +879,10 @@ public enum Status: Equatable {
     /// An alias that is assigned to an account or contract cannot be assigned to another account or contract.
     case aliasAlreadyAssigned  // = 332
 
-    /// A provided metadata key was invalid. Verification includes, for example, checking the size of Ed25519 and ECDSA(secp256k1)
-    /// public keys.
+    /// A provided metadata key was invalid. Verification includes, for example, checking the size of Ed25519 and ECDSA(secp256k1) public keys.
     case invalidMetadataKey  // = 333
 
-    ///Metadata key is not set on token
+    /// Metadata key is not set on token
     case tokenHasNoMetadataKey  // = 334
 
     /// Token Metadata is not provided
@@ -933,47 +890,35 @@ public enum Status: Equatable {
 
     /// NFT serial numbers are missing in the TokenUpdateNftsTransactionBody
     case missingSerialNumbers  // = 336
-    /// Admin key is not set on token
 
+    /// Admin key is not set on token
     case tokenHasNoAdminKey  // = 337
 
-    /// A transaction failed because the consensus node identified is
-    /// deleted from the address book.
+    /// A transaction failed because the consensus node identified is deleted from the address book.
     case nodeDeleted  // = 338
 
-    /// A transaction failed because the consensus node identified is not valid or
-    /// does not exist in state.
+    /// A transaction failed because the consensus node identified is not valid or does not exist in state.
     case invalidNodeID  // = 339
 
-    /// A transaction failed because one or more entries in the list of
-    /// service endpoints for the `gossip_endpoint` field is invalid.<br/>
-    /// The most common cause for this response is a service endpoint that has
-    /// the domain name (DNS) set rather than address and port.
+    /// A transaction failed because one or more entries in the list of service endpoints for the `gossip_endpoint` field is invalid.<br/> The most common cause for this response is a service endpoint that has the domain name (DNS) set rather than address and port.
     case invalidGossipEndpoint  // = 340
 
-    /// A transaction failed because the node account identifier provided
-    /// does not exist or is not valid.<br/>
-    /// One common source of this error is providing a node account identifier
-    /// using the "alias" form rather than "numeric" form.
+    /// A transaction failed because the node account identifier provided does not exist or is not valid.<br/> One common source of this error is providing a node account identifier using the "alias" form rather than "numeric" form. It is also used for atomic batch transaction for child transaction if the node account id is not 0.0.0.
     case invalidNodeAccountID  // = 341
 
-    /// A transaction failed because the description field cannot be encoded
-    /// as UTF-8 or is more than 100 bytes when encoded.
+    /// A transaction failed because the description field cannot be encoded as UTF-8 or is more than 100 bytes when encoded.
     case invalidNodeDescription  // = 342
 
-    /// A transaction failed because one or more entries in the list of
-    /// service endpoints for the `service_endpoint` field is invalid.
+    /// A transaction failed because one or more entries in the list of service endpoints for the `service_endpoint` field is invalid.<br/> The most common cause for this response is a service endpoint that has the domain name (DNS) set rather than address and port.
     case invalidServiceEndpoint  // = 343
 
-    /// A transaction failed because the TLS certificate provided for the
-    /// node is missing or invalid.
+    /// A transaction failed because the TLS certificate provided for the node is missing or invalid. <p> #### Probable Causes The certificate MUST be a TLS certificate of a type permitted for gossip signatures.<br/> The value presented MUST be a UTF-8 NFKD encoding of the TLS certificate.<br/> The certificate encoded MUST be in PEM format.<br/> The `gossip_ca_certificate` field is REQUIRED and MUST NOT be empty.
     case invalidGossipCaCertificate  // = 344
 
-    /// A transaction failed because the hash provided for the gRPC certificate
-    /// is present but invalid.
+    /// A transaction failed because the hash provided for the gRPC certificate is present but invalid. <p> #### Probable Causes The `grpc_certificate_hash` MUST be a SHA-384 hash.<br/> The input hashed MUST be a UTF-8 NFKD encoding of the actual TLS certificate.<br/> The certificate to be encoded MUST be in PEM format.
     case invalidGrpcCertificate  // = 345
 
-    /// The maximum automatic associations value is not valid.
+    /// The maximum automatic associations value is not valid.<br/> The most common cause for this error is a value less than `-1`.
     case invalidMaxAutoAssociations  // = 346
 
     /// The maximum number of nodes allowed in the address book have been created.
@@ -982,7 +927,7 @@ public enum Status: Equatable {
     /// In ServiceEndpoint, domain_name and ipAddressV4 are mutually exclusive
     case ipFqdnCannotBeSetForSameEndpoint  // = 348
 
-    ///  Fully qualified domain name is not allowed in gossip_endpoint
+    /// Fully qualified domain name is not allowed in gossip_endpoint
     case gossipEndpointCannotHaveFqdn  // = 349
 
     /// In ServiceEndpoint, domain_name size too large
@@ -994,7 +939,7 @@ public enum Status: Equatable {
     /// The number of gossip endpoints exceeds the limit
     case gossipEndpointsExceededLimit  // = 352
 
-    /// The transaction attempted to use duplicate `TokenReference`
+    /// The transaction attempted to use duplicate `TokenReference`.<br/> This affects `TokenReject` attempting to reject same token reference more than once.
     case tokenReferenceRepeated  // = 353
 
     /// The account id specified as the owner in `TokenReject` is invalid or does not exist.
@@ -1015,59 +960,52 @@ public enum Status: Equatable {
     /// The node account is not allowed to be updated
     case updateNodeAccountNotAllowed  // = 359
 
-    /// The token has no metadata key or supply key
+    /// The token has no metadata or supply key
     case tokenHasNoMetadataOrSupplyKey  // = 360
 
-    /// The transaction attempted to the use an empty List of `PendingAirdropId`.
-    case emptyPendingAirdropIdList  // = 361
+    /// The list of `PendingAirdropId`s is empty and MUST NOT be empty.
+    case emptyPendingAirdropIDList  // = 361
 
-    /// The transaction attempted to the same `PendingAirdropId` twice.
-    case pendingAirdropIdRepeated  // = 362
+    /// A `PendingAirdropId` is repeated in a `claim` or `cancel` transaction.
+    case pendingAirdropIDRepeated  // = 362
 
-    /// The transaction attempted to use more than the allowed number of `PendingAirdropId`.
-    case pendingAirdropIdListTooLong  // = 363
+    /// The number of `PendingAirdropId` values in the list exceeds the maximum allowable number.
+    case pendingAirdropIDListTooLong  // = 363
 
     /// A pending airdrop already exists for the specified NFT.
     case pendingNftAirdropAlreadyExists  // = 364
 
-    /// The identified account is sender for one or more pending airdrop(s) and cannot be deleted.
+    /// The identified account is sender for one or more pending airdrop(s) and cannot be deleted. <p> The requester SHOULD cancel all pending airdrops before resending this transaction.
     case accountHasPendingAirdrops  // = 365
 
-    /// Consensus throttle did not allow execution of this transaction.
+    /// Consensus throttle did not allow execution of this transaction.<br/> The transaction should be retried after a modest delay.
     case throttledAtConsensus  // = 366
 
-    /// The provided pending airdrop id is invalid.
-    case invalidPendingAirdropId  // = 367
+    /// The provided pending airdrop id is invalid.<br/> This pending airdrop MAY already be claimed or cancelled. <p> The client SHOULD query a mirror node to determine the current status of the pending airdrop.
+    case invalidPendingAirdropID  // = 367
 
-    /// The token to be airdropped has a fallback royalty fee and cannot be
-    /// sent or claimed via an airdrop transaction.
+    /// The token to be airdropped has a fallback royalty fee and cannot be sent or claimed via an airdrop transaction.
     case tokenAirdropWithFallbackRoyalty  // = 368
 
-    /// This airdrop claim is for a pending airdrop with an invalid token.
+    /// This airdrop claim is for a pending airdrop with an invalid token.<br/> The token might be deleted, or the sender may not have enough tokens to fulfill the offer. <p> The client SHOULD query mirror node to determine the status of the pending airdrop and whether the sender can fulfill the offer.
     case invalidTokenInPendingAirdrop  // = 369
 
-    /// A scheduled transaction configured to wait for expiry to execute was given
-    /// an expiry time at which there is already too many transactions scheduled to
-    /// expire; its creation must be retried with a different expiry.
+    /// A scheduled transaction configured to wait for expiry to execute was given an expiry time at which there is already too many transactions scheduled to expire; its creation must be retried with a different expiry.
     case scheduleExpiryIsBusy  // = 370
 
     /// The provided gRPC certificate hash is invalid.
     case invalidGrpcCertificateHash  // = 371
 
-    /// A scheduled transaction configured to wait for expiry to execute was not
-    /// given an explicit expiration time.
+    /// A scheduled transaction configured to wait for expiry to execute was not given an explicit expiration time.
     case missingExpiryTime  // = 372
 
-    /// A contract operation attempted to schedule another transaction after it
-    /// had already scheduled a recursive contract call.
+    /// A contract operation attempted to schedule another transaction after it had already scheduled a recursive contract call.
     case noSchedulingAllowedAfterScheduledRecursion  // = 373
 
-    /// A contract can schedule recursive calls a finite number of times (this is
-    /// approximately four million times with typical network configuration.)
+    /// A contract can schedule recursive calls a finite number of times (this is approximately four million times with typical network configuration.)
     case recursiveSchedulingLimitReached  // = 374
 
-    /// The target network is waiting for the ledger ID to be set, which is a
-    /// side effect of finishing the network's TSS construction.
+    /// The target network is waiting for the ledger ID to be set, which is a side effect of finishing the network's TSS construction.
     case waitingForLedgerID  // = 375
 
     /// The provided fee exempt key list size exceeded the limit.
@@ -1082,16 +1020,13 @@ public enum Status: Equatable {
     /// The provided fee schedule key contains an invalid key.
     case invalidFeeScheduleKey  // = 379
 
-    /// If a fee schedule key is not set when we create a topic
-    /// we cannot add it on update.
+    /// If a fee schedule key is not set when we create a topic we cannot add it on update.
     case feeScheduleKeyCannotBeUpdated  // = 380
 
-    /// If the topic's custom fees are updated the topic SHOULD have a
-    /// fee schedule key
+    /// If the topic's custom fees are updated the topic SHOULD have a fee schedule key
     case feeScheduleKeyNotSet  // = 381
 
-    /// The fee amount is exceeding the amount that the payer
-    /// is willing to pay.
+    /// The fee amount is exceeding the amount that the payer is willing to pay.
     case maxCustomFeeLimitExceeded  // = 382
 
     /// There are no corresponding custom fees.
@@ -1100,36 +1035,34 @@ public enum Status: Equatable {
     /// The provided list contains invalid max custom fee.
     case invalidMaxCustomFees  // = 384
 
-    /// The provided max custom fee list contains fees with
-    /// duplicate denominations.
+    /// The provided max custom fee list contains fees with duplicate denominations.
     case duplicateDenominationInMaxCustomFeeList  // = 385
 
-    /// The provided max custom fee list contains fees with
-    /// duplicate account id.
+    /// The provided max custom fee list contains fees with duplicate account id.
     case duplicateAccountIDInMaxCustomFeeList  // = 386
 
     /// Max custom fees list is not supported for this operation.
     case maxCustomFeesIsNotSupported  // = 387
 
-    /// The list of batch transactions is empty.
+    /// The list of batch transactions is empty
     case batchListEmpty  // = 388
 
-    /// The list of batch transactions contains duplicated transactions.
+    /// The list of batch transactions contains duplicated transactions
     case batchListContainsDuplicates  // = 389
 
     /// The list of batch transactions contains a transaction type that is in the AtomicBatch blacklist as configured in the network.
     case batchTransactionInBlacklist  // = 390
 
-    /// The inner transaction of a batch transaction failed.
+    /// The inner transaction of a batch transaction failed
     case innerTransactionFailed  // = 391
 
-    /// The inner transaction of a batch transaction is missing a batch key.
+    /// The inner transaction of a batch transaction is missing a batch key
     case missingBatchKey  // = 392
 
-    /// The batch key is set for a non batch transaction.
+    /// The batch key is set for a non batch transaction
     case batchKeySetOnNonInnerTransaction  // = 393
 
-    /// The batch key is not valid.
+    /// The batch key is not valid
     case invalidBatchKey  // = 394
 
     /// The provided schedule expiry time is not configurable.
@@ -1147,20 +1080,11 @@ public enum Status: Equatable {
     /// The GRPC proxy endpoint is set in the NodeCreate or NodeUpdate transaction, which the network does not support.
     case grpcWebProxyNotSupported  // = 399
 
-    /// The list of `PendingAirdropId`s is empty and MUST NOT be empty.
-    case emptyPendingAirdropIDList  // = 361
-
-    /// A `PendingAirdropId` is repeated in a `claim` or `cancel` transaction.
-    case pendingAirdropIDRepeated  // = 362
-
-    /// The number of `PendingAirdropId` values in the list exceeds the maximum allowable number.
-    case pendingAirdropIDListTooLong  // = 363
-
     /// An NFT transfers list referenced a token type other than NON_FUNGIBLE_UNIQUE.
     case nftTransfersOnlyAllowedForNonFungibleUnique  // = 400
 
     /// A HAPI client cannot set the SignedTransaction#use_serialized_tx_message_hash_algorithm field.
-    case invalidSerializedTXMessageHashAlgorithm  // = 401
+    case invalidSerializedTxMessageHashAlgorithm  // = 401
 
     /// A LambdaSStore referenced a valid entity number but with the wrong entity type.
     case wrongHookEntityType  // = 499
@@ -1572,10 +1496,13 @@ public enum Status: Equatable {
         case 358: self = .emptyTokenReferenceList
         case 359: self = .updateNodeAccountNotAllowed
         case 360: self = .tokenHasNoMetadataOrSupplyKey
+        case 361: self = .emptyPendingAirdropIDList
+        case 362: self = .pendingAirdropIDRepeated
+        case 363: self = .pendingAirdropIDListTooLong
         case 364: self = .pendingNftAirdropAlreadyExists
         case 365: self = .accountHasPendingAirdrops
         case 366: self = .throttledAtConsensus
-        case 367: self = .invalidPendingAirdropId
+        case 367: self = .invalidPendingAirdropID
         case 368: self = .tokenAirdropWithFallbackRoyalty
         case 369: self = .invalidTokenInPendingAirdrop
         case 370: self = .scheduleExpiryIsBusy
@@ -1608,11 +1535,8 @@ public enum Status: Equatable {
         case 397: self = .throttleGroupLcmOverflow
         case 398: self = .airdropContainsMultipleSendersForAToken
         case 399: self = .grpcWebProxyNotSupported
-        case 361: self = .emptyPendingAirdropIDList
-        case 362: self = .pendingAirdropIDRepeated
-        case 363: self = .pendingAirdropIDListTooLong
         case 400: self = .nftTransfersOnlyAllowedForNonFungibleUnique
-        case 401: self = .invalidSerializedTXMessageHashAlgorithm
+        case 401: self = .invalidSerializedTxMessageHashAlgorithm
         case 499: self = .wrongHookEntityType
         case 500: self = .evmHookGasThrottled
         case 501: self = .hookIDInUse
@@ -1966,13 +1890,13 @@ public enum Status: Equatable {
         case .emptyTokenReferenceList: return 358
         case .updateNodeAccountNotAllowed: return 359
         case .tokenHasNoMetadataOrSupplyKey: return 360
-        case .emptyPendingAirdropIdList: return 361
-        case .pendingAirdropIdRepeated: return 362
-        case .pendingAirdropIdListTooLong: return 363
+        case .emptyPendingAirdropIDList: return 361
+        case .pendingAirdropIDRepeated: return 362
+        case .pendingAirdropIDListTooLong: return 363
         case .pendingNftAirdropAlreadyExists: return 364
         case .accountHasPendingAirdrops: return 365
         case .throttledAtConsensus: return 366
-        case .invalidPendingAirdropId: return 367
+        case .invalidPendingAirdropID: return 367
         case .tokenAirdropWithFallbackRoyalty: return 368
         case .invalidTokenInPendingAirdrop: return 369
         case .scheduleExpiryIsBusy: return 370
@@ -2005,11 +1929,8 @@ public enum Status: Equatable {
         case .throttleGroupLcmOverflow: return 397
         case .airdropContainsMultipleSendersForAToken: return 398
         case .grpcWebProxyNotSupported: return 399
-        case .emptyPendingAirdropIDList: return 361
-        case .pendingAirdropIDRepeated: return 362
-        case .pendingAirdropIDListTooLong: return 363
         case .nftTransfersOnlyAllowedForNonFungibleUnique: return 400
-        case .invalidSerializedTXMessageHashAlgorithm: return 401
+        case .invalidSerializedTxMessageHashAlgorithm: return 401
         case .wrongHookEntityType: return 499
         case .evmHookGasThrottled: return 500
         case .hookIDInUse: return 501
@@ -2366,13 +2287,13 @@ extension Status: CaseIterable {
         .emptyTokenReferenceList,
         .updateNodeAccountNotAllowed,
         .tokenHasNoMetadataOrSupplyKey,
-        .emptyPendingAirdropIdList,
-        .pendingAirdropIdRepeated,
-        .pendingAirdropIdListTooLong,
+        .emptyPendingAirdropIDList,
+        .pendingAirdropIDRepeated,
+        .pendingAirdropIDListTooLong,
         .pendingNftAirdropAlreadyExists,
         .accountHasPendingAirdrops,
         .throttledAtConsensus,
-        .invalidPendingAirdropId,
+        .invalidPendingAirdropID,
         .tokenAirdropWithFallbackRoyalty,
         .invalidTokenInPendingAirdrop,
         .scheduleExpiryIsBusy,
@@ -2400,11 +2321,13 @@ extension Status: CaseIterable {
         .missingBatchKey,
         .batchKeySetOnNonInnerTransaction,
         .invalidBatchKey,
-        .emptyPendingAirdropIDList,
-        .pendingAirdropIDRepeated,
-        .pendingAirdropIDListTooLong,
+        .scheduleExpiryNotConfigurable,
+        .creatingSystemEntities,
+        .throttleGroupLcmOverflow,
+        .airdropContainsMultipleSendersForAToken,
+        .grpcWebProxyNotSupported,
         .nftTransfersOnlyAllowedForNonFungibleUnique,
-        .invalidSerializedTXMessageHashAlgorithm,
+        .invalidSerializedTxMessageHashAlgorithm,
         .wrongHookEntityType,
         .evmHookGasThrottled,
         .hookIDInUse,
@@ -2793,9 +2716,11 @@ extension Status {
             392: "MISSING_BATCH_KEY",
             393: "BATCH_KEY_SET_ON_NON_INNER_TRANSACTION",
             394: "INVALID_BATCH_KEY",
-            361: "EMPTY_PENDING_AIRDROP_ID_LIST",
-            362: "PENDING_AIRDROP_ID_REPEATED",
-            363: "PENDING_AIRDROP_ID_LIST_TOO_LONG",
+            395: "SCHEDULE_EXPIRY_NOT_CONFIGURABLE",
+            396: "CREATING_SYSTEM_ENTITIES",
+            397: "THROTTLE_GROUP_LCM_OVERFLOW",
+            398: "AIRDROP_CONTAINS_MULTIPLE_SENDERS_FOR_A_TOKEN",
+            399: "GRPC_WEB_PROXY_NOT_SUPPORTED",
             400: "NFT_TRANSFERS_ONLY_ALLOWED_FOR_NON_FUNGIBLE_UNIQUE",
             401: "INVALID_SERIALIZED_TX_MESSAGE_HASH_ALGORITHM",
             499: "WRONG_HOOK_ENTITY_TYPE",

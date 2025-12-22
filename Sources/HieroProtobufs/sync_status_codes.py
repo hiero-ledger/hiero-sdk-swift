@@ -34,11 +34,10 @@ class StatusCode:
     deprecated: bool    # Whether the code is marked as deprecated
 
 
-# Acronyms that should stay uppercase in Swift case names
+# Acronyms that need special casing in Swift
+# ID stays uppercase (e.g., invalidFileID), TX uses Title Case (e.g., insufficientTxFee)
 ACRONYM_MAPPINGS = {
     'ID': 'ID',
-    'IP': 'IP', 
-    'TX': 'TX',
     'IPV4': 'Ipv4',
     'FQDN': 'Fqdn',
     'NFT': 'Nft',
@@ -55,7 +54,8 @@ def proto_to_swift_case(proto_name: str) -> str:
     Examples:
         OK -> ok
         INVALID_TRANSACTION -> invalidTransaction
-        INVALID_FILE_ID -> invalidFileID
+        INVALID_FILE_ID -> invalidFileID (ID stays uppercase)
+        INSUFFICIENT_TX_FEE -> insufficientTxFee (TX uses Title Case)
     """
     if proto_name == "OK":
         return "ok"
