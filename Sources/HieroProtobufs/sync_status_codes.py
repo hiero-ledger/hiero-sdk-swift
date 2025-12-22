@@ -69,22 +69,30 @@ def proto_to_swift_case(proto_name: str) -> str:
     return ''.join(result_parts)
 
 
+def _extract_block_comment_text(line: str) -> str:
+    """Extract text from a single-line block comment."""
+    return re.sub(r'/\*\*?\s*|\s*\*/', '', line).strip()
+
+
 def _process_comment_line(line: str, current_comment: List[str]) -> bool:
     """Process a comment line and return True if it was a comment."""
-    if line.startswith('/**') or line.startswith('/*'):
+    # Block comment start
+    if line.startswith('/*'):
         current_comment.clear()
-        if '*/' in line:
-            comment_text = re.sub(r'/\*\*?\s*|\s*\*/', '', line).strip()
-            if comment_text:
-                current_comment.append(comment_text)
-        return True
-    
-    if line.startswith('*'):
-        comment_text = line.lstrip('* ').rstrip()
-        if comment_text and comment_text != '/':
+        comment_text = _extract_block_comment_text(line) if '*/' in line else ''
+        if comment_text:
             current_comment.append(comment_text)
         return True
     
+    # Inside block comment
+    if line.startswith('*'):
+        comment_text = line.lstrip('* ').rstrip()
+        is_valid = comment_text and comment_text != '/'
+        if is_valid:
+            current_comment.append(comment_text)
+        return True
+    
+    # Single line comment
     if line.startswith('//'):
         current_comment.append(line.lstrip('/ ').strip())
         return True
@@ -230,32 +238,34 @@ def _insert_before_pattern(content: str, pattern: str, new_content: str,
     return content
 
 
+def _log_verbose(verbose: bool, message: str) -> None:
+    """Print message if verbose mode is enabled."""
+    if verbose:
+        print(message)
+
+
 def _apply_swift_updates(content: str, missing_codes: List[StatusCode], verbose: bool) -> str:
     """Apply all Swift file updates and return modified content."""
     # 1. Add enum case declarations
-    if verbose:
-        print("Adding enum case declarations...")
+    _log_verbose(verbose, "Adding enum case declarations...")
     case_declarations = '\n\n'.join(generate_case_declaration(c) for c in missing_codes)
     marker = "    /// swift-format-ignore: AlwaysUseLowerCamelCase\n    case unrecognized(Int32)"
     content = _insert_before_marker(content, marker, case_declarations + '\n', "case declarations")
     
     # 2. Add init(rawValue:) cases
-    if verbose:
-        print("Adding init(rawValue:) cases...")
+    _log_verbose(verbose, "Adding init(rawValue:) cases...")
     init_cases = '\n'.join(generate_init_case(c) for c in missing_codes)
     content = _insert_before_marker(content, "        default: self = .unrecognized(rawValue)", 
                                     init_cases, "init cases")
     
     # 3. Add rawValue cases
-    if verbose:
-        print("Adding rawValue cases...")
+    _log_verbose(verbose, "Adding rawValue cases...")
     raw_value_cases = '\n'.join(generate_raw_value_case(c) for c in missing_codes)
     content = _insert_before_marker(content, "        case .unrecognized(let i): return i",
                                     raw_value_cases, "rawValue cases")
     
     # 4. Add allCases entries
-    if verbose:
-        print("Adding allCases entries...")
+    _log_verbose(verbose, "Adding allCases entries...")
     all_cases_entries = '\n'.join(generate_all_cases_entry(c) for c in missing_codes)
     content = _insert_before_pattern(
         content,
@@ -266,8 +276,7 @@ def _apply_swift_updates(content: str, missing_codes: List[StatusCode], verbose:
     )
     
     # 5. Add nameMap entries
-    if verbose:
-        print("Adding nameMap entries...")
+    _log_verbose(verbose, "Adding nameMap entries...")
     name_map_entries = '\n'.join(generate_name_map_entry(c) for c in missing_codes)
     content = _insert_before_pattern(
         content,
