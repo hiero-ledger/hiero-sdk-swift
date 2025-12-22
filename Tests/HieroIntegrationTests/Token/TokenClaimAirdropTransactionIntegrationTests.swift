@@ -412,7 +412,7 @@ internal class TokenClaimAirdropTransactionIntegrationTests: HieroIntegrationTes
                 .sign(accountKey)
                 .execute(testEnv.client)
                 .getRecord(testEnv.client),
-            .invalidPendingAirdropID
+            .invalidPendingAirdropId
         )
     }
 
@@ -428,7 +428,7 @@ internal class TokenClaimAirdropTransactionIntegrationTests: HieroIntegrationTes
                 XCTFail("`\(error.kind)` is not `.transactionPreCheckStatus`")
                 return
             }
-            XCTAssertEqual(status, .emptyPendingAirdropIDList)
+            XCTAssertEqual(status, .emptyPendingAirdropIdList)
         }
     }
 
@@ -479,7 +479,7 @@ internal class TokenClaimAirdropTransactionIntegrationTests: HieroIntegrationTes
                 XCTFail("`\(error.kind)` is not `.transactionPreCheckStatus`")
                 return
             }
-            XCTAssertEqual(status, .pendingAirdropIDRepeated)
+            XCTAssertEqual(status, .pendingAirdropIdRepeated)
         }
     }
 

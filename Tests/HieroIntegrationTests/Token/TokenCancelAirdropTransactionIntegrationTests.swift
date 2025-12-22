@@ -469,7 +469,7 @@ internal class TokenCancelAirdropTransactionIntegrationTests: HieroIntegrationTe
                 .addPendingAirdropId(record.pendingAirdropRecords[0].pendingAirdropId)
                 .execute(testEnv.client)
                 .getRecord(testEnv.client),
-            .invalidPendingAirdropID
+            .invalidPendingAirdropId
         )
     }
 
@@ -478,7 +478,7 @@ internal class TokenCancelAirdropTransactionIntegrationTests: HieroIntegrationTe
         await assertPrecheckStatus(
             try await TokenCancelAirdropTransaction()
                 .execute(testEnv.client),
-            .emptyPendingAirdropIDList
+            .emptyPendingAirdropIdList
         )
     }
 
@@ -513,7 +513,7 @@ internal class TokenCancelAirdropTransactionIntegrationTests: HieroIntegrationTe
                 .addPendingAirdropId(record.pendingAirdropRecords[0].pendingAirdropId)
                 .addPendingAirdropId(record.pendingAirdropRecords[0].pendingAirdropId)
                 .execute(testEnv.client),
-            .pendingAirdropIDRepeated
+            .pendingAirdropIdRepeated
         )
     }
 }
