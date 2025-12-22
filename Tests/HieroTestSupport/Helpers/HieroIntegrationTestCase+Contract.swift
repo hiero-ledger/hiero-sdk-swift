@@ -20,10 +20,17 @@ extension HieroIntegrationTestCase {
     /// Use this when you need full control over the contract lifecycle or when testing
     /// scenarios where cleanup would interfere with the test (e.g., immutable contracts).
     ///
-    /// - Parameter transaction: Pre-configured `ContractCreateTransaction` (before execute)
+    /// - Parameters:
+    ///   - transaction: Pre-configured `ContractCreateTransaction` (before execute)
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created contract ID
-    public func createUnmanagedContract(_ transaction: ContractCreateTransaction) async throws -> ContractId {
-        let receipt = try await transaction.execute(testEnv.client).getReceipt(testEnv.client)
+    public func createUnmanagedContract(_ transaction: ContractCreateTransaction, useAdminClient: Bool = false)
+        async throws -> ContractId
+    {
+        let receipt =
+            try await transaction
+            .execute(useAdminClient ? testEnv.adminClient : testEnv.client)
+            .getReceipt(useAdminClient ? testEnv.adminClient : testEnv.client)
         return try XCTUnwrap(receipt.contractId)
     }
 
@@ -60,12 +67,14 @@ extension HieroIntegrationTestCase {
     /// - Parameters:
     ///   - transaction: Pre-configured `ContractCreateTransaction` (before execute)
     ///   - adminKey: Private key for contract deletion
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created contract ID
     public func createContract(
         _ transaction: ContractCreateTransaction,
-        adminKey: PrivateKey
+        adminKey: PrivateKey,
+        useAdminClient: Bool = false
     ) async throws -> ContractId {
-        try await createContract(transaction, adminKeys: [adminKey])
+        try await createContract(transaction, adminKeys: [adminKey], useAdminClient: useAdminClient)
     }
 
     /// Creates a smart contract and registers it for automatic cleanup (multiple keys).
@@ -73,12 +82,14 @@ extension HieroIntegrationTestCase {
     /// - Parameters:
     ///   - transaction: Pre-configured `ContractCreateTransaction` (before execute)
     ///   - adminKeys: Private keys required for contract deletion
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created contract ID
     public func createContract(
         _ transaction: ContractCreateTransaction,
-        adminKeys: [PrivateKey]
+        adminKeys: [PrivateKey],
+        useAdminClient: Bool = false
     ) async throws -> ContractId {
-        let contractId = try await createUnmanagedContract(transaction)
+        let contractId = try await createUnmanagedContract(transaction, useAdminClient: useAdminClient)
         await registerContract(contractId, adminKeys: adminKeys)
         return contractId
     }
@@ -89,13 +100,15 @@ extension HieroIntegrationTestCase {
     ///
     /// The file is automatically registered for cleanup.
     ///
+    /// - Parameter useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created file ID
-    public func createContractBytecodeFile() async throws -> FileId {
+    public func createContractBytecodeFile(useAdminClient: Bool = false) async throws -> FileId {
         try await createFile(
             FileCreateTransaction()
                 .keys([.single(testEnv.operator.privateKey.publicKey)])
                 .contents(TestConstants.contractBytecode),
-            key: testEnv.operator.privateKey
+            key: testEnv.operator.privateKey,
+            useAdminClient: useAdminClient
         )
     }
 
@@ -145,35 +158,41 @@ extension HieroIntegrationTestCase {
     /// For custom configurations, use `standardContractCreateTransaction` with
     /// `createContract` or `createUnmanagedContract` directly.
     ///
+    /// - Parameter useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created contract ID
-    public func createStandardContract() async throws -> ContractId {
-        let fileId = try await createContractBytecodeFile()
+    public func createStandardContract(useAdminClient: Bool = false) async throws -> ContractId {
+        let fileId = try await createContractBytecodeFile(useAdminClient: useAdminClient)
         let transaction = standardContractCreateTransaction(fileId: fileId)
-        return try await createContract(transaction, adminKey: testEnv.operator.privateKey)
+        return try await createContract(
+            transaction, adminKey: testEnv.operator.privateKey, useAdminClient: useAdminClient)
     }
 
     /// Creates an immutable contract (no admin key, cannot be deleted).
     ///
     /// Note: This creates an unmanaged contract since immutable contracts cannot be cleaned up.
     ///
+    /// - Parameter useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created contract ID
-    public func createImmutableContract() async throws -> ContractId {
-        let fileId = try await createContractBytecodeFile()
+    public func createImmutableContract(useAdminClient: Bool = false) async throws -> ContractId {
+        let fileId = try await createContractBytecodeFile(useAdminClient: useAdminClient)
         return try await createUnmanagedContract(
-            standardContractCreateTransaction(fileId: fileId, adminKey: .some(.none))
+            standardContractCreateTransaction(fileId: fileId, adminKey: .some(.none)),
+            useAdminClient: useAdminClient
         )
     }
 
     /// Creates an unmanaged contract with the operator's admin key.
     ///
+    /// - Parameter useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created contract ID
-    public func createUnmanagedContractWithOperatorAdmin() async throws -> ContractId {
-        let fileId = try await createContractBytecodeFile()
+    public func createUnmanagedContractWithOperatorAdmin(useAdminClient: Bool = false) async throws -> ContractId {
+        let fileId = try await createContractBytecodeFile(useAdminClient: useAdminClient)
         return try await createUnmanagedContract(
             standardContractCreateTransaction(
                 fileId: fileId,
                 adminKey: testEnv.operator.privateKey.publicKey
-            )
+            ),
+            useAdminClient: useAdminClient
         )
     }
 

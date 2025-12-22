@@ -20,10 +20,17 @@ extension HieroIntegrationTestCase {
     /// Use this when you need full control over the account lifecycle or when testing
     /// scenarios where cleanup would interfere with the test.
     ///
-    /// - Parameter transaction: Pre-configured `AccountCreateTransaction` (before execute)
+    /// - Parameters
+    ///   - transaction: Pre-configured `AccountCreateTransaction` (before execute)
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created account ID
-    public func createUnmanagedAccount(_ transaction: AccountCreateTransaction) async throws -> AccountId {
-        let receipt = try await transaction.execute(testEnv.client).getReceipt(testEnv.client)
+    public func createUnmanagedAccount(_ transaction: AccountCreateTransaction, useAdminClient: Bool = false)
+        async throws -> AccountId
+    {
+        let receipt =
+            try await transaction
+            .execute(useAdminClient ? testEnv.adminClient : testEnv.client)
+            .getReceipt(useAdminClient ? testEnv.adminClient : testEnv.client)
         return try XCTUnwrap(receipt.accountId)
     }
 
@@ -54,12 +61,14 @@ extension HieroIntegrationTestCase {
     /// - Parameters:
     ///   - transaction: Pre-configured `AccountCreateTransaction` (before execute)
     ///   - key: Private key for account deletion
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created account ID
     public func createAccount(
         _ transaction: AccountCreateTransaction,
-        key: PrivateKey
+        key: PrivateKey,
+        useAdminClient: Bool = false
     ) async throws -> AccountId {
-        try await createAccount(transaction, keys: [key])
+        try await createAccount(transaction, keys: [key], useAdminClient: useAdminClient)
     }
 
     /// Creates an account and registers it for automatic cleanup (multiple keys).
@@ -67,12 +76,14 @@ extension HieroIntegrationTestCase {
     /// - Parameters:
     ///   - transaction: Pre-configured `AccountCreateTransaction` (before execute)
     ///   - keys: Private keys required for account deletion
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created account ID
     public func createAccount(
         _ transaction: AccountCreateTransaction,
-        keys: [PrivateKey]
+        keys: [PrivateKey],
+        useAdminClient: Bool = false
     ) async throws -> AccountId {
-        let accountId = try await createUnmanagedAccount(transaction)
+        let accountId = try await createUnmanagedAccount(transaction, useAdminClient: useAdminClient)
         await registerAccount(accountId, keys: keys)
         return accountId
     }
@@ -83,20 +94,25 @@ extension HieroIntegrationTestCase {
     ///
     /// This is the primary convenience method for creating accounts in tests.
     ///
-    /// - Parameter initialBalance: Optional initial Hbar balance. If nil, no balance is set.
+    /// - Parameters:
+    ///   - initialBalance: Optional initial Hbar balance. If nil, no balance is set.
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: Tuple of account ID and private key
     public func createTestAccount(
-        initialBalance: Hbar? = nil
+        initialBalance: Hbar? = nil,
+        useAdminClient: Bool = false
     ) async throws -> (accountId: AccountId, key: PrivateKey) {
         let key = PrivateKey.generateEd25519()
-        var tx = AccountCreateTransaction()
+        let tx = AccountCreateTransaction()
             .keyWithoutAlias(.single(key.publicKey))
+
         if let initialBalance = initialBalance {
-            tx = try tx.initialBalance(initialBalance)
+            _ = try tx.initialBalance(initialBalance)
                 .freezeWith(testEnv.client)
                 .sign(key)
         }
-        let accountId = try await createAccount(tx, key: key)
+
+        let accountId = try await createAccount(tx, key: key, useAdminClient: useAdminClient)
         return (accountId, key)
     }
 
@@ -104,17 +120,23 @@ extension HieroIntegrationTestCase {
     ///
     /// Use this when you need an account that won't be automatically cleaned up.
     ///
-    /// - Parameter initialBalance: Optional initial Hbar balance
+    /// - Parameters:
+    ///   - initialBalance: Optional initial Hbar balance
+    ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: Tuple of account ID and private key
     public func createSimpleUnmanagedAccount(
-        initialBalance: Hbar? = nil
+        initialBalance: Hbar? = nil,
+        useAdminClient: Bool = false
     ) async throws -> (accountId: AccountId, key: PrivateKey) {
         let key = PrivateKey.generateEd25519()
-        var tx = AccountCreateTransaction().keyWithoutAlias(.single(key.publicKey))
+        let tx = AccountCreateTransaction()
+            .keyWithoutAlias(.single(key.publicKey))
+
         if let initialBalance = initialBalance {
-            tx = tx.initialBalance(initialBalance)
+            _ = tx.initialBalance(initialBalance)
         }
-        let accountId = try await createUnmanagedAccount(tx)
+
+        let accountId = try await createUnmanagedAccount(tx, useAdminClient: useAdminClient)
         return (accountId, key)
     }
 
