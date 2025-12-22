@@ -31,19 +31,59 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 ///*
-/// A transaction body to publish a node's history proof key.
+/// A transaction body to publish a node's history proof key and
+/// WRAPS messages.
 public struct Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofKeyPublicationTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  public var data: Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofKeyPublicationTransactionBody.OneOf_Data? = nil
+
   ///*
   /// The proof key the submitting node intends to use when
-  /// contributing signatures for use in proving history
+  /// contributing WRAPS messages for use in proving history
   /// belongs to the chain of trust for the ledger id.
-  public var proofKey: Data = Data()
+  public var proofKey: Data {
+    get {
+      if case .proofKey(let v)? = data {return v}
+      return Data()
+    }
+    set {data = .proofKey(newValue)}
+  }
+
+  ///*
+  /// A WRAPS message from the submitting node.
+  public var wrapsMessage: Data {
+    get {
+      if case .wrapsMessage(let v)? = data {return v}
+      return Data()
+    }
+    set {data = .wrapsMessage(newValue)}
+  }
+
+  ///*
+  /// The id of the proof construction this publication is for.
+  public var constructionID: UInt64 = 0
+
+  ///*
+  /// The phase of the proof construction this key is being
+  /// published for.
+  public var phase: Com_Hedera_Hapi_Node_State_History_WrapsPhase = .r1
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public enum OneOf_Data: Equatable, @unchecked Sendable {
+    ///*
+    /// The proof key the submitting node intends to use when
+    /// contributing WRAPS messages for use in proving history
+    /// belongs to the chain of trust for the ledger id.
+    case proofKey(Data)
+    ///*
+    /// A WRAPS message from the submitting node.
+    case wrapsMessage(Data)
+
+  }
 
   public init() {}
 }
@@ -56,6 +96,9 @@ extension Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofKeyPublicationT
   public static let protoMessageName: String = _protobuf_package + ".HistoryProofKeyPublicationTransactionBody"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "proof_key"),
+    2: .standard(proto: "wraps_message"),
+    3: .standard(proto: "construction_id"),
+    4: .same(proto: "phase"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -64,21 +107,58 @@ extension Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofKeyPublicationT
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.proofKey) }()
+      case 1: try {
+        var v: Data?
+        try decoder.decodeSingularBytesField(value: &v)
+        if let v = v {
+          if self.data != nil {try decoder.handleConflictingOneOf()}
+          self.data = .proofKey(v)
+        }
+      }()
+      case 2: try {
+        var v: Data?
+        try decoder.decodeSingularBytesField(value: &v)
+        if let v = v {
+          if self.data != nil {try decoder.handleConflictingOneOf()}
+          self.data = .wrapsMessage(v)
+        }
+      }()
+      case 3: try { try decoder.decodeSingularUInt64Field(value: &self.constructionID) }()
+      case 4: try { try decoder.decodeSingularEnumField(value: &self.phase) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.proofKey.isEmpty {
-      try visitor.visitSingularBytesField(value: self.proofKey, fieldNumber: 1)
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    switch self.data {
+    case .proofKey?: try {
+      guard case .proofKey(let v)? = self.data else { preconditionFailure() }
+      try visitor.visitSingularBytesField(value: v, fieldNumber: 1)
+    }()
+    case .wrapsMessage?: try {
+      guard case .wrapsMessage(let v)? = self.data else { preconditionFailure() }
+      try visitor.visitSingularBytesField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
+    if self.constructionID != 0 {
+      try visitor.visitSingularUInt64Field(value: self.constructionID, fieldNumber: 3)
+    }
+    if self.phase != .r1 {
+      try visitor.visitSingularEnumField(value: self.phase, fieldNumber: 4)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofKeyPublicationTransactionBody, rhs: Com_Hedera_Hapi_Services_Auxiliary_History_HistoryProofKeyPublicationTransactionBody) -> Bool {
-    if lhs.proofKey != rhs.proofKey {return false}
+    if lhs.data != rhs.data {return false}
+    if lhs.constructionID != rhs.constructionID {return false}
+    if lhs.phase != rhs.phase {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

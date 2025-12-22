@@ -119,6 +119,7 @@ let package = Package(
             exclude: [
                 "Protos",
                 "update_protos.py",
+                "sync_status_codes.py",
             ]
         ),
         // weird name, but whatever, internal targets

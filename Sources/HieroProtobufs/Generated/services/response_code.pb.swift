@@ -1556,6 +1556,10 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   case invalidSerializedTxMessageHashAlgorithm // = 401
 
   ///*
+  /// A LambdaSStore referenced a valid entity number but with the wrong entity type.
+  case wrongHookEntityType // = 499
+
+  ///*
   /// An EVM hook execution was throttled due to high network gas utilization.
   case evmHookGasThrottled // = 500
 
@@ -2043,6 +2047,7 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 399: self = .grpcWebProxyNotSupported
     case 400: self = .nftTransfersOnlyAllowedForNonFungibleUnique
     case 401: self = .invalidSerializedTxMessageHashAlgorithm
+    case 499: self = .wrongHookEntityType
     case 500: self = .evmHookGasThrottled
     case 501: self = .hookIDInUse
     case 502: self = .badHookRequest
@@ -2436,6 +2441,7 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .grpcWebProxyNotSupported: return 399
     case .nftTransfersOnlyAllowedForNonFungibleUnique: return 400
     case .invalidSerializedTxMessageHashAlgorithm: return 401
+    case .wrongHookEntityType: return 499
     case .evmHookGasThrottled: return 500
     case .hookIDInUse: return 501
     case .badHookRequest: return 502
@@ -2829,6 +2835,7 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     .grpcWebProxyNotSupported,
     .nftTransfersOnlyAllowedForNonFungibleUnique,
     .invalidSerializedTxMessageHashAlgorithm,
+    .wrongHookEntityType,
     .evmHookGasThrottled,
     .hookIDInUse,
     .badHookRequest,
@@ -3224,6 +3231,7 @@ extension Proto_ResponseCodeEnum: SwiftProtobuf._ProtoNameProviding {
     399: .same(proto: "GRPC_WEB_PROXY_NOT_SUPPORTED"),
     400: .same(proto: "NFT_TRANSFERS_ONLY_ALLOWED_FOR_NON_FUNGIBLE_UNIQUE"),
     401: .same(proto: "INVALID_SERIALIZED_TX_MESSAGE_HASH_ALGORITHM"),
+    499: .same(proto: "WRONG_HOOK_ENTITY_TYPE"),
     500: .same(proto: "EVM_HOOK_GAS_THROTTLED"),
     501: .same(proto: "HOOK_ID_IN_USE"),
     502: .same(proto: "BAD_HOOK_REQUEST"),

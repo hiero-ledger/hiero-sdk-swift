@@ -1160,6 +1160,105 @@ public enum Status: Equatable {
     /// The GRPC proxy endpoint is set in the NodeCreate or NodeUpdate transaction, which the network does not support.
     case grpcWebProxyNotSupported  // = 399
 
+    /// The list of `PendingAirdropId`s is empty and MUST NOT be empty.
+    case emptyPendingAirdropIDList  // = 361
+
+    /// A `PendingAirdropId` is repeated in a `claim` or `cancel` transaction.
+    case pendingAirdropIDRepeated  // = 362
+
+    /// The number of `PendingAirdropId` values in the list exceeds the maximum allowable number.
+    case pendingAirdropIDListTooLong  // = 363
+
+    /// An NFT transfers list referenced a token type other than NON_FUNGIBLE_UNIQUE.
+    case nftTransfersOnlyAllowedForNonFungibleUnique  // = 400
+
+    /// A HAPI client cannot set the SignedTransaction#use_serialized_tx_message_hash_algorithm field.
+    case invalidSerializedTXMessageHashAlgorithm  // = 401
+
+    /// A LambdaSStore referenced a valid entity number but with the wrong entity type.
+    case wrongHookEntityType  // = 499
+
+    /// An EVM hook execution was throttled due to high network gas utilization.
+    case evmHookGasThrottled  // = 500
+
+    /// A user tried to create a hook with an id already in use.
+    case hookIDInUse  // = 501
+
+    /// A transaction tried to execute a hook that did not match the specified type or was malformed in some other way.
+    case badHookRequest  // = 502
+
+    /// A CryptoTransfer relying on a ACCOUNT_ALLOWANCE hook was rejected.
+    case rejectedByAccountAllowanceHook  // = 503
+
+    /// A hook id was not found.
+    case hookNotFound  // = 504
+
+    /// A lambda mapping slot, storage key, or storage value exceeded 32 bytes.
+    case lambdaStorageUpdateBytesTooLong  // = 505
+
+    /// A lambda mapping slot, storage key, or storage value failed to use the minimal representation (i.e., no leading zeros).
+    case lambdaStorageUpdateBytesMustUseMinimalRepresentation  // = 506
+
+    /// A hook id was invalid.
+    case invalidHookID  // = 507
+
+    /// A lambda storage update had no contents.
+    case emptyLambdaStorageUpdate  // = 508
+
+    /// A user repeated the same hook id in a creation details list.
+    case hookIDRepeatedInCreationDetails  // = 509
+
+    /// Hooks are not not enabled on the target Hiero network.
+    case hooksNotEnabled  // = 510
+
+    /// The target hook is not a lambda.
+    case hookIsNotALambda  // = 511
+
+    /// A hook was deleted.
+    case hookDeleted  // = 512
+
+    /// The LambdaSStore tried to update too many storage slots in a single transaction.
+    case tooManyLambdaStorageUpdates  // = 513
+
+    /// A lambda mapping slot, storage key, or storage value failed to use the minimal representation (i.e., no leading zeros).
+    case hookCreationBytesMustUseMinimalRepresentation  // = 514
+
+    /// A lambda mapping slot, storage key, or storage value exceeded 32 bytes.
+    case hookCreationBytesTooLong  // = 515
+
+    /// A hook creation spec was not found.
+    case invalidHookCreationSpec  // = 516
+
+    /// A hook extension point was empty.
+    case hookExtensionEmpty  // = 517
+
+    /// A hook admin key was invalid.
+    case invalidHookAdminKey  // = 518
+
+    /// The hook deletion requires the hook to have zero storage slots.
+    case hookDeletionRequiresZeroStorageSlots  // = 519
+
+    /// Cannot set both a hook call and an approval on the same AccountAmount or NftTransfer message.
+    case cannotSetHooksAndApproval  // = 520
+
+    /// The attempted operation is invalid until all the target entity's hooks have been deleted.
+    case transactionRequiresZeroHooks  // = 521
+
+    /// The HookCall set in the transaction is invalid
+    case invalidHookCall  // = 522
+
+    /// Hooks are not supported to be used in TokenAirdrop transactions
+    case hooksAreNotSupportedInAirdrops  // = 523
+
+    /// This operation cannot be completed because the target account is a "Node Account".<br/> This account is currently in use as the "Node Account" for a consensus node, and therefore the requested change is not permitted. The transaction may be resubmitted once the account is no longer in use as a "Node Account" for any consensus node.
+    case accountIsLinkedToANode  // = 524
+
+    /// Hooks are not supported to be used in Batch transactions and Scheduled transactions. They are only supported in a top level CryptoTransfer transaction.
+    case hooksExecutionsRequireTopLevelCryptoTransfer  // = 525
+
+    /// This operation cannot be completed because the target account has a zero balance.<br/> Node accounts require a positive balance. The transaction may be resubmitted once the account has been funded.
+    case nodeAccountHasZeroBalance  // = 526
+
     /// swift-format-ignore: AlwaysUseLowerCamelCase
     case unrecognized(Int32)
 
@@ -1522,6 +1621,39 @@ public enum Status: Equatable {
         case 397: self = .throttleGroupLcmOverflow
         case 398: self = .airdropContainsMultipleSendersForAToken
         case 399: self = .grpcWebProxyNotSupported
+        case 361: self = .emptyPendingAirdropIDList
+        case 362: self = .pendingAirdropIDRepeated
+        case 363: self = .pendingAirdropIDListTooLong
+        case 400: self = .nftTransfersOnlyAllowedForNonFungibleUnique
+        case 401: self = .invalidSerializedTXMessageHashAlgorithm
+        case 499: self = .wrongHookEntityType
+        case 500: self = .evmHookGasThrottled
+        case 501: self = .hookIDInUse
+        case 502: self = .badHookRequest
+        case 503: self = .rejectedByAccountAllowanceHook
+        case 504: self = .hookNotFound
+        case 505: self = .lambdaStorageUpdateBytesTooLong
+        case 506: self = .lambdaStorageUpdateBytesMustUseMinimalRepresentation
+        case 507: self = .invalidHookID
+        case 508: self = .emptyLambdaStorageUpdate
+        case 509: self = .hookIDRepeatedInCreationDetails
+        case 510: self = .hooksNotEnabled
+        case 511: self = .hookIsNotALambda
+        case 512: self = .hookDeleted
+        case 513: self = .tooManyLambdaStorageUpdates
+        case 514: self = .hookCreationBytesMustUseMinimalRepresentation
+        case 515: self = .hookCreationBytesTooLong
+        case 516: self = .invalidHookCreationSpec
+        case 517: self = .hookExtensionEmpty
+        case 518: self = .invalidHookAdminKey
+        case 519: self = .hookDeletionRequiresZeroStorageSlots
+        case 520: self = .cannotSetHooksAndApproval
+        case 521: self = .transactionRequiresZeroHooks
+        case 522: self = .invalidHookCall
+        case 523: self = .hooksAreNotSupportedInAirdrops
+        case 524: self = .accountIsLinkedToANode
+        case 525: self = .hooksExecutionsRequireTopLevelCryptoTransfer
+        case 526: self = .nodeAccountHasZeroBalance
         default: self = .unrecognized(rawValue)
         }
     }
@@ -1886,6 +2018,39 @@ public enum Status: Equatable {
         case .throttleGroupLcmOverflow: return 397
         case .airdropContainsMultipleSendersForAToken: return 398
         case .grpcWebProxyNotSupported: return 399
+        case .emptyPendingAirdropIDList: return 361
+        case .pendingAirdropIDRepeated: return 362
+        case .pendingAirdropIDListTooLong: return 363
+        case .nftTransfersOnlyAllowedForNonFungibleUnique: return 400
+        case .invalidSerializedTXMessageHashAlgorithm: return 401
+        case .wrongHookEntityType: return 499
+        case .evmHookGasThrottled: return 500
+        case .hookIDInUse: return 501
+        case .badHookRequest: return 502
+        case .rejectedByAccountAllowanceHook: return 503
+        case .hookNotFound: return 504
+        case .lambdaStorageUpdateBytesTooLong: return 505
+        case .lambdaStorageUpdateBytesMustUseMinimalRepresentation: return 506
+        case .invalidHookID: return 507
+        case .emptyLambdaStorageUpdate: return 508
+        case .hookIDRepeatedInCreationDetails: return 509
+        case .hooksNotEnabled: return 510
+        case .hookIsNotALambda: return 511
+        case .hookDeleted: return 512
+        case .tooManyLambdaStorageUpdates: return 513
+        case .hookCreationBytesMustUseMinimalRepresentation: return 514
+        case .hookCreationBytesTooLong: return 515
+        case .invalidHookCreationSpec: return 516
+        case .hookExtensionEmpty: return 517
+        case .invalidHookAdminKey: return 518
+        case .hookDeletionRequiresZeroStorageSlots: return 519
+        case .cannotSetHooksAndApproval: return 520
+        case .transactionRequiresZeroHooks: return 521
+        case .invalidHookCall: return 522
+        case .hooksAreNotSupportedInAirdrops: return 523
+        case .accountIsLinkedToANode: return 524
+        case .hooksExecutionsRequireTopLevelCryptoTransfer: return 525
+        case .nodeAccountHasZeroBalance: return 526
         case .unrecognized(let i): return i
         }
     }
@@ -2248,6 +2413,39 @@ extension Status: CaseIterable {
         .missingBatchKey,
         .batchKeySetOnNonInnerTransaction,
         .invalidBatchKey,
+        .emptyPendingAirdropIDList,
+        .pendingAirdropIDRepeated,
+        .pendingAirdropIDListTooLong,
+        .nftTransfersOnlyAllowedForNonFungibleUnique,
+        .invalidSerializedTXMessageHashAlgorithm,
+        .wrongHookEntityType,
+        .evmHookGasThrottled,
+        .hookIDInUse,
+        .badHookRequest,
+        .rejectedByAccountAllowanceHook,
+        .hookNotFound,
+        .lambdaStorageUpdateBytesTooLong,
+        .lambdaStorageUpdateBytesMustUseMinimalRepresentation,
+        .invalidHookID,
+        .emptyLambdaStorageUpdate,
+        .hookIDRepeatedInCreationDetails,
+        .hooksNotEnabled,
+        .hookIsNotALambda,
+        .hookDeleted,
+        .tooManyLambdaStorageUpdates,
+        .hookCreationBytesMustUseMinimalRepresentation,
+        .hookCreationBytesTooLong,
+        .invalidHookCreationSpec,
+        .hookExtensionEmpty,
+        .invalidHookAdminKey,
+        .hookDeletionRequiresZeroStorageSlots,
+        .cannotSetHooksAndApproval,
+        .transactionRequiresZeroHooks,
+        .invalidHookCall,
+        .hooksAreNotSupportedInAirdrops,
+        .accountIsLinkedToANode,
+        .hooksExecutionsRequireTopLevelCryptoTransfer,
+        .nodeAccountHasZeroBalance,
     ]
 }
 
@@ -2608,6 +2806,39 @@ extension Status {
             392: "MISSING_BATCH_KEY",
             393: "BATCH_KEY_SET_ON_NON_INNER_TRANSACTION",
             394: "INVALID_BATCH_KEY",
+            361: "EMPTY_PENDING_AIRDROP_ID_LIST",
+            362: "PENDING_AIRDROP_ID_REPEATED",
+            363: "PENDING_AIRDROP_ID_LIST_TOO_LONG",
+            400: "NFT_TRANSFERS_ONLY_ALLOWED_FOR_NON_FUNGIBLE_UNIQUE",
+            401: "INVALID_SERIALIZED_TX_MESSAGE_HASH_ALGORITHM",
+            499: "WRONG_HOOK_ENTITY_TYPE",
+            500: "EVM_HOOK_GAS_THROTTLED",
+            501: "HOOK_ID_IN_USE",
+            502: "BAD_HOOK_REQUEST",
+            503: "REJECTED_BY_ACCOUNT_ALLOWANCE_HOOK",
+            504: "HOOK_NOT_FOUND",
+            505: "LAMBDA_STORAGE_UPDATE_BYTES_TOO_LONG",
+            506: "LAMBDA_STORAGE_UPDATE_BYTES_MUST_USE_MINIMAL_REPRESENTATION",
+            507: "INVALID_HOOK_ID",
+            508: "EMPTY_LAMBDA_STORAGE_UPDATE",
+            509: "HOOK_ID_REPEATED_IN_CREATION_DETAILS",
+            510: "HOOKS_NOT_ENABLED",
+            511: "HOOK_IS_NOT_A_LAMBDA",
+            512: "HOOK_DELETED",
+            513: "TOO_MANY_LAMBDA_STORAGE_UPDATES",
+            514: "HOOK_CREATION_BYTES_MUST_USE_MINIMAL_REPRESENTATION",
+            515: "HOOK_CREATION_BYTES_TOO_LONG",
+            516: "INVALID_HOOK_CREATION_SPEC",
+            517: "HOOK_EXTENSION_EMPTY",
+            518: "INVALID_HOOK_ADMIN_KEY",
+            519: "HOOK_DELETION_REQUIRES_ZERO_STORAGE_SLOTS",
+            520: "CANNOT_SET_HOOKS_AND_APPROVAL",
+            521: "TRANSACTION_REQUIRES_ZERO_HOOKS",
+            522: "INVALID_HOOK_CALL",
+            523: "HOOKS_ARE_NOT_SUPPORTED_IN_AIRDROPS",
+            524: "ACCOUNT_IS_LINKED_TO_A_NODE",
+            525: "HOOKS_EXECUTIONS_REQUIRE_TOP_LEVEL_CRYPTO_TRANSFER",
+            526: "NODE_ACCOUNT_HAS_ZERO_BALANCE",
         ]
 }
 
