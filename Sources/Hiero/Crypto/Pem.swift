@@ -98,23 +98,19 @@ internal enum Pem {
 
         let (base64Final, base64Lines) = message.splitLast() ?? ("", [])
 
-        var base64Message: String = ""
-
+        // Validate line lengths (all full lines must be exactly 64 chars)
         for line in base64Lines {
             guard line.count == 64 else {
                 throw HError.keyParse("Invalid Pem")
             }
-
-            base64Message += line
         }
 
         guard base64Final.count <= 64 else {
             throw HError.keyParse("Invalid Pem")
         }
 
-        base64Message += base64Final
+        let base64Message = base64Lines.joined() + base64Final
 
-        // fixme: ensure that `+/` are the characterset used.
         guard let message = Data(base64Encoded: base64Message) else {
             throw HError.keyParse("Invalid Pem")
         }

@@ -82,7 +82,13 @@ extension Pkcs5 {
         /// iteration count providing computational cost for attackers.
         case pbkdf2(Pbkdf2Parameters)
 
-        // TODO: Consider adding scrypt support
+        // TODO: Consider adding scrypt support (RFC 7914)
+        // Scrypt is more memory-hard than PBKDF2, providing better resistance against
+        // GPU/ASIC-based attacks. Some tools (e.g., OpenSSL 1.1+) can generate
+        // scrypt-encrypted PKCS#8 keys. Implementation would require:
+        // - CryptoSwift's Scrypt implementation
+        // - New ScryptParams struct with DER conformance
+        // - OID: 1.3.6.1.4.1.11591.4.11 (id-scrypt)
         // case scrypt(ScryptParams)
 
         /// Derive a key using this KDF.
