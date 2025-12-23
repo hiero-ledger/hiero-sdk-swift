@@ -430,7 +430,6 @@ public final class ContractCreateFlow {
     }
 
     private static func splitBytecode(_ bytecode: Data) -> (fileCreate: Data, fileAppend: Data?) {
-        let bytecode = bytecode.hexStringEncoded().data(using: .utf8)!
         guard bytecode.count > maxFileCreateDataBytes else {
             return (bytecode, nil)
         }

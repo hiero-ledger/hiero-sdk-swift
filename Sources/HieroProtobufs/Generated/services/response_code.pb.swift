@@ -1556,6 +1556,10 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   case invalidSerializedTxMessageHashAlgorithm // = 401
 
   ///*
+  /// A LambdaSStore referenced a valid entity number but with the wrong entity type.
+  case wrongHookEntityType // = 499
+
+  ///*
   /// An EVM hook execution was throttled due to high network gas utilization.
   case evmHookGasThrottled // = 500
 
@@ -1653,6 +1657,28 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   ///*
   ///  Hooks are not supported to be used in TokenAirdrop transactions
   case hooksAreNotSupportedInAirdrops // = 523
+
+  ///*
+  /// This operation cannot be completed because the target
+  /// account is a "Node Account".<br/>
+  /// This account is currently in use as the "Node Account" for a
+  /// consensus node, and therefore the requested change is
+  /// not permitted. The transaction may be resubmitted once the
+  /// account is no longer in use as a "Node Account" for any
+  /// consensus node.
+  case accountIsLinkedToANode // = 524
+
+  ///*
+  ///  Hooks are not supported to be used in Batch transactions and Scheduled transactions.
+  /// They are only supported in a top level CryptoTransfer transaction.
+  case hooksExecutionsRequireTopLevelCryptoTransfer // = 525
+
+  ///*
+  /// This operation cannot be completed because the target
+  /// account has a zero balance.<br/>
+  /// Node accounts require a positive balance. The transaction may be
+  /// resubmitted once the account has been funded.
+  case nodeAccountHasZeroBalance // = 526
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -2021,6 +2047,7 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 399: self = .grpcWebProxyNotSupported
     case 400: self = .nftTransfersOnlyAllowedForNonFungibleUnique
     case 401: self = .invalidSerializedTxMessageHashAlgorithm
+    case 499: self = .wrongHookEntityType
     case 500: self = .evmHookGasThrottled
     case 501: self = .hookIDInUse
     case 502: self = .badHookRequest
@@ -2045,6 +2072,9 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 521: self = .transactionRequiresZeroHooks
     case 522: self = .invalidHookCall
     case 523: self = .hooksAreNotSupportedInAirdrops
+    case 524: self = .accountIsLinkedToANode
+    case 525: self = .hooksExecutionsRequireTopLevelCryptoTransfer
+    case 526: self = .nodeAccountHasZeroBalance
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -2411,6 +2441,7 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .grpcWebProxyNotSupported: return 399
     case .nftTransfersOnlyAllowedForNonFungibleUnique: return 400
     case .invalidSerializedTxMessageHashAlgorithm: return 401
+    case .wrongHookEntityType: return 499
     case .evmHookGasThrottled: return 500
     case .hookIDInUse: return 501
     case .badHookRequest: return 502
@@ -2435,6 +2466,9 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .transactionRequiresZeroHooks: return 521
     case .invalidHookCall: return 522
     case .hooksAreNotSupportedInAirdrops: return 523
+    case .accountIsLinkedToANode: return 524
+    case .hooksExecutionsRequireTopLevelCryptoTransfer: return 525
+    case .nodeAccountHasZeroBalance: return 526
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -2801,6 +2835,7 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     .grpcWebProxyNotSupported,
     .nftTransfersOnlyAllowedForNonFungibleUnique,
     .invalidSerializedTxMessageHashAlgorithm,
+    .wrongHookEntityType,
     .evmHookGasThrottled,
     .hookIDInUse,
     .badHookRequest,
@@ -2825,6 +2860,9 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     .transactionRequiresZeroHooks,
     .invalidHookCall,
     .hooksAreNotSupportedInAirdrops,
+    .accountIsLinkedToANode,
+    .hooksExecutionsRequireTopLevelCryptoTransfer,
+    .nodeAccountHasZeroBalance,
   ]
 
 }
@@ -3193,6 +3231,7 @@ extension Proto_ResponseCodeEnum: SwiftProtobuf._ProtoNameProviding {
     399: .same(proto: "GRPC_WEB_PROXY_NOT_SUPPORTED"),
     400: .same(proto: "NFT_TRANSFERS_ONLY_ALLOWED_FOR_NON_FUNGIBLE_UNIQUE"),
     401: .same(proto: "INVALID_SERIALIZED_TX_MESSAGE_HASH_ALGORITHM"),
+    499: .same(proto: "WRONG_HOOK_ENTITY_TYPE"),
     500: .same(proto: "EVM_HOOK_GAS_THROTTLED"),
     501: .same(proto: "HOOK_ID_IN_USE"),
     502: .same(proto: "BAD_HOOK_REQUEST"),
@@ -3217,5 +3256,8 @@ extension Proto_ResponseCodeEnum: SwiftProtobuf._ProtoNameProviding {
     521: .same(proto: "TRANSACTION_REQUIRES_ZERO_HOOKS"),
     522: .same(proto: "INVALID_HOOK_CALL"),
     523: .same(proto: "HOOKS_ARE_NOT_SUPPORTED_IN_AIRDROPS"),
+    524: .same(proto: "ACCOUNT_IS_LINKED_TO_A_NODE"),
+    525: .same(proto: "HOOKS_EXECUTIONS_REQUIRE_TOP_LEVEL_CRYPTO_TRANSFER"),
+    526: .same(proto: "NODE_ACCOUNT_HAS_ZERO_BALANCE"),
   ]
 }

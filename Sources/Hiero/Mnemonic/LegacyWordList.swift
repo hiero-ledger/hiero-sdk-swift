@@ -2,6 +2,14 @@
 
 // swiftlint:disable file_length
 
+/// Legacy word list (4096 words) for older Hedera wallet mnemonics.
+///
+/// This word list supports the legacy 22-word mnemonic format used by
+/// older versions of the Hedera mobile wallets. It contains 4096 words
+/// (12-bit encoding per word) compared to BIP-39's 2048 words (11-bit).
+///
+/// - Warning: This format is deprecated. Use BIP-39 (12/24 word) mnemonics
+///   for new implementations.
 internal let legacyWordList: MnemonicWordList = """
     aback
     abbey

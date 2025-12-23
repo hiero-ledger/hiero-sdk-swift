@@ -237,6 +237,10 @@ public enum Proto_SubType: SwiftProtobuf.Enum, Swift.CaseIterable {
   /// The resource cost for the transaction type includes a ConsensusSubmitMessage
   /// for a topic with custom fees.
   case submitMessageWithCustomFees // = 7
+
+  ///*
+  /// The resource cost for the transaction type that includes a CryptoTransfer with hook invocations
+  case cryptoTransferWithHooks // = 8
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -253,6 +257,7 @@ public enum Proto_SubType: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 5: self = .scheduleCreateContractCall
     case 6: self = .topicCreateWithCustomFees
     case 7: self = .submitMessageWithCustomFees
+    case 8: self = .cryptoTransferWithHooks
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -267,6 +272,7 @@ public enum Proto_SubType: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .scheduleCreateContractCall: return 5
     case .topicCreateWithCustomFees: return 6
     case .submitMessageWithCustomFees: return 7
+    case .cryptoTransferWithHooks: return 8
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -281,6 +287,7 @@ public enum Proto_SubType: SwiftProtobuf.Enum, Swift.CaseIterable {
     .scheduleCreateContractCall,
     .topicCreateWithCustomFees,
     .submitMessageWithCustomFees,
+    .cryptoTransferWithHooks,
   ]
 
 }
@@ -1875,16 +1882,6 @@ public struct Proto_HookCall: Sendable {
   public var id: Proto_HookCall.OneOf_ID? = nil
 
   ///*
-  /// The full id of the hook to call, when the owning entity is not forced by the call site.
-  public var fullHookID: Proto_HookId {
-    get {
-      if case .fullHookID(let v)? = id {return v}
-      return Proto_HookId()
-    }
-    set {id = .fullHookID(newValue)}
-  }
-
-  ///*
   /// The numeric id of the hook to call, when the owning entity is forced by the call site.
   public var hookID: Int64 {
     get {
@@ -1911,9 +1908,6 @@ public struct Proto_HookCall: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_ID: Equatable, Sendable {
-    ///*
-    /// The full id of the hook to call, when the owning entity is not forced by the call site.
-    case fullHookID(Proto_HookId)
     ///*
     /// The numeric id of the hook to call, when the owning entity is forced by the call site.
     case hookID(Int64)
@@ -2202,6 +2196,71 @@ public struct Proto_NftTransfer: @unchecked Sendable {
       return Proto_HookCall()
     }
     set {_uniqueStorage()._receiverAllowanceHookCall = .prePostTxReceiverAllowanceHook(newValue)}
+  }
+
+  ///*
+  /// If set, a call to a hook of type `ACCOUNT_ALLOWANCE_HOOK` installed on
+  /// senderAccountID that must succeed for the transaction to occur.
+  /// <p>
+  /// Cannot be set if `is_approval` is true.
+  public var senderAllowanceHookCall: Proto_NftTransfer.OneOf_SenderAllowanceHookCall? = nil
+
+  ///*
+  /// A single call made before attempting the CryptoTransfer, to a
+  /// method with logical signature allow(HookContext, ProposedTransfers)
+  public var preTxSenderAllowanceHook: Proto_HookCall {
+    get {
+      if case .preTxSenderAllowanceHook(let v)? = senderAllowanceHookCall {return v}
+      return Proto_HookCall()
+    }
+    set {senderAllowanceHookCall = .preTxSenderAllowanceHook(newValue)}
+  }
+
+  ///*
+  /// Two calls, the first call before attempting the CryptoTransfer, to a
+  /// method with logical signature allowPre(HookContext, ProposedTransfers);
+  /// and the second call after attempting the CryptoTransfer, to a method
+  /// with logical signature allowPost(HookContext, ProposedTransfers).
+  public var prePostTxSenderAllowanceHook: Proto_HookCall {
+    get {
+      if case .prePostTxSenderAllowanceHook(let v)? = senderAllowanceHookCall {return v}
+      return Proto_HookCall()
+    }
+    set {senderAllowanceHookCall = .prePostTxSenderAllowanceHook(newValue)}
+  }
+
+  ///*
+  /// If set, a call to a hook of type `ACCOUNT_ALLOWANCE_HOOK` installed on
+  /// receiverAccountID that must succeed for the transaction to occur.
+  /// <p>
+  /// May be set even if `is_approval` is true. In this case, the approval applies
+  /// to the sender authorization, and the hook applies to the receiver authorization
+  /// (if needed, e.g. because of a fallback royalty fee or receiver signature
+  /// requirement).
+  public var receiverAllowanceHookCall: Proto_NftTransfer.OneOf_ReceiverAllowanceHookCall? = nil
+
+  ///*
+  /// A single call made before attempting the CryptoTransfer, to a
+  /// method with logical signature allow(HookContext, ProposedTransfers)
+  public var preTxReceiverAllowanceHook: Proto_HookCall {
+    get {
+      if case .preTxReceiverAllowanceHook(let v)? = receiverAllowanceHookCall {return v}
+      return Proto_HookCall()
+    }
+    set {receiverAllowanceHookCall = .preTxReceiverAllowanceHook(newValue)}
+  }
+
+  ///*
+  /// Two calls, the first call before attempting the CryptoTransfer, to a
+  /// method with logical signature allowPre(HookContext, ProposedTransfers);
+  /// and the second call after attempting the CryptoTransfer, to a method
+  /// with logical signature allowPost(HookContext, ProposedTransfers).
+  public var prePostTxReceiverAllowanceHook: Proto_HookCall {
+    get {
+      if case .prePostTxReceiverAllowanceHook(let v)? = receiverAllowanceHookCall {return v}
+      return Proto_HookCall()
+    }
+    set {receiverAllowanceHookCall = .prePostTxReceiverAllowanceHook(newValue)}
   }
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -3999,6 +4058,7 @@ extension Proto_SubType: SwiftProtobuf._ProtoNameProviding {
     5: .same(proto: "SCHEDULE_CREATE_CONTRACT_CALL"),
     6: .same(proto: "TOPIC_CREATE_WITH_CUSTOM_FEES"),
     7: .same(proto: "SUBMIT_MESSAGE_WITH_CUSTOM_FEES"),
+    8: .same(proto: "CRYPTO_TRANSFER_WITH_HOOKS"),
   ]
 }
 
@@ -4739,8 +4799,7 @@ extension Proto_HookEntityId: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 extension Proto_HookCall: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".HookCall"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "full_hook_id"),
-    2: .standard(proto: "hook_id"),
+    1: .standard(proto: "hook_id"),
     3: .standard(proto: "evm_hook_call"),
   ]
 
@@ -4751,19 +4810,6 @@ extension Proto_HookCall: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: Proto_HookId?
-        var hadOneofValue = false
-        if let current = self.id {
-          hadOneofValue = true
-          if case .fullHookID(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.id = .fullHookID(v)
-        }
-      }()
-      case 2: try {
         var v: Int64?
         try decoder.decodeSingularInt64Field(value: &v)
         if let v = v {
@@ -4794,17 +4840,9 @@ extension Proto_HookCall: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    switch self.id {
-    case .fullHookID?: try {
-      guard case .fullHookID(let v)? = self.id else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }()
-    case .hookID?: try {
-      guard case .hookID(let v)? = self.id else { preconditionFailure() }
-      try visitor.visitSingularInt64Field(value: v, fieldNumber: 2)
-    }()
-    case nil: break
-    }
+    try { if case .hookID(let v)? = self.id {
+      try visitor.visitSingularInt64Field(value: v, fieldNumber: 1)
+    } }()
     try { if case .evmHookCall(let v)? = self.callSpec {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     } }()
@@ -5028,71 +5066,68 @@ extension Proto_NftTransfer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    _ = _uniqueStorage()
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      while let fieldNumber = try decoder.nextFieldNumber() {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every case branch when no optimizations are
-        // enabled. https://github.com/apple/swift-protobuf/issues/1034
-        switch fieldNumber {
-        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._senderAccountID) }()
-        case 2: try { try decoder.decodeSingularMessageField(value: &_storage._receiverAccountID) }()
-        case 3: try { try decoder.decodeSingularInt64Field(value: &_storage._serialNumber) }()
-        case 4: try { try decoder.decodeSingularBoolField(value: &_storage._isApproval) }()
-        case 5: try {
-          var v: Proto_HookCall?
-          var hadOneofValue = false
-          if let current = _storage._senderAllowanceHookCall {
-            hadOneofValue = true
-            if case .preTxSenderAllowanceHook(let m) = current {v = m}
-          }
-          try decoder.decodeSingularMessageField(value: &v)
-          if let v = v {
-            if hadOneofValue {try decoder.handleConflictingOneOf()}
-            _storage._senderAllowanceHookCall = .preTxSenderAllowanceHook(v)
-          }
-        }()
-        case 6: try {
-          var v: Proto_HookCall?
-          var hadOneofValue = false
-          if let current = _storage._senderAllowanceHookCall {
-            hadOneofValue = true
-            if case .prePostTxSenderAllowanceHook(let m) = current {v = m}
-          }
-          try decoder.decodeSingularMessageField(value: &v)
-          if let v = v {
-            if hadOneofValue {try decoder.handleConflictingOneOf()}
-            _storage._senderAllowanceHookCall = .prePostTxSenderAllowanceHook(v)
-          }
-        }()
-        case 7: try {
-          var v: Proto_HookCall?
-          var hadOneofValue = false
-          if let current = _storage._receiverAllowanceHookCall {
-            hadOneofValue = true
-            if case .preTxReceiverAllowanceHook(let m) = current {v = m}
-          }
-          try decoder.decodeSingularMessageField(value: &v)
-          if let v = v {
-            if hadOneofValue {try decoder.handleConflictingOneOf()}
-            _storage._receiverAllowanceHookCall = .preTxReceiverAllowanceHook(v)
-          }
-        }()
-        case 8: try {
-          var v: Proto_HookCall?
-          var hadOneofValue = false
-          if let current = _storage._receiverAllowanceHookCall {
-            hadOneofValue = true
-            if case .prePostTxReceiverAllowanceHook(let m) = current {v = m}
-          }
-          try decoder.decodeSingularMessageField(value: &v)
-          if let v = v {
-            if hadOneofValue {try decoder.handleConflictingOneOf()}
-            _storage._receiverAllowanceHookCall = .prePostTxReceiverAllowanceHook(v)
-          }
-        }()
-        default: break
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._senderAccountID) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._receiverAccountID) }()
+      case 3: try { try decoder.decodeSingularInt64Field(value: &self.serialNumber) }()
+      case 4: try { try decoder.decodeSingularBoolField(value: &self.isApproval) }()
+      case 5: try {
+        var v: Proto_HookCall?
+        var hadOneofValue = false
+        if let current = self.senderAllowanceHookCall {
+          hadOneofValue = true
+          if case .preTxSenderAllowanceHook(let m) = current {v = m}
         }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.senderAllowanceHookCall = .preTxSenderAllowanceHook(v)
+        }
+      }()
+      case 6: try {
+        var v: Proto_HookCall?
+        var hadOneofValue = false
+        if let current = self.senderAllowanceHookCall {
+          hadOneofValue = true
+          if case .prePostTxSenderAllowanceHook(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.senderAllowanceHookCall = .prePostTxSenderAllowanceHook(v)
+        }
+      }()
+      case 7: try {
+        var v: Proto_HookCall?
+        var hadOneofValue = false
+        if let current = self.receiverAllowanceHookCall {
+          hadOneofValue = true
+          if case .preTxReceiverAllowanceHook(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.receiverAllowanceHookCall = .preTxReceiverAllowanceHook(v)
+        }
+      }()
+      case 8: try {
+        var v: Proto_HookCall?
+        var hadOneofValue = false
+        if let current = self.receiverAllowanceHookCall {
+          hadOneofValue = true
+          if case .prePostTxReceiverAllowanceHook(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.receiverAllowanceHookCall = .prePostTxReceiverAllowanceHook(v)
+        }
+      }()
+      default: break
       }
     }
   }
@@ -5138,24 +5173,38 @@ extension Proto_NftTransfer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
       case nil: break
       }
     }
+    switch self.senderAllowanceHookCall {
+    case .preTxSenderAllowanceHook?: try {
+      guard case .preTxSenderAllowanceHook(let v)? = self.senderAllowanceHookCall else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+    }()
+    case .prePostTxSenderAllowanceHook?: try {
+      guard case .prePostTxSenderAllowanceHook(let v)? = self.senderAllowanceHookCall else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+    }()
+    case nil: break
+    }
+    switch self.receiverAllowanceHookCall {
+    case .preTxReceiverAllowanceHook?: try {
+      guard case .preTxReceiverAllowanceHook(let v)? = self.receiverAllowanceHookCall else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+    }()
+    case .prePostTxReceiverAllowanceHook?: try {
+      guard case .prePostTxReceiverAllowanceHook(let v)? = self.receiverAllowanceHookCall else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
+    }()
+    case nil: break
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Proto_NftTransfer, rhs: Proto_NftTransfer) -> Bool {
-    if lhs._storage !== rhs._storage {
-      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
-        let _storage = _args.0
-        let rhs_storage = _args.1
-        if _storage._senderAccountID != rhs_storage._senderAccountID {return false}
-        if _storage._receiverAccountID != rhs_storage._receiverAccountID {return false}
-        if _storage._serialNumber != rhs_storage._serialNumber {return false}
-        if _storage._isApproval != rhs_storage._isApproval {return false}
-        if _storage._senderAllowanceHookCall != rhs_storage._senderAllowanceHookCall {return false}
-        if _storage._receiverAllowanceHookCall != rhs_storage._receiverAllowanceHookCall {return false}
-        return true
-      }
-      if !storagesAreEqual {return false}
-    }
+    if lhs._senderAccountID != rhs._senderAccountID {return false}
+    if lhs._receiverAccountID != rhs._receiverAccountID {return false}
+    if lhs.serialNumber != rhs.serialNumber {return false}
+    if lhs.isApproval != rhs.isApproval {return false}
+    if lhs.senderAllowanceHookCall != rhs.senderAllowanceHookCall {return false}
+    if lhs.receiverAllowanceHookCall != rhs.receiverAllowanceHookCall {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

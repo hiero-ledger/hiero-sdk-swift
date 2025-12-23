@@ -58,10 +58,10 @@ extension QueryCost: Execute {
         return (request, ())
     }
 
-    internal func execute(_ channel: GRPCChannel, _ request: Proto_Query) async throws
+    internal func execute(_ channel: GRPCChannel, _ request: Proto_Query, _ deadline: TimeInterval) async throws
         -> Proto_Response
     {
-        try await query.queryExecute(channel, request)
+        try await query.queryExecute(channel, request, deadline)
     }
 
     internal func makeResponse(

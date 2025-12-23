@@ -220,6 +220,12 @@ extension Transaction {
             let value = try intoOnlyValue(value)
             return try LambdaSStoreTransaction(protobuf: firstBody, value)
 
+        case .hookDispatch(let code):
+            throw HError.fromProtobuf("unrecognized: hookDispatch `\(code)`")
+
+        case .stateSignatureTransaction(let code):
+            throw HError.fromProtobuf("unrecognized: stateSignatureTransaction `\(code)`")
+
         default:
             throw HError.fromProtobuf("unrecognized code")
         }

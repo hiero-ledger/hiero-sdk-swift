@@ -278,10 +278,10 @@ public enum RequestType {
     /// Atomic batch transaction
     case atomicBatch
 
-    /// Lambda Sstore transaction
+    /// Lambda SStore transaction
     case lambdaSstore
 
-    /// Hook dispatch
+    /// Hook dispatch transaction
     case hookDispatch
 
     // swiftlint:disable:next function_body_length

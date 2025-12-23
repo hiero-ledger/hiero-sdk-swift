@@ -2,6 +2,12 @@
 
 // swiftlint:disable file_length
 
+/// BIP-39 English word list (2048 words).
+///
+/// This is the standard BIP-39 word list used for mnemonic phrase generation
+/// and validation. Words are sorted alphabetically for efficient binary search.
+///
+/// Reference: https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
 internal let bip39WordList: MnemonicWordList = """
     abandon
     ability

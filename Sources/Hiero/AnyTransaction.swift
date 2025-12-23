@@ -300,6 +300,14 @@ internal enum ServicesTransactionDataList {
             array.append(data)
             self = .atomicBatch(array)
 
+        case (.lambdaSstore(var array), .lambdaSstore(let data)):
+            array.append(data)
+            self = .lambdaSstore(array)
+
+        case (.hookDispatch(var array), .hookDispatch(let data)):
+            array.append(data)
+            self = .hookDispatch(array)
+
         default:
             throw HError.fromProtobuf("mismatched transaction types")
         }

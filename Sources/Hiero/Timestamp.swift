@@ -83,7 +83,10 @@ extension Timestamp: ProtobufCodable {
     internal typealias Protobuf = Proto_Timestamp
 
     internal init(protobuf proto: Protobuf) {
-        self.init(seconds: UInt64(proto.seconds), subSecondNanos: UInt32(proto.nanos))
+        self.init(
+            seconds: UInt64(bitPattern: proto.seconds),
+            subSecondNanos: UInt32(bitPattern: proto.nanos)
+        )
     }
 
     internal func toProtobuf() -> Protobuf {

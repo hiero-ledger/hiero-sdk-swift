@@ -68,58 +68,98 @@ public struct Proto_EvmTransactionResult: @unchecked Sendable {
   ///*
   /// The Hedera id of the caller.<br/>
   public var senderID: Proto_AccountID {
-    get {return _senderID ?? Proto_AccountID()}
-    set {_senderID = newValue}
+    get {return _storage._senderID ?? Proto_AccountID()}
+    set {_uniqueStorage()._senderID = newValue}
   }
   /// Returns true if `senderID` has been explicitly set.
-  public var hasSenderID: Bool {return self._senderID != nil}
+  public var hasSenderID: Bool {return _storage._senderID != nil}
   /// Clears the value of `senderID`. Subsequent reads from it will return its default value.
-  public mutating func clearSenderID() {self._senderID = nil}
+  public mutating func clearSenderID() {_uniqueStorage()._senderID = nil}
 
   ///*
   /// The Hedera id of the contract receiving the call.<br/>
   public var contractID: Proto_ContractID {
-    get {return _contractID ?? Proto_ContractID()}
-    set {_contractID = newValue}
+    get {return _storage._contractID ?? Proto_ContractID()}
+    set {_uniqueStorage()._contractID = newValue}
   }
   /// Returns true if `contractID` has been explicitly set.
-  public var hasContractID: Bool {return self._contractID != nil}
+  public var hasContractID: Bool {return _storage._contractID != nil}
   /// Clears the value of `contractID`. Subsequent reads from it will return its default value.
-  public mutating func clearContractID() {self._contractID = nil}
+  public mutating func clearContractID() {_uniqueStorage()._contractID = nil}
 
   ///*
   /// Result data from the function call.
-  public var resultData: Data = Data()
+  public var resultData: Data {
+    get {return _storage._resultData}
+    set {_uniqueStorage()._resultData = newValue}
+  }
 
   ///*
   /// Any error message produced by the contract call. Max size of 100 bytes.
   /// <p>
   /// This SHALL be unset if the contract call succeeded.
-  public var errorMessage: String = String()
+  public var errorMessage: String {
+    get {return _storage._errorMessage}
+    set {_uniqueStorage()._errorMessage = newValue}
+  }
 
   ///*
   /// EVM gas used.
-  public var gasUsed: UInt64 = 0
+  public var gasUsed: UInt64 {
+    get {return _storage._gasUsed}
+    set {_uniqueStorage()._gasUsed = newValue}
+  }
 
   ///*
   /// If not already externalized in a transaction body, the context of the
   /// internal call producing this result.
   public var internalCallContext: Proto_InternalCallContext {
-    get {return _internalCallContext ?? Proto_InternalCallContext()}
-    set {_internalCallContext = newValue}
+    get {return _storage._internalCallContext ?? Proto_InternalCallContext()}
+    set {_uniqueStorage()._internalCallContext = newValue}
   }
   /// Returns true if `internalCallContext` has been explicitly set.
-  public var hasInternalCallContext: Bool {return self._internalCallContext != nil}
+  public var hasInternalCallContext: Bool {return _storage._internalCallContext != nil}
   /// Clears the value of `internalCallContext`. Subsequent reads from it will return its default value.
-  public mutating func clearInternalCallContext() {self._internalCallContext = nil}
+  public mutating func clearInternalCallContext() {_uniqueStorage()._internalCallContext = nil}
+
+  ///*
+  /// If set, the id of the executed hook.
+  public var executedHookID: Proto_HookId {
+    get {return _storage._executedHookID ?? Proto_HookId()}
+    set {_uniqueStorage()._executedHookID = newValue}
+  }
+  /// Returns true if `executedHookID` has been explicitly set.
+  public var hasExecutedHookID: Bool {return _storage._executedHookID != nil}
+  /// Clears the value of `executedHookID`. Subsequent reads from it will return its default value.
+  public mutating func clearExecutedHookID() {_uniqueStorage()._executedHookID = nil}
+
+  ///*
+  /// A list of contract account nonce values.<br/>
+  /// This list SHALL contain a nonce value for each contract account modified
+  /// as a result of this contract call. These nonce values SHALL be the value
+  /// after the contract call is completed.
+  public var contractNonces: [Proto_ContractNonceInfo] {
+    get {return _storage._contractNonces}
+    set {_uniqueStorage()._contractNonces = newValue}
+  }
+
+  ///*
+  /// In an EthereumTransaction, the nonce of the signer account at the end of
+  /// the transaction.<br/>
+  public var signerNonce: SwiftProtobuf.Google_Protobuf_Int64Value {
+    get {return _storage._signerNonce ?? SwiftProtobuf.Google_Protobuf_Int64Value()}
+    set {_uniqueStorage()._signerNonce = newValue}
+  }
+  /// Returns true if `signerNonce` has been explicitly set.
+  public var hasSignerNonce: Bool {return _storage._signerNonce != nil}
+  /// Clears the value of `signerNonce`. Subsequent reads from it will return its default value.
+  public mutating func clearSignerNonce() {_uniqueStorage()._signerNonce = nil}
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
 
-  fileprivate var _senderID: Proto_AccountID? = nil
-  fileprivate var _contractID: Proto_ContractID? = nil
-  fileprivate var _internalCallContext: Proto_InternalCallContext? = nil
+  fileprivate var _storage = _StorageClass.defaultInstance
 }
 
 ///*
@@ -468,58 +508,132 @@ extension Proto_EvmTransactionResult: SwiftProtobuf.Message, SwiftProtobuf._Mess
     4: .standard(proto: "error_message"),
     5: .standard(proto: "gas_used"),
     6: .standard(proto: "internal_call_context"),
+    7: .standard(proto: "executed_hook_id"),
+    8: .standard(proto: "contract_nonces"),
+    9: .standard(proto: "signer_nonce"),
   ]
 
+  fileprivate class _StorageClass {
+    var _senderID: Proto_AccountID? = nil
+    var _contractID: Proto_ContractID? = nil
+    var _resultData: Data = Data()
+    var _errorMessage: String = String()
+    var _gasUsed: UInt64 = 0
+    var _internalCallContext: Proto_InternalCallContext? = nil
+    var _executedHookID: Proto_HookId? = nil
+    var _contractNonces: [Proto_ContractNonceInfo] = []
+    var _signerNonce: SwiftProtobuf.Google_Protobuf_Int64Value? = nil
+
+    #if swift(>=5.10)
+      // This property is used as the initial default value for new instances of the type.
+      // The type itself is protecting the reference to its storage via CoW semantics.
+      // This will force a copy to be made of this reference when the first mutation occurs;
+      // hence, it is safe to mark this as `nonisolated(unsafe)`.
+      static nonisolated(unsafe) let defaultInstance = _StorageClass()
+    #else
+      static let defaultInstance = _StorageClass()
+    #endif
+
+    private init() {}
+
+    init(copying source: _StorageClass) {
+      _senderID = source._senderID
+      _contractID = source._contractID
+      _resultData = source._resultData
+      _errorMessage = source._errorMessage
+      _gasUsed = source._gasUsed
+      _internalCallContext = source._internalCallContext
+      _executedHookID = source._executedHookID
+      _contractNonces = source._contractNonces
+      _signerNonce = source._signerNonce
+    }
+  }
+
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
+    }
+    return _storage
+  }
+
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularMessageField(value: &self._senderID) }()
-      case 2: try { try decoder.decodeSingularMessageField(value: &self._contractID) }()
-      case 3: try { try decoder.decodeSingularBytesField(value: &self.resultData) }()
-      case 4: try { try decoder.decodeSingularStringField(value: &self.errorMessage) }()
-      case 5: try { try decoder.decodeSingularUInt64Field(value: &self.gasUsed) }()
-      case 6: try { try decoder.decodeSingularMessageField(value: &self._internalCallContext) }()
-      default: break
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._senderID) }()
+        case 2: try { try decoder.decodeSingularMessageField(value: &_storage._contractID) }()
+        case 3: try { try decoder.decodeSingularBytesField(value: &_storage._resultData) }()
+        case 4: try { try decoder.decodeSingularStringField(value: &_storage._errorMessage) }()
+        case 5: try { try decoder.decodeSingularUInt64Field(value: &_storage._gasUsed) }()
+        case 6: try { try decoder.decodeSingularMessageField(value: &_storage._internalCallContext) }()
+        case 7: try { try decoder.decodeSingularMessageField(value: &_storage._executedHookID) }()
+        case 8: try { try decoder.decodeRepeatedMessageField(value: &_storage._contractNonces) }()
+        case 9: try { try decoder.decodeSingularMessageField(value: &_storage._signerNonce) }()
+        default: break
+        }
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    try { if let v = self._senderID {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    } }()
-    try { if let v = self._contractID {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    } }()
-    if !self.resultData.isEmpty {
-      try visitor.visitSingularBytesField(value: self.resultData, fieldNumber: 3)
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      try { if let v = _storage._senderID {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+      } }()
+      try { if let v = _storage._contractID {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+      } }()
+      if !_storage._resultData.isEmpty {
+        try visitor.visitSingularBytesField(value: _storage._resultData, fieldNumber: 3)
+      }
+      if !_storage._errorMessage.isEmpty {
+        try visitor.visitSingularStringField(value: _storage._errorMessage, fieldNumber: 4)
+      }
+      if _storage._gasUsed != 0 {
+        try visitor.visitSingularUInt64Field(value: _storage._gasUsed, fieldNumber: 5)
+      }
+      try { if let v = _storage._internalCallContext {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+      } }()
+      try { if let v = _storage._executedHookID {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+      } }()
+      if !_storage._contractNonces.isEmpty {
+        try visitor.visitRepeatedMessageField(value: _storage._contractNonces, fieldNumber: 8)
+      }
+      try { if let v = _storage._signerNonce {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
+      } }()
     }
-    if !self.errorMessage.isEmpty {
-      try visitor.visitSingularStringField(value: self.errorMessage, fieldNumber: 4)
-    }
-    if self.gasUsed != 0 {
-      try visitor.visitSingularUInt64Field(value: self.gasUsed, fieldNumber: 5)
-    }
-    try { if let v = self._internalCallContext {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
-    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Proto_EvmTransactionResult, rhs: Proto_EvmTransactionResult) -> Bool {
-    if lhs._senderID != rhs._senderID {return false}
-    if lhs._contractID != rhs._contractID {return false}
-    if lhs.resultData != rhs.resultData {return false}
-    if lhs.errorMessage != rhs.errorMessage {return false}
-    if lhs.gasUsed != rhs.gasUsed {return false}
-    if lhs._internalCallContext != rhs._internalCallContext {return false}
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._senderID != rhs_storage._senderID {return false}
+        if _storage._contractID != rhs_storage._contractID {return false}
+        if _storage._resultData != rhs_storage._resultData {return false}
+        if _storage._errorMessage != rhs_storage._errorMessage {return false}
+        if _storage._gasUsed != rhs_storage._gasUsed {return false}
+        if _storage._internalCallContext != rhs_storage._internalCallContext {return false}
+        if _storage._executedHookID != rhs_storage._executedHookID {return false}
+        if _storage._contractNonces != rhs_storage._contractNonces {return false}
+        if _storage._signerNonce != rhs_storage._signerNonce {return false}
+        return true
+      }
+      if !storagesAreEqual {return false}
+    }
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

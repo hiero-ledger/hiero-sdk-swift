@@ -21,7 +21,9 @@ public class Query<Response>: ValidateChecksums {
         fatalError("Method `Query.toQueryProtobufWith` must be overridden by `\(type(of: self))`")
     }
 
-    internal func queryExecute(_ channel: GRPCChannel, _ request: Proto_Query) async throws -> Proto_Response {
+    internal func queryExecute(_ channel: GRPCChannel, _ request: Proto_Query, _ deadline: TimeInterval) async throws
+        -> Proto_Response
+    {
         fatalError("Method `Query.queryExecute` must be overridden by `\(type(of: self))`")
     }
 
@@ -134,6 +136,24 @@ public class Query<Response>: ValidateChecksums {
         try await QueryCost(query: self).execute(client)
     }
 
+    /// Per-query gRPC deadline override.
+    ///
+    /// When set, this overrides the client's global `grpcDeadline` for this query only.
+    /// Useful for queries that may require more or less time than the default.
+    ///
+    /// If `nil`, the client's `grpcDeadline` will be used.
+    public final var grpcDeadline: TimeInterval?
+
+    /// Sets a per-query gRPC deadline override.
+    ///
+    /// - Parameter deadline: Timeout in seconds
+    /// - Returns: Self for method chaining
+    @discardableResult
+    public final func grpcDeadline(_ deadline: TimeInterval) -> Self {
+        self.grpcDeadline = deadline
+        return self
+    }
+
     // TODO: paymentSigner
 
     public final func execute(_ client: Client, _ timeout: TimeInterval? = nil) async throws -> Response {
@@ -212,8 +232,10 @@ extension Query: Execute {
         return (request, ())
     }
 
-    internal func execute(_ channel: GRPC.GRPCChannel, _ request: Proto_Query) async throws -> Proto_Response {
-        try await queryExecute(channel, request)
+    internal func execute(_ channel: GRPC.GRPCChannel, _ request: Proto_Query, _ deadline: TimeInterval) async throws
+        -> Proto_Response
+    {
+        try await queryExecute(channel, request, deadline)
     }
 
     internal func makeResponse(

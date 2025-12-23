@@ -69,4 +69,6 @@ tasks:
         dir: Sources/HieroProtobufs
         cmds:
             - cmd: python3 update_protos.py
+            - cmd: python3 sync_status_codes.py
+            - cmd: task format
 

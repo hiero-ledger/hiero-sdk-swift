@@ -222,8 +222,10 @@ extension ChunkedTransaction.FirstChunkView: Execute {
         )
     }
 
-    internal func execute(_ channel: GRPCChannel, _ request: GrpcRequest) async throws -> GrpcResponse {
-        try await transaction.transactionExecute(channel, request)
+    internal func execute(_ channel: GRPCChannel, _ request: GrpcRequest, _ deadline: TimeInterval) async throws
+        -> GrpcResponse
+    {
+        try await transaction.transactionExecute(channel, request, deadline)
     }
 
     internal func makeResponse(
@@ -289,8 +291,10 @@ extension ChunkedTransaction.ChunkView: Execute {
         )
     }
 
-    internal func execute(_ channel: GRPCChannel, _ request: GrpcRequest) async throws -> GrpcResponse {
-        try await transaction.transactionExecute(channel, request)
+    internal func execute(_ channel: GRPCChannel, _ request: GrpcRequest, _ deadline: TimeInterval) async throws
+        -> GrpcResponse
+    {
+        try await transaction.transactionExecute(channel, request, deadline)
     }
 
     internal func makeResponse(
