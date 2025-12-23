@@ -258,4 +258,110 @@ extension HieroIntegrationTestCase {
             info.adminKey, .contractId(contractId), "Admin key should be contract ID", file: file, line: line)
         XCTAssertEqual(info.storage, storage, "Storage mismatch", file: file, line: line)
     }
+
+    // MARK: - EVM Hook Contract Helpers
+
+    /// Creates an unmanaged EVM hook contract for testing hooks.
+    ///
+    /// Use this when you need a hook contract that won't be automatically cleaned up.
+    ///
+    /// - Parameter useAdminClient: Whether to use the admin client (default: false)
+    /// - Returns: The created contract ID
+    public func createUnmanagedEvmHookContract(useAdminClient: Bool = false) async throws -> ContractId {
+        try await createUnmanagedContract(
+            ContractCreateTransaction()
+                .bytecode(TestConstants.evmHookBytecode)
+                .gas(300_000),
+            useAdminClient: useAdminClient
+        )
+    }
+
+    /// Creates a simple EVM hook contract for testing hooks.
+    ///
+    /// This creates a minimal contract that can be used as a lambda hook target.
+    /// The contract is registered for cleanup.
+    ///
+    /// - Parameter useAdminClient: Whether to use the admin client (default: false)
+    /// - Returns: The created contract ID
+    public func createEvmHookContract(useAdminClient: Bool = false) async throws -> ContractId {
+        let contractId = try await createUnmanagedEvmHookContract(useAdminClient: useAdminClient)
+        await registerContract(contractId, adminKey: testEnv.operator.privateKey)
+        return contractId
+    }
+
+    // MARK: - Hook Creation Details Helpers
+
+    /// Creates a LambdaEvmHook with the specified contract ID and optional storage updates.
+    ///
+    /// - Parameters:
+    ///   - contractId: The contract ID for the lambda hook
+    ///   - storageUpdates: Optional array of (key, value) tuples for storage updates
+    /// - Returns: A configured LambdaEvmHook
+    private func createLambdaEvmHook(
+        contractId: ContractId,
+        storageUpdates: [(key: Data, value: Data)]? = nil
+    ) -> LambdaEvmHook {
+        var lambdaEvmHook = LambdaEvmHook()
+        lambdaEvmHook.spec.contractId = contractId
+
+        if let storageUpdates = storageUpdates {
+            for (key, value) in storageUpdates {
+                var slot = LambdaStorageSlot()
+                slot.key = key
+                slot.value = value
+
+                var update = LambdaStorageUpdate()
+                update.storageSlot = slot
+
+                lambdaEvmHook.addStorageUpdate(update)
+            }
+        }
+
+        return lambdaEvmHook
+    }
+
+    /// Creates a standard HookCreationDetails with a lambda EVM hook.
+    ///
+    /// - Parameters:
+    ///   - contractId: The contract ID for the lambda hook
+    ///   - hookId: The hook identifier (default: 1)
+    ///   - hookExtensionPoint: The hook extension point (default: .accountAllowanceHook)
+    ///   - adminKey: Optional admin key for the hook
+    ///   - storageUpdates: Optional array of (key, value) tuples for storage updates
+    /// - Returns: A configured HookCreationDetails
+    public func createHookDetails(
+        contractId: ContractId,
+        hookId: Int64 = 1,
+        hookExtensionPoint: HookExtensionPoint = .accountAllowanceHook,
+        adminKey: Key? = nil,
+        storageUpdates: [(key: Data, value: Data)]? = nil
+    ) -> HookCreationDetails {
+        let lambdaEvmHook = createLambdaEvmHook(contractId: contractId, storageUpdates: storageUpdates)
+
+        return HookCreationDetails(
+            hookExtensionPoint: hookExtensionPoint,
+            hookId: hookId,
+            lambdaEvmHook: lambdaEvmHook,
+            adminKey: adminKey
+        )
+    }
+
+    /// Convenience: Creates HookCreationDetails with default storage updates.
+    ///
+    /// Uses default storage key `[0x01, 0x23, 0x45]` and value `[0x67, 0x89, 0xAB]`.
+    ///
+    /// - Parameters:
+    ///   - contractId: The contract ID for the lambda hook
+    ///   - hookId: The hook identifier (default: 1)
+    /// - Returns: A configured HookCreationDetails with storage updates
+    public func createHookDetailsWithStorage(
+        contractId: ContractId,
+        hookId: Int64 = 1
+    ) -> HookCreationDetails {
+        createHookDetails(
+            contractId: contractId,
+            hookId: hookId,
+            storageUpdates: [(key: Data([0x01, 0x23, 0x45]), value: Data([0x67, 0x89, 0xAB]))]
+        )
+    }
 }
