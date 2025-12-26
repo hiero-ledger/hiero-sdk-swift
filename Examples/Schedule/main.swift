@@ -14,13 +14,6 @@ internal enum Program {
         // by this account and be signed by this key
         client.setOperator(env.operatorAccountId, env.operatorKey)
 
-        let key = PrivateKey.generateEd25519()
-        let accountId = try await AccountCreateTransaction()
-            .keyWithoutAlias(.single(key.publicKey))
-            .execute(client)
-            .getReceipt(client)
-            .accountId!
-
         // Generate a Ed25519 private, public key pair
         let key1 = PrivateKey.generateEd25519()
         let key2 = PrivateKey.generateEd25519()
@@ -30,45 +23,62 @@ internal enum Program {
         print("private key 2 = \(key2)")
         print("public key 2 = \(key2.publicKey)")
 
-        var customFee = CustomFixedFee()
-        customFee.feeCollectorAccountId = accountId
-        customFee.amount = 10
-
-        let topicId = try await TopicCreateTransaction()
-            .feeScheduleKey(.single(key1.publicKey))
-            .addCustomFee(customFee)
+        let newAccountId = try await AccountCreateTransaction()
+            .keyWithoutAlias(.keyList([.single(key1.publicKey), .single(key2.publicKey)]))
+            .initialBalance(.fromTinybars(1000))
             .execute(client)
             .getReceipt(client)
-            .topicId!
+            .accountId!
 
-        print("new topic ID: \(topicId)")
+        print("new account ID: \(newAccountId)")
 
-        var customFeeLimitFee = CustomFixedFee()
-        customFeeLimitFee.amount = 5
-        let customFeeLimit = CustomFeeLimit(payerId: env.operatorAccountId, customFees: [customFeeLimitFee])
+        let tx = TransferTransaction()
+            .hbarTransfer(newAccountId, -Hbar(1))
+            .hbarTransfer(env.operatorAccountId, Hbar(1))
 
-        let response = try await TopicMessageSubmitTransaction()
-            .topicId(topicId)
-            .message("hello from hashgraph".data(using: .utf8)!)
-            .addCustomFeeLimit(customFeeLimit)
+        let response =
+            try await tx
             .schedule()
-            .expirationTime(.now + .seconds(3))
+            .expirationTime(.now + .days(1))
             .isWaitForExpiry(true)
             .execute(client)
 
-        let scheduledTransactionId = response.transactionId
-        print("scheduled transaction ID = \(scheduledTransactionId)")
+        print("scheduled transaction ID = \(response.transactionId)")
 
         let scheduleId = try await response.getReceipt(client).scheduleId!
         print("schedule ID = \(scheduleId)")
 
-        _ = try await Task.sleep(nanoseconds: 1_000_000_000 * 6)
+        let record = try await response.getRecord(client)
+        print("record = \(record)")
 
-        let scheduleInfo = try await ScheduleInfoQuery().scheduleId(scheduleId).execute(client)
+        _ = try await ScheduleSignTransaction()
+            .scheduleId(scheduleId)
+            .freezeWith(client)
+            .sign(key1)
+            .execute(client)
+            .getReceipt(client)
 
-        print("scheduleInfo = \(scheduleInfo)")
+        let info = try await ScheduleInfoQuery()
+            .scheduleId(scheduleId)
+            .execute(client)
 
-        print("scheduled transaction receipt = \(try await TransactionReceiptQuery().transactionId(scheduledTransactionId).execute(client))")
+        print("schedule info = \(info)")
+
+        _ = try await ScheduleSignTransaction()
+            .scheduleId(scheduleId)
+            .freezeWith(client)
+            .sign(key2)
+            .execute(client)
+            .getReceipt(client)
+
+        let transactionId = response.transactionId
+
+        print("The following link should query the mirror node for the scheduled transaction:")
+
+        let transactionIdString =
+            "\(transactionId.accountId)-\(transactionId.validStart.seconds)-\(transactionId.validStart.subSecondNanos)"
+
+        print("https://\(env.networkName).mirrornode.hedera.com/api/v1/transactions/\(transactionIdString)")
     }
 }
 
