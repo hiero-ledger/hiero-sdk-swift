@@ -63,11 +63,12 @@ internal final class BatchTransactionIntegrationTests: HieroIntegrationTestCase 
         )
     }
 
-    internal func test_BlacklistedBatchTransaction() async throws {
+    internal func test_ProhibitedBatchTransaction() async throws {
         // Given
         let batchKey = PrivateKey.generateEcdsa()
 
         // When / Then
+        // Note: The status code from the network is still "batchTransactionInBlacklist"
         await assertReceiptStatus(
             try await BatchTransaction()
                 .addInnerTransaction(
@@ -90,7 +91,7 @@ internal final class BatchTransactionIntegrationTests: HieroIntegrationTestCase 
 
         let topicMsgSubmitTx = try TopicMessageSubmitTransaction()
             .topicId(topicId)
-            .message("Hello from HCS!".data(using: .utf8) ?? Data())
+            .message(Data("Hello from HCS!".utf8))
             .batchify(client: testEnv.client, .single(batchKey.publicKey))
 
         // When

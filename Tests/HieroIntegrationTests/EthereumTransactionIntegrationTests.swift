@@ -50,9 +50,10 @@ internal class EthereumTransactionIntegrationTests: HieroIntegrationTestCase {
 
     internal func test_JumboTransaction() async throws {
         // Given
-        let jumboContractBytecode =
+        let jumboContractBytecode = Data(
             "6080604052348015600e575f5ffd5b506101828061001c5f395ff3fe608060405234801561000f575f5ffd5b5060043610610029575f3560e01c80631e0a3f051461002d575b5f5ffd5b610047600480360381019061004291906100d0565b61005d565b6040516100549190610133565b60405180910390f35b5f5f905092915050565b5f5ffd5b5f5ffd5b5f5ffd5b5f5ffd5b5f5ffd5b5f5f83601f8401126100905761008f61006f565b5b8235905067ffffffffffffffff8111156100ad576100ac610073565b5b6020830191508360018202830111156100c9576100c8610077565b5b9250929050565b5f5f602083850312156100e6576100e5610067565b5b5f83013567ffffffffffffffff8111156101035761010261006b565b5b61010f8582860161007b565b92509250509250929050565b5f819050919050565b61012d8161011b565b82525050565b5f6020820190506101465f830184610124565b9291505056fea26469706673582212202829ebd1cf38c443e4fd3770cd4306ac4c6bb9ac2828074ae2b9cd16121fcfea64736f6c634300081e0033"
-            .data(using: .utf8)!
+                .utf8
+        )
 
         let ecdsaPrivateKey = PrivateKey.generateEcdsa()
         let aliasAccountId = ecdsaPrivateKey.toAccountId(shard: 0, realm: 0)
@@ -99,15 +100,21 @@ internal class EthereumTransactionIntegrationTests: HieroIntegrationTestCase {
 
     // MARK: - Helper Methods
 
+    /// EIP-1559 transaction fields used for building Ethereum transactions.
+    private struct EIP1559TransactionFields {
+        let chainId: Data
+        let nonce: Data
+        let maxPriorityGas: Data
+        let maxGas: Data
+        let gasLimit: Data
+        let contractBytes: Data
+        let value: Data
+        let callDataBytes: Data
+
+        static let transactionType = Data([0x02])
+    }
+
     /// Builds EIP-1559 Ethereum transaction data with proper RLP encoding and signing.
-    ///
-    /// - Parameters:
-    ///   - privateKey: The ECDSA private key to sign the transaction.
-    ///   - contractId: The contract to call.
-    ///   - callData: The function parameters.
-    ///   - functionName: The name of the function to call.
-    ///   - gasLimit: The gas limit for the transaction.
-    /// - Returns: The fully encoded Ethereum transaction data.
     private func buildEthereumTransactionData(
         privateKey: PrivateKey,
         contractId: ContractId,
@@ -115,72 +122,81 @@ internal class EthereumTransactionIntegrationTests: HieroIntegrationTestCase {
         functionName: String,
         gasLimit: Data
     ) throws -> Data {
-        let chainId = Data(hexEncoded: "012a")!
-        let nonce = Data()  // Empty for 0 in RLP
-        let maxPriorityGas = Data()  // Empty for 0 in RLP
-        let maxGas = Data(hexEncoded: "d1385c7bf0")!
-        // Note: toEvmAddress() crashes in test context, using toSolidityAddress() as workaround
-        let contractBytes = Data(hexEncoded: try contractId.toSolidityAddress())!
-        let value = Data()  // Empty for 0 in RLP
-        let callDataBytes = callData.toBytes(functionName)
+        let fields = try EIP1559TransactionFields(
+            chainId: Data(hexEncoded: "012a")!,
+            nonce: Data(),  // Empty for 0 in RLP
+            maxPriorityGas: Data(),  // Empty for 0 in RLP
+            maxGas: Data(hexEncoded: "d1385c7bf0")!,
+            gasLimit: gasLimit,
+            // Note: toEvmAddress() crashes in test context, using toSolidityAddress() as workaround
+            contractBytes: Data(hexEncoded: contractId.toSolidityAddress())!,
+            value: Data(),  // Empty for 0 in RLP
+            callDataBytes: callData.toBytes(functionName)
+        )
 
-        let type = Data([0x02])
+        let unsignedTx = encodeUnsignedTransaction(fields)
+        let (r, s, v) = try signTransaction(unsignedTx, privateKey: privateKey)
+        return encodeSignedTransaction(fields, v: v, r: r, s: s)
+    }
 
-        // RLP encode the unsigned transaction
+    /// RLP encodes the unsigned EIP-1559 transaction.
+    private func encodeUnsignedTransaction(_ fields: EIP1559TransactionFields) -> Data {
         var encoder = Rlp.Encoder()
         encoder.startList()
-        encoder.append(chainId)
-        encoder.append(nonce)
-        encoder.append(maxPriorityGas)
-        encoder.append(maxGas)
-        encoder.append(gasLimit)
-        encoder.append(contractBytes)
-        encoder.append(value)
-        encoder.append(callDataBytes)
+        encoder.append(fields.chainId)
+        encoder.append(fields.nonce)
+        encoder.append(fields.maxPriorityGas)
+        encoder.append(fields.maxGas)
+        encoder.append(fields.gasLimit)
+        encoder.append(fields.contractBytes)
+        encoder.append(fields.value)
+        encoder.append(fields.callDataBytes)
         encoder.startList()  // Empty accessList
         encoder.endList()
         encoder.endList()
-        let unsignedSequence = encoder.output
 
-        var messageToSign = type
-        messageToSign.append(unsignedSequence)
+        var result = EIP1559TransactionFields.transactionType
+        result.append(encoder.output)
+        return result
+    }
 
-        // Sign the message
-        let signature = privateKey.sign(messageToSign)
+    /// Signs the transaction and returns (r, s, v) signature components.
+    private func signTransaction(_ unsignedTx: Data, privateKey: PrivateKey) throws -> (Data, Data, Data) {
+        let signature = privateKey.sign(unsignedTx)
         let r = Data(signature.prefix(32))
         let s = Data(signature.suffix(32))
 
-        // Get the recovery ID dynamically
-        let recoveryId = privateKey.getRecoveryId(r: r, s: s, message: messageToSign)
+        let recoveryId = privateKey.getRecoveryId(r: r, s: s, message: unsignedTx)
         guard recoveryId >= 0 else {
             throw HError(kind: .basicParse, description: "Failed to compute recovery ID")
         }
 
         // Recovery ID encoding: 0 = empty, 1-3 = single byte
         let v: Data = recoveryId == 0 ? Data() : Data([UInt8(recoveryId)])
+        return (r, s, v)
+    }
 
-        // RLP encode the signed transaction
-        var signedEncoder = Rlp.Encoder()
-        signedEncoder.startList()
-        signedEncoder.append(chainId)
-        signedEncoder.append(nonce)
-        signedEncoder.append(maxPriorityGas)
-        signedEncoder.append(maxGas)
-        signedEncoder.append(gasLimit)
-        signedEncoder.append(contractBytes)
-        signedEncoder.append(value)
-        signedEncoder.append(callDataBytes)
-        signedEncoder.startList()  // Empty accessList
-        signedEncoder.endList()
-        signedEncoder.append(v)
-        signedEncoder.append(r)
-        signedEncoder.append(s)
-        signedEncoder.endList()
-        let signedSequence = signedEncoder.output
+    /// RLP encodes the signed EIP-1559 transaction.
+    private func encodeSignedTransaction(_ fields: EIP1559TransactionFields, v: Data, r: Data, s: Data) -> Data {
+        var encoder = Rlp.Encoder()
+        encoder.startList()
+        encoder.append(fields.chainId)
+        encoder.append(fields.nonce)
+        encoder.append(fields.maxPriorityGas)
+        encoder.append(fields.maxGas)
+        encoder.append(fields.gasLimit)
+        encoder.append(fields.contractBytes)
+        encoder.append(fields.value)
+        encoder.append(fields.callDataBytes)
+        encoder.startList()  // Empty accessList
+        encoder.endList()
+        encoder.append(v)
+        encoder.append(r)
+        encoder.append(s)
+        encoder.endList()
 
-        var ethereumData = type
-        ethereumData.append(signedSequence)
-
-        return ethereumData
+        var result = EIP1559TransactionFields.transactionType
+        result.append(encoder.output)
+        return result
     }
 }
