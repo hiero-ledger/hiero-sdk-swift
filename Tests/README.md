@@ -107,6 +107,45 @@ HIERO_OPERATOR_KEY=3030020100300706052b8104000a042204205bc004059ffa2943965d306f2
 HIERO_ENVIRONMENT_TYPE=local
 ```
 
+#### Kubernetes DNS Configuration (Required for Node Update Tests)
+
+When running against a local Kubernetes-based Hedera network (e.g., solo), some tests that trigger address book updates (like `NodeUpdateTransactionIntegrationTests`) require `/etc/hosts` entries for the Kubernetes internal DNS names.
+
+Add the following to your `/etc/hosts` file:
+
+```
+127.0.0.1 network-node1-svc.solo.svc.cluster.local
+127.0.0.1 network-node2-svc.solo.svc.cluster.local
+```
+
+**Why is this needed?**
+
+The address book returned by the network contains internal Kubernetes DNS names. When the SDK updates its network configuration from the address book, it uses these hostnames. Without the `/etc/hosts` entries, the SDK cannot resolve these addresses when connecting to nodes.
+
+The SDK automatically remaps `network-node2` from port 50211 to 51211 for local port-forwarding compatibility (since both hostnames resolve to 127.0.0.1 but need different ports).
+
+#### Mirror Node Web3 API (Required for Mirror Node Contract Tests)
+
+The `MirrorNodeContractIntegrationTests` require the mirror node's web3 API to be accessible on port 8545. This is a separate service from the main mirror node REST API (port 5600).
+
+For local development with solo, ensure port 8545 is port-forwarded:
+
+```bash
+kubectl port-forward svc/mirror-1-web3 -n solo 8545:80 &
+```
+
+(The web3 service listens on port 80 internally, which is forwarded to local port 8545)
+
+You can verify the web3 API is accessible:
+
+```bash
+curl -X POST http://localhost:8545/api/v1/contracts/call \
+  -H "Content-Type: application/json" \
+  -d '{"data":"", "to":"0x0000000000000000000000000000000000000001", "estimate":false}'
+```
+
+If the port-forward is not set up, the mirror node contract tests will fail with connection errors.
+
 ### Custom Network
 
 ```bash

@@ -5,14 +5,12 @@ import HieroTestSupport
 import XCTest
 
 internal final class MirrorNodeContractIntegrationTests: HieroIntegrationTestCase {
-    internal func disabledTestCanEstimateAndCall() async throws {
+    internal func test_CanEstimateAndCall() async throws {
         // Given
         let contractId = try await createStandardContract()
 
-        /// Wait 3 seconds for the mirror node to import the contract data.
-        try await Task.sleep(nanoseconds: 3_000_000_000)
+        try await Task.sleep(nanoseconds: 5_000_000_000)
 
-        // When
         let estimateResponse = try await MirrorNodeContractEstimateGasQuery()
             .contractId(contractId)
             .sender(testEnv.operator.accountId)
@@ -29,6 +27,7 @@ internal final class MirrorNodeContractIntegrationTests: HieroIntegrationTestCas
             .function("getMessage")
             .execute(testEnv.client)
 
+        // When
         let mirrorNodeResponse = try await MirrorNodeContractCallQuery()
             .contractId(contractId)
             .function("getMessage")
@@ -38,7 +37,7 @@ internal final class MirrorNodeContractIntegrationTests: HieroIntegrationTestCas
         XCTAssertEqual(consensusNodeResponse.bytes.map { String(format: "%02x", $0) }.joined(), mirrorNodeResponse)
     }
 
-    internal func disabledTestBadContractId() async throws {
+    internal func test_BadContractIdReturnsDefaultGas() async throws {
         // Given / When
         let estimateResponse = try await MirrorNodeContractEstimateGasQuery()
             .contractId(ContractId(999999))
@@ -51,12 +50,11 @@ internal final class MirrorNodeContractIntegrationTests: HieroIntegrationTestCas
         XCTAssertEqual(estimatedGas, 22892)
     }
 
-    internal func disabledTestLowGasLimit() async throws {
+    internal func test_LowGasLimitFails() async throws {
         // Given
         let contractId = try await createStandardContract()
 
-        /// Wait 3 seconds for the mirror node to import the contract data.
-        try await Task.sleep(nanoseconds: 3_000_000_000)
+        try await Task.sleep(nanoseconds: 5_000_000_000)
 
         // When / Then
         await assertThrowsHErrorAsync(

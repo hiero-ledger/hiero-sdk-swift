@@ -98,11 +98,17 @@ public class MirrorNodeContractQuery: ValidateChecksums {
         let mirrorNetworkAddress = client.mirrorNetwork[0]
         let contractCallEndpoint = "/api/v1/contracts/call"
 
-        /// Construct the URL.
-        let url = URL(
-            string: client.ledgerId == nil
-                ? "http://" + mirrorNetworkAddress.split(separator: ":")[0] + ":8545" + contractCallEndpoint
-                : "https://" + mirrorNetworkAddress + contractCallEndpoint)!
+        // Check if this is a local development environment (matching Go SDK behavior)
+        let hostPart = String(mirrorNetworkAddress.split(separator: ":")[0])
+        let isLocalHost = hostPart == "localhost" || hostPart == "127.0.0.1"
+
+        // Construct the URL - use port 8545 for local web3 API (matching Go SDK)
+        let url: URL
+        if isLocalHost {
+            url = URL(string: "http://\(hostPart):8545\(contractCallEndpoint)")!
+        } else {
+            url = URL(string: "https://\(mirrorNetworkAddress)\(contractCallEndpoint)")!
+        }
 
         /// Begin to construct the HTTP request.
         var request = URLRequest(url: url)
@@ -135,7 +141,11 @@ public class MirrorNodeContractQuery: ValidateChecksums {
         guard let httpResponse = response as? HTTPURLResponse,
             (200..<300).contains(httpResponse.statusCode)
         else {
-            throw URLError(.badServerResponse)
+            let httpResponse = response as? HTTPURLResponse
+            let statusCode = httpResponse?.statusCode ?? 0
+            let responseBody = String(data: data, encoding: .utf8) ?? "No response body"
+            throw HError.basicParse(
+                "Received non-200 response from Mirror Node: \(statusCode), details: \(responseBody)")
         }
 
         /// Verify the JSON response and return the result.

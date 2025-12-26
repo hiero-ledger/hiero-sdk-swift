@@ -559,6 +559,66 @@ public struct PrivateKey: LosslessStringConvertible, ExpressibleByStringLiteral,
         }
     }
 
+    /// Computes the recovery ID for an ECDSA signature.
+    ///
+    /// The recovery ID (0-3) allows recovering the public key from just the signature
+    /// and message hash, which is required for Ethereum-compatible transactions.
+    ///
+    /// This method tries each possible recovery ID (0-3) and returns the one that
+    /// correctly recovers this key's public key.
+    ///
+    /// - Parameters:
+    ///   - r: The r component of the ECDSA signature (32 bytes).
+    ///   - s: The s component of the ECDSA signature (32 bytes).
+    ///   - message: The original message that was signed (will be hashed with Keccak-256).
+    /// - Returns: The recovery ID (0-3), or -1 if the key is not ECDSA or recovery fails.
+    public func getRecoveryId(r: Data, s: Data, message: Data) -> Int {
+        guard case .ecdsa(let key) = kind else {
+            return -1
+        }
+
+        guard r.count == 32, s.count == 32 else {
+            return -1
+        }
+
+        // Create the compact signature (r || s)
+        let compactSignature = r + s
+
+        // Hash the message with Keccak-256 (same as sign() does for ECDSA)
+        let hash = Keccak.keccak256(message)
+        guard let digest = Keccak256Digest(hash) else {
+            return -1
+        }
+
+        // Get the expected public key bytes
+        let expectedPubKey = key.publicKey.dataRepresentation
+
+        // Try each possible recovery ID (0-3)
+        for recoveryId in Int32(0)..<Int32(4) {
+            do {
+                let recoverableSignature = try secp256k1.Recovery.ECDSASignature(
+                    compactRepresentation: compactSignature,
+                    recoveryId: recoveryId
+                )
+
+                let recoveredPubKey = try secp256k1.Recovery.PublicKey(
+                    digest,
+                    signature: recoverableSignature,
+                    format: .compressed
+                )
+
+                if recoveredPubKey.dataRepresentation == expectedPubKey {
+                    return Int(recoveryId)
+                }
+            } catch {
+                // This recovery ID didn't work, try the next one
+                continue
+            }
+        }
+
+        return -1
+    }
+
     // MARK: Key Derivation
 
     /// Returns `true` if this key supports BIP-32 derivation.

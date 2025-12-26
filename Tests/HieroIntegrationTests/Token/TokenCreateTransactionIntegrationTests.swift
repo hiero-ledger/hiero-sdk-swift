@@ -83,7 +83,7 @@ internal final class TokenCreateTransactionIntegrationTests: HieroIntegrationTes
         )
     }
 
-    internal func disabledTestMissingTreasuryAccountIdSigFail() async throws {
+    internal func test_MissingTreasuryAccountIdSigFail() async throws {
         // Given / When / Then
         await assertReceiptStatus(
             try await TokenCreateTransaction()
