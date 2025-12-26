@@ -124,7 +124,7 @@ internal final class TopicMessageSubmitTransactionUnitTests: HieroUnitTestCase, 
         XCTAssertEqual(tx.customFeeLimits, [customFeeLimitToAdd])
     }
 
-    internal func testScheduledCustomFeeLimits() throws {
+    internal func test_ScheduledCustomFeeLimits() throws {
         let payerId = AccountId(3)
         let amount: UInt64 = 4
         let tokenId = TokenId(3)
