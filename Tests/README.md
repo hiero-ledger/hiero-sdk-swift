@@ -124,28 +124,6 @@ The address book returned by the network contains internal Kubernetes DNS names.
 
 The SDK automatically remaps `network-node2` from port 50211 to 51211 for local port-forwarding compatibility (since both hostnames resolve to 127.0.0.1 but need different ports).
 
-#### Mirror Node Web3 API (Required for Mirror Node Contract Tests)
-
-The `MirrorNodeContractIntegrationTests` require the mirror node's web3 API to be accessible on port 8545. This is a separate service from the main mirror node REST API (port 5600).
-
-For local development with solo, ensure port 8545 is port-forwarded:
-
-```bash
-kubectl port-forward svc/mirror-1-web3 -n solo 8545:80 &
-```
-
-(The web3 service listens on port 80 internally, which is forwarded to local port 8545)
-
-You can verify the web3 API is accessible:
-
-```bash
-curl -X POST http://localhost:8545/api/v1/contracts/call \
-  -H "Content-Type: application/json" \
-  -d '{"data":"", "to":"0x0000000000000000000000000000000000000001", "estimate":false}'
-```
-
-If the port-forward is not set up, the mirror node contract tests will fail with connection errors.
-
 ### Custom Network
 
 ```bash

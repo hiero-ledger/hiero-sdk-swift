@@ -98,11 +98,11 @@ public class MirrorNodeContractQuery: ValidateChecksums {
         let mirrorNetworkAddress = client.mirrorNetwork[0]
         let contractCallEndpoint = "/api/v1/contracts/call"
 
-        // Check if this is a local development environment (matching Go SDK behavior)
+        // Check if this is a local development environment
         let hostPart = String(mirrorNetworkAddress.split(separator: ":")[0])
         let isLocalHost = hostPart == "localhost" || hostPart == "127.0.0.1"
 
-        // Construct the URL - use port 8545 for local web3 API (matching Go SDK)
+        // Construct the URL - use port 8545 for local web3 API
         let url: URL
         if isLocalHost {
             url = URL(string: "http://\(hostPart):8545\(contractCallEndpoint)")!
