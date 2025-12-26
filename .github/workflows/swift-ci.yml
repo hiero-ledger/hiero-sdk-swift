@@ -1,7 +1,7 @@
 name: Swift CI
 on:
   pull_request:
-  push: 
+  push:
     branches: ['main']
 
 defaults:
@@ -13,7 +13,8 @@ permissions:
 
 jobs:
   format:
-    runs-on: macos-latest
+    name: Format (lint)
+    runs-on: hiero-client-sdk-linux-large
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
@@ -23,73 +24,110 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Install swift-format
-        run: brew install swift-format
+      - name: Install system deps for Swift
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            git curl unzip xz-utils ca-certificates pkg-config \
+            clang libicu-dev libxml2-dev libsqlite3-dev zlib1g-dev \
+            libcurl4-openssl-dev libssl-dev
 
-      - name: Format
-        run: swift format lint --strict --configuration .swift-format.json --recursive --parallel Sources/ Tests/ Examples/ Package.swift
-
-  build:
-    strategy:
-      matrix:
-        swift: ["5.9", "5.10"]
-        os: [macos-13, macos-latest]
-
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+      - name: Setup Swift (toolchain)
+        uses: SwiftyLab/setup-swift@4bbb093f8c68d1dee1caa8b67c681a3f8fe70a91 # v1.12.0
         with:
-          egress-policy: audit
+          swift-version: '5.9'
 
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@3aed395c5397f62deb91d8fe7af1418a9ae4d16f # v2.1.0
-        with:
-          swift-version: ${{ matrix.swift }}
+      - name: Build swift-format
+        run: |
+          set -euxo pipefail
+          git clone --depth=1 --branch 510.1.0 https://github.com/apple/swift-format.git .swift-format-src
+          pushd .swift-format-src
+          swift build -c release
+          echo "$PWD/.build/release" >> $GITHUB_PATH
+          popd
+          swift-format --version || true
 
-      - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Cache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
-        with:
-          path: sdk/swift/.build
-          key: ${{ runner.os }}-${{ matrix.swift }}-spm-${{ github.job }}-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.swift }}-spm-
-
-      - name: Build
-        run: swift build
+      - name: Format (lint)
+        run: |
+          swift-format lint --strict --configuration .swift-format.json --recursive --parallel Sources/ Tests/ Examples/ Package.swift
 
   test:
+    name: Build and Test SDK
     strategy:
       matrix:
         swift: ["5.9", "5.10"]
-        os: [macos-13, macos-latest]
+    runs-on: hiero-client-sdk-linux-large
+    env:
+      SOLO_CLUSTER_NAME: solo
+      SOLO_NAMESPACE: solo
+      SOLO_CLUSTER_SETUP_NAMESPACE: solo-cluster
+      SOLO_DEPLOYMENT: solo-deployment
+      KIND_IMAGE: kindest/node:v1.32.2   # pin to a stable image
 
-    needs: [build]
-    runs-on: ${{ matrix.os }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f
         with:
           egress-policy: audit
 
       - name: Setup Swift
-        uses: swift-actions/setup-swift@3aed395c5397f62deb91d8fe7af1418a9ae4d16f # v2.1.0
+        uses: SwiftyLab/setup-swift@4bbb093f8c68d1dee1caa8b67c681a3f8fe70a91 # v1.12.0
         with:
           swift-version: ${{ matrix.swift }}
 
       - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-      - name: Cache Code
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+      - name: Cache SPM build dir
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
         with:
-          path: sdk/swift/.build
+          path: .build
           key: ${{ runner.os }}-${{ matrix.swift }}-spm-${{ github.job }}-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.swift }}-spm-
 
-      - name: Test
-        run: swift test
+      - name: Install system dependencies for Swift/gRPC
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            git curl jq coreutils ca-certificates \
+            clang libicu-dev libxml2-dev libsqlite3-dev zlib1g-dev \
+            libcurl4-openssl-dev libssl-dev pkg-config \
+            protobuf-compiler
+
+      - name: Verify Swift installation
+        run: |
+          swift --version
+          which swift
+          swift package --version
+
+      - name: Build SDK and TCK
+        run: |
+          swift build
+
+      - name: Run unit tests (HieroUnitTests)
+        env:
+          HIERO_PROFILE: ciUnit
+        run: swift test --filter HieroUnitTests
+
+      - name: Prepare Hiero Solo
+        id: solo
+        uses: hiero-ledger/hiero-solo-action@fbca3e7a99ce9aa8a250563a81187abe115e0dad # v0.16.0
+        with:
+          installMirrorNode: true
+          mirrorNodeVersion: v0.142.0
+          hieroVersion: v0.69.0
+          dualMode: true
+      
+      - name: Run integration tests (HieroIntegrationTests)
+        env:
+          HIERO_PROFILE: ciIntegration
+          HIERO_OPERATOR_ID: ${{ steps.solo.outputs.accountId }}
+          HIERO_OPERATOR_KEY: ${{ steps.solo.outputs.privateKey }}
+          HIERO_ENVIRONMENT_TYPE: custom
+          HIERO_CONSENSUS_NODES: 127.0.0.1:50211,127.0.0.1:51211
+          HIERO_CONSENSUS_NODE_ACCOUNT_IDS: 0.0.3,0.0.4
+          HIERO_MIRROR_NODES: 127.0.0.1:5600
+        run: swift test --filter HieroIntegrationTests

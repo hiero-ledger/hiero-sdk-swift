@@ -127,7 +127,9 @@ public class ChunkedTransaction: Transaction {
                 .executeAll(client, timeoutPerChunk: timeoutPerChunk)
         }
 
-        precondition(self.data.count < self.maxMessageSize, "todo: throw an actual error here")
+        if self.data.count > self.maxMessageSize {
+            throw HError.illegalState("transaction requires \(self.data.count) but only has \(self.maxMessageSize)")
+        }
 
         var responses: [Response] = []
 
@@ -220,8 +222,10 @@ extension ChunkedTransaction.FirstChunkView: Execute {
         )
     }
 
-    internal func execute(_ channel: GRPCChannel, _ request: GrpcRequest) async throws -> GrpcResponse {
-        try await transaction.transactionExecute(channel, request)
+    internal func execute(_ channel: GRPCChannel, _ request: GrpcRequest, _ deadline: TimeInterval) async throws
+        -> GrpcResponse
+    {
+        try await transaction.transactionExecute(channel, request, deadline)
     }
 
     internal func makeResponse(
@@ -287,8 +291,10 @@ extension ChunkedTransaction.ChunkView: Execute {
         )
     }
 
-    internal func execute(_ channel: GRPCChannel, _ request: GrpcRequest) async throws -> GrpcResponse {
-        try await transaction.transactionExecute(channel, request)
+    internal func execute(_ channel: GRPCChannel, _ request: GrpcRequest, _ deadline: TimeInterval) async throws
+        -> GrpcResponse
+    {
+        try await transaction.transactionExecute(channel, request, deadline)
     }
 
     internal func makeResponse(

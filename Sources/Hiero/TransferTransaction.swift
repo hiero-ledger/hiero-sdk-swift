@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import Foundation
 import GRPC
 import HieroProtobufs
 import SwiftProtobuf
@@ -42,6 +43,12 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
         doHbarTransfer(accountId, amount.toTinybars(), false)
     }
 
+    /// Add a non-approved hbar transfer to the transaction.
+    @discardableResult
+    public func hbarTransfer(_ evmAddress: EvmAddress, _ amount: Hbar) -> Self {
+        doHbarTransfer(AccountId.fromEvmAddress(evmAddress), amount.toTinybars(), false)
+    }
+
     /// Add an approved hbar transfer to the transaction.
     @discardableResult
     public func approvedHbarTransfer(_ accountId: AccountId, _ amount: Hbar) -> Self {
@@ -53,6 +60,18 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
         _ amount: Int64,
         _ approved: Bool
     ) -> Self {
+        for (index, transfer) in transfers.enumerated()
+        where transfer.accountId == accountId && transfer.isApproval == approved {
+            let newTinybars = transfer.amount + amount
+            if newTinybars == 0 {
+                transfers.remove(at: index)
+            } else {
+                transfers[index].amount = newTinybars
+            }
+
+            return self
+        }
+
         transfers.append(Transfer(accountId: accountId, amount: amount, isApproval: approved))
 
         return self
@@ -64,11 +83,13 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
         try super.validateChecksums(on: ledgerId)
     }
 
-    internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction) async throws
+    internal override func transactionExecute(
+        _ channel: GRPCChannel, _ request: Proto_Transaction, _ deadline: TimeInterval
+    ) async throws
         -> Proto_TransactionResponse
     {
         try await Proto_CryptoServiceAsyncClient(channel: channel).cryptoTransfer(
-            request, callOptions: applyGrpcHeader())
+            request, callOptions: applyGrpcHeader(deadline: deadline))
     }
 
     internal override func toTransactionDataProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody.OneOf_Data {

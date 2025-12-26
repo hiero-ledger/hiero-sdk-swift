@@ -38,6 +38,7 @@ let exampleTargets = [
     "CreateStatefulContract",
     "CreateTopic",
     "CreateTopicWithRevenue",
+    "CreateUpdateDeleteNode",
     "DeleteAccount",
     "DeleteFile",
     "FileAppendChunked",
@@ -105,9 +106,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/vapor/vapor.git", .upToNextMajor(from: "4.101.3")),
-        .package(url: "https://github.com/attaswift/BigInt.git", .upToNextMajor(from: "5.2.0")),
-        // Currently, only used for keccak256
-        .package(url: "https://github.com/krzyzanowskim/OpenSSL-Package.git", .upToNextMajor(from: "3.3.2000")),
+        .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", from: "1.8.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.0.0")),
     ],
     targets: [
         .target(
@@ -119,6 +119,7 @@ let package = Package(
             exclude: [
                 "Protos",
                 "update_protos.py",
+                "sync_status_codes.py",
             ]
         ),
         // weird name, but whatever, internal targets
@@ -137,8 +138,8 @@ let package = Package(
                 .product(name: "GRPC", package: "grpc-swift"),
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "secp256k1", package: "secp256k1.swift"),
-                .product(name: "BigInt", package: "BigInt"),
-                .product(name: "OpenSSL", package: "OpenSSL-Package"),
+                .product(name: "CryptoSwift", package: "CryptoSwift"),
+                .product(name: "Crypto", package: "swift-crypto"),
             ]
             // todo: find some way to enable these locally.
             // swiftSettings: [
@@ -153,22 +154,32 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "HieroTests",
+            name: "HieroTestSupport",
             dependencies: [
                 "Hiero",
+                "HieroProtobufs",
+                .product(name: "SwiftDotenv", package: "swift-dotenv"),
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+            ],
+            path: "Tests/HieroTestSupport"
+        ),
+        .testTarget(
+            name: "HieroUnitTests",
+            dependencies: [
+                "Hiero",
+                "HieroTestSupport",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ],
             exclude: ["__Snapshots__"]
         ),
         .testTarget(
-            name: "HieroE2ETests",
+            name: "HieroIntegrationTests",
             dependencies: [
                 "Hiero",
+                "HieroTestSupport",
                 .product(name: "SwiftDotenv", package: "swift-dotenv"),
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
                 "HieroExampleUtilities",
-            ],
-            exclude: ["File/__Snapshots__"]
+            ]
         ),
     ] + exampleTargets
 )

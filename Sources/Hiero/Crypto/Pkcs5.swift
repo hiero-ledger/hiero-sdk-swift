@@ -1,62 +1,161 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import CommonCrypto
-import CryptoKit
+// MARK: - PKCS#5 Password-Based Cryptography
+
+/// PKCS#5 (Public-Key Cryptography Standards #5) defines methods for
+/// encrypting data using a password-derived key. This implementation
+/// supports PBES2 (Password-Based Encryption Scheme 2).
+///
+/// Used for decrypting PKCS#8 encrypted private keys.
+///
+/// Reference: RFC 8018 (https://tools.ietf.org/html/rfc8018)
+///
+/// File organization:
+/// - Pkcs5.swift (this file): Entry point + AlgorithmIdentifier
+/// - Pkcs5Pbkdf2.swift: PBKDF2 key derivation (RFC 8018 Section 5)
+/// - Pkcs5Pbes2.swift: PBES2 encryption scheme (RFC 8018 Section 6)
+
 import Foundation
 import SwiftASN1
 
-internal enum Pkcs5 {}
+/// PKCS#5 password-based cryptography structures.
+///
+/// PKCS#5 provides:
+/// - **PBKDF2**: Key derivation from passwords (see `Pkcs5Pbkdf2.swift`)
+/// - **PBES2**: Password-based encryption scheme (see `Pkcs5Pbes2.swift`)
+///
+/// These are used together to encrypt/decrypt private keys with passwords.
+///
+/// ## Example
+/// ```swift
+/// // Decrypt an encrypted PKCS#8 private key
+/// let decrypted = try encryptionScheme.decrypt(password: passwordData, document: encryptedData)
+/// ```
+internal enum Pkcs5 {
 
-extension Pkcs5 {
-    internal enum EncryptionScheme {
-        case pbes2(Pbes2Parameters)
+    // MARK: - Algorithm Identifier
+
+    /// RFC 5280 algorithm identifier.
+    ///
+    /// An algorithm identifier pairs an OID with optional algorithm-specific parameters.
+    /// This is a fundamental ASN.1 structure used throughout PKCS standards.
+    ///
+    /// ```text
+    /// AlgorithmIdentifier ::= SEQUENCE {
+    ///   algorithm    OBJECT IDENTIFIER,
+    ///   parameters   ANY DEFINED BY algorithm OPTIONAL
+    /// }
+    /// ```
+    internal struct AlgorithmIdentifier {
+        /// The algorithm's object identifier (OID).
+        internal let oid: ASN1ObjectIdentifier
+
+        /// Optional algorithm-specific parameters encoded as ASN.1 ANY.
+        internal let parameters: ASN1Any?
+
+        /// Create an algorithm identifier.
+        ///
+        /// - Parameters:
+        ///   - oid: The algorithm's object identifier.
+        ///   - parameters: Optional algorithm-specific parameters.
+        internal init(oid: ASN1ObjectIdentifier, parameters: ASN1Any? = nil) {
+            self.oid = oid
+            self.parameters = parameters
+        }
+
+        /// Extract the parameters as an OID, if applicable.
+        ///
+        /// Some algorithms use an OID as their parameter (e.g., named curves).
+        internal var parametersOID: ASN1ObjectIdentifier? {
+            try? parameters.map(ASN1ObjectIdentifier.init(asn1Any:))
+        }
     }
-}
 
-extension ASN1ObjectIdentifier.NamedCurves {
-    /// OID for the secp256k1 named curve.
-    ///
-    /// `iso(1) identified-organization(3) certicom(132) curve(0) 10`
-    internal static let secp256k1: ASN1ObjectIdentifier = [1, 3, 132, 0, 10]
-}
+    // MARK: - Encryption Scheme
 
-extension ASN1ObjectIdentifier.AlgorithmIdentifier {
-    /// OID for the ed25519 algorithm.
+    /// Supported encryption schemes for password-based encryption.
     ///
-    /// `iso(1) identified-organization(3) thawte(101) id-Ed25519(112)`
-    ///
-    /// `101.100` through `101.127` were donated to the IETF Curdle Security Working Group for the sake of Edwards Elliptic Curves with smaller arcs, hence the weird spot.
-    internal static let ed25519: ASN1ObjectIdentifier = [1, 3, 101, 112]
+    /// Currently supports PBES2, which combines PBKDF2 key derivation
+    /// with AES encryption.
+    internal enum EncryptionScheme {
+        /// PBES2 (Password-Based Encryption Scheme 2) with associated parameters.
+        ///
+        /// PBES2 uses PBKDF2 to derive a key from the password, then encrypts
+        /// the data using a symmetric cipher (typically AES-CBC).
+        case pbes2(Pbes2Parameters)
 
-    /// OID for the password based key derivation function version 2 (PBKDF2) algorithm.
-    ///
-    /// `iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-5(5) id-PBKDF2(12)`
-    internal static let pbkdf2: ASN1ObjectIdentifier = [1, 2, 840, 113_549, 1, 5, 12]
-
-    /// OID for the password based key derivation function version 2 (PBKDF2) algorithm.
-    ///
-    /// `iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-5(5) id-PBES2(13)`
-    internal static let pbes2: ASN1ObjectIdentifier = [1, 2, 840, 113_549, 1, 5, 13]
-
-    /// OID for AES 128 bit encryption in CBC mode with RFC-5652 padding.
-    ///
-    /// `joint-iso-itu-t(2).country(16).us(840).organization(1).gov(101).csor(3).nistAlgorithms(4).aes(1).aes128-CBC-PAD(2)`
-    internal static let aes128CbcPad: ASN1ObjectIdentifier = [2, 16, 840, 1, 101, 3, 4, 1, 2]
-}
-
-extension Pkcs5.EncryptionScheme {
-    internal func decrypt(password: Data, document: Data) throws -> Data {
-        switch self {
-        case .pbes2(let params): return try params.decrypt(password: password, document: document)
+        /// Decrypt encrypted data using this encryption scheme.
+        ///
+        /// - Parameters:
+        ///   - password: The password used to derive the encryption key.
+        ///   - document: The encrypted data to decrypt.
+        /// - Returns: The decrypted plaintext data.
+        /// - Throws: An error if decryption fails (wrong password, corrupted data, etc.).
+        internal func decrypt(password: Data, document: Data) throws -> Data {
+            switch self {
+            case .pbes2(let params):
+                return try params.decrypt(password: password, document: document)
+            }
         }
     }
 }
 
+// MARK: - AlgorithmIdentifier DER Conformance
+
+extension Pkcs5.AlgorithmIdentifier: DERImplicitlyTaggable {
+    /// The default ASN.1 identifier (SEQUENCE).
+    internal static var defaultIdentifier: ASN1Identifier { .sequence }
+
+    /// Initialize from DER-encoded ASN.1 data.
+    ///
+    /// Parses a SEQUENCE containing an OID and optional parameters.
+    ///
+    /// - Parameters:
+    ///   - derEncoded: The DER-encoded ASN.1 node.
+    ///   - identifier: The expected ASN.1 identifier.
+    /// - Throws: An error if the ASN.1 structure is invalid.
+    internal init(derEncoded: ASN1Node, withIdentifier identifier: ASN1Identifier) throws {
+        self = try DER.sequence(derEncoded, identifier: identifier) { nodes in
+            let oid = try ASN1ObjectIdentifier(derEncoded: &nodes)
+            let parameters = nodes.next().map(ASN1Any.init(derEncoded:))
+            return Self(oid: oid, parameters: parameters)
+        }
+    }
+
+    /// Serialize to DER-encoded ASN.1 format.
+    ///
+    /// Writes a SEQUENCE containing the OID and optional parameters.
+    ///
+    /// - Parameters:
+    ///   - coder: The serializer to write to.
+    ///   - identifier: The ASN.1 identifier to use.
+    /// - Throws: An error if serialization fails.
+    internal func serialize(into coder: inout DER.Serializer, withIdentifier identifier: ASN1Identifier) throws {
+        try coder.appendConstructedNode(identifier: identifier) { coder in
+            try coder.serialize(oid)
+            if let parameters = parameters {
+                try coder.serialize(parameters)
+            }
+        }
+    }
+}
+
+// MARK: - EncryptionScheme DER Conformance
+
 extension Pkcs5.EncryptionScheme: DERImplicitlyTaggable {
+    /// The default ASN.1 identifier (same as AlgorithmIdentifier).
     internal static var defaultIdentifier: ASN1Identifier {
         Pkcs5.AlgorithmIdentifier.defaultIdentifier
     }
 
+    /// Initialize from DER-encoded ASN.1 data.
+    ///
+    /// Parses the algorithm identifier and extracts the PBES2 parameters.
+    ///
+    /// - Parameters:
+    ///   - derEncoded: The DER-encoded ASN.1 node.
+    ///   - identifier: The expected ASN.1 identifier.
+    /// - Throws: `ASN1Error.invalidASN1Object` if parsing fails or algorithm is unsupported.
     internal init(derEncoded: ASN1Node, withIdentifier identifier: ASN1Identifier) throws {
         let algId = try Pkcs5.AlgorithmIdentifier(derEncoded: derEncoded, withIdentifier: identifier)
 
@@ -72,6 +171,12 @@ extension Pkcs5.EncryptionScheme: DERImplicitlyTaggable {
         }
     }
 
+    /// Serialize to DER-encoded ASN.1 format.
+    ///
+    /// - Parameters:
+    ///   - coder: The serializer to write to.
+    ///   - identifier: The ASN.1 identifier to use.
+    /// - Throws: An error if serialization fails.
     internal func serialize(into coder: inout DER.Serializer, withIdentifier identifier: ASN1Identifier) throws {
         let params: ASN1Any
         switch self {
@@ -79,7 +184,7 @@ extension Pkcs5.EncryptionScheme: DERImplicitlyTaggable {
             params = try .init(erasing: pbes2)
         }
 
-        return try Pkcs5.AlgorithmIdentifier(oid: .AlgorithmIdentifier.pbes2, parameters: params)
+        try Pkcs5.AlgorithmIdentifier(oid: .AlgorithmIdentifier.pbes2, parameters: params)
             .serialize(into: &coder, withIdentifier: identifier)
     }
 }

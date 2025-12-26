@@ -1,0 +1,47 @@
+HieroProtobufs.Proto_TransactionBody:
+transactionID {
+  transactionValidStart {
+    seconds: 1554158542
+  }
+  accountID {
+    accountNum: 5005
+  }
+}
+nodeAccountID {
+  accountNum: 5005
+}
+transactionFee: 200000000
+transactionValidDuration {
+  seconds: 120
+}
+nodeCreate {
+  account_id {
+    accountNum: 5007
+  }
+  description: "test description"
+  gossip_endpoint {
+    port: 42
+    domain_name: "unit.test.com"
+  }
+  gossip_endpoint {
+    port: 43
+    domain_name: "unit.test.com"
+  }
+  service_endpoint {
+    port: 44
+    domain_name: "unit.test.com"
+  }
+  service_endpoint {
+    port: 45
+    domain_name: "unit.test.com"
+  }
+  gossip_ca_certificate: "\001\002\003\004"
+  grpc_certificate_hash: "\005\006\007\b"
+  admin_key {
+    ed25519: "\340\310\354'X\245\207\237\372\302&\241<\fQky\236r\343QA\240\335\202\217\224\323y\210\244\267"
+  }
+  grpc_proxy_endpoint {
+    port: 46
+    domain_name: "unit.test.com"
+  }
+}

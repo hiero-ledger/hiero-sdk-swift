@@ -1,19 +1,31 @@
 // SPDX-License-Identifier: Apache-2.0
 
-/// Struct to hold the parameters of a 'grantTokenKyc' JSON-RPC method call.
+/// Represents the parameters for a `grantTokenKyc` JSON-RPC method call.
+///
+/// This struct captures the optional parameters needed to grant KYC (Know Your Customer)
+/// status to an account for a specific token, including the `tokenId`, the `accountId`,
+/// and any common transaction parameters.
+///
+/// - Note: All fields are optional; validation and defaulting behavior should be handled downstream.
 internal struct GrantTokenKycParams {
 
     internal var tokenId: String? = nil
     internal var accountId: String? = nil
     internal var commonTransactionParams: CommonTransactionParams? = nil
 
-    internal init(_ request: JSONRequest) throws {
-        if let params = try getOptionalParams(request) {
-            self.tokenId = try getOptionalJsonParameter("tokenId", params, JSONRPCMethod.grantTokenKyc)
-            self.accountId = try getOptionalJsonParameter("accountId", params, JSONRPCMethod.grantTokenKyc)
-            self.commonTransactionParams = try CommonTransactionParams(
-                try getOptionalJsonParameter("commonTransactionParams", params, JSONRPCMethod.grantTokenKyc),
-                JSONRPCMethod.grantTokenKyc)
-        }
+    internal init(request: JSONRequest) throws {
+        let method: JSONRPCMethod = .grantTokenKyc
+        guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else { return }
+
+        self.tokenId = try JSONRPCParser.getOptionalParameterIfPresent(name: "tokenId", from: params, for: method)
+        self.accountId = try JSONRPCParser.getOptionalParameterIfPresent(
+            name: "accountId",
+            from: params,
+            for: method)
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams",
+            from: params,
+            for: method,
+            using: CommonTransactionParams.init)
     }
 }

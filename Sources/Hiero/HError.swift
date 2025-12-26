@@ -29,6 +29,7 @@ public struct HError: Error, CustomStringConvertible {
         case cannotCreateChecksum
         case freezeUnsetNodeAccountIds
         case uninitialized
+        case illegalState
     }
 
     public let description: String
@@ -103,6 +104,10 @@ public struct HError: Error, CustomStringConvertible {
 
     internal static func unitialized(_ description: String) -> Self {
         Self(kind: .uninitialized, description: description)
+    }
+
+    internal static func illegalState(_ description: String) -> Self {
+        Self(kind: .illegalState, description: description)
     }
 }
 

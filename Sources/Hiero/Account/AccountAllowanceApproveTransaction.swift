@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import Foundation
 import GRPC
 import HieroProtobufs
 
@@ -91,26 +92,18 @@ public final class AccountAllowanceApproveTransaction: Transaction {
     public func approveTokenNftAllowance(
         _ nftId: NftId,
         _ ownerAccountId: AccountId,
-        _ spenderAccountId: AccountId
+        _ spenderAccountId: AccountId,
+        _ delegatingSpenderAccountId: AccountId? = nil
     ) -> Self {
-        ensureNotFrozen()
-
-        if var allowance = nftAllowances.first(where: { (allowance) in
-            allowance.tokenId == nftId.tokenId && allowance.spenderAccountId == spenderAccountId
-                && allowance.ownerAccountId == ownerAccountId && allowance.approvedForAll == nil
-        }) {
-            allowance.serials.append(nftId.serial)
-        } else {
-            nftAllowances.append(
-                TokenNftAllowance(
-                    tokenId: nftId.tokenId,
-                    ownerAccountId: ownerAccountId,
-                    spenderAccountId: spenderAccountId,
-                    serials: [nftId.serial],
-                    approvedForAll: nil,
-                    delegatingSpenderAccountId: nil
-                ))
-        }
+        nftAllowances.append(
+            TokenNftAllowance(
+                tokenId: nftId.tokenId,
+                ownerAccountId: ownerAccountId,
+                spenderAccountId: spenderAccountId,
+                serials: [nftId.serial],
+                approvedForAll: nil,
+                delegatingSpenderAccountId: delegatingSpenderAccountId
+            ))
 
         return self
     }
@@ -136,6 +129,27 @@ public final class AccountAllowanceApproveTransaction: Transaction {
         return self
     }
 
+    /// Delete the NFT allowance on all serial numbers (present and future).
+    @discardableResult
+    public func deleteTokenNftAllowanceAllSerials(
+        _ tokenId: TokenId,
+        _ ownerAccountId: AccountId,
+        _ spenderAccountId: AccountId
+    ) -> Self {
+
+        nftAllowances.append(
+            TokenNftAllowance(
+                tokenId: tokenId,
+                ownerAccountId: ownerAccountId,
+                spenderAccountId: spenderAccountId,
+                serials: [],
+                approvedForAll: false,
+                delegatingSpenderAccountId: nil
+            ))
+
+        return self
+    }
+
     public func getNftApprovals() -> [TokenNftAllowance] {
         self.nftAllowances
     }
@@ -148,11 +162,13 @@ public final class AccountAllowanceApproveTransaction: Transaction {
         try super.validateChecksums(on: ledgerId)
     }
 
-    internal override func transactionExecute(_ channel: GRPCChannel, _ request: Proto_Transaction) async throws
+    internal override func transactionExecute(
+        _ channel: GRPCChannel, _ request: Proto_Transaction, _ deadline: TimeInterval
+    ) async throws
         -> Proto_TransactionResponse
     {
         try await Proto_CryptoServiceAsyncClient(channel: channel).approveAllowances(
-            request, callOptions: applyGrpcHeader())
+            request, callOptions: applyGrpcHeader(deadline: deadline))
     }
 
     internal override func toTransactionDataProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody.OneOf_Data {

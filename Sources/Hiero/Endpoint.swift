@@ -2,7 +2,6 @@
 
 import Foundation
 import HieroProtobufs
-import Network
 
 public struct Endpoint {
     public var ipAddress: IPv4Address? = nil
