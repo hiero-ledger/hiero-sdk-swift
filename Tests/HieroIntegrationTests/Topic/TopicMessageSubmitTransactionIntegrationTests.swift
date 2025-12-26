@@ -219,65 +219,38 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
     }
 
     /// Asserts that a scheduled transaction failed with the expected status.
-    /// Handles both immediate execution and deferred execution scenarios.
-    /// - Throws: `HError` if the schedule wasn't created (error occurred at precheck)
     private func assertScheduledTransactionStatus(
-        _ response: TransactionResponse,
-        expectedStatus: Status,
-        file: StaticString = #file,
-        line: UInt = #line
+        _ response: TransactionResponse, expectedStatus: Status,
+        file: StaticString = #file, line: UInt = #line
     ) async throws {
         let receipt = try await TransactionReceiptQuery()
-            .transactionId(response.transactionId)
-            .includeChildren(true)
-            .execute(testEnv.client)
+            .transactionId(response.transactionId).includeChildren(true).execute(testEnv.client)
 
-        // If no scheduleId, the error might be in the receipt status or children
+        // If no scheduleId, check if error is in receipt status or children
         guard let scheduleId = receipt.scheduleId else {
-            // Check if the expected error is in the receipt status or children
-            if receipt.status == expectedStatus {
-                return  // Test passed - error is in the receipt status
-            }
-            if receipt.children.contains(where: { $0.status == expectedStatus }) {
-                return  // Test passed - error is in children
-            }
+            let hasError =
+                receipt.status == expectedStatus
+                || receipt.children.contains { $0.status == expectedStatus }
+            if hasError { return }
             XCTFail(
-                "Expected scheduleId in receipt, or expected \(expectedStatus) in receipt status/children. Got status: \(receipt.status)",
-                file: file, line: line)
+                "Expected scheduleId or \(expectedStatus) in receipt. Got: \(receipt.status)", file: file, line: line)
             return
         }
 
-        let scheduleInfo = try await ScheduleInfoQuery()
-            .scheduleId(scheduleId)
-            .execute(testEnv.client)
+        let scheduleInfo = try await ScheduleInfoQuery().scheduleId(scheduleId).execute(testEnv.client)
 
         if let executedAt = scheduleInfo.executedAt {
             guard let scheduledTxId = receipt.scheduledTransactionId else {
-                XCTFail(
-                    "Expected scheduledTransactionId when schedule executed at \(executedAt)", file: file, line: line)
+                XCTFail("Expected scheduledTransactionId when executed at \(executedAt)", file: file, line: line)
                 return
             }
-
             await assertReceiptStatus(
                 try await TransactionReceiptQuery()
-                    .transactionId(scheduledTxId)
-                    .validateStatus(true)
-                    .execute(testEnv.client),
-                expectedStatus,
-                file: file,
-                line: line
-            )
+                    .transactionId(scheduledTxId).validateStatus(true).execute(testEnv.client),
+                expectedStatus, file: file, line: line)
         } else {
-            let hasExpectedError =
-                receipt.children.contains { $0.status == expectedStatus }
-                || receipt.status == expectedStatus
-
-            XCTAssertTrue(
-                hasExpectedError,
-                "Expected \(expectedStatus) status, got receipt status: \(receipt.status), children: \(receipt.children.map { $0.status })",
-                file: file,
-                line: line
-            )
+            let hasError = receipt.children.contains { $0.status == expectedStatus } || receipt.status == expectedStatus
+            XCTAssertTrue(hasError, "Expected \(expectedStatus), got: \(receipt.status)", file: file, line: line)
         }
     }
 
@@ -427,69 +400,44 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
     internal func test_DoesNotExecuteWithInvalidCustomFeeLimitUsingScheduledTransaction() async throws {
         // Given
         let tokenId = try await createToken(
-            TokenCreateTransaction()
-                .name(TestConstants.tokenName)
-                .symbol(TestConstants.tokenSymbol)
-                .initialSupply(10)
-                .treasuryAccountId(testEnv.operator.accountId)
-        )
+            TokenCreateTransaction().name(TestConstants.tokenName).symbol(TestConstants.tokenSymbol)
+                .initialSupply(10).treasuryAccountId(testEnv.operator.accountId))
 
-        let customFixedFee = CustomFixedFee(2, testEnv.operator.accountId, tokenId)
-        let topicId = try await createRevenueGeneratingTopic(customFee: customFixedFee)
+        let topicId = try await createRevenueGeneratingTopic(
+            customFee: CustomFixedFee(2, testEnv.operator.accountId, tokenId))
         let (payerAccountId, payerKey) = try await createPayerWithTokenAssociation()
         try await transferTokens(tokenId, to: payerAccountId, amount: 2)
-
         testEnv.client.setOperator(payerAccountId, payerKey)
 
         // Test 1: Invalid token ID (0.0.0) - should fail with NO_VALID_MAX_CUSTOM_FEE
-        let invalidTokenCustomFeeLimit = CustomFeeLimit(
-            payerId: payerAccountId,
-            customFees: [CustomFixedFee(1, nil, TokenId(num: 0))]
-        )
-
         let response1 = try await TopicMessageSubmitTransaction()
-            .topicId(topicId)
-            .message(Data("Hello, Hedera!".utf8))
-            .addCustomFeeLimit(invalidTokenCustomFeeLimit)
-            .schedule()
-            .expirationTime(.now + .days(1))
-            .execute(testEnv.client)
-
+            .topicId(topicId).message(Data("Hello, Hedera!".utf8))
+            .addCustomFeeLimit(
+                CustomFeeLimit(payerId: payerAccountId, customFees: [CustomFixedFee(1, nil, TokenId(num: 0))])
+            )
+            .schedule().expirationTime(.now + .days(1)).execute(testEnv.client)
         try await assertScheduledTransactionStatus(response1, expectedStatus: .noValidMaxCustomFee)
 
         // Test 2: Duplicate denomination - should fail with DUPLICATE_DENOMINATION_IN_MAX_CUSTOM_FEE_LIST
-        let duplicateDenominationCustomFeeLimit = CustomFeeLimit(
-            payerId: payerAccountId,
-            customFees: [
-                CustomFixedFee(1, nil, tokenId),
-                CustomFixedFee(2, nil, tokenId),
-            ]
-        )
+        let duplicateFeeLimit = CustomFeeLimit(
+            payerId: payerAccountId, customFees: [CustomFixedFee(1, nil, tokenId), CustomFixedFee(2, nil, tokenId)])
 
-        // May fail at precheck or during scheduled execution
         do {
             let response2 = try await TopicMessageSubmitTransaction()
-                .topicId(topicId)
-                .message(Data("Hello, Hedera!".utf8))
-                .addCustomFeeLimit(duplicateDenominationCustomFeeLimit)
-                .schedule()
-                .expirationTime(.now + .days(1))
-                .execute(testEnv.client)
-
+                .topicId(topicId).message(Data("Hello, Hedera!".utf8)).addCustomFeeLimit(duplicateFeeLimit)
+                .schedule().expirationTime(.now + .days(1)).execute(testEnv.client)
             try await assertScheduledTransactionStatus(
                 response2, expectedStatus: .duplicateDenominationInMaxCustomFeeList)
         } catch let error as HError {
             // Error might occur at precheck
-            switch error.kind {
-            case .transactionPreCheckStatus(let status, transactionId: _):
+            if case .transactionPreCheckStatus(let status, _) = error.kind {
                 XCTAssertEqual(status, .duplicateDenominationInMaxCustomFeeList)
-            case .receiptStatus(let status, transactionId: _):
+            } else if case .receiptStatus(let status, _) = error.kind {
                 XCTAssertEqual(status, .duplicateDenominationInMaxCustomFeeList)
-            default:
-                XCTFail("Unexpected error type: \(error.kind)")
+            } else {
+                XCTFail("Unexpected error: \(error.kind)")
             }
         }
-
         testEnv.client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
     }
 }
