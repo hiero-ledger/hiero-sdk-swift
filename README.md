@@ -12,9 +12,11 @@ The SDK for interacting with a Hiero based network.
 
 ### Requirements
 
-- Swift v5.6+
+- Swift v5.9+ (Swift 6.0+ recommended)
 - MacOS v10.15+ (2019, Catalina)
 - iOS 13+ (2019)
+
+> ⚠️ **Deprecation Notice:** Swift 5.9 and 5.10 support is deprecated and will be removed in a future release. Please migrate to Swift 6.0+.
 
 ### Install
 
