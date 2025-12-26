@@ -196,7 +196,8 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
     }
 
     /// Creates a payer account with unlimited token associations.
-    private func createPayerWithTokenAssociation(initialBalance: Hbar = Hbar(1)) async throws -> (AccountId, PrivateKey) {
+    private func createPayerWithTokenAssociation(initialBalance: Hbar = Hbar(1)) async throws -> (AccountId, PrivateKey)
+    {
         let payerKey = PrivateKey.generateEcdsa()
         let payerAccountId = try await createAccount(
             AccountCreateTransaction()
@@ -240,7 +241,9 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
             if receipt.children.contains(where: { $0.status == expectedStatus }) {
                 return  // Test passed - error is in children
             }
-            XCTFail("Expected scheduleId in receipt, or expected \(expectedStatus) in receipt status/children. Got status: \(receipt.status)", file: file, line: line)
+            XCTFail(
+                "Expected scheduleId in receipt, or expected \(expectedStatus) in receipt status/children. Got status: \(receipt.status)",
+                file: file, line: line)
             return
         }
 
@@ -250,7 +253,8 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
 
         if let executedAt = scheduleInfo.executedAt {
             guard let scheduledTxId = receipt.scheduledTransactionId else {
-                XCTFail("Expected scheduledTransactionId when schedule executed at \(executedAt)", file: file, line: line)
+                XCTFail(
+                    "Expected scheduledTransactionId when schedule executed at \(executedAt)", file: file, line: line)
                 return
             }
 
@@ -264,7 +268,8 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
                 line: line
             )
         } else {
-            let hasExpectedError = receipt.children.contains { $0.status == expectedStatus }
+            let hasExpectedError =
+                receipt.children.contains { $0.status == expectedStatus }
                 || receipt.status == expectedStatus
 
             XCTAssertTrue(
@@ -322,7 +327,8 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
 
         let customFixedFee = CustomFixedFee(1, testEnv.operator.accountId, tokenId)
         let topicId = try await createRevenueGeneratingTopic(customFee: customFixedFee)
-        let (payerAccountId, payerKey) = try await createPayerWithTokenAssociation(initialBalance: TestConstants.testMediumHbarBalance)
+        let (payerAccountId, payerKey) = try await createPayerWithTokenAssociation(
+            initialBalance: TestConstants.testMediumHbarBalance)
         try await transferTokens(tokenId, to: payerAccountId, amount: 1)
 
         let customFeeLimit = CustomFeeLimit(
@@ -470,7 +476,8 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
                 .expirationTime(.now + .days(1))
                 .execute(testEnv.client)
 
-            try await assertScheduledTransactionStatus(response2, expectedStatus: .duplicateDenominationInMaxCustomFeeList)
+            try await assertScheduledTransactionStatus(
+                response2, expectedStatus: .duplicateDenominationInMaxCustomFeeList)
         } catch let error as HError {
             // Error might occur at precheck
             switch error.kind {
