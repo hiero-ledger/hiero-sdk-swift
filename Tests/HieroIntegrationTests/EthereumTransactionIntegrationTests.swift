@@ -114,6 +114,13 @@ internal class EthereumTransactionIntegrationTests: HieroIntegrationTestCase {
         static let transactionType = Data([0x02])
     }
 
+    /// ECDSA signature components (r, s, v) for Ethereum transactions.
+    private struct SignatureComponents {
+        let r: Data
+        let s: Data
+        let v: Data
+    }
+
     /// Builds EIP-1559 Ethereum transaction data with proper RLP encoding and signing.
     private func buildEthereumTransactionData(
         privateKey: PrivateKey,
@@ -135,8 +142,8 @@ internal class EthereumTransactionIntegrationTests: HieroIntegrationTestCase {
         )
 
         let unsignedTx = encodeUnsignedTransaction(fields)
-        let (r, s, v) = try signTransaction(unsignedTx, privateKey: privateKey)
-        return encodeSignedTransaction(fields, v: v, r: r, s: s)
+        let sig = try signTransaction(unsignedTx, privateKey: privateKey)
+        return encodeSignedTransaction(fields, signature: sig)
     }
 
     /// RLP encodes the unsigned EIP-1559 transaction.
@@ -160,8 +167,8 @@ internal class EthereumTransactionIntegrationTests: HieroIntegrationTestCase {
         return result
     }
 
-    /// Signs the transaction and returns (r, s, v) signature components.
-    private func signTransaction(_ unsignedTx: Data, privateKey: PrivateKey) throws -> (Data, Data, Data) {
+    /// Signs the transaction and returns signature components.
+    private func signTransaction(_ unsignedTx: Data, privateKey: PrivateKey) throws -> SignatureComponents {
         let signature = privateKey.sign(unsignedTx)
         let r = Data(signature.prefix(32))
         let s = Data(signature.suffix(32))
@@ -173,11 +180,11 @@ internal class EthereumTransactionIntegrationTests: HieroIntegrationTestCase {
 
         // Recovery ID encoding: 0 = empty, 1-3 = single byte
         let v: Data = recoveryId == 0 ? Data() : Data([UInt8(recoveryId)])
-        return (r, s, v)
+        return SignatureComponents(r: r, s: s, v: v)
     }
 
     /// RLP encodes the signed EIP-1559 transaction.
-    private func encodeSignedTransaction(_ fields: EIP1559TransactionFields, v: Data, r: Data, s: Data) -> Data {
+    private func encodeSignedTransaction(_ fields: EIP1559TransactionFields, signature: SignatureComponents) -> Data {
         var encoder = Rlp.Encoder()
         encoder.startList()
         encoder.append(fields.chainId)
@@ -190,9 +197,9 @@ internal class EthereumTransactionIntegrationTests: HieroIntegrationTestCase {
         encoder.append(fields.callDataBytes)
         encoder.startList()  // Empty accessList
         encoder.endList()
-        encoder.append(v)
-        encoder.append(r)
-        encoder.append(s)
+        encoder.append(signature.v)
+        encoder.append(signature.r)
+        encoder.append(signature.s)
         encoder.endList()
 
         var result = EIP1559TransactionFields.transactionType
