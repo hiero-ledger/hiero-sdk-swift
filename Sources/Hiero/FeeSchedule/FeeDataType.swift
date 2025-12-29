@@ -31,6 +31,9 @@ public enum FeeDataType {
     /// The resource cost for the transaction type includes a ConsensusSubmitMessage
     /// for a topic with custom fees.
     case submitMessageWithCustomFees
+
+    /// The resource cost for the transaction type that includes a CryptoTransfer with hook invocations
+    case cryptoTransferWithHooks
 }
 
 extension FeeDataType: TryProtobufCodable {
@@ -46,8 +49,7 @@ extension FeeDataType: TryProtobufCodable {
         case .scheduleCreateContractCall: self = .scheduleCreateContractCall
         case .topicCreateWithCustomFees: self = .topicCreateWithCustomFees
         case .submitMessageWithCustomFees: self = .submitMessageWithCustomFees
-        case .cryptoTransferWithHooks:
-            throw HError.fromProtobuf("cryptoTransferWithHooks fee data type is not supported")
+        case .cryptoTransferWithHooks: self = .cryptoTransferWithHooks
         case .UNRECOGNIZED(let code):
             throw HError.fromProtobuf("unrecognized FeeDataType `\(code)`")
         }
@@ -63,6 +65,7 @@ extension FeeDataType: TryProtobufCodable {
         case .scheduleCreateContractCall: return .scheduleCreateContractCall
         case .topicCreateWithCustomFees: return .topicCreateWithCustomFees
         case .submitMessageWithCustomFees: return .submitMessageWithCustomFees
+        case .cryptoTransferWithHooks: return .cryptoTransferWithHooks
         }
     }
 }

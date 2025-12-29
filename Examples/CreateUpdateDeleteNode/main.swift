@@ -3,7 +3,6 @@
 import Foundation
 import Hiero
 import HieroExampleUtilities
-import Network
 import SwiftDotenv
 
 // Set the paths **HERE** for the json files provided by solo.

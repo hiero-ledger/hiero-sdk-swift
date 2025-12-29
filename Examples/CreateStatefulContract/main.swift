@@ -12,7 +12,7 @@ internal enum Program {
 
         client.setOperator(env.operatorAccountId, env.operatorKey)
 
-        let bytecode = try await HieroExampleUtilities.Resources.statefulContract
+        let bytecode = HieroExampleUtilities.Resources.statefulContract
 
         // create the contract's bytecode file
         let fileTransactionResponse = try await FileCreateTransaction()
