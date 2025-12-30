@@ -2,8 +2,11 @@
 
 import AnyAsyncSequence
 import Foundation
-import GRPC
 import HieroProtobufs
+
+#if canImport(FoundationNetworking)
+    import FoundationNetworking
+#endif
 
 /// Request object for users, SDKs, and tools to query expected fees without
 /// submitting transactions to the network.
@@ -63,108 +66,136 @@ public final class FeeEstimateQuery: ValidateChecksums, MirrorQuery {
             try validateChecksums(on: client)
         }
 
-        // Auto-freeze the transaction if not already frozen
-        if let transaction = transaction, !transaction.isFrozen {
-            try transaction.freezeWith(client)
-        }
-
-        return try await executeChannel(client.mirrorChannel, timeout)
-    }
-
-    internal func executeChannel(_ channel: any GRPCChannel, _ timeout: TimeInterval? = nil) async throws -> Response {
         guard let transaction = transaction else {
             throw HError.unitialized("Transaction is required for FeeEstimateQuery")
         }
 
+        // Auto-freeze the transaction if not already frozen
+        if !transaction.isFrozen {
+            try transaction.freezeWith(client)
+        }
+
         // Handle chunked transactions
         if let chunkedTransaction = transaction as? ChunkedTransaction {
-            return try await estimateChunkedTransaction(chunkedTransaction, channel, timeout)
+            return try await estimateChunkedTransaction(chunkedTransaction, client)
         }
 
         // For non-chunked transactions, create a single transaction protobuf
-        // Transaction should already be frozen by execute() method, but handle the case where it's not
         let frozenTransaction = transaction.isFrozen ? transaction : try transaction.freeze()
 
         // Create a transaction protobuf using makeRequestInner
-        // We'll use dummy values if needed since we're just estimating fees
         let transactionId = frozenTransaction.transactionId ?? Transaction.dummyId
         let nodeAccountId = frozenTransaction.nodeAccountIds?.first ?? Transaction.dummyAccountId
 
         let chunkInfo = ChunkInfo.single(transactionId: transactionId, nodeAccountId: nodeAccountId)
         let (transactionProtobuf, _) = frozenTransaction.makeRequestInner(chunkInfo: chunkInfo)
 
-        let request = toProtobuf(transaction: transactionProtobuf)
-
-        // Make the unary gRPC call with retry logic for transient errors
-        // Note: This assumes the protobufs have been regenerated with getFeeEstimate method
-        return try await executeWithRetry(channel: channel, request: request, timeout: timeout)
+        return try await requestFeeEstimate(client: client, transaction: transactionProtobuf)
     }
 
-    private func executeWithRetry(
-        channel: any GRPCChannel,
-        request: Protobuf,
-        timeout: TimeInterval?
+    /// Send a fee estimate request for a transaction to the mirror node REST API.
+    private func requestFeeEstimate(
+        client: Client,
+        transaction: Proto_Transaction
     ) async throws -> FeeEstimateResponse {
-        let client = Com_Hedera_Mirror_Api_Proto_NetworkServiceAsyncClient(channel: channel)
+        // Serialize the transaction to protobuf bytes
+        let transactionBytes = try transaction.serializedData()
 
-        do {
-            let response = try await client.getFeeEstimate(request)
-            return try .fromProtobuf(response)
-        } catch let error as GRPCStatus {
-            // Retry on transient errors (UNAVAILABLE, DEADLINE_EXCEEDED)
-            // Do not retry on INVALID_ARGUMENT (malformed transaction)
-            switch error.code {
-            case .unavailable, .deadlineExceeded:
-                // Simple retry - in production, you might want exponential backoff
-                let response = try await client.getFeeEstimate(request)
-                return try .fromProtobuf(response)
-            case .invalidArgument:
-                // Don't retry on invalid arguments
-                throw HError(
-                    kind: .grpcStatus(status: Int32(error.code.rawValue)),
-                    description: "Invalid transaction for fee estimation: \(error.message ?? "")"
-                )
-            default:
-                throw HError(
-                    kind: .grpcStatus(status: Int32(error.code.rawValue)),
-                    description: error.message ?? ""
-                )
+        // Construct the URL
+        let url = try buildFeeEstimateUrl(client: client)
+
+        // Build the HTTP request
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/protobuf", forHTTPHeaderField: "Content-Type")
+        request.httpBody = transactionBytes
+
+        // Send the request
+        #if canImport(FoundationNetworking)
+            // Linux: Use callback-based API wrapped in continuation
+            let (data, response): (Data, URLResponse) = try await withCheckedThrowingContinuation { continuation in
+                URLSession.shared.dataTask(with: request) { data, response, error in
+                    if let error = error {
+                        continuation.resume(throwing: error)
+                        return
+                    }
+                    guard let data = data, let response = response else {
+                        continuation.resume(throwing: URLError(.badServerResponse))
+                        return
+                    }
+                    continuation.resume(returning: (data, response))
+                }.resume()
             }
+        #else
+            // macOS/iOS: Use modern async/await API
+            let (data, response) = try await URLSession.shared.data(for: request)
+        #endif
+
+        // Verify response status
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw HError.basicParse("Invalid HTTP response")
         }
+
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw HError.basicParse("HTTP error \(httpResponse.statusCode): \(errorMessage)")
+        }
+
+        // Parse JSON response
+        return try FeeEstimateResponse.fromJson(data, mode: mode)
     }
 
+    /// Build the URL for the fee estimate endpoint.
+    private func buildFeeEstimateUrl(client: Client) throws -> URL {
+        let mirrorNetworkAddress = client.mirrorNetwork[0]
+        let modeString = mode == .state ? "STATE" : "INTRINSIC"
+        let endpoint = "/network/fees?mode=\(modeString)"
+
+        // Check if this is a local environment
+        let isLocal = mirrorNetworkAddress.contains("localhost") || mirrorNetworkAddress.contains("127.0.0.1")
+
+        let urlString: String
+        if isLocal {
+            // For local environments, use port 8084 for the mirror node REST API
+            let host = mirrorNetworkAddress.split(separator: ":")[0]
+            urlString = "http://\(host):8084\(endpoint)"
+        } else {
+            // For remote environments, use HTTPS
+            urlString = "https://\(mirrorNetworkAddress)\(endpoint)"
+        }
+
+        guard let url = URL(string: urlString) else {
+            throw HError.basicParse("Invalid URL: \(urlString)")
+        }
+
+        return url
+    }
+
+    /// Estimate fees for a chunked transaction.
     private func estimateChunkedTransaction(
         _ transaction: ChunkedTransaction,
-        _ channel: any GRPCChannel,
-        _ timeout: TimeInterval?
+        _ client: Client
     ) async throws -> FeeEstimateResponse {
         // Transaction should already be frozen by execute() method, but handle the case where it's not
         let frozenTransaction = transaction.isFrozen ? transaction : try transaction.freeze()
 
         guard let transactionId = frozenTransaction.transactionId ?? Transaction.dummyId as TransactionId?,
-              let nodeAccountId = frozenTransaction.nodeAccountIds?.first ?? Transaction.dummyAccountId as AccountId?
+            let nodeAccountId = frozenTransaction.nodeAccountIds?.first ?? Transaction.dummyAccountId as AccountId?
         else {
-            throw HError.unitialized("Transaction must have transaction ID and node account IDs for fee estimation")
+            throw HError.unitialized(
+                "Transaction must have transaction ID and node account IDs for fee estimation")
         }
 
         let usedChunks = frozenTransaction.usedChunks
-
-        var totalNodeSubtotal: UInt64 = 0
-        var totalServiceSubtotal: UInt64 = 0
-        var allNotes: [String] = []
-        var networkMultiplier: UInt32 = 0
-        var allNodeExtras: [FeeExtra] = []
-        var allServiceExtras: [FeeExtra] = []
+        var responses: [FeeEstimateResponse] = []
 
         // Estimate fees for each chunk
         for chunkIndex in 0..<usedChunks {
             let chunkInfo: ChunkInfo
             if chunkIndex == 0 {
-                chunkInfo = ChunkInfo.initial(total: usedChunks, transactionId: transactionId, nodeAccountId: nodeAccountId)
+                chunkInfo = ChunkInfo.initial(
+                    total: usedChunks, transactionId: transactionId, nodeAccountId: nodeAccountId)
             } else {
-                // For subsequent chunks, we need to increment the transaction ID
-                // In practice, the mirror node should handle this, but we'll use the same transaction ID
-                // for estimation purposes
                 chunkInfo = ChunkInfo(
                     current: chunkIndex,
                     total: usedChunks,
@@ -175,38 +206,53 @@ public final class FeeEstimateQuery: ValidateChecksums, MirrorQuery {
             }
 
             let (transactionProtobuf, _) = frozenTransaction.makeRequestInner(chunkInfo: chunkInfo)
-            let request = toProtobuf(transaction: transactionProtobuf)
-
-            let estimate = try await executeWithRetry(channel: channel, request: request, timeout: timeout)
-
-            totalNodeSubtotal += estimate.nodeFee.base + estimate.nodeFee.extras.reduce(0) { $0 + $1.subtotal }
-            totalServiceSubtotal += estimate.serviceFee.base + estimate.serviceFee.extras.reduce(0) { $0 + $1.subtotal }
-            allNotes.append(contentsOf: estimate.notes)
-            networkMultiplier = estimate.networkFee.multiplier
-            allNodeExtras.append(contentsOf: estimate.nodeFee.extras)
-            allServiceExtras.append(contentsOf: estimate.serviceFee.extras)
+            let estimate = try await requestFeeEstimate(client: client, transaction: transactionProtobuf)
+            responses.append(estimate)
         }
 
-        // Calculate aggregated fees
-        // Node fee: sum of all base fees plus extras
-        let nodeExtrasTotal = allNodeExtras.reduce(0) { $0 + $1.subtotal }
-        let nodeBaseTotal = totalNodeSubtotal - nodeExtrasTotal
-        
-        // Service fee: sum of all base fees plus extras
-        let serviceExtrasTotal = allServiceExtras.reduce(0) { $0 + $1.subtotal }
-        let serviceBaseTotal = totalServiceSubtotal - serviceExtrasTotal
-        
-        // Network fee: calculated from node subtotal
-        let networkSubtotal = UInt64(networkMultiplier) * totalNodeSubtotal
-        let total = networkSubtotal + totalNodeSubtotal + totalServiceSubtotal
+        return aggregateFeeResponses(responses)
+    }
 
-        // Create aggregated response
+    /// Aggregate per-chunk fee responses into a single response.
+    private func aggregateFeeResponses(_ responses: [FeeEstimateResponse]) -> FeeEstimateResponse {
+        if responses.isEmpty {
+            return FeeEstimateResponse(
+                mode: mode,
+                networkFee: NetworkFee(multiplier: 0, subtotal: 0),
+                nodeFee: FeeEstimate(base: 0, extras: []),
+                serviceFee: FeeEstimate(base: 0, extras: []),
+                notes: [],
+                total: 0
+            )
+        }
+
+        // Aggregate results across chunks
+        var networkMultiplier: UInt32 = responses[0].networkFee.multiplier
+        var networkSubtotal: UInt64 = 0
+        var nodeBase: UInt64 = 0
+        var serviceBase: UInt64 = 0
+        var allNodeExtras: [FeeExtra] = []
+        var allServiceExtras: [FeeExtra] = []
+        var allNotes: [String] = []
+        var total: UInt64 = 0
+
+        for response in responses {
+            networkMultiplier = response.networkFee.multiplier
+            networkSubtotal += response.networkFee.subtotal
+            nodeBase += response.nodeFee.base
+            serviceBase += response.serviceFee.base
+            allNodeExtras.append(contentsOf: response.nodeFee.extras)
+            allServiceExtras.append(contentsOf: response.serviceFee.extras)
+            allNotes.append(contentsOf: response.notes)
+            total += response.total
+        }
+
         return FeeEstimateResponse(
             mode: mode,
             networkFee: NetworkFee(multiplier: networkMultiplier, subtotal: networkSubtotal),
-            nodeFee: FeeEstimate(base: nodeBaseTotal, extras: allNodeExtras),
-            serviceFee: FeeEstimate(base: serviceBaseTotal, extras: allServiceExtras),
-            notes: Array(Set(allNotes)), // Deduplicate notes
+            nodeFee: FeeEstimate(base: nodeBase, extras: allNodeExtras),
+            serviceFee: FeeEstimate(base: serviceBase, extras: allServiceExtras),
+            notes: allNotes,
             total: total
         )
     }
@@ -216,26 +262,3 @@ public final class FeeEstimateQuery: ValidateChecksums, MirrorQuery {
         try transaction?.validateChecksums(on: ledgerId)
     }
 }
-
-extension FeeEstimateQuery: ToProtobuf {
-    internal typealias Protobuf = Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery
-
-    internal func toProtobuf() -> Protobuf {
-        // This method is required by ToProtobuf protocol but isn't typically used
-        // since we need the transaction to create a complete protobuf.
-        // Use toProtobuf(transaction:) instead for the actual implementation.
-        .with { proto in
-            proto.mode = mode.toProtobuf()
-            // transaction field will be empty - caller should use toProtobuf(transaction:) instead
-        }
-    }
-
-    internal func toProtobuf(transaction: Proto_Transaction) -> Protobuf {
-        .with { proto in
-            proto.mode = mode.toProtobuf()
-            proto.transaction = transaction
-        }
-    }
-}
-
-

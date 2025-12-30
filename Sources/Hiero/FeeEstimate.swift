@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import Foundation
 import HieroProtobufs
 
 /// The fee estimate for a component. Includes the base fee and any extras.
@@ -35,6 +36,19 @@ extension FeeEstimate: TryProtobufCodable {
             proto.base = base
             proto.extras = extras.toProtobuf()
         }
+    }
+}
+
+// MARK: - JSON Parsing
+
+extension FeeEstimate {
+    /// Parse a `FeeEstimate` from a JSON dictionary.
+    internal static func fromJson(_ json: [String: Any]) throws -> FeeEstimate {
+        let base = (json["base"] as? NSNumber)?.uint64Value ?? 0
+        let extrasJson = json["extras"] as? [[String: Any]] ?? []
+        let extras = try extrasJson.map { try FeeExtra.fromJson($0) }
+
+        return FeeEstimate(base: base, extras: extras)
     }
 }
 

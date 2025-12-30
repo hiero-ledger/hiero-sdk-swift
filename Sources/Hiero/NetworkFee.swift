@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import Foundation
 import HieroProtobufs
 
 /// The network fee component which covers the cost of gossip, consensus,
@@ -37,6 +38,18 @@ extension NetworkFee: TryProtobufCodable {
             proto.multiplier = UInt32(multiplier)
             proto.subtotal = subtotal
         }
+    }
+}
+
+// MARK: - JSON Parsing
+
+extension NetworkFee {
+    /// Parse a `NetworkFee` from a JSON dictionary.
+    internal static func fromJson(_ json: [String: Any]) throws -> NetworkFee {
+        let multiplier = (json["multiplier"] as? NSNumber)?.uint32Value ?? 0
+        let subtotal = (json["subtotal"] as? NSNumber)?.uint64Value ?? 0
+
+        return NetworkFee(multiplier: multiplier, subtotal: subtotal)
     }
 }
 

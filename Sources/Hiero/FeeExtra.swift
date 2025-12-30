@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import Foundation
 import HieroProtobufs
 
 /// The extra fee charged for the transaction.
@@ -71,6 +72,29 @@ extension FeeExtra: TryProtobufCodable {
             proto.feePerUnit = feePerUnit
             proto.subtotal = subtotal
         }
+    }
+}
+
+// MARK: - JSON Parsing
+
+extension FeeExtra {
+    /// Parse a `FeeExtra` from a JSON dictionary.
+    internal static func fromJson(_ json: [String: Any]) throws -> FeeExtra {
+        let name = json["name"] as? String ?? ""
+        let included = (json["included"] as? NSNumber)?.uint32Value ?? 0
+        let count = (json["count"] as? NSNumber)?.uint32Value ?? 0
+        let charged = (json["charged"] as? NSNumber)?.uint32Value ?? 0
+        let feePerUnit = (json["fee_per_unit"] as? NSNumber)?.uint64Value ?? 0
+        let subtotal = (json["subtotal"] as? NSNumber)?.uint64Value ?? 0
+
+        return FeeExtra(
+            name: name,
+            included: included,
+            count: count,
+            charged: charged,
+            feePerUnit: feePerUnit,
+            subtotal: subtotal
+        )
     }
 }
 

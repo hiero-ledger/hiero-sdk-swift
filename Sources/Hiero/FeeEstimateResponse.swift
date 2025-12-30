@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import Foundation
 import HieroProtobufs
 
 /// The response containing the estimated transaction fees.
@@ -73,6 +74,49 @@ extension FeeEstimateResponse: TryProtobufCodable {
             proto.notes = notes
             proto.total = total
         }
+    }
+}
+
+// MARK: - JSON Parsing
+
+extension FeeEstimateResponse {
+    /// Parse a `FeeEstimateResponse` from JSON data returned by the mirror node REST API.
+    ///
+    /// - Parameters:
+    ///   - data: The JSON data from the REST API response.
+    ///   - mode: The fee estimate mode that was used in the request.
+    /// - Returns: A parsed `FeeEstimateResponse`.
+    /// - Throws: An error if JSON parsing fails.
+    internal static func fromJson(_ data: Data, mode: FeeEstimateMode) throws -> FeeEstimateResponse {
+        guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
+            throw HError.basicParse("Unable to decode FeeEstimateResponse JSON")
+        }
+
+        return try fromJson(json, mode: mode)
+    }
+
+    /// Parse a `FeeEstimateResponse` from a JSON dictionary.
+    ///
+    /// - Parameters:
+    ///   - json: The JSON dictionary.
+    ///   - mode: The fee estimate mode that was used in the request.
+    /// - Returns: A parsed `FeeEstimateResponse`.
+    /// - Throws: An error if required fields are missing.
+    internal static func fromJson(_ json: [String: Any], mode: FeeEstimateMode) throws -> FeeEstimateResponse {
+        let networkFee = try NetworkFee.fromJson(json["network_fee"] as? [String: Any] ?? [:])
+        let nodeFee = try FeeEstimate.fromJson(json["node_fee"] as? [String: Any] ?? [:])
+        let serviceFee = try FeeEstimate.fromJson(json["service_fee"] as? [String: Any] ?? [:])
+        let notes = json["notes"] as? [String] ?? []
+        let total = (json["total"] as? NSNumber)?.uint64Value ?? 0
+
+        return FeeEstimateResponse(
+            mode: mode,
+            networkFee: networkFee,
+            nodeFee: nodeFee,
+            serviceFee: serviceFee,
+            notes: notes,
+            total: total
+        )
     }
 }
 
