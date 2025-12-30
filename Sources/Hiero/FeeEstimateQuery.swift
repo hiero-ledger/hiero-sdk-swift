@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import AnyAsyncSequence
 import Foundation
 import HieroProtobufs
 
@@ -10,7 +9,7 @@ import HieroProtobufs
 
 /// Request object for users, SDKs, and tools to query expected fees without
 /// submitting transactions to the network.
-public final class FeeEstimateQuery: ValidateChecksums, MirrorQuery {
+public final class FeeEstimateQuery: ValidateChecksums {
     private var mode: FeeEstimateMode
     private var transaction: Transaction?
 
@@ -44,23 +43,13 @@ public final class FeeEstimateQuery: ValidateChecksums, MirrorQuery {
         return self
     }
 
-    public func subscribe(_ client: Client, _ timeout: TimeInterval? = nil) -> AnyAsyncSequence<FeeEstimateResponse> {
-        // For unary RPC, subscribe just returns a single element
-        // Use AsyncThrowingStream to handle errors properly
-        AsyncThrowingStream { continuation in
-            Task {
-                do {
-                    let response = try await execute(client, timeout)
-                    continuation.yield(response)
-                    continuation.finish()
-                } catch {
-                    continuation.finish(throwing: error)
-                }
-            }
-        }
-        .eraseToAnyAsyncSequence()
-    }
-
+    /// Execute the fee estimate query.
+    ///
+    /// - Parameters:
+    ///   - client: The client to use for the request.
+    ///   - timeout: Optional timeout for the HTTP request.
+    /// - Returns: The fee estimate response.
+    /// - Throws: An error if the request fails.
     public func execute(_ client: Client, _ timeout: TimeInterval? = nil) async throws -> FeeEstimateResponse {
         if client.isAutoValidateChecksumsEnabled() {
             try validateChecksums(on: client)
@@ -77,26 +66,24 @@ public final class FeeEstimateQuery: ValidateChecksums, MirrorQuery {
 
         // Handle chunked transactions
         if let chunkedTransaction = transaction as? ChunkedTransaction {
-            return try await estimateChunkedTransaction(chunkedTransaction, client)
+            return try await estimateChunkedTransaction(chunkedTransaction, client, timeout: timeout)
         }
 
         // For non-chunked transactions, create a single transaction protobuf
-        let frozenTransaction = transaction.isFrozen ? transaction : try transaction.freeze()
-
-        // Create a transaction protobuf using makeRequestInner
-        let transactionId = frozenTransaction.transactionId ?? Transaction.dummyId
-        let nodeAccountId = frozenTransaction.nodeAccountIds?.first ?? Transaction.dummyAccountId
+        let transactionId = transaction.transactionId ?? Transaction.dummyId
+        let nodeAccountId = transaction.nodeAccountIds?.first ?? Transaction.dummyAccountId
 
         let chunkInfo = ChunkInfo.single(transactionId: transactionId, nodeAccountId: nodeAccountId)
-        let (transactionProtobuf, _) = frozenTransaction.makeRequestInner(chunkInfo: chunkInfo)
+        let (transactionProtobuf, _) = transaction.makeRequestInner(chunkInfo: chunkInfo)
 
-        return try await requestFeeEstimate(client: client, transaction: transactionProtobuf)
+        return try await requestFeeEstimate(client: client, transaction: transactionProtobuf, timeout: timeout)
     }
 
     /// Send a fee estimate request for a transaction to the mirror node REST API.
     private func requestFeeEstimate(
         client: Client,
-        transaction: Proto_Transaction
+        transaction: Proto_Transaction,
+        timeout: TimeInterval?
     ) async throws -> FeeEstimateResponse {
         // Serialize the transaction to protobuf bytes
         let transactionBytes = try transaction.serializedData()
@@ -109,6 +96,11 @@ public final class FeeEstimateQuery: ValidateChecksums, MirrorQuery {
         request.httpMethod = "POST"
         request.setValue("application/protobuf", forHTTPHeaderField: "Content-Type")
         request.httpBody = transactionBytes
+
+        // Apply timeout if provided
+        if let timeout = timeout {
+            request.timeoutInterval = timeout
+        }
 
         // Send the request
         #if canImport(FoundationNetworking)
@@ -133,12 +125,12 @@ public final class FeeEstimateQuery: ValidateChecksums, MirrorQuery {
 
         // Verify response status
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw HError.basicParse("Invalid HTTP response")
+            throw HError.basicParse("Fee estimate request failed: Invalid HTTP response")
         }
 
         guard (200..<300).contains(httpResponse.statusCode) else {
             let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw HError.basicParse("HTTP error \(httpResponse.statusCode): \(errorMessage)")
+            throw HError.basicParse("Fee estimate request failed: HTTP \(httpResponse.statusCode) - \(errorMessage)")
         }
 
         // Parse JSON response
@@ -147,7 +139,10 @@ public final class FeeEstimateQuery: ValidateChecksums, MirrorQuery {
 
     /// Build the URL for the fee estimate endpoint.
     private func buildFeeEstimateUrl(client: Client) throws -> URL {
-        let mirrorNetworkAddress = client.mirrorNetwork[0]
+        guard let mirrorNetworkAddress = client.mirrorNetwork.first else {
+            throw HError.basicParse("Fee estimate request failed: No mirror network configured")
+        }
+
         let modeString = mode == .state ? "STATE" : "INTRINSIC"
         let endpoint = "/network/fees?mode=\(modeString)"
 
@@ -165,7 +160,7 @@ public final class FeeEstimateQuery: ValidateChecksums, MirrorQuery {
         }
 
         guard let url = URL(string: urlString) else {
-            throw HError.basicParse("Invalid URL: \(urlString)")
+            throw HError.basicParse("Fee estimate request failed: Invalid URL: \(urlString)")
         }
 
         return url
@@ -174,40 +169,52 @@ public final class FeeEstimateQuery: ValidateChecksums, MirrorQuery {
     /// Estimate fees for a chunked transaction.
     private func estimateChunkedTransaction(
         _ transaction: ChunkedTransaction,
-        _ client: Client
+        _ client: Client,
+        timeout: TimeInterval?
     ) async throws -> FeeEstimateResponse {
-        // Transaction should already be frozen by execute() method, but handle the case where it's not
-        let frozenTransaction = transaction.isFrozen ? transaction : try transaction.freeze()
-
-        guard let transactionId = frozenTransaction.transactionId ?? Transaction.dummyId as TransactionId?,
-            let nodeAccountId = frozenTransaction.nodeAccountIds?.first ?? Transaction.dummyAccountId as AccountId?
+        // Transaction is guaranteed frozen at this point (frozen in execute method)
+        guard let transactionId = transaction.transactionId ?? Transaction.dummyId as TransactionId?,
+            let nodeAccountId = transaction.nodeAccountIds?.first ?? Transaction.dummyAccountId as AccountId?
         else {
             throw HError.unitialized(
                 "Transaction must have transaction ID and node account IDs for fee estimation")
         }
 
-        let usedChunks = frozenTransaction.usedChunks
-        var responses: [FeeEstimateResponse] = []
+        let usedChunks = transaction.usedChunks
 
-        // Estimate fees for each chunk
-        for chunkIndex in 0..<usedChunks {
-            let chunkInfo: ChunkInfo
-            if chunkIndex == 0 {
-                chunkInfo = ChunkInfo.initial(
-                    total: usedChunks, transactionId: transactionId, nodeAccountId: nodeAccountId)
-            } else {
-                chunkInfo = ChunkInfo(
-                    current: chunkIndex,
-                    total: usedChunks,
-                    initialTransactionId: transactionId,
-                    currentTransactionId: transactionId,
-                    nodeAccountId: nodeAccountId
-                )
+        // Parallelize fee estimate requests for each chunk
+        let responses = try await withThrowingTaskGroup(of: (Int, FeeEstimateResponse).self) { group in
+            for chunkIndex in 0..<usedChunks {
+                let chunkInfo: ChunkInfo
+                if chunkIndex == 0 {
+                    chunkInfo = ChunkInfo.initial(
+                        total: usedChunks, transactionId: transactionId, nodeAccountId: nodeAccountId)
+                } else {
+                    chunkInfo = ChunkInfo(
+                        current: chunkIndex,
+                        total: usedChunks,
+                        initialTransactionId: transactionId,
+                        currentTransactionId: transactionId,
+                        nodeAccountId: nodeAccountId
+                    )
+                }
+
+                let (transactionProtobuf, _) = transaction.makeRequestInner(chunkInfo: chunkInfo)
+
+                group.addTask {
+                    let estimate = try await self.requestFeeEstimate(
+                        client: client, transaction: transactionProtobuf, timeout: timeout)
+                    return (chunkIndex, estimate)
+                }
             }
 
-            let (transactionProtobuf, _) = frozenTransaction.makeRequestInner(chunkInfo: chunkInfo)
-            let estimate = try await requestFeeEstimate(client: client, transaction: transactionProtobuf)
-            responses.append(estimate)
+            var results: [(Int, FeeEstimateResponse)] = []
+            for try await result in group {
+                results.append(result)
+            }
+
+            // Sort by chunk index to maintain order
+            return results.sorted { $0.0 < $1.0 }.map { $1 }
         }
 
         return aggregateFeeResponses(responses)

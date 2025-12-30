@@ -367,9 +367,9 @@ extension ServicesTransactionDataList: TryFromProtobuf {
         case .scheduleDelete(let data): value = .scheduleDelete([data])
         case .scheduleSign(let data): value = .scheduleSign([data])
         case .utilPrng(let data): value = .prng([data])
-        case .lambdaSstore(let data):
+        case .lambdaSstore:
             throw HError.basicParse("lambdaSstore transaction type is not supported")
-        case .hookDispatch(let data):
+        case .hookDispatch:
             throw HError.basicParse("hookDispatch transaction type is not supported")
         case .tokenUpdateNfts(let data): value = .tokenUpdateNfts([data])
         case .cryptoAddLiveHash: throw HError.fromProtobuf("Unsupported transaction `AddLiveHashTransaction`")
@@ -384,8 +384,6 @@ extension ServicesTransactionDataList: TryFromProtobuf {
         case .tokenCancelAirdrop(let data): value = .tokenCancelAirdrop([data])
         case .tokenClaimAirdrop(let data): value = .tokenClaimAirdrop([data])
         case .atomicBatch(let data): value = .atomicBatch([data])
-        case .lambdaSstore(let data): value = .lambdaSstore([data])
-        case .hookDispatch(let data): value = .hookDispatch([data])
         case .stateSignatureTransaction:
             throw HError.fromProtobuf("Unsupported transaction `StateSignatureTransaction`")
         case .hintsPreprocessingVote:
