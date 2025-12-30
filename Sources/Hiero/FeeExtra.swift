@@ -49,6 +49,12 @@ public struct FeeExtra: Sendable, Equatable, Hashable {
     }
 
     /// Parse a `FeeExtra` from a JSON dictionary.
+    ///
+    /// - Parameter json: The JSON dictionary containing fee extra fields.
+    /// - Returns: A parsed `FeeExtra`.
+    /// - Note: Missing or malformed fields default to zero/empty values rather than throwing.
+    ///   This is intentional to handle optional fields in the API response gracefully.
+    ///   The `fee_per_unit` JSON key maps to the `feePerUnit` property.
     internal static func fromJson(_ json: [String: Any]) throws -> FeeExtra {
         let name = json["name"] as? String ?? ""
         let included = (json["included"] as? NSNumber)?.uint32Value ?? 0

@@ -21,6 +21,11 @@ public struct FeeEstimate: Sendable, Equatable, Hashable {
     }
 
     /// Parse a `FeeEstimate` from a JSON dictionary.
+    ///
+    /// - Parameter json: The JSON dictionary containing `base` and `extras` fields.
+    /// - Returns: A parsed `FeeEstimate`.
+    /// - Note: Missing or malformed fields default to zero/empty values rather than throwing.
+    ///   This is intentional to handle optional fields in the API response gracefully.
     internal static func fromJson(_ json: [String: Any]) throws -> FeeEstimate {
         let base = (json["base"] as? NSNumber)?.uint64Value ?? 0
         let extrasJson = json["extras"] as? [[String: Any]] ?? []

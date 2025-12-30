@@ -3,8 +3,6 @@
 import Foundation
 
 /// The response containing the estimated transaction fees.
-///
-/// All properties are immutable (`@immutable` in the specification).
 public struct FeeEstimateResponse: Sendable, Equatable, Hashable {
     /// The mode that was used to calculate the fees.
     public let mode: FeeEstimateMode
@@ -58,7 +56,9 @@ public struct FeeEstimateResponse: Sendable, Equatable, Hashable {
     ///   - data: The JSON data from the REST API response.
     ///   - mode: The fee estimate mode that was used in the request.
     /// - Returns: A parsed `FeeEstimateResponse`.
-    /// - Throws: An error if JSON parsing fails.
+    /// - Throws: `HError.basicParse` if the JSON cannot be deserialized.
+    /// - Note: Missing or malformed fields default to zero/empty values rather than throwing.
+    ///   This is intentional to handle optional fields in the API response gracefully.
     internal static func fromJson(_ data: Data, mode: FeeEstimateMode) throws -> FeeEstimateResponse {
         guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
             throw HError.basicParse("Unable to decode FeeEstimateResponse JSON")
@@ -73,7 +73,8 @@ public struct FeeEstimateResponse: Sendable, Equatable, Hashable {
     ///   - json: The JSON dictionary.
     ///   - mode: The fee estimate mode that was used in the request.
     /// - Returns: A parsed `FeeEstimateResponse`.
-    /// - Throws: An error if required fields are missing.
+    /// - Note: Missing or malformed fields default to zero/empty values rather than throwing.
+    ///   This is intentional to handle optional fields in the API response gracefully.
     internal static func fromJson(_ json: [String: Any], mode: FeeEstimateMode) throws -> FeeEstimateResponse {
         let networkFee = try NetworkFee.fromJson(json["network_fee"] as? [String: Any] ?? [:])
         let nodeFee = try FeeEstimate.fromJson(json["node_fee"] as? [String: Any] ?? [:])
