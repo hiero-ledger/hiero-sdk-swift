@@ -54,16 +54,9 @@ internal final class AccountBalanceQueryIntegrationTests: HieroIntegrationTestCa
 
     internal func test_InvalidAccountIdFails() async throws {
         // Given / When / Then
-        await assertThrowsHErrorAsync(
+        await assertQueryNoPaymentPrecheckStatus(
             try await AccountBalanceQuery(accountId: "1.0.3").execute(testEnv.client),
-            "expected error querying account balance"
-        ) { error in
-            guard case .queryNoPaymentPreCheckStatus(let status) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryNoPaymentPrecheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .invalidAccountID)
-        }
+            .invalidAccountID
+        )
     }
 }
