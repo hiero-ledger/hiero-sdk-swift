@@ -110,6 +110,40 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
 
     // MARK: - Network Updates
 
+    /// Maps endpoints for local development port-forwarding.
+    ///
+    /// In local development environments using Kubernetes, nodes are accessed via port-forwarding
+    /// where each node needs a different port on localhost. The address book contains internal
+    /// Kubernetes addresses where all nodes use port 50211, but port-forwarding requires:
+    /// - network-node1 (node 0): port 50211
+    /// - network-node2 (node 1): port 51211
+    ///
+    /// - Parameter endpoint: The original endpoint string
+    /// - Returns: The mapped endpoint with adjusted port if needed
+    private static func mapEndpointForLocalDevelopment(_ endpoint: String) -> String {
+        // Map network-node2 from port 50211 to 51211 for local port-forwarding
+        if endpoint.contains("network-node2-svc.solo.svc.cluster.local:50211") {
+            return endpoint.replacingOccurrences(
+                of: "network-node2-svc.solo.svc.cluster.local:50211",
+                with: "network-node2-svc.solo.svc.cluster.local:51211"
+            )
+        }
+        // All other addresses (including network-node1) pass through unchanged
+        return endpoint
+    }
+
+    /// Maps a HostAndPort for local development port-forwarding.
+    ///
+    /// - Parameter hostAndPort: The original host and port
+    /// - Returns: The mapped HostAndPort with adjusted port if needed
+    private static func mapHostAndPortForLocalDevelopment(_ hostAndPort: HostAndPort) -> HostAndPort {
+        // Map network-node2 from port 50211 to 51211 for local port-forwarding
+        if hostAndPort.host.contains("network-node2-svc.solo.svc.cluster.local") && hostAndPort.port == 50211 {
+            return HostAndPort(host: hostAndPort.host, port: 51211)
+        }
+        return hostAndPort
+    }
+
     /// Converts a node address book to a network address dictionary.
     ///
     /// - Parameter addressBook: Array of node addresses from the address book
@@ -119,7 +153,8 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
 
         for nodeAddress in addressBook {
             for endpoint in nodeAddress.serviceEndpoints {
-                network[endpoint.description] = nodeAddress.nodeAccountId
+                let mappedEndpoint = mapEndpointForLocalDevelopment(endpoint.description)
+                network[mappedEndpoint] = nodeAddress.nodeAccountId
             }
         }
 
@@ -167,7 +202,9 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
             let selected = endpoints.first.flatMap { endpoint -> HostAndPort? in
                 let host = endpoint.ip?.debugDescription ?? endpoint.domainName
                 guard let resolvedHost = host, !resolvedHost.isEmpty else { return nil }
-                return HostAndPort(host: resolvedHost, port: endpoint.port)
+                let hostAndPort = HostAndPort(host: resolvedHost, port: endpoint.port)
+                // Apply local development port mapping for Kubernetes environments
+                return mapHostAndPortForLocalDevelopment(hostAndPort)
             }
 
             let new: Set<HostAndPort> = selected.map { Set([$0]) } ?? []

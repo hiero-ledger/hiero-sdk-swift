@@ -38,17 +38,10 @@ internal final class FileContentsQueryIntegrationTests: HieroIntegrationTestCase
 
     internal func test_MissingFileIdFails() async throws {
         // Given / When / Then
-        await assertThrowsHErrorAsync(
-            try await FileContentsQuery()
-                .execute(testEnv.client)
-        ) { error in
-            guard case .queryNoPaymentPreCheckStatus(let status) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryNoPaymentPreCheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .invalidFileID)
-        }
+        await assertQueryNoPaymentPrecheckStatus(
+            try await FileContentsQuery().execute(testEnv.client),
+            .invalidFileID
+        )
     }
 
     internal func test_QueryCostBigMax() async throws {
@@ -78,33 +71,26 @@ internal final class FileContentsQueryIntegrationTests: HieroIntegrationTestCase
         let cost = try await query.getCost(testEnv.client)
 
         // When / Then
-        await assertThrowsHErrorAsync(
+        await assertMaxQueryPaymentExceeded(
             try await query.execute(testEnv.client),
-            "expected error querying file contents"
-        ) { error in
-            XCTAssertEqual(error.kind, .maxQueryPaymentExceeded(queryCost: cost, maxQueryPayment: .fromTinybars(1)))
-        }
+            queryCost: cost,
+            maxQueryPayment: .fromTinybars(1)
+        )
     }
 
-    internal func disabledTestQueryInsufficientTxFeeFails() async throws {
+    internal func test_QueryInsufficientTxFeeFails() async throws {
         // Given
         let fileId = try await createTestFile(contents: testContent)
 
         // When / Then
-        await assertThrowsHErrorAsync(
+        await assertQueryPaymentPrecheckStatus(
             try await FileContentsQuery()
                 .fileId(fileId)
                 .maxPaymentAmount(.fromTinybars(10000))
                 .paymentAmount(.fromTinybars(1))
-                .execute(testEnv.client)
-        ) { error in
-            guard case .queryPaymentPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryPaymentPreCheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .insufficientTxFee)
-        }
+                .execute(testEnv.client),
+            .insufficientTxFee
+        )
     }
 
     internal func test_QueryFeeSchedule() async throws {

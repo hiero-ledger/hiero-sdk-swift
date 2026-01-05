@@ -508,6 +508,45 @@ public class Transaction: ValidateChecksums {
         return transaction
     }
 
+    /// Creates a Transaction from SignedTransaction bytes.
+    ///
+    /// This is used for deserializing inner transactions from a BatchTransaction,
+    /// where the inner transactions are stored as SignedTransaction bytes (not wrapped in Transaction).
+    internal static func fromSignedTransactionBytes(_ bytes: Data) throws -> Transaction {
+        let signedTransaction: Proto_SignedTransaction
+        do {
+            signedTransaction = try Proto_SignedTransaction(serializedBytes: bytes)
+        } catch {
+            throw HError.fromProtobuf(String(describing: error))
+        }
+
+        let transactionBody: Proto_TransactionBody
+        do {
+            transactionBody = try Proto_TransactionBody(serializedBytes: signedTransaction.bodyBytes)
+        } catch {
+            throw HError.fromProtobuf(String(describing: error))
+        }
+
+        guard let data = transactionBody.data else {
+            throw HError.fromProtobuf("Unexpected missing `data`")
+        }
+
+        // Create the transaction from the protobuf
+        let transaction = try Transaction.fromProtobuf(transactionBody, [data])
+
+        // Set node account IDs from the body
+        let nodeAccountId = try AccountId.fromProtobuf(transactionBody.nodeAccountID)
+        transaction.nodeAccountIds =
+            (nodeAccountId == Transaction.dummyAccountId) ? nil : [nodeAccountId]
+
+        // Create sources from the signed transaction for signature preservation
+        // Wrap in a Transaction to create proper sources
+        let protoTransaction = Proto_Transaction.with { $0.signedTransactionBytes = bytes }
+        transaction.sources = try TransactionSources(transactions: [protoTransaction])
+
+        return transaction
+    }
+
     public final func toBytes() throws -> Data {
         if let sources = self.sources?.signWithSigners(self.signers) {
             return sources.toBytes()
@@ -599,6 +638,24 @@ extension Transaction {
     }
 
     internal func makeRequestInner(chunkInfo: ChunkInfo) -> (Proto_Transaction, TransactionHash) {
+        let signedTransaction = makeSignedTransactionProtobuf(chunkInfo: chunkInfo)
+
+        // swiftlint:disable:next force_try
+        let signedTransactionBytes = try! signedTransaction.serializedData()
+
+        let transactionHash = TransactionHash(hashing: signedTransactionBytes)
+
+        let transaction = Proto_Transaction.with { $0.signedTransactionBytes = signedTransactionBytes }
+
+        return (transaction, transactionHash)
+    }
+
+    /// Creates a SignedTransaction protobuf for batch transaction serialization.
+    ///
+    /// This method is used by `toSerializedProtoTransactions` to properly serialize
+    /// inner transactions for `BatchTransaction`. The consensus node expects
+    /// `SignedTransaction` bytes, not the outer `Transaction` wrapper.
+    internal func makeSignedTransactionProtobuf(chunkInfo: ChunkInfo) -> Proto_SignedTransaction {
         let body: Proto_TransactionBody = self.toTransactionBodyProtobuf(chunkInfo)
 
         // swiftlint:disable:next force_try
@@ -617,19 +674,10 @@ extension Transaction {
             signatures.append(SignaturePair(signature))
         }
 
-        let signedTransaction = Proto_SignedTransaction.with { proto in
+        return Proto_SignedTransaction.with { proto in
             proto.bodyBytes = bodyBytes
             proto.sigMap.sigPair = signatures.toProtobuf()
         }
-
-        // swiftlint:disable:next force_try
-        let signedTransactionBytes = try! signedTransaction.serializedData()
-
-        let transactionHash = TransactionHash(hashing: signedTransactionBytes)
-
-        let transaction = Proto_Transaction.with { $0.signedTransactionBytes = signedTransactionBytes }
-
-        return (transaction, transactionHash)
     }
 
     private func toTransactionBodyProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody {
@@ -653,7 +701,9 @@ extension Transaction {
             proto.transactionValidDuration = (self.transactionValidDuration ?? .minutes(2)).toProtobuf()
             proto.memo = self.transactionMemo
 
-            if chunkInfo.nodeAccountId != Transaction.dummyAccountId {
+            // For batch transactions, always set nodeAccountID (consensus node requires 0.0.0)
+            // For regular transactions, skip if it's the dummy account
+            if batchKey != nil || chunkInfo.nodeAccountId != Transaction.dummyAccountId {
                 proto.nodeAccountID = chunkInfo.nodeAccountId.toProtobuf()
             }
 
@@ -817,7 +867,10 @@ extension Transaction {
                     nodeAccountId: nodeAccountId
                 )
 
-                protoTransactions.append(try transaction.makeRequestInner(chunkInfo: chunkInfo).0.serializedBytes())
+                // Serialize SignedTransaction (not the outer Transaction wrapper)
+                // The consensus node expects SignedTransaction bytes in AtomicBatchTransactionBody.transactions
+                protoTransactions.append(
+                    try transaction.makeSignedTransactionProtobuf(chunkInfo: chunkInfo).serializedData())
             }
         }
 

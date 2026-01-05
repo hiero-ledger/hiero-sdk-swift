@@ -149,15 +149,14 @@ internal final class TokenInfoQueryIntegrationTests: HieroIntegrationTestCase {
         let cost = try await query.getCost(testEnv.client)
 
         // When / Then
-        await assertThrowsHErrorAsync(
+        await assertMaxQueryPaymentExceeded(
             try await query.execute(testEnv.client),
-            "expected error querying token info"
-        ) { error in
-            XCTAssertEqual(error.kind, .maxQueryPaymentExceeded(queryCost: cost, maxQueryPayment: .fromTinybars(1)))
-        }
+            queryCost: cost,
+            maxQueryPayment: .fromTinybars(1)
+        )
     }
 
-    internal func disabledTestQueryCostInsufficientTxFeeFails() async throws {
+    internal func test_QueryCostInsufficientTxFeeFails() async throws {
         // Given
         let (accountId, accountKey) = try await createTestAccount()
         let tokenId = try await createBasicFungibleToken(
@@ -167,19 +166,13 @@ internal final class TokenInfoQueryIntegrationTests: HieroIntegrationTestCase {
         )
 
         // When / Then
-        await assertThrowsHErrorAsync(
+        await assertQueryPaymentPrecheckStatus(
             try await TokenInfoQuery()
                 .tokenId(tokenId)
                 .maxPaymentAmount(.fromTinybars(10000))
                 .paymentAmount(.fromTinybars(1))
-                .execute(testEnv.client)
-        ) { error in
-            guard case .queryPaymentPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryPaymentPreCheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .insufficientTxFee)
-        }
+                .execute(testEnv.client),
+            .insufficientTxFee
+        )
     }
 }

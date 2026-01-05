@@ -33,31 +33,17 @@ internal final class TokenNftInfoQueryIntegrationTests: HieroIntegrationTestCase
 
     internal func test_InvalidNftIdFails() async throws {
         // Given / When / Then
-        await assertThrowsHErrorAsync(
-            try await TokenNftInfoQuery(nftId: NftId(tokenId: 0, serial: 2023))
-                .execute(testEnv.client)
-        ) { error in
-            guard case .queryNoPaymentPreCheckStatus(let status) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryNoPaymentPreCheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .invalidNftID)
-        }
+        await assertQueryNoPaymentPrecheckStatus(
+            try await TokenNftInfoQuery(nftId: NftId(tokenId: 0, serial: 2023)).execute(testEnv.client),
+            .invalidNftID
+        )
     }
 
     internal func test_InvalidSerialNumberFails() async throws {
         // Given / When / Then
-        await assertThrowsHErrorAsync(
-            try await TokenNftInfoQuery(nftId: NftId(tokenId: 0, serial: .max))
-                .execute(testEnv.client)
-        ) { error in
-            guard case .queryNoPaymentPreCheckStatus(let status) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryNoPaymentPreCheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .invalidTokenNftSerialNumber)
-        }
+        await assertQueryNoPaymentPrecheckStatus(
+            try await TokenNftInfoQuery(nftId: NftId(tokenId: 0, serial: .max)).execute(testEnv.client),
+            .invalidTokenNftSerialNumber
+        )
     }
 }
