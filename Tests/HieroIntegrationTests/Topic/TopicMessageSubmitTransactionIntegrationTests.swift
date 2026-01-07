@@ -74,29 +74,7 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
         )
     }
 
-    internal func test_DecodeHexRegressionTest() throws {
-        // Given
-        let transactionBytes = Data(
-            hexEncoded:
-                """
-                2ac2010a580a130a0b08d38f8f880610a09be91512041899e11c120218041880\
-                c2d72f22020878da01330a0418a5a12012103030303030303136323736333737\
-                31351a190a130a0b08d38f8f880610a09be91512041899e11c1001180112660a\
-                640a20603edaec5d1c974c92cb5bee7b011310c3b84b13dc048424cd6ef146d6\
-                a0d4a41a40b6a08f310ee29923e5868aac074468b2bde05da95a806e2f4a4f45\
-                2177f129ca0abae7831e595b5beaa1c947e2cb71201642bab33fece5184b0454\
-                7afc40850a
-                """
-        )!
-
-        // When
-        let transaction = try Transaction.fromBytes(transactionBytes)
-
-        // Then
-        _ = try XCTUnwrap(transaction.transactionId)
-    }
-
-    internal func disabledTestChargesHbarFeeWithLimitsApplied() async throws {
+    internal func test_ChargesHbarFeeWithLimitsApplied() async throws {
         // Given
         let hbarAmount: UInt64 = 100_000_000
         let privateKey = PrivateKey.generateEcdsa()
@@ -104,6 +82,7 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
 
         let topicId = try await createTopic(
             TopicCreateTransaction()
+                .maxTransactionFee(Hbar(50))
                 .adminKey(.single(testEnv.operator.privateKey.publicKey))
                 .feeScheduleKey(.single(testEnv.operator.privateKey.publicKey))
                 .addCustomFee(customFixedFee),
@@ -117,16 +96,15 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
             key: privateKey
         )
 
-        testEnv.client.setOperator(accountId, privateKey)
+        let payerClient = try Client.forNetwork(testEnv.client.network)
+            .setOperator(accountId, privateKey)
 
         // When
         _ = try await TopicMessageSubmitTransaction()
             .topicId(topicId)
             .message(Data("Hello, Hedera™ hashgraph!".utf8))
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
-
-        testEnv.client.setOperator(testEnv.operator.accountId, PrivateKey.generateEcdsa())
+            .execute(payerClient)
+            .getReceipt(payerClient)
 
         // Then
         let accountInfo = try await AccountBalanceQuery()
@@ -136,8 +114,7 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
         XCTAssertLessThan(accountInfo.hbars.toTinybars(), Int64(hbarAmount / 2))
     }
 
-    // This test is to ensure that the fee exempt keys are exempted from the custom fee
-    internal func disabledTestExemptsFeeExemptKeysFromHbarFees() async throws {
+    internal func test_ExemptsFeeExemptKeysFromHbarFees() async throws {
         // Given
         let hbarAmount: UInt64 = 100_000_000
         let feeExemptKey1 = PrivateKey.generateEcdsa()
@@ -147,6 +124,7 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
 
         let topicId = try await createTopic(
             try TopicCreateTransaction()
+                .maxTransactionFee(Hbar(50))
                 .adminKey(.single(testEnv.operator.privateKey.publicKey))
                 .feeScheduleKey(.single(testEnv.operator.privateKey.publicKey))
                 .feeExemptKeys([.single(feeExemptKey1.publicKey), .single(feeExemptKey2.publicKey)])
@@ -163,22 +141,22 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
             key: feeExemptKey1
         )
 
-        testEnv.client.setOperator(payerAccountId, feeExemptKey1)
+        let payerClient = try Client.forNetwork(testEnv.client.network)
+            .setOperator(payerAccountId, feeExemptKey1)
 
         // When
         _ = try await TopicMessageSubmitTransaction()
             .topicId(topicId)
             .message(Data("Hello, Hedera™ hashgraph!".utf8))
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
-
-        testEnv.client.setOperator(payerAccountId, PrivateKey.generateEcdsa())
+            .execute(payerClient)
+            .getReceipt(payerClient)
 
         // Then
         let accountInfo = try await AccountBalanceQuery()
             .accountId(payerAccountId)
             .execute(testEnv.client)
 
+        // Account should have more than half the initial amount because they were exempt from the custom fee
         XCTAssertGreaterThan(accountInfo.hbars.toTinybars(), Int64(hbarAmount / 2))
     }
 

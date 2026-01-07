@@ -107,6 +107,23 @@ HIERO_OPERATOR_KEY=3030020100300706052b8104000a042204205bc004059ffa2943965d306f2
 HIERO_ENVIRONMENT_TYPE=local
 ```
 
+#### Kubernetes DNS Configuration (Required for Node Update Tests)
+
+When running against a local Kubernetes-based Hedera network (e.g., solo), some tests that trigger address book updates (like `NodeUpdateTransactionIntegrationTests`) require `/etc/hosts` entries for the Kubernetes internal DNS names.
+
+Add the following to your `/etc/hosts` file:
+
+```
+127.0.0.1 network-node1-svc.solo.svc.cluster.local
+127.0.0.1 network-node2-svc.solo.svc.cluster.local
+```
+
+**Why is this needed?**
+
+The address book returned by the network contains internal Kubernetes DNS names. When the SDK updates its network configuration from the address book, it uses these hostnames. Without the `/etc/hosts` entries, the SDK cannot resolve these addresses when connecting to nodes.
+
+The SDK automatically remaps `network-node2` from port 50211 to 51211 for local port-forwarding compatibility (since both hostnames resolve to 127.0.0.1 but need different ports).
+
 ### Custom Network
 
 ```bash

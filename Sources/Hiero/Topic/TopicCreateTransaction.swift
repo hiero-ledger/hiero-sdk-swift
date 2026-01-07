@@ -37,8 +37,7 @@ public final class TopicCreateTransaction: Transaction {
         if self.autoRenewAccountId == nil {
             if let feePayerAccountId = transactionId?.accountId {
                 self.autoRenewAccountId = feePayerAccountId
-            }
-            if let client = client, let clientOperatorAccountId = client.operator?.accountId {
+            } else if let client = client, let clientOperatorAccountId = client.operator?.accountId {
                 self.autoRenewAccountId = clientOperatorAccountId
             }
         }

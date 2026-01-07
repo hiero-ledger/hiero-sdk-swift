@@ -27,16 +27,9 @@ internal class TransactionRecordQueryIntegrationTests: HieroIntegrationTestCase 
 
     internal func test_QueryInvalidTxIdFails() async throws {
         // Given / When / Then
-        await assertThrowsHErrorAsync(
+        await assertQueryNoPaymentPrecheckStatus(
             try await TransactionRecordQuery().execute(testEnv.client),
-            "expected error querying transaction record"
-        ) { error in
-            guard case .queryNoPaymentPreCheckStatus(let status) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryPreCheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .invalidTransactionID)
-        }
+            .invalidTransactionID
+        )
     }
 }
