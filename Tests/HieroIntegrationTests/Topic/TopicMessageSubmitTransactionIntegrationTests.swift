@@ -159,4 +159,263 @@ internal class TopicMessageSubmitTransactionIntegrationTests: HieroIntegrationTe
         // Account should have more than half the initial amount because they were exempt from the custom fee
         XCTAssertGreaterThan(accountInfo.hbars.toTinybars(), Int64(hbarAmount / 2))
     }
+
+    // MARK: - Scheduled Transactions with Custom Fee Limits
+
+    /// Creates a revenue-generating topic with the given custom fee.
+    private func createRevenueGeneratingTopic(customFee: CustomFixedFee) async throws -> TopicId {
+        try await createTopic(
+            TopicCreateTransaction()
+                .adminKey(.single(testEnv.operator.privateKey.publicKey))
+                .feeScheduleKey(.single(testEnv.operator.privateKey.publicKey))
+                .addCustomFee(customFee),
+            adminKey: testEnv.operator.privateKey
+        )
+    }
+
+    /// Creates a payer account with unlimited token associations.
+    private func createPayerWithTokenAssociation(initialBalance: Hbar = Hbar(1)) async throws -> (AccountId, PrivateKey)
+    {
+        let payerKey = PrivateKey.generateEcdsa()
+        let payerAccountId = try await createAccount(
+            AccountCreateTransaction()
+                .initialBalance(initialBalance)
+                .maxAutomaticTokenAssociations(TestConstants.testUnlimitedTokenAssociations)
+                .keyWithoutAlias(Key.single(payerKey.publicKey)),
+            key: payerKey
+        )
+        return (payerAccountId, payerKey)
+    }
+
+    /// Transfers tokens from the operator to the specified account.
+    private func transferTokens(_ tokenId: TokenId, to accountId: AccountId, amount: Int64) async throws {
+        _ = try await TransferTransaction()
+            .tokenTransfer(tokenId, testEnv.operator.accountId, -amount)
+            .tokenTransfer(tokenId, accountId, amount)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+    }
+
+    /// Asserts that a scheduled transaction failed with the expected status.
+    private func assertScheduledTransactionStatus(
+        _ response: TransactionResponse, expectedStatus: Status,
+        file: StaticString = #file, line: UInt = #line
+    ) async throws {
+        let receipt = try await TransactionReceiptQuery()
+            .transactionId(response.transactionId).includeChildren(true).execute(testEnv.client)
+
+        // If no scheduleId, check if error is in receipt status or children
+        guard let scheduleId = receipt.scheduleId else {
+            let hasError =
+                receipt.status == expectedStatus
+                || receipt.children.contains { $0.status == expectedStatus }
+            if hasError { return }
+            XCTFail(
+                "Expected scheduleId or \(expectedStatus) in receipt. Got: \(receipt.status)", file: file, line: line)
+            return
+        }
+
+        let scheduleInfo = try await ScheduleInfoQuery().scheduleId(scheduleId).execute(testEnv.client)
+
+        if let executedAt = scheduleInfo.executedAt {
+            guard let scheduledTxId = receipt.scheduledTransactionId else {
+                XCTFail("Expected scheduledTransactionId when executed at \(executedAt)", file: file, line: line)
+                return
+            }
+            await assertReceiptStatus(
+                try await TransactionReceiptQuery()
+                    .transactionId(scheduledTxId).validateStatus(true).execute(testEnv.client),
+                expectedStatus, file: file, line: line)
+        } else {
+            let hasError = receipt.children.contains { $0.status == expectedStatus } || receipt.status == expectedStatus
+            XCTAssertTrue(hasError, "Expected \(expectedStatus), got: \(receipt.status)", file: file, line: line)
+        }
+    }
+
+    internal func test_ChargesHbarsWithLimitUsingScheduledTransaction() async throws {
+        // Given
+        let hbarAmount: UInt64 = 100_000_000
+        let customFixedFee = CustomFixedFee(hbarAmount / 2, testEnv.operator.accountId)
+        let topicId = try await createRevenueGeneratingTopic(customFee: customFixedFee)
+        let (payerAccountId, payerKey) = try await createTestAccount(initialBalance: Hbar(1))
+
+        let customFeeLimit = CustomFeeLimit(
+            payerId: payerAccountId,
+            customFees: [customFixedFee]
+        )
+
+        testEnv.client.setOperator(payerAccountId, payerKey)
+
+        // When
+        _ = try await TopicMessageSubmitTransaction()
+            .topicId(topicId)
+            .message(Data("Hello, Hedera!".utf8))
+            .addCustomFeeLimit(customFeeLimit)
+            .schedule()
+            .expirationTime(.now + .days(1))
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        testEnv.client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
+
+        // Then
+        let accountBalance = try await AccountBalanceQuery()
+            .accountId(payerAccountId)
+            .execute(testEnv.client)
+
+        XCTAssertLessThan(accountBalance.hbars.toTinybars(), Int64(hbarAmount / 2))
+    }
+
+    internal func test_ChargesTokensWithLimitUsingScheduledTransaction() async throws {
+        // Given
+        let tokenId = try await createToken(
+            TokenCreateTransaction()
+                .name(TestConstants.tokenName)
+                .symbol(TestConstants.tokenSymbol)
+                .initialSupply(10)
+                .treasuryAccountId(testEnv.operator.accountId)
+        )
+
+        let customFixedFee = CustomFixedFee(1, testEnv.operator.accountId, tokenId)
+        let topicId = try await createRevenueGeneratingTopic(customFee: customFixedFee)
+        let (payerAccountId, payerKey) = try await createPayerWithTokenAssociation(
+            initialBalance: TestConstants.testMediumHbarBalance)
+        try await transferTokens(tokenId, to: payerAccountId, amount: 1)
+
+        let customFeeLimit = CustomFeeLimit(
+            payerId: payerAccountId,
+            customFees: [CustomFixedFee(1, nil, tokenId)]
+        )
+
+        // When
+        testEnv.client.setOperator(payerAccountId, payerKey)
+
+        _ = try await TopicMessageSubmitTransaction()
+            .topicId(topicId)
+            .message(Data("Hello, Hedera!".utf8))
+            .addCustomFeeLimit(customFeeLimit)
+            .schedule()
+            .expirationTime(.now + .days(1))
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        testEnv.client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
+
+        // Then
+        let accountBalance = try await AccountBalanceQuery()
+            .accountId(payerAccountId)
+            .execute(testEnv.client)
+
+        XCTAssertEqual(accountBalance.tokenBalances[tokenId], 0)
+    }
+
+    internal func test_DoesNotChargeHbarsWithLowerLimitUsingScheduledTransaction() async throws {
+        // Given
+        let hbarAmount: UInt64 = 100_000_000
+        let customFixedFee = CustomFixedFee(hbarAmount / 2, testEnv.operator.accountId)
+        let topicId = try await createRevenueGeneratingTopic(customFee: customFixedFee)
+        let (payerAccountId, payerKey) = try await createTestAccount(initialBalance: Hbar(1))
+
+        let customFeeLimit = CustomFeeLimit(
+            payerId: payerAccountId,
+            customFees: [CustomFixedFee(hbarAmount / 2 - 1, nil, nil)]
+        )
+
+        testEnv.client.setOperator(payerAccountId, payerKey)
+
+        // When
+        let response = try await TopicMessageSubmitTransaction()
+            .topicId(topicId)
+            .message(Data("Hello, Hedera!".utf8))
+            .addCustomFeeLimit(customFeeLimit)
+            .schedule()
+            .expirationTime(.now + .days(1))
+            .execute(testEnv.client)
+
+        testEnv.client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
+
+        // Then
+        try await assertScheduledTransactionStatus(response, expectedStatus: .maxCustomFeeLimitExceeded)
+    }
+
+    internal func test_DoesNotChargeTokensWithLowerLimitUsingScheduledTransaction() async throws {
+        // Given
+        let tokenId = try await createToken(
+            TokenCreateTransaction()
+                .name(TestConstants.tokenName)
+                .symbol(TestConstants.tokenSymbol)
+                .initialSupply(10)
+                .treasuryAccountId(testEnv.operator.accountId)
+        )
+
+        let customFixedFee = CustomFixedFee(2, testEnv.operator.accountId, tokenId)
+        let topicId = try await createRevenueGeneratingTopic(customFee: customFixedFee)
+        let (payerAccountId, payerKey) = try await createPayerWithTokenAssociation()
+        try await transferTokens(tokenId, to: payerAccountId, amount: 2)
+
+        let customFeeLimit = CustomFeeLimit(
+            payerId: payerAccountId,
+            customFees: [CustomFixedFee(1, nil, tokenId)]
+        )
+
+        testEnv.client.setOperator(payerAccountId, payerKey)
+
+        // When
+        let response = try await TopicMessageSubmitTransaction()
+            .topicId(topicId)
+            .message(Data("Hello, Hedera!".utf8))
+            .addCustomFeeLimit(customFeeLimit)
+            .schedule()
+            .expirationTime(.now + .days(1))
+            .execute(testEnv.client)
+
+        testEnv.client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
+
+        // Then
+        try await assertScheduledTransactionStatus(response, expectedStatus: .maxCustomFeeLimitExceeded)
+    }
+
+    internal func test_DoesNotExecuteWithInvalidCustomFeeLimitUsingScheduledTransaction() async throws {
+        // Given
+        let tokenId = try await createToken(
+            TokenCreateTransaction().name(TestConstants.tokenName).symbol(TestConstants.tokenSymbol)
+                .initialSupply(10).treasuryAccountId(testEnv.operator.accountId))
+
+        let topicId = try await createRevenueGeneratingTopic(
+            customFee: CustomFixedFee(2, testEnv.operator.accountId, tokenId))
+        let (payerAccountId, payerKey) = try await createPayerWithTokenAssociation()
+        try await transferTokens(tokenId, to: payerAccountId, amount: 2)
+        testEnv.client.setOperator(payerAccountId, payerKey)
+
+        // Test 1: Invalid token ID (0.0.0) - should fail with NO_VALID_MAX_CUSTOM_FEE
+        let response1 = try await TopicMessageSubmitTransaction()
+            .topicId(topicId).message(Data("Hello, Hedera!".utf8))
+            .addCustomFeeLimit(
+                CustomFeeLimit(payerId: payerAccountId, customFees: [CustomFixedFee(1, nil, TokenId(num: 0))])
+            )
+            .schedule().expirationTime(.now + .days(1)).execute(testEnv.client)
+        try await assertScheduledTransactionStatus(response1, expectedStatus: .noValidMaxCustomFee)
+
+        // Test 2: Duplicate denomination - should fail with DUPLICATE_DENOMINATION_IN_MAX_CUSTOM_FEE_LIST
+        let duplicateFeeLimit = CustomFeeLimit(
+            payerId: payerAccountId, customFees: [CustomFixedFee(1, nil, tokenId), CustomFixedFee(2, nil, tokenId)])
+
+        do {
+            let response2 = try await TopicMessageSubmitTransaction()
+                .topicId(topicId).message(Data("Hello, Hedera!".utf8)).addCustomFeeLimit(duplicateFeeLimit)
+                .schedule().expirationTime(.now + .days(1)).execute(testEnv.client)
+            try await assertScheduledTransactionStatus(
+                response2, expectedStatus: .duplicateDenominationInMaxCustomFeeList)
+        } catch let error as HError {
+            // Error might occur at precheck
+            if case .transactionPreCheckStatus(let status, _) = error.kind {
+                XCTAssertEqual(status, .duplicateDenominationInMaxCustomFeeList)
+            } else if case .receiptStatus(let status, _) = error.kind {
+                XCTAssertEqual(status, .duplicateDenominationInMaxCustomFeeList)
+            } else {
+                XCTFail("Unexpected error: \(error.kind)")
+            }
+        }
+        testEnv.client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
+    }
 }
