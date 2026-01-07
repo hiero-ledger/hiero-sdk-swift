@@ -42,6 +42,8 @@ public final class ScheduleCreateTransaction: Transaction {
         try super.init(protobuf: proto)
     }
 
+    internal override var defaultMaxTransactionFee: Hbar { 5 }
+
     /// The timestamp for when the transaction should be evaluated for execution and then expire.
     public var expirationTime: Timestamp? {
         willSet {
@@ -173,6 +175,7 @@ extension ScheduleCreateTransaction: ToProtobuf {
             Proto_SchedulableTransactionBody.with { proto in
                 proto.data = scheduledTransaction.toSchedulableTransactionData()
                 proto.memo = scheduledTransaction.transaction.transactionMemo
+                proto.maxCustomFees = scheduledTransaction.transaction.customFeeLimits.compactMap { $0.toProtobuf() }
 
                 let transactionFee =
                     scheduledTransaction.transaction.maxTransactionFee

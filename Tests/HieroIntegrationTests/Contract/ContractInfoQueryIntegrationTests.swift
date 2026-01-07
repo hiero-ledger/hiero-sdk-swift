@@ -33,16 +33,10 @@ internal final class ContractInfoQueryIntegrationTests: HieroIntegrationTestCase
 
     internal func test_MissingContractIdFails() async throws {
         // Given / When / Then
-        await assertThrowsHErrorAsync(
-            try await ContractInfoQuery().execute(testEnv.client)
-        ) { error in
-            guard case .queryNoPaymentPreCheckStatus(let status) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryNoPaymentPreCheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .invalidContractID)
-        }
+        await assertQueryNoPaymentPrecheckStatus(
+            try await ContractInfoQuery().execute(testEnv.client),
+            .invalidContractID
+        )
     }
 
     internal func test_QueryCostBigMax() async throws {
@@ -58,38 +52,28 @@ internal final class ContractInfoQueryIntegrationTests: HieroIntegrationTestCase
     internal func test_QueryCostSmallMaxFails() async throws {
         // Given
         let contractId = try await createStandardContract()
-
-        // When
         let query = ContractInfoQuery(contractId: contractId).maxPaymentAmount(.fromTinybars(1))
         let cost = try await query.getCost(testEnv.client)
 
-        // Then
-        await assertThrowsHErrorAsync(
+        // When / Then
+        await assertMaxQueryPaymentExceeded(
             try await query.execute(testEnv.client),
-            "expected error querying contract"
-        ) { error in
-            // note: there's a very small chance this fails if the cost of a ContractInfoQuery changes right when we execute it.
-            XCTAssertEqual(error.kind, .maxQueryPaymentExceeded(queryCost: cost, maxQueryPayment: .fromTinybars(1)))
-        }
+            queryCost: cost,
+            maxQueryPayment: .fromTinybars(1)
+        )
     }
 
-    internal func disabledTestQueryCostInsufficientTxFeeFails() async throws {
+    internal func test_QueryCostInsufficientTxFeeFails() async throws {
         // Given
         let contractId = try await createStandardContract()
 
         // When / Then
-        await assertThrowsHErrorAsync(
+        await assertQueryPaymentPrecheckStatus(
             try await ContractInfoQuery(contractId: contractId)
                 .maxPaymentAmount(.fromTinybars(10000))
                 .paymentAmount(.fromTinybars(1))
-                .execute(testEnv.client)
-        ) { error in
-            guard case .queryPaymentPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryPaymentPreCheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .insufficientTxFee)
-        }
+                .execute(testEnv.client),
+            .insufficientTxFee
+        )
     }
 }

@@ -19,17 +19,10 @@ internal final class AccountDeleteTransactionIntegrationTests: HieroIntegrationT
             .getReceipt(testEnv.client)
 
         // Then
-        await assertThrowsHErrorAsync(
+        await assertQueryNoPaymentPrecheckStatus(
             try await AccountInfoQuery(accountId: accountId).execute(testEnv.client),
-            "expected error querying account"
-        ) { error in
-            guard case .queryNoPaymentPreCheckStatus(let status) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryNoPaymentPreCheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .accountDeleted)
-        }
+            .accountDeleted
+        )
     }
 
     internal func test_MissingAccountIdFails() async throws {
