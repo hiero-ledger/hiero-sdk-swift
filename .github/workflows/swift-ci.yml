@@ -119,7 +119,7 @@ jobs:
           soloVersion: v0.52.0
           installMirrorNode: true
           mirrorNodeVersion: v0.145.2
-          hieroVersion: v0.69.0
+          hieroVersion: v0.69.1
           dualMode: true
       
       - name: Run integration tests (HieroIntegrationTests)
