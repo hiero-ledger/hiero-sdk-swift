@@ -491,7 +491,7 @@ internal class TokenAirdropTransactionIntegrationTests: HieroIntegrationTestCase
         )
     }
 
-    internal func disabledTestAirdropTokensWithInvalidBodyFail() async throws {
+    internal func test_AirdropTokensWithInvalidBodyFail() async throws {
         // Given
         let tokenId = try await createToken(
             TokenCreateTransaction()
@@ -505,30 +505,18 @@ internal class TokenAirdropTransactionIntegrationTests: HieroIntegrationTestCase
         )
 
         // When / Then
-        await assertThrowsHErrorAsync(
+        await assertPrecheckStatus(
             try await TokenAirdropTransaction()
                 .execute(testEnv.client),
-            "expected error Airdropping token"
-        ) { error in
-            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.transactionPreCheckStatus`")
-                return
-            }
-            XCTAssertEqual(status, .emptyTokenTransferBody)
-        }
+            .emptyTokenTransferBody
+        )
 
-        await assertThrowsHErrorAsync(
+        await assertPrecheckStatus(
             try await TokenAirdropTransaction()
                 .tokenTransfer(tokenId, testEnv.operator.accountId, TestConstants.testAmount)
                 .tokenTransfer(tokenId, testEnv.operator.accountId, TestConstants.testAmount)
                 .execute(testEnv.client),
-            "expected error Airdropping token"
-        ) { error in
-            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.transactionPreCheckStatus`")
-                return
-            }
-            XCTAssertEqual(status, .invalidTransactionBody)
-        }
+            .airdropContainsMultipleSendersForAToken
+        )
     }
 }

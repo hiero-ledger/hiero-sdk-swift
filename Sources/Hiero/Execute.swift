@@ -291,10 +291,17 @@ private func executeAnyInner<E: Execute>(
         let indexes = ctx.network.nodeIndexesForIdsAllowingUnknown(nodeAccountIds)
         return indexes.isEmpty ? nil : indexes
     }
+
+    // Track nodes that returned INVALID_NODE_ACCOUNT
+    var invalidNodeAccountNodes: Set<Int> = []
+    var addressBookUpdateCount = 0
+    let maxAddressBookUpdates = 1
+
     var attempt = 0
 
     while true {
         let randomNodeIndexes = randomNodeIndexes(ctx: ctx, explicitNodeIndexes: explicitNodeIndexes)
+        let nodeCount = explicitNodeIndexes?.count ?? ctx.network.healthyNodeIndexes().count
 
         inner: for await nodeIndex in randomNodeIndexes {
             defer { attempt += 1 }
@@ -320,6 +327,25 @@ private func executeAnyInner<E: Execute>(
 
             case .retryImmediately(let error):
                 lastError = error
+                continue inner
+
+            case .invalidNodeAccount(let error):
+                lastError = error
+                invalidNodeAccountNodes.insert(nodeIndex)
+                addressBookUpdateCount += 1
+
+                // If all specified nodes have returned INVALID_NODE_ACCOUNT
+                // and we've already updated the address book, throw immediately
+                if let explicitNodes = explicitNodeIndexes {
+                    let allNodesFailed = explicitNodes.allSatisfy { invalidNodeAccountNodes.contains($0) }
+                    if allNodesFailed && addressBookUpdateCount >= maxAddressBookUpdates {
+                        throw error
+                    }
+                } else if invalidNodeAccountNodes.count >= nodeCount && addressBookUpdateCount >= maxAddressBookUpdates
+                {
+                    throw error
+                }
+
                 continue inner
 
             case .regenerateTransactionAndRetry(let error):
@@ -353,6 +379,9 @@ private enum ExecutionResult<Response> {
 
     /// Request failed and should be retried immediately on next node
     case retryImmediately(HError)
+
+    /// Request failed with INVALID_NODE_ACCOUNT - retry with next node but track for immediate failure
+    case invalidNodeAccount(HError)
 
     /// Transaction expired and should be retried with a new transaction ID
     case regenerateTransactionAndRetry(HError)
@@ -562,7 +591,7 @@ private func handlePrecheckStatus<E: Execute>(params: PrecheckParameters<E>) asy
             }
         }
 
-        return .retryImmediately(params.executable.makeErrorPrecheck(params.status, params.transactionId))
+        return .invalidNodeAccount(params.executable.makeErrorPrecheck(params.status, params.transactionId))
 
     case .transactionExpired
     where params.executable.explicitTransactionId == nil && params.ctx.operatorAccountId != nil:

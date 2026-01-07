@@ -34,28 +34,21 @@ internal class NetworkVersionInfoQueryIntegrationTests: HieroIntegrationTestCase
         let cost = try await query.getCost(testEnv.client)
 
         // When / Then
-        await assertThrowsHErrorAsync(
-            try await query.execute(testEnv.client)
-        ) { error in
-            // note: there's a very small chance this fails if the cost of a FileContentsQuery changes right when we execute it.
-            XCTAssertEqual(error.kind, .maxQueryPaymentExceeded(queryCost: cost, maxQueryPayment: .fromTinybars(1)))
-        }
+        await assertMaxQueryPaymentExceeded(
+            try await query.execute(testEnv.client),
+            queryCost: cost,
+            maxQueryPayment: .fromTinybars(1)
+        )
     }
 
-    internal func disabledTestGetCostInsufficientTxFeeFails() async throws {
+    internal func test_GetCostInsufficientTxFeeFails() async throws {
         // Given / When / Then
-        await assertThrowsHErrorAsync(
+        await assertQueryPaymentPrecheckStatus(
             try await NetworkVersionInfoQuery()
                 .maxPaymentAmount(.fromTinybars(10000))
                 .paymentAmount(.fromTinybars(1))
-                .execute(testEnv.client)
-        ) { error in
-            guard case .queryPaymentPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryPaymentPreCheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .insufficientTxFee)
-        }
+                .execute(testEnv.client),
+            .insufficientTxFee
+        )
     }
 }

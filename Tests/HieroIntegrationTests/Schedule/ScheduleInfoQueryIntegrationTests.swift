@@ -29,16 +29,10 @@ internal class ScheduleInfoQueryIntegrationTests: HieroIntegrationTestCase {
 
     internal func test_MissingScheduleIdFails() async throws {
         // Given / When / Then
-        await assertThrowsHErrorAsync(
-            try await ScheduleInfoQuery().execute(testEnv.client)
-        ) { error in
-            guard case .queryNoPaymentPreCheckStatus(let status) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryPaymentPreCheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .invalidScheduleID)
-        }
+        await assertQueryNoPaymentPrecheckStatus(
+            try await ScheduleInfoQuery().execute(testEnv.client),
+            .invalidScheduleID
+        )
     }
 
     internal func test_QueryCost() async throws {
@@ -83,15 +77,14 @@ internal class ScheduleInfoQueryIntegrationTests: HieroIntegrationTestCase {
         let cost = try await query.getCost(testEnv.client)
 
         // When / Then
-        await assertThrowsHErrorAsync(
+        await assertMaxQueryPaymentExceeded(
             try await query.execute(testEnv.client),
-            "expected error querying schedule"
-        ) { error in
-            XCTAssertEqual(error.kind, .maxQueryPaymentExceeded(queryCost: cost, maxQueryPayment: .fromTinybars(1)))
-        }
+            queryCost: cost,
+            maxQueryPayment: .fromTinybars(1)
+        )
     }
 
-    internal func disabledTestQueryCostInsufficientTxFeeFails() async throws {
+    internal func test_QueryCostInsufficientTxFeeFails() async throws {
         // Given
         let (accountId, _) = try await createTestAccount(initialBalance: TestConstants.testSmallHbarBalance)
         let scheduleId = try await createSchedule(
@@ -100,19 +93,13 @@ internal class ScheduleInfoQueryIntegrationTests: HieroIntegrationTestCase {
         )
 
         // When / Then
-        await assertThrowsHErrorAsync(
+        await assertQueryPaymentPrecheckStatus(
             try await ScheduleInfoQuery()
                 .scheduleId(scheduleId)
                 .maxPaymentAmount(.fromTinybars(10000))
                 .paymentAmount(.fromTinybars(1))
-                .execute(testEnv.client)
-        ) { error in
-            guard case .queryPaymentPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.queryNoPaymentPreCheckStatus`")
-                return
-            }
-
-            XCTAssertEqual(status, .insufficientTxFee)
-        }
+                .execute(testEnv.client),
+            .insufficientTxFee
+        )
     }
 }
