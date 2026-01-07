@@ -123,4 +123,28 @@ internal final class TopicMessageSubmitTransactionUnitTests: HieroUnitTestCase, 
 
         XCTAssertEqual(tx.customFeeLimits, [customFeeLimitToAdd])
     }
+
+    internal func test_ScheduledCustomFeeLimits() throws {
+        let payerId = AccountId(3)
+        let amount: UInt64 = 4
+        let tokenId = TokenId(3)
+        let customFeeLimitToAdd = CustomFeeLimit(
+            payerId: payerId,
+            customFees: [
+                CustomFixedFee(amount, nil, tokenId)
+            ])
+
+        let tx = TopicMessageSubmitTransaction()
+            .addCustomFeeLimit(customFeeLimitToAdd)
+            .schedule()
+            .toProtobuf()
+
+        XCTAssertEqual(tx.scheduledTransactionBody.maxCustomFees.count, 1)
+        XCTAssertEqual(tx.scheduledTransactionBody.maxCustomFees[0].accountID.accountNum, Int64(payerId.num))
+        XCTAssertEqual(tx.scheduledTransactionBody.maxCustomFees[0].fees.count, 1)
+        XCTAssertEqual(tx.scheduledTransactionBody.maxCustomFees[0].fees[0].amount, Int64(amount))
+        XCTAssertEqual(
+            tx.scheduledTransactionBody.maxCustomFees[0].fees[0].denominatingTokenID.tokenNum, Int64(tokenId.num))
+
+    }
 }

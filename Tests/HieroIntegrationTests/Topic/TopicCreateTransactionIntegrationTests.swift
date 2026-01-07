@@ -15,7 +15,7 @@ internal class TopicCreateTransactionIntegrationTests: HieroIntegrationTestCase 
         XCTAssertEqual(info.topicMemo, TestConstants.standardTopicMemo)
     }
 
-    internal func disabledTestFieldless() async throws {
+    internal func test_Fieldless() async throws {
         // Given / When
         let topicId = try await createImmutableTopic()
 
@@ -64,17 +64,10 @@ internal class TopicCreateTransactionIntegrationTests: HieroIntegrationTestCase 
         XCTAssertNotNil(info.autoRenewAccountId)
     }
 
-    internal func disabledTestCreateWithTransactionIdAssignsAutoRenewAccountIdToTransactionIdAccountId() async throws {
+    internal func test_CreateWithTransactionIdAssignsAutoRenewAccountIdToTransactionIdAccountId() async throws {
         // Given
-        let privateKey = PrivateKey.generateEcdsa()
+        let (accountId, privateKey) = try await createTestAccount(initialBalance: TestConstants.testMediumHbarBalance)
         let adminKey = PrivateKey.generateEcdsa()
-
-        let accountId = try await createAccount(
-            AccountCreateTransaction()
-                .keyWithoutAlias(Key.single(privateKey.publicKey))
-                .initialBalance(TestConstants.testMediumHbarBalance),
-            key: privateKey
-        )
 
         // When
         let topicId = try await createTopic(
@@ -82,7 +75,8 @@ internal class TopicCreateTransactionIntegrationTests: HieroIntegrationTestCase 
                 .transactionId(TransactionId.generateFrom(accountId))
                 .adminKey(.single(adminKey.publicKey))
                 .freezeWith(testEnv.client)
-                .sign(privateKey),
+                .sign(privateKey)
+                .sign(adminKey),
             adminKey: adminKey
         )
 

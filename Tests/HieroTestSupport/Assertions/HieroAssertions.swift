@@ -148,3 +148,142 @@ public func assertPrecheckStatus<T>(
         XCTAssertEqual(status, expectedStatus, file: file, line: line)
     }
 }
+
+/// Assert that an async expression throws an HError with a specific query payment precheck status.
+///
+/// This is a convenience wrapper for asserting query payment precheck errors in integration tests.
+/// These errors occur when a query with a payment transaction fails precheck (e.g., insufficient fee).
+///
+/// ## Usage
+/// ```swift
+/// await assertQueryPaymentPrecheckStatus(
+///     try await AccountInfoQuery(accountId: accountId)
+///         .maxPaymentAmount(.fromTinybars(10000))
+///         .paymentAmount(.fromTinybars(1))
+///         .execute(testEnv.client),
+///     .insufficientTxFee
+/// )
+/// ```
+///
+/// - Parameters:
+///   - expression: The async expression to evaluate
+///   - expectedStatus: The expected query payment precheck status
+///   - message: Optional message displayed on failure
+///   - file: Source file (auto-captured)
+///   - line: Source line (auto-captured)
+public func assertQueryPaymentPrecheckStatus<T>(
+    _ expression: @autoclosure () async throws -> T,
+    _ expectedStatus: Status,
+    _ message: @autoclosure () -> String = "",
+    file: StaticString = #file,
+    line: UInt = #line
+) async {
+    let msg = message()
+    await assertThrowsHErrorAsync(
+        try await expression(),
+        msg,
+        file: file,
+        line: line
+    ) { error in
+        guard case .queryPaymentPreCheckStatus(let status, transactionId: _) = error.kind else {
+            let failMessage =
+                "Expected queryPaymentPreCheckStatus error, got \(error.kind)"
+                + (msg.isEmpty ? "" : " - \(msg)")
+            XCTFail(failMessage, file: file, line: line)
+            return
+        }
+        XCTAssertEqual(status, expectedStatus, file: file, line: line)
+    }
+}
+
+/// Assert that an async expression throws an HError with a specific query (no payment) precheck status.
+///
+/// This is a convenience wrapper for asserting query precheck errors in integration tests.
+/// These errors occur when a query without a payment fails precheck (e.g., invalid ID).
+///
+/// ## Usage
+/// ```swift
+/// await assertQueryNoPaymentPrecheckStatus(
+///     try await AccountInfoQuery().execute(testEnv.client),
+///     .invalidAccountID
+/// )
+/// ```
+///
+/// - Parameters:
+///   - expression: The async expression to evaluate
+///   - expectedStatus: The expected query precheck status
+///   - message: Optional message displayed on failure
+///   - file: Source file (auto-captured)
+///   - line: Source line (auto-captured)
+public func assertQueryNoPaymentPrecheckStatus<T>(
+    _ expression: @autoclosure () async throws -> T,
+    _ expectedStatus: Status,
+    _ message: @autoclosure () -> String = "",
+    file: StaticString = #file,
+    line: UInt = #line
+) async {
+    let msg = message()
+    await assertThrowsHErrorAsync(
+        try await expression(),
+        msg,
+        file: file,
+        line: line
+    ) { error in
+        guard case .queryNoPaymentPreCheckStatus(let status) = error.kind else {
+            let failMessage =
+                "Expected queryNoPaymentPreCheckStatus error, got \(error.kind)"
+                + (msg.isEmpty ? "" : " - \(msg)")
+            XCTFail(failMessage, file: file, line: line)
+            return
+        }
+        XCTAssertEqual(status, expectedStatus, file: file, line: line)
+    }
+}
+
+/// Assert that an async expression throws an HError for max query payment exceeded.
+///
+/// This is a convenience wrapper for asserting that a query fails because the estimated
+/// cost exceeds the maximum payment amount set by the client.
+///
+/// ## Usage
+/// ```swift
+/// let query = AccountInfoQuery(accountId: accountId).maxPaymentAmount(.fromTinybars(1))
+/// let cost = try await query.getCost(testEnv.client)
+/// await assertMaxQueryPaymentExceeded(
+///     try await query.execute(testEnv.client),
+///     queryCost: cost,
+///     maxQueryPayment: .fromTinybars(1)
+/// )
+/// ```
+///
+/// - Parameters:
+///   - expression: The async expression to evaluate
+///   - queryCost: The expected query cost
+///   - maxQueryPayment: The expected max query payment that was exceeded
+///   - message: Optional message displayed on failure
+///   - file: Source file (auto-captured)
+///   - line: Source line (auto-captured)
+public func assertMaxQueryPaymentExceeded<T>(
+    _ expression: @autoclosure () async throws -> T,
+    queryCost: Hbar,
+    maxQueryPayment: Hbar,
+    _ message: @autoclosure () -> String = "",
+    file: StaticString = #file,
+    line: UInt = #line
+) async {
+    let msg = message()
+    await assertThrowsHErrorAsync(
+        try await expression(),
+        msg,
+        file: file,
+        line: line
+    ) { error in
+        XCTAssertEqual(
+            error.kind,
+            .maxQueryPaymentExceeded(queryCost: queryCost, maxQueryPayment: maxQueryPayment),
+            msg.isEmpty ? "" : msg,
+            file: file,
+            line: line
+        )
+    }
+}

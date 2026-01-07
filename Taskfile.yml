@@ -61,6 +61,8 @@ tasks:
             - git show-ref --verify -q refs/heads/{{.proto}} && git pull origin || exit 0
             - cd ..
             - task: submodule:generate
+              vars:
+                proto: "{{.proto}}"
             - task: build
             - echo "Successfully updated protobufs to {{.proto}}"
 
@@ -68,7 +70,7 @@ tasks:
         desc: "Generate the swift files from the protobufs"
         dir: Sources/HieroProtobufs
         cmds:
-            - cmd: python3 update_protos.py
+            - cmd: python3 update_protos.py --version {{.proto}}
             - cmd: python3 sync_status_codes.py
             - cmd: task format
 

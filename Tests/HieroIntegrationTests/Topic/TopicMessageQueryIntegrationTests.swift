@@ -7,29 +7,29 @@ import HieroTestSupport
 import XCTest
 
 internal class TopicMessageQueryIntegrationTests: HieroIntegrationTestCase {
-    internal func disabledTestBasic() async throws {
-        // Given
-        let topicId = try await createStandardTopic()
-
-        // When
-        async let submitFut = TopicMessageSubmitTransaction()
-            .topicId(topicId)
-            .message("Hello, from HCS!".data(using: .utf8)!)
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
-
-        async let messages = withThrowingTaskGroup(of: [Hiero.TopicMessage].self) { group in
+    /// Queries topic messages with retry logic and timeout protection.
+    ///
+    /// The mirror node may not immediately have the topic available after creation,
+    /// so this method retries up to 20 times with 200ms delays on "not found" errors.
+    /// A 60-second timeout prevents the test from hanging indefinitely.
+    ///
+    /// - Parameters:
+    ///   - topicId: The topic to query messages from
+    ///   - limit: Maximum number of messages to retrieve
+    /// - Returns: Array of topic messages
+    private func queryTopicMessagesWithRetry(topicId: TopicId, limit: UInt64) async throws -> [TopicMessage] {
+        try await withThrowingTaskGroup(of: [TopicMessage].self) { group in
             group.addTask {
                 for _ in 0..<20 {
                     do {
                         return try await TopicMessageQuery(
                             topicId: topicId,
                             startTime: .init(fromUnixTimestampNanos: 0),
-                            limit: 1
+                            limit: limit
                         )
                         .execute(self.testEnv.client)
                     } catch let error as HError {
-                        // topic not found -> try again
+                        // Topic not found on mirror node yet -> retry
                         switch error.kind {
                         case .grpcStatus(let status) where status == GRPCStatus.Code.notFound.rawValue:
                             try await Task.sleep(nanoseconds: 200 * 1_000_000)
@@ -43,6 +43,7 @@ internal class TopicMessageQueryIntegrationTests: HieroIntegrationTestCase {
                 XCTFail("Couldn't get topic after 20 attempts")
                 throw CancellationError()
             }
+
             group.addTask {
                 await Task.yield()
                 try await Task.sleep(nanoseconds: 60 * 1_000_000_000)
@@ -53,70 +54,43 @@ internal class TopicMessageQueryIntegrationTests: HieroIntegrationTestCase {
             defer { group.cancelAll() }
             return try await group.next()!
         }
-
-        // Then
-        do {
-            let (messages, _) = try await (messages, submitFut)
-
-            XCTAssertEqual(messages.count, 1)
-            XCTAssertEqual(messages[0].contents, "Hello, from HCS!".data(using: .utf8)!)
-        }
     }
 
-    internal func disabledTestLarge() async throws {
+    internal func test_Basic() async throws {
+        // Given
+        let topicId = try await createStandardTopic()
+        let messageContent = "Hello, from HCS!".data(using: .utf8)!
+
+        _ = try await TopicMessageSubmitTransaction()
+            .topicId(topicId)
+            .message(messageContent)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // When
+        let messages = try await queryTopicMessagesWithRetry(topicId: topicId, limit: 1)
+
+        // Then
+        XCTAssertEqual(messages.count, 1)
+        XCTAssertEqual(messages[0].contents, messageContent)
+    }
+
+    internal func test_Large() async throws {
         // Given
         let bigContents = Resources.bigContents.data(using: .utf8)!
         let topicId = try await createStandardTopic()
 
-        // When
-        async let submitFut = TopicMessageSubmitTransaction()
-            .message(bigContents)
+        _ = try await TopicMessageSubmitTransaction()
             .topicId(topicId)
+            .message(bigContents)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
-        async let messages = withThrowingTaskGroup(of: [Hiero.TopicMessage].self) { group in
-            group.addTask {
-                for _ in 0..<20 {
-                    do {
-                        return try await TopicMessageQuery(
-                            topicId: topicId,
-                            startTime: .init(fromUnixTimestampNanos: 0),
-                            limit: 14
-                        )
-                        .execute(self.testEnv.client)
-                    } catch let error as HError {
-                        // topic not found -> try again
-                        switch error.kind {
-                        case .grpcStatus(let status) where status == GRPCStatus.Code.notFound.rawValue:
-                            try await Task.sleep(nanoseconds: 200 * 1_000_000)
-                            continue
-
-                        default: throw error
-                        }
-                    }
-                }
-
-                XCTFail("Couldn't get topic after 20 attempts")
-                throw CancellationError()
-            }
-
-            group.addTask {
-                await Task.yield()
-                try await Task.sleep(nanoseconds: 60 * 1_000_000_000)
-                throw CancellationError()
-            }
-
-            defer { group.cancelAll() }
-            return try await group.next()!
-        }
+        // When
+        let messages = try await queryTopicMessagesWithRetry(topicId: topicId, limit: 14)
 
         // Then
-        do {
-            let (messages, _) = try await (messages, submitFut)
-
-            XCTAssertEqual(messages.count, 1)
-            XCTAssertEqual(messages[0].contents, bigContents)
-        }
+        XCTAssertEqual(messages.count, 1)
+        XCTAssertEqual(messages[0].contents, bigContents)
     }
 }

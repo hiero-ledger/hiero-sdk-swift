@@ -39,8 +39,7 @@ internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTest
 
         // When
         let receipt = try await NodeUpdateTransaction()
-            .nodeAccountIds([AccountId(num: 3)])
-            .nodeId(0)
+            .nodeId(1)
             .accountId(accountId)
             .freezeWith(testEnv.adminClient)
             .sign(accountKey)
@@ -50,19 +49,18 @@ internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTest
         // Then
         XCTAssertEqual(receipt.status, .success)
 
-        if receipt.status == .success {
-            // Reset the node account ID to the original account ID
-            _ = try await NodeUpdateTransaction()
-                .nodeAccountIds([AccountId(num: 4)])
-                .nodeId(0)
-                .accountId(AccountId(num: 3))
-                .freezeWith(testEnv.adminClient)
-                .sign(accountKey)
-                .execute(testEnv.adminClient)
-                .getReceipt(testEnv.adminClient)
+        // Reset the node account ID to the original account ID
+        _ = try await NodeUpdateTransaction()
+            .nodeAccountIds([AccountId(num: 3)])
+            .nodeId(1)
+            .accountId(AccountId(num: 4))
+            .freezeWith(testEnv.adminClient)
+            .sign(accountKey)
+            .execute(testEnv.adminClient)
+            .getReceipt(testEnv.adminClient)
 
-            XCTAssertEqual(receipt.status, .success, "Node update transaction failed to reset node account ID")
-        }
+        // Wait for mirror node to synchronize
+        try await Task.sleep(nanoseconds: 5_000_000_000)
     }
 
     internal func test_NodeUpdateTransactionCanChangeNodeAccountIdInvalidSignature() async throws {
@@ -166,66 +164,48 @@ internal final class NodeUpdateTransactionIntegrationTests: HieroIntegrationTest
         )
     }
 
-    internal func disabledTestNodeUpdateTransactionCanChangeNodeAccountUpdateAddressbookAndRetry() async throws {
+    internal func test_NodeUpdateTransactionCanChangeNodeAccountUpdateAddressbookAndRetry() async throws {
         // Given
-        let (newOperatorAccountId, newOperatorKey) = try await createTestAccount(
-            initialBalance: TestConstants.testMediumHbarBalance)
-        let (newAccountId, newAccountKey) = try await createTestAccount(
-            initialBalance: TestConstants.testMediumHbarBalance)
-
-        _ = testEnv.client.setOperator(newOperatorAccountId, newOperatorKey)
-
-        addTeardownBlock { [self] in
-            _ = testEnv.client.setOperator(testEnv.operator.accountId, testEnv.operator.privateKey)
-        }
-
-        await testEnv.client.setNetworkUpdatePeriod(nanoseconds: nil)
-
-        let addressBook = try await NodeAddressBookQuery()
-            .setFileId(FileId.addressBook)
-            .execute(testEnv.client)
-
-        let node0 = addressBook.nodeAddresses.first(where: { $0.nodeId == 0 })!
-        let oldNode0AccountId = node0.nodeAccountId
+        let (newAccountId, newAccountKey) = try await createTestAccount(initialBalance: Hbar(1))
 
         // When
         let updateReceipt = try await NodeUpdateTransaction()
-            .nodeId(0)
+            .nodeId(1)
             .accountId(newAccountId)
+            .freezeWith(testEnv.adminClient)
             .sign(newAccountKey)
-            .sign(testEnv.operator.privateKey)
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
+            .execute(testEnv.adminClient)
+            .getReceipt(testEnv.adminClient)
+        XCTAssertEqual(updateReceipt.status, .success, "Node update transaction failed")
+
+        try await Task.sleep(nanoseconds: 5_000_000_000)
 
         // Then
-        XCTAssertEqual(updateReceipt.status, .success, "Node update transaction failed")
-        XCTAssertEqual(updateReceipt.nodeId, 0, "Node ID mismatch in receipt")
+        let testKey = PrivateKey.generateEd25519()
+        await assertPrecheckStatus(
+            try await AccountCreateTransaction()
+                .keyWithoutAlias(.single(testKey.publicKey))
+                .nodeAccountIds([AccountId(num: 4)])
+                .execute(testEnv.adminClient)
+                .getReceipt(testEnv.adminClient),
+            .invalidNodeAccount
+        )
 
-        // Wait for the node update to propagate to the mirror node
-        try await Task.sleep(nanoseconds: 10_000_000_000)
+        _ = try await createAccount(
+            AccountCreateTransaction()
+                .keyWithoutAlias(.single(testKey.publicKey))
+                .nodeAccountIds([newAccountId]),
+            key: testKey
+        )
 
-        // Attempt to create a new account using node 0's OLD account ID, then fallback to node 4
-        // This should trigger INVALID_NODE_ACCOUNT, update the address book, then retry with node 4
-        let newAccountId2 = try await AccountCreateTransaction()
-            .nodeAccountIds([oldNode0AccountId, AccountId(num: 4)])  // Try in order: node 0 first, then node 4
-            .keyWithoutAlias(.single(testEnv.operator.privateKey.publicKey))
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
-            .accountId
+        _ = try await NodeUpdateTransaction()
+            .nodeId(1)
+            .accountId(AccountId(num: 4))
+            .freezeWith(testEnv.adminClient)
+            .sign(newAccountKey)
+            .execute(testEnv.adminClient)
+            .getReceipt(testEnv.adminClient)
 
-        XCTAssertNotNil(newAccountId2, "Failed to create account after INVALID_NODE_ACCOUNT retry")
-
-        // Cleanup: Reset node 0 back to its original account ID
-        do {
-            _ = try await NodeUpdateTransaction()
-                .nodeAccountIds([AccountId(num: 4)])  // Use a known good node
-                .nodeId(0)
-                .accountId(oldNode0AccountId)
-                .execute(testEnv.client)
-                .getReceipt(testEnv.client)
-        } catch {
-            // Best effort cleanup - log but don't fail the test
-            print("Warning: Failed to reset node 0 account ID: \(error)")
-        }
+        try await Task.sleep(nanoseconds: 5_000_000_000)
     }
 }

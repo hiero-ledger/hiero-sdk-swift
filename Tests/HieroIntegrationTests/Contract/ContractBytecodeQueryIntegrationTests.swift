@@ -42,12 +42,10 @@ internal final class ContractBytecodeQueryIntegrationTests: HieroIntegrationTest
         let cost = try await bytecodeQuery.getCost(testEnv.client)
 
         // When / Then
-        await assertThrowsHErrorAsync(
+        await assertMaxQueryPaymentExceeded(
             try await bytecodeQuery.execute(testEnv.client),
-            "expected error querying contract bytecode"
-        ) { error in
-            // note: there's a very small chance this fails if the cost of a AccountInfoQuery changes right when we execute it.
-            XCTAssertEqual(error.kind, .maxQueryPaymentExceeded(queryCost: cost, maxQueryPayment: .fromTinybars(1)))
-        }
+            queryCost: cost,
+            maxQueryPayment: .fromTinybars(1)
+        )
     }
 }

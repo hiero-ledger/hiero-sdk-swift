@@ -7,6 +7,8 @@ import glob
 import shlex
 from subprocess import CompletedProcess
 from enum import Enum, auto
+import argparse
+import re
 
 class ProtoDirectory(Enum):
     MIRROR: str = "Mirror"
@@ -122,7 +124,49 @@ def run_protoc_grpc(proto_files: List[str]):
             print(f"Stderr: {e.stderr}")
         return None
 
+def update_ci_hiero_version(version: str, ci_file_path: str = "../../.github/workflows/swift-ci.yml"):
+    """
+    Update the hieroVersion value in the GitHub Actions CI workflow file.
+    """
+    try:
+        # Read the current file contents
+        with open(ci_file_path, 'r') as f:
+            content = f.read()
+        
+        # Pattern to match hieroVersion: vX.X.X
+        pattern = r'(hieroVersion:\s*)v[\d.]+'
+        replacement = f'\\1{version}'
+        
+        # Check if the pattern exists
+        if not re.search(pattern, content):
+            print(f"Warning: Could not find hieroVersion in {ci_file_path}")
+            return False
+        
+        # Replace the version
+        new_content = re.sub(pattern, replacement, content)
+        
+        # Write the updated content back
+        with open(ci_file_path, 'w') as f:
+            f.write(new_content)
+        
+        print(f"\nUpdated hieroVersion to {version} in {ci_file_path}")
+        return True
+        
+    except FileNotFoundError:
+        print(f"Error: CI workflow file not found at {ci_file_path}")
+        return False
+    except Exception as e:
+        print(f"Error updating CI workflow file: {e}")
+        return False
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Update proto files and generate Swift code.')
+    parser.add_argument('--version', '-v', type=str, required=True,
+                        help='The Hiero version to use (e.g., v0.69.0). This will also update the hieroVersion in the CI workflow.')
+    args = parser.parse_args()
+    
+    hiero_version = args.version
+    
     # Source and destination directories
     SOURCE_DIR = "../../protobufs/hapi/hedera-protobuf-java-api/src/main/proto"
     DEST_DIR = "Protos"
@@ -276,6 +320,9 @@ if __name__ == "__main__":
         
         # Generate gRPC code
         run_protoc_grpc(successfully_copied)
+        
+        # Update the CI workflow with the new Hiero version
+        update_ci_hiero_version(hiero_version)
     else:
         print("\nNo files were copied successfully. Cannot generate code.")
 

@@ -116,9 +116,10 @@ jobs:
         id: solo
         uses: hiero-ledger/hiero-solo-action@fbca3e7a99ce9aa8a250563a81187abe115e0dad # v0.16.0
         with:
+          soloVersion: v0.52.0
           installMirrorNode: true
-          mirrorNodeVersion: v0.142.0
-          hieroVersion: v0.69.0
+          mirrorNodeVersion: v0.145.2
+          hieroVersion: v0.69.1
           dualMode: true
       
       - name: Run integration tests (HieroIntegrationTests)

@@ -356,7 +356,7 @@ internal class TokenClaimAirdropTransactionIntegrationTests: HieroIntegrationTes
             try await TokenClaimAirdropTransaction()
                 .addPendingAirdropId(record.pendingAirdropRecords[0].pendingAirdropId)
                 .execute(testEnv.client)
-                .getRecord(testEnv.client),
+                .getReceipt(testEnv.client),
             .invalidSignature
         )
     }
@@ -411,28 +411,21 @@ internal class TokenClaimAirdropTransactionIntegrationTests: HieroIntegrationTes
                 .freezeWith(testEnv.client)
                 .sign(accountKey)
                 .execute(testEnv.client)
-                .getRecord(testEnv.client),
+                .getReceipt(testEnv.client),
             .invalidPendingAirdropId
         )
     }
 
-    internal func disabledTestClaimEmptyPendingAirdropFail() async throws {
+    internal func test_ClaimEmptyPendingAirdropFail() async throws {
         // Given / When / Then
-        await assertThrowsHErrorAsync(
+        await assertPrecheckStatus(
             try await TokenClaimAirdropTransaction()
-                .execute(testEnv.client)
-                .getRecord(testEnv.client),
-            "expected error Claiming token"
-        ) { error in
-            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.transactionPreCheckStatus`")
-                return
-            }
-            XCTAssertEqual(status, .emptyPendingAirdropIdList)
-        }
+                .execute(testEnv.client),
+            .emptyPendingAirdropIdList
+        )
     }
 
-    internal func disabledTestClaimDuplicateEntriesFail() async throws {
+    internal func test_ClaimDuplicateEntriesFail() async throws {
         // Given
         let accountKey = PrivateKey.generateEd25519()
         let accountId = try await createAccount(
@@ -468,19 +461,13 @@ internal class TokenClaimAirdropTransactionIntegrationTests: HieroIntegrationTes
             .getRecord(testEnv.client)
 
         // When / Then
-        await assertThrowsHErrorAsync(
+        await assertPrecheckStatus(
             try await TokenClaimAirdropTransaction()
                 .addPendingAirdropId(record.pendingAirdropRecords[0].pendingAirdropId)
                 .addPendingAirdropId(record.pendingAirdropRecords[0].pendingAirdropId)
                 .execute(testEnv.client),
-            "expected error Claiming token"
-        ) { error in
-            guard case .transactionPreCheckStatus(let status, transactionId: _) = error.kind else {
-                XCTFail("`\(error.kind)` is not `.transactionPreCheckStatus`")
-                return
-            }
-            XCTAssertEqual(status, .pendingAirdropIdRepeated)
-        }
+            .pendingAirdropIdRepeated
+        )
     }
 
     internal func test_ClaimDeletedTokensFail() async throws {
