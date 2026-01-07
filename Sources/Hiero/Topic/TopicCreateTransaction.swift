@@ -30,13 +30,14 @@ public final class TopicCreateTransaction: Transaction {
         try super.init(protobuf: proto)
     }
 
+    internal override var defaultMaxTransactionFee: Hbar { 25 }
+
     @discardableResult
     public override func freezeWith(_ client: Client?) throws -> Self {
         if self.autoRenewAccountId == nil {
             if let feePayerAccountId = transactionId?.accountId {
                 self.autoRenewAccountId = feePayerAccountId
-            }
-            if let client = client, let clientOperatorAccountId = client.operator?.accountId {
+            } else if let client = client, let clientOperatorAccountId = client.operator?.accountId {
                 self.autoRenewAccountId = clientOperatorAccountId
             }
         }

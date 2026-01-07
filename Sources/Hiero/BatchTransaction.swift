@@ -6,7 +6,8 @@ import HieroProtobufs
 
 public final class BatchTransaction: Transaction {
     internal init(protobuf proto: Proto_TransactionBody, _ data: Proto_AtomicBatchTransactionBody) throws {
-        self.transactions = try data.transactions.map { try Transaction.fromBytes($0) }
+        // Inner transactions are stored as SignedTransaction bytes, not Transaction wrapper bytes
+        self.transactions = try data.transactions.map { try Transaction.fromSignedTransactionBytes($0) }
 
         try super.init(protobuf: proto)
     }
