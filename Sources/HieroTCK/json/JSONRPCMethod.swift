@@ -36,6 +36,7 @@ internal enum JSONRPCMethod: String {
     case updateFile = "updateFile"
     case updateTokenFeeSchedule = "updateTokenFeeSchedule"
     case updateToken = "updateToken"
+    case wipeToken = "wipeToken"
     case unsupported
 
     /// Attempts to parse a string into a corresponding `JSONRPCMethod` enum value.

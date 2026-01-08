@@ -133,6 +133,8 @@ internal class TCKServer {
                     from: UpdateTokenFeeScheduleParams(request: request))
             case .updateToken:
                 jsonRpcResponse = try await TokenService.updateToken(from: UpdateTokenParams(request: request))
+            case .wipeToken:
+                jsonRpcResponse = try await TokenService.wipeToken(from: WipeTokenParams(request: request))
 
             // MARK: - Unsupported Method
             case .unsupported:

@@ -350,4 +350,22 @@ internal enum TokenService {
 
         return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
     }
+
+    /// Handles the `wipeToken` JSON-RPC method.
+    internal static func wipeToken(from params: WipeTokenParams) async throws -> JSONObject {
+        var tx = TokenWipeTransaction()
+        let method: JSONRPCMethod = .wipeToken
+
+        tx.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
+        tx.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
+        try CommonParamsParser.getAmountIfPresent(from: params.amount, for: method).assign(to: &tx.amount)
+        try params.serialNumbers.assign(to: &tx.serials) { serials in
+            try serials.enumerated().map { index, serial in
+                try CommonParamsParser.getSerialNumber(from: serial, for: method, index: index)
+            }
+        }
+        try params.commonTransactionParams?.applyToTransaction(&tx)
+
+        return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
+    }
 }
