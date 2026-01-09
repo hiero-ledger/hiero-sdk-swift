@@ -90,9 +90,9 @@ internal class TCKServer {
             // MARK: - SDKClient Methods
 
             case .reset:
-                jsonRpcResponse = try SDKClient.client.reset(from: ResetParams(request: request))
+                jsonRpcResponse = try await SDKClient.client.reset(from: ResetParams(request: request))
             case .setup:
-                jsonRpcResponse = try SDKClient.client.setup(from: SetupParams(request: request))
+                jsonRpcResponse = try await SDKClient.client.setup(from: SetupParams(request: request))
 
             // MARK: - TokenService Methods
 
