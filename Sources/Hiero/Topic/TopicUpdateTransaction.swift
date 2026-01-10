@@ -24,8 +24,8 @@ public final class TopicUpdateTransaction: Transaction {
         autoRenewPeriod: Duration? = nil,
         autoRenewAccountId: AccountId? = nil,
         feeScheduleKey: Key? = nil,
-        feeExemptKeys: [Key] = [],
-        customFees: [CustomFixedFee] = []
+        feeExemptKeys: [Key]? = nil,
+        customFees: [CustomFixedFee]? = nil
     ) {
         self.topicId = topicId
         self.expirationTime = expirationTime
@@ -50,8 +50,8 @@ public final class TopicUpdateTransaction: Transaction {
         autoRenewPeriod = data.hasAutoRenewPeriod ? .fromProtobuf(data.autoRenewPeriod) : nil
         autoRenewAccountId = data.hasAutoRenewAccount ? try .fromProtobuf(data.autoRenewAccount) : nil
         feeScheduleKey = data.hasFeeScheduleKey ? try .fromProtobuf(data.feeScheduleKey) : nil
-        feeExemptKeys = data.hasFeeExemptKeyList ? try data.feeExemptKeyList.keys.map { try Key.fromProtobuf($0) } : []
-        customFees = data.hasCustomFees ? try data.customFees.fees.map { try CustomFixedFee.fromProtobuf($0) } : []
+        feeExemptKeys = data.hasFeeExemptKeyList ? try data.feeExemptKeyList.keys.map { try Key.fromProtobuf($0) } : nil
+        customFees = data.hasCustomFees ? try data.customFees.fees.map { try CustomFixedFee.fromProtobuf($0) } : nil
 
         try super.init(protobuf: proto)
     }
@@ -204,7 +204,8 @@ public final class TopicUpdateTransaction: Transaction {
     }
 
     /// The keys that can be used to update the fee schedule for the topic.
-    public var feeExemptKeys: [Key] = [] {
+    /// Set to `nil` to leave unchanged, or `[]` to clear existing keys.
+    public var feeExemptKeys: [Key]? = nil {
         willSet {
             ensureNotFrozen()
         }
@@ -229,13 +230,17 @@ public final class TopicUpdateTransaction: Transaction {
     /// Adds a key that will be exempt from paying fees.
     @discardableResult
     public func addFeeExemptKey(_ feeExemptKey: Key) -> Self {
-        self.feeExemptKeys.append(feeExemptKey)
+        if self.feeExemptKeys == nil {
+            self.feeExemptKeys = []
+        }
+        self.feeExemptKeys!.append(feeExemptKey)
 
         return self
     }
 
     /// The custom fixed fee to be assessed during a message submission to this topic.
-    public var customFees: [CustomFixedFee] = [] {
+    /// Set to `nil` to leave unchanged, or `[]` to clear existing fees.
+    public var customFees: [CustomFixedFee]? = nil {
         willSet {
             ensureNotFrozen()
         }
@@ -260,7 +265,10 @@ public final class TopicUpdateTransaction: Transaction {
     /// Appends a fixed fee to the existing topic.
     @discardableResult
     public func addCustomFee(_ customFee: CustomFixedFee) -> Self {
-        self.customFees.append(customFee)
+        if self.customFees == nil {
+            self.customFees = []
+        }
+        self.customFees!.append(customFee)
 
         return self
     }
@@ -291,10 +299,6 @@ extension TopicUpdateTransaction: ToProtobuf {
     internal typealias Protobuf = Proto_ConsensusUpdateTopicTransactionBody
 
     internal func toProtobuf() -> Protobuf {
-
-        let feeExemptKeys = feeExemptKeys.map { $0.toProtobuf() }
-        let customFees = customFees.map { $0.toTopicFeeProtobuf() }
-
         return .with { proto in
             topicId?.toProtobufInto(&proto.topicID)
             expirationTime?.toProtobufInto(&proto.expirationTime)
@@ -305,12 +309,13 @@ extension TopicUpdateTransaction: ToProtobuf {
             autoRenewAccountId?.toProtobufInto(&proto.autoRenewAccount)
             feeScheduleKey?.toProtobufInto(&proto.feeScheduleKey)
 
-            if !feeExemptKeys.isEmpty {
-                proto.feeExemptKeyList.keys.append(contentsOf: feeExemptKeys)
+            // nil = no change, [] = clear, [...] = update
+            if let feeExemptKeys = feeExemptKeys {
+                proto.feeExemptKeyList.keys = feeExemptKeys.map { $0.toProtobuf() }
             }
 
-            if !customFees.isEmpty {
-                proto.customFees.fees.append(contentsOf: customFees)
+            if let customFees = customFees {
+                proto.customFees.fees = customFees.map { $0.toTopicFeeProtobuf() }
             }
         }
     }

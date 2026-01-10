@@ -341,7 +341,7 @@ internal enum CommonParamsParser {
     ///   - feeCollectorsExempt: A flag indicating whether all collectors are exempt from paying the fee.
     ///   - method: The JSON-RPC method name, used for contextual error messages if parsing fails.
     /// - Returns: A fully-constructed `Hiero.FixedFee` ready for transaction execution.
-    /// - Throws: `JSONError.invalidParams` if the `amount` or `denominatingTokenID` fields are invalid or malformed.
+    /// - Throws: `JSONError.invalidParams` if the `amount` or `denominatingTokenId` fields are invalid or malformed.
     static private func getHieroFixedFee(
         _ fee: FixedFee,
         feeCollectorAccountId: AccountId,
@@ -353,9 +353,61 @@ internal enum CommonParamsParser {
                 from: fee.amount,
                 for: method,
                 using: JSONRPCParam.parseUInt64ReinterpretingSigned(name:from:for:)),
-            denominatingTokenId: try getTokenIdIfPresent(from: fee.denominatingTokenID),
+            denominatingTokenId: try getTokenIdIfPresent(from: fee.denominatingTokenId),
             feeCollectorAccountId: feeCollectorAccountId,
             allCollectorsAreExempt: feeCollectorsExempt)
+    }
+
+    // MARK: - Topic
+
+    /// Parses an optional JSON-RPC string into a `TopicId`.
+    ///
+    /// - Parameters:
+    ///   - param: A string representing a topic ID, or `nil`.
+    /// - Returns: A `TopicId` if the string is present and valid; otherwise `nil`.
+    /// - Throws: If the topic ID format is invalid.
+    static internal func getTopicIdIfPresent(from param: String?) throws -> TopicId? {
+        try param.flatMap { try TopicId.fromString($0) }
+    }
+
+    /// Converts a list of JSON-RPC `CustomFee` types into a list of Hiero `CustomFixedFee` types for topics.
+    ///
+    /// Topics only support fixed fees, so this function extracts only the fixed fee portion
+    /// of each custom fee entry. If a fee entry does not contain a fixed fee, it will throw an error.
+    ///
+    /// - Parameters:
+    ///   - param: The optional list of `CustomFee` entries from the JSON-RPC request.
+    ///   - method: The JSON-RPC method name, used for contextual error messages during parsing.
+    /// - Returns: An array of `CustomFixedFee` values suitable for topic APIs, or `nil`.
+    /// - Throws: `JSONError.invalidParams` if a fee does not contain a fixed fee or if any field cannot be parsed.
+    static internal func getHieroCustomFixedFeesIfPresent(from param: [CustomFee]?, for method: JSONRPCMethod) throws
+        -> [Hiero.CustomFixedFee]?
+    {
+        guard let customFees = param else { return nil }
+
+        var fixedFees = [Hiero.CustomFixedFee]()
+
+        for customFee in customFees {
+            let feeCollectorAccountId = try AccountId.fromString(customFee.feeCollectorAccountId)
+            let feeCollectorsExempt = customFee.feeCollectorsExempt
+
+            guard let fixed = customFee.fixedFee else {
+                throw JSONError.invalidParams(
+                    "\(method): topics only support fixed fees.")
+            }
+
+            fixedFees.append(
+                Hiero.CustomFixedFee(
+                    try getHieroFixedFee(
+                        fixed,
+                        feeCollectorAccountId: feeCollectorAccountId,
+                        feeCollectorsExempt: feeCollectorsExempt,
+                        for: method),
+                    feeCollectorAccountId,
+                    feeCollectorsExempt))
+        }
+
+        return fixedFees
     }
 
     // MARK: - Airdrop

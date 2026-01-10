@@ -91,6 +91,8 @@ internal class TCKServer {
 
             case .reset:
                 jsonRpcResponse = try await SDKClient.client.reset(from: ResetParams(request: request))
+            case .setOperator:
+                jsonRpcResponse = try SDKClient.client.setOperator(from: SetOperatorParams(request: request))
             case .setup:
                 jsonRpcResponse = try await SDKClient.client.setup(from: SetupParams(request: request))
 
@@ -135,6 +137,17 @@ internal class TCKServer {
                 jsonRpcResponse = try await TokenService.updateToken(from: UpdateTokenParams(request: request))
             case .wipeToken:
                 jsonRpcResponse = try await TokenService.wipeToken(from: WipeTokenParams(request: request))
+
+            // MARK: - TopicService Methods
+
+            case .createTopic:
+                jsonRpcResponse = try await TopicService.createTopic(from: CreateTopicParams(request: request))
+            case .deleteTopic:
+                jsonRpcResponse = try await TopicService.deleteTopic(from: DeleteTopicParams(request: request))
+            case .submitTopicMessage:
+                jsonRpcResponse = try await TopicService.submitTopicMessage(from: SubmitTopicMessageParams(request: request))
+            case .updateTopic:
+                jsonRpcResponse = try await TopicService.updateTopic(from: UpdateTopicParams(request: request))
 
             // MARK: - Unsupported Method
             case .unsupported:

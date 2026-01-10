@@ -25,6 +25,17 @@ internal class SDKClient {
         return .dictionary(["status": .string("SUCCESS")])
     }
 
+    /// Handles the `setOperator` JSON-RPC method.
+    ///
+    /// Updates the operator (payer) on the existing client without recreating it.
+    internal func setOperator(from params: SetOperatorParams) throws -> JSONObject {
+        let operatorAccountId = try AccountId.fromString(params.operatorAccountId)
+        let operatorPrivateKey = try PrivateKey.fromStringDer(params.operatorPrivateKey)
+        
+        self.client.setOperator(operatorAccountId, operatorPrivateKey)
+        return .dictionary(["status": .string("SUCCESS")])
+    }
+
     /// Handles the `setup` JSON-RPC method.
     internal func setup(from params: SetupParams) async throws -> JSONObject {
         let operatorAccountId = try AccountId.fromString(params.operatorAccountId)

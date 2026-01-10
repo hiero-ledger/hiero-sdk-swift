@@ -50,7 +50,7 @@ extension CustomFeeLimit: TryProtobufCodable {
             proto.accountID = payerId.toProtobuf()
             proto.fees = customFees.map { fee in
                 .with { proto in
-                    proto.amount = Int64(fee.amount)
+                    proto.amount = Int64(bitPattern: fee.amount)
                     if let tokenId = fee.denominatingTokenId {
                         proto.denominatingTokenID = tokenId.toProtobuf()
                     }
