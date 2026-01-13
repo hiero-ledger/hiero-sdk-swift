@@ -85,7 +85,8 @@ internal class TCKServer {
                 jsonRpcResponse = try await ContractService.contractCallQuery(
                     from: ContractCallQueryParams(request: request))
             case .contractInfoQuery:
-                jsonRpcResponse = try await ContractService.contractInfoQuery(from: ContractInfoQueryParams(request: request))
+                jsonRpcResponse = try await ContractService.contractInfoQuery(
+                    from: ContractInfoQueryParams(request: request))
             case .createContract:
                 jsonRpcResponse = try await ContractService.createContract(from: CreateContractParams(request: request))
             case .createEthereumTransaction:

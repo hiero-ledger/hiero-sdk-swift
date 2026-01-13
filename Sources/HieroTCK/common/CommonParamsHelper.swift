@@ -115,16 +115,19 @@ internal enum CommonParamsParser {
         }
     }
 
-    /// Parses an optional JSON-RPC string into an `Hbar` query payment.
+    /// Parses an optional JSON-RPC string into an `Hbar` query payment and applies it to a query.
     ///
     /// - Parameters:
     ///   - param: A string representing the query payment in tinybars, or `nil`.
+    ///   - query: The query to apply the payment amount to.
     ///   - method: The JSON-RPC method name, used for error context.
-    /// - Returns: An `Hbar` value if the string is present and valid; otherwise `nil`.
     /// - Throws: `JSONError.invalidParams` if the string is non-nil but not a valid integer.
-    static internal func getQueryPaymentIfPresent(from param: String?, for method: JSONRPCMethod) throws -> Hbar? {
-        try param.flatMap {
-            Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "queryPayment", from: $0, for: method))
+    static internal func assignQueryPaymentIfPresent<Q: Query<R>, R>(
+        from param: String?, to query: Q, for method: JSONRPCMethod
+    ) throws {
+        try param.ifPresent {
+            query.paymentAmount(
+                Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "queryPayment", from: $0, for: method)))
         }
     }
 

@@ -15,8 +15,8 @@ internal enum ContractService {
         query.functionParameters = try CommonParamsParser.getFunctionParametersIfPresent(
             from: params.functionParameters)
         params.functionName.ifPresent { query.function($0) }
-        try CommonParamsParser.getMaxQueryPaymentIfPresent(from: params.maxQueryPayment, for: method)
-            .ifPresent { query.maxPaymentAmount($0) }
+        query.maxPaymentAmount(
+            try CommonParamsParser.getMaxQueryPaymentIfPresent(from: params.maxQueryPayment, for: method))
         query.senderAccountId = try CommonParamsParser.getAccountIdIfPresent(from: params.senderAccountId)
 
         let result = try await SDKClient.client.executeQuery(query)
@@ -60,10 +60,9 @@ internal enum ContractService {
         let method: JSONRPCMethod = .contractByteCodeQuery
 
         query.contractId = try CommonParamsParser.getContractIdIfPresent(from: params.contractId)
-        try CommonParamsParser.getQueryPaymentIfPresent(from: params.queryPayment, for: method)
-            .ifPresent { query.paymentAmount($0) }
-        try CommonParamsParser.getMaxQueryPaymentIfPresent(from: params.maxQueryPayment, for: method)
-            .ifPresent { query.maxPaymentAmount($0) }
+        try CommonParamsParser.assignQueryPaymentIfPresent(from: params.queryPayment, to: query, for: method)
+        query.maxPaymentAmount(
+            try CommonParamsParser.getMaxQueryPaymentIfPresent(from: params.maxQueryPayment, for: method))
 
         let result = try await SDKClient.client.executeQuery(query)
 
@@ -82,10 +81,9 @@ internal enum ContractService {
         let method: JSONRPCMethod = .contractInfoQuery
 
         query.contractId = try CommonParamsParser.getContractIdIfPresent(from: params.contractId)
-        try CommonParamsParser.getQueryPaymentIfPresent(from: params.queryPayment, for: method)
-            .ifPresent { query.paymentAmount($0) }
-        try CommonParamsParser.getMaxQueryPaymentIfPresent(from: params.maxQueryPayment, for: method)
-            .ifPresent { query.maxPaymentAmount($0) }
+        try CommonParamsParser.assignQueryPaymentIfPresent(from: params.queryPayment, to: query, for: method)
+        query.maxPaymentAmount(
+            try CommonParamsParser.getMaxQueryPaymentIfPresent(from: params.maxQueryPayment, for: method))
 
         let result = try await SDKClient.client.executeQuery(query)
 
