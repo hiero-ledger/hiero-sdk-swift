@@ -24,8 +24,8 @@ internal enum TopicService {
             from: params.autoRenewPeriod, for: method)
         tx.autoRenewAccountId = try CommonParamsParser.getAccountIdIfPresent(from: params.autoRenewAccountId)
         tx.feeScheduleKey = try CommonParamsParser.getKeyIfPresent(from: params.feeScheduleKey)
-        try params.feeExemptKeys.assignIfPresent(to: &tx.feeExemptKeys) {
-            try $0.map { try KeyService.getHieroKey(from: $0) }
+        try params.feeExemptKeys.assignIfPresent(to: &tx.feeExemptKeys) { keys in
+            try keys.map { try KeyService.getHieroKey(from: $0) }
         }
         try CommonParamsParser.getHieroCustomFixedFeesIfPresent(from: params.customFees, for: method)
             .assignIfPresent(to: &tx.customFees)
@@ -78,8 +78,8 @@ internal enum TopicService {
         params.message.assignIfPresent(to: &tx.message) { Data($0.utf8) }
         params.maxChunks.assignIfPresent(to: &tx.maxChunks) { Int($0) }
         params.chunkSize.assignIfPresent(to: &tx.chunkSize) { Int($0) }
-        try params.customFeeLimits.assignIfPresent(to: &tx.customFeeLimits) {
-            try $0.map { try $0.toHiero(for: method) }
+        try params.customFeeLimits.assignIfPresent(to: &tx.customFeeLimits) { limits in
+            try limits.map { try $0.toHiero(for: method) }
         }
         try params.commonTransactionParams?.applyToTransaction(&tx)
 

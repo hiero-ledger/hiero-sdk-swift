@@ -374,14 +374,12 @@ internal enum TokenService {
     internal static func getTokenInfo(from params: GetTokenInfoParams) async throws -> JSONObject {
         let query = TokenInfoQuery()
         let method: JSONRPCMethod = .getTokenInfo
-
         query.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
         try CommonParamsParser.assignQueryPaymentIfPresent(from: params.queryPayment, to: query, for: method)
         query.maxPaymentAmount(
             try CommonParamsParser.getMaxQueryPaymentIfPresent(from: params.maxQueryPayment, for: method))
 
         let result = try await SDKClient.client.executeQuery(query)
-
         var response: [String: JSONObject] = [:]
 
         response["tokenId"] = .string(result.tokenId.toString())
@@ -400,30 +398,13 @@ internal enum TokenService {
         result.pauseKey.ifPresent { response["pauseKey"] = .string(keyToString($0)) }
         result.metadataKey.ifPresent { response["metadataKey"] = .string(keyToString($0)) }
 
-        if let defaultFreezeStatus = result.defaultFreezeStatus {
-            response["defaultFreezeStatus"] = .bool(defaultFreezeStatus)
-        } else {
-            response["defaultFreezeStatus"] = .null
-        }
-
-        if let defaultKycStatus = result.defaultKycStatus {
-            response["defaultKycStatus"] = .bool(defaultKycStatus)
-        } else {
-            response["defaultKycStatus"] = .null
-        }
-
+        response["defaultFreezeStatus"] = result.defaultFreezeStatus.map { .bool($0) } ?? .null
+        response["defaultKycStatus"] = result.defaultKycStatus.map { .bool($0) } ?? .null
         response["pauseStatus"] = .string(pauseStatusToString(result.pauseStatus))
         response["isDeleted"] = .bool(result.isDeleted)
-
-        if let autoRenewAccount = result.autoRenewAccount {
-            response["autoRenewAccountId"] = .string(autoRenewAccount.toString())
-        }
-        if let autoRenewPeriod = result.autoRenewPeriod {
-            response["autoRenewPeriod"] = .string(String(autoRenewPeriod.seconds))
-        }
-        if let expirationTime = result.expirationTime {
-            response["expirationTime"] = .string(String(expirationTime.seconds))
-        }
+        result.autoRenewAccount.ifPresent { response["autoRenewAccountId"] = .string($0.toString()) }
+        result.autoRenewPeriod.ifPresent { response["autoRenewPeriod"] = .string(String($0.seconds)) }
+        result.expirationTime.ifPresent { response["expirationTime"] = .string(String($0.seconds)) }
 
         response["tokenMemo"] = .string(result.tokenMemo)
         response["customFees"] = .list(result.customFees.map { serializeCustomFee($0) })

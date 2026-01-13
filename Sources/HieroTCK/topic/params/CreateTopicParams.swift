@@ -6,15 +6,15 @@
 /// including memo, keys, auto-renew settings, and fee configuration.
 internal struct CreateTopicParams {
 
-    internal var memo: String? = nil
-    internal var adminKey: String? = nil
-    internal var submitKey: String? = nil
-    internal var autoRenewPeriod: String? = nil
-    internal var autoRenewAccountId: String? = nil
-    internal var feeScheduleKey: String? = nil
-    internal var feeExemptKeys: [String]? = nil
-    internal var customFees: [CustomFee]? = nil
-    internal var commonTransactionParams: CommonTransactionParams? = nil
+    internal var memo: String?
+    internal var adminKey: String?
+    internal var submitKey: String?
+    internal var autoRenewPeriod: String?
+    internal var autoRenewAccountId: String?
+    internal var feeScheduleKey: String?
+    internal var feeExemptKeys: [String]?
+    internal var customFees: [CustomFee]?
+    internal var commonTransactionParams: CommonTransactionParams?
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .createTopic

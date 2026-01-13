@@ -3,8 +3,8 @@
 /// Represents the parameters for a `deleteTopic` JSON-RPC method call.
 internal struct DeleteTopicParams {
 
-    internal var topicId: String? = nil
-    internal var commonTransactionParams: CommonTransactionParams? = nil
+    internal var topicId: String?
+    internal var commonTransactionParams: CommonTransactionParams?
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .deleteTopic

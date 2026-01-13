@@ -3,8 +3,8 @@
 /// Represents the parameters for a `submitTopicMessage` JSON-RPC method call.
 internal struct SubmitTopicMessageParams {
 
-    internal var topicId: String? = nil
-    internal var message: String? = nil
+    internal var topicId: String?
+    internal var message: String?
     internal var maxChunks: Int64? = nil
     internal var chunkSize: Int64? = nil
     internal var customFeeLimits: [CustomFeeLimit]? = nil

@@ -110,8 +110,8 @@ internal enum CommonParamsParser {
     /// - Returns: An `Hbar` value if the string is present and valid; otherwise `nil`.
     /// - Throws: `JSONError.invalidParams` if the string is non-nil but not a valid integer.
     static internal func getInitialBalanceIfPresent(from param: String?, for method: JSONRPCMethod) throws -> Hbar? {
-        try param.flatMap {
-            Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "initialBalance", from: $0, for: method))
+        try param.flatMap { value in
+            Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "initialBalance", from: value, for: method))
         }
     }
 
@@ -125,9 +125,9 @@ internal enum CommonParamsParser {
     static internal func assignQueryPaymentIfPresent<Q: Query<R>, R>(
         from param: String?, to query: Q, for method: JSONRPCMethod
     ) throws {
-        try param.ifPresent {
+        try param.ifPresent { value in
             query.paymentAmount(
-                Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "queryPayment", from: $0, for: method)))
+                Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "queryPayment", from: value, for: method)))
         }
     }
 
@@ -139,8 +139,8 @@ internal enum CommonParamsParser {
     /// - Returns: An `Hbar` value if the string is present and valid; otherwise `nil`.
     /// - Throws: `JSONError.invalidParams` if the string is non-nil but not a valid integer.
     static internal func getMaxQueryPaymentIfPresent(from param: String?, for method: JSONRPCMethod) throws -> Hbar? {
-        try param.flatMap {
-            Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "maxQueryPayment", from: $0, for: method))
+        try param.flatMap { value in
+            Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "maxQueryPayment", from: value, for: method))
         }
     }
 
@@ -259,8 +259,8 @@ internal enum CommonParamsParser {
     /// - Returns: A `UInt64` if the string is present and valid; otherwise `nil`.
     /// - Throws: `JSONError.invalidParams` if the input is malformed.
     static internal func getGasIfPresent(from param: String?, for method: JSONRPCMethod) throws -> UInt64? {
-        try param.flatMap {
-            try JSONRPCParam.parseUInt64ReinterpretingSigned(name: "gas", from: $0, for: method)
+        try param.flatMap { value in
+            try JSONRPCParam.parseUInt64ReinterpretingSigned(name: "gas", from: value, for: method)
         }
     }
 
@@ -544,8 +544,8 @@ internal enum CommonParamsParser {
     /// - Returns: The decoded `Data`, or `nil` if the input is `nil`.
     /// - Throws: `JSONError.internalError` if the hex string is invalid.
     static internal func parseHexToDataIfPresent(from param: String?, paramName: String) throws -> Data? {
-        try param.flatMap {
-            let hexString = $0.hasPrefix("0x") ? String($0.dropFirst(2)) : $0
+        try param.flatMap { value in
+            let hexString = value.hasPrefix("0x") ? String(value.dropFirst(2)) : value
             guard let data = hexStringToData(hexString) else {
                 throw JSONError.internalError("\(paramName): invalid hex string")
             }

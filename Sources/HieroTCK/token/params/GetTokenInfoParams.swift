@@ -3,9 +3,9 @@
 /// Parameters for the `getTokenInfo` JSON-RPC method.
 internal struct GetTokenInfoParams {
 
-    internal var tokenId: String? = nil
-    internal var queryPayment: String? = nil
-    internal var maxQueryPayment: String? = nil
+    internal var tokenId: String?
+    internal var queryPayment: String?
+    internal var maxQueryPayment: String?
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .getTokenInfo

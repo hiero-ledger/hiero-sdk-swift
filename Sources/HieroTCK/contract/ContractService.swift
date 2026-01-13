@@ -36,8 +36,8 @@ internal enum ContractService {
         result.getAddress(0).ifPresent { response["address"] = .string("0x" + $0) }
 
         if result.bytes.count >= 32 {
-            result.getBytes32(0).ifPresent {
-                response["bytes32"] = .string("0x" + $0.map { String(format: "%02x", $0) }.joined())
+            result.getBytes32(0).ifPresent { bytes in
+                response["bytes32"] = .string("0x" + bytes.map { String(format: "%02x", $0) }.joined())
             }
         }
 
@@ -93,8 +93,8 @@ internal enum ContractService {
         response["accountId"] = .string(result.accountId.toString())
         response["contractAccountId"] = .string(result.contractAccountId)
 
-        result.adminKey.ifPresent {
-            if case .single(let publicKey) = $0 {
+        result.adminKey.ifPresent { key in
+            if case .single(let publicKey) = key {
                 response["adminKey"] = .string(publicKey.toStringDer())
             }
         }
@@ -162,8 +162,9 @@ internal enum ContractService {
         tx.ethereumData = try CommonParamsParser.parseHexToDataIfPresent(
             from: params.ethereumData, paramName: "ethereumData")
         tx.callDataFileId = try CommonParamsParser.getFileIdIfPresent(from: params.callDataFileId)
-        try params.maxGasAllowance.assignIfPresent(to: &tx.maxGasAllowanceHbar) {
-            Hbar.fromTinybars(try CommonParamsParser.getAmount(from: $0, for: method, using: JSONRPCParam.parseInt64))
+        try params.maxGasAllowance.assignIfPresent(to: &tx.maxGasAllowanceHbar) { value in
+            Hbar.fromTinybars(
+                try CommonParamsParser.getAmount(from: value, for: method, using: JSONRPCParam.parseInt64))
         }
         try params.commonTransactionParams?.applyToTransaction(&tx)
 

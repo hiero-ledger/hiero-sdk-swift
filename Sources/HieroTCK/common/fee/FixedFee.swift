@@ -9,7 +9,7 @@ internal struct FixedFee: JSONRPCListElementDecodable {
     internal static let elementName = "fixed fee"
 
     internal var amount: String
-    internal var denominatingTokenId: String? = nil
+    internal var denominatingTokenId: String?
 
     internal init(from params: [String: JSONObject], for method: JSONRPCMethod) throws {
         self.amount = try JSONRPCParser.getRequiredParameter(name: "amount", from: params, for: method)

@@ -9,11 +9,11 @@
 /// - Note: Either `amount` or `serialNumbers` should be provided, depending on token type.
 internal struct WipeTokenParams {
 
-    internal var tokenId: String? = nil
-    internal var accountId: String? = nil
-    internal var amount: String? = nil
-    internal var serialNumbers: [String]? = nil
-    internal var commonTransactionParams: CommonTransactionParams? = nil
+    internal var tokenId: String?
+    internal var accountId: String?
+    internal var amount: String?
+    internal var serialNumbers: [String]?
+    internal var commonTransactionParams: CommonTransactionParams?
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .wipeToken
