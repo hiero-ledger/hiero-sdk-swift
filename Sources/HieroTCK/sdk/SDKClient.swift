@@ -31,7 +31,7 @@ internal class SDKClient {
     internal func setOperator(from params: SetOperatorParams) throws -> JSONObject {
         let operatorAccountId = try AccountId.fromString(params.operatorAccountId)
         let operatorPrivateKey = try PrivateKey.fromStringDer(params.operatorPrivateKey)
-        
+
         self.client.setOperator(operatorAccountId, operatorPrivateKey)
         return .dictionary(["status": .string("SUCCESS")])
     }
@@ -114,6 +114,18 @@ internal class SDKClient {
     /// - Throws: Any error encountered while freezing the transaction (e.g. invalid configuration).
     internal func freezeTransaction<T: Transaction>(_ tx: inout T) throws {
         try tx.freezeWith(client)
+    }
+
+    /// Executes a Hiero query and returns its result.
+    ///
+    /// This submits the query to the Hiero network and returns the response.
+    ///
+    /// - Parameters:
+    ///   - query: The Hiero query to execute.
+    /// - Returns: The query response.
+    /// - Throws: Any error that occurs during execution.
+    internal func executeQuery<Q: Query<R>, R>(_ query: Q) async throws -> R {
+        return try await query.execute(client)
     }
 
     // MARK: - Private

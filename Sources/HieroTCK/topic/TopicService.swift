@@ -17,15 +17,18 @@ internal enum TopicService {
         var tx = TopicCreateTransaction()
         let method: JSONRPCMethod = .createTopic
 
-        params.memo.assign(to: &tx.topicMemo)
+        params.memo.assignIfPresent(to: &tx.topicMemo)
         tx.adminKey = try CommonParamsParser.getKeyIfPresent(from: params.adminKey)
         tx.submitKey = try CommonParamsParser.getKeyIfPresent(from: params.submitKey)
-        tx.autoRenewPeriod = try CommonParamsParser.getAutoRenewPeriodIfPresent(from: params.autoRenewPeriod, for: method)
+        tx.autoRenewPeriod = try CommonParamsParser.getAutoRenewPeriodIfPresent(
+            from: params.autoRenewPeriod, for: method)
         tx.autoRenewAccountId = try CommonParamsParser.getAccountIdIfPresent(from: params.autoRenewAccountId)
         tx.feeScheduleKey = try CommonParamsParser.getKeyIfPresent(from: params.feeScheduleKey)
-        try params.feeExemptKeys.assign(to: &tx.feeExemptKeys) { try $0.map { try KeyService.getHieroKey(from: $0) } }
+        try params.feeExemptKeys.assignIfPresent(to: &tx.feeExemptKeys) {
+            try $0.map { try KeyService.getHieroKey(from: $0) }
+        }
         try CommonParamsParser.getHieroCustomFixedFeesIfPresent(from: params.customFees, for: method)
-            .assign(to: &tx.customFees)
+            .assignIfPresent(to: &tx.customFees)
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         let txReceipt = try await SDKClient.client.executeTransactionAndGetReceipt(tx)
@@ -51,10 +54,11 @@ internal enum TopicService {
         let method: JSONRPCMethod = .updateTopic
 
         tx.topicId = try CommonParamsParser.getTopicIdIfPresent(from: params.topicId)
-        params.memo.assign(to: &tx.topicMemo)
+        params.memo.assignIfPresent(to: &tx.topicMemo)
         tx.adminKey = try CommonParamsParser.getKeyIfPresent(from: params.adminKey)
         tx.submitKey = try CommonParamsParser.getKeyIfPresent(from: params.submitKey)
-        tx.autoRenewPeriod = try CommonParamsParser.getAutoRenewPeriodIfPresent(from: params.autoRenewPeriod, for: method)
+        tx.autoRenewPeriod = try CommonParamsParser.getAutoRenewPeriodIfPresent(
+            from: params.autoRenewPeriod, for: method)
         tx.autoRenewAccountId = try CommonParamsParser.getAccountIdIfPresent(from: params.autoRenewAccountId)
         tx.expirationTime = try CommonParamsParser.getExpirationTimeIfPresent(from: params.expirationTime, for: method)
         tx.feeScheduleKey = try CommonParamsParser.getKeyIfPresent(from: params.feeScheduleKey)
@@ -71,15 +75,14 @@ internal enum TopicService {
         let method: JSONRPCMethod = .submitTopicMessage
 
         tx.topicId = try CommonParamsParser.getTopicIdIfPresent(from: params.topicId)
-        params.message.assign(to: &tx.message) { Data($0.utf8) }
-        params.maxChunks.assign(to: &tx.maxChunks) { Int($0) }
-        params.chunkSize.assign(to: &tx.chunkSize) { Int($0) }
-        try params.customFeeLimits.assign(to: &tx.customFeeLimits) { try $0.map { try $0.toHiero(for: method) } }
+        params.message.assignIfPresent(to: &tx.message) { Data($0.utf8) }
+        params.maxChunks.assignIfPresent(to: &tx.maxChunks) { Int($0) }
+        params.chunkSize.assignIfPresent(to: &tx.chunkSize) { Int($0) }
+        try params.customFeeLimits.assignIfPresent(to: &tx.customFeeLimits) {
+            try $0.map { try $0.toHiero(for: method) }
+        }
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
-        let txReceipt = try await SDKClient.client.executeTransactionAndGetReceipt(tx)
-        return .dictionary([
-            "status": .string(txReceipt.status.description),
-        ])
+        return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
     }
 }

@@ -96,19 +96,18 @@ internal enum AccountService {
         let method: JSONRPCMethod = .createAccount
 
         tx.key = try CommonParamsParser.getKeyIfPresent(from: params.key)
-        try params.initialBalance.assign(to: &tx.initialBalance) {
-            Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "initialBalance", from: $0, for: method))
-        }
-        params.receiverSignatureRequired.assign(to: &tx.receiverSignatureRequired)
+        try CommonParamsParser.getInitialBalanceIfPresent(from: params.initialBalance, for: method)
+            .assignIfPresent(to: &tx.initialBalance)
+        params.receiverSignatureRequired.assignIfPresent(to: &tx.receiverSignatureRequired)
         tx.autoRenewPeriod = try CommonParamsParser.getAutoRenewPeriodIfPresent(
             from: params.autoRenewPeriod,
             for: method)
-        params.memo.assign(to: &tx.accountMemo)
-        params.maxAutoTokenAssociations.assign(to: &tx.maxAutomaticTokenAssociations)
-        try params.alias.flatMap { try EvmAddress.fromString($0) }.assign(to: &tx.alias)
+        params.memo.assignIfPresent(to: &tx.accountMemo)
+        params.maxAutoTokenAssociations.assignIfPresent(to: &tx.maxAutomaticTokenAssociations)
+        try params.alias.flatMap { try EvmAddress.fromString($0) }.assignIfPresent(to: &tx.alias)
         tx.stakedAccountId = try CommonParamsParser.getAccountIdIfPresent(from: params.stakedAccountId)
         tx.stakedNodeId = try CommonParamsParser.getStakedNodeIdIfPresent(from: params.stakedNodeId, for: method)
-        params.declineStakingReward.assign(to: &tx.declineStakingReward)
+        params.declineStakingReward.assignIfPresent(to: &tx.declineStakingReward)
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         let txReceipt = try await SDKClient.client.executeTransactionAndGetReceipt(tx)

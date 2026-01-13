@@ -7,7 +7,7 @@ internal struct SetOperatorParams {
 
     internal var operatorAccountId: String
     internal var operatorPrivateKey: String
-    
+
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .setOperator
         let params = try JSONRPCParser.getRequiredRequestParams(request: request)
@@ -16,7 +16,6 @@ internal struct SetOperatorParams {
             name: "operatorAccountId",
             from: params,
             for: method)
-
         self.operatorPrivateKey = try JSONRPCParser.getRequiredParameter(
             name: "operatorPrivateKey",
             from: params,

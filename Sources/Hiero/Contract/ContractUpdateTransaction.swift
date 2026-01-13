@@ -328,15 +328,26 @@ extension ContractUpdateTransaction: ToProtobuf {
                     Int32(maxAutomaticTokenAssociations))
             }
 
-            autoRenewAccountId?.toProtobufInto(&proto.autoRenewAccountID)
-            proxyAccountId?.toProtobufInto(&proto.proxyAccountID)
-
-            if let stakedNodeId = stakedNodeId {
-                proto.stakedNodeID = Int64(stakedNodeId)
+            // Special case: 0.0.0 is a sentinel to clear the auto-renew account.
+            // The consensus node's preHandle check uses equals(AccountID.DEFAULT),
+            // which expects NO fields set. We must serialize an empty AccountID.
+            if let autoRenewAccountId = autoRenewAccountId {
+                if autoRenewAccountId.shard == 0 && autoRenewAccountId.realm == 0
+                    && autoRenewAccountId.num == 0 && autoRenewAccountId.alias == nil
+                {
+                    proto.autoRenewAccountID = Proto_AccountID()
+                } else {
+                    proto.autoRenewAccountID = autoRenewAccountId.toProtobuf()
+                }
             }
+            proxyAccountId?.toProtobufInto(&proto.proxyAccountID)
 
             if let stakedAccountId = stakedAccountId {
                 proto.stakedAccountID = stakedAccountId.toProtobuf()
+            }
+
+            if let stakedNodeId = stakedNodeId {
+                proto.stakedNodeID = Int64(stakedNodeId)
             }
 
             if let declineStakingReward = declineStakingReward {
