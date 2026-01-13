@@ -2,20 +2,20 @@
 
 internal struct CreateContractParams {
 
-    internal var bytecodeFileId: String? = nil
-    internal var adminKey: String? = nil
-    internal var gas: String? = nil
-    internal var initialBalance: String? = nil
-    internal var constructorParameters: String? = nil
-    internal var autoRenewPeriod: String? = nil
-    internal var autoRenewAccountId: String? = nil
-    internal var memo: String? = nil
-    internal var stakedAccountId: String? = nil
-    internal var stakedNodeId: String? = nil
-    internal var declineStakingReward: Bool? = nil
-    internal var maxAutomaticTokenAssociations: Int32? = nil
-    internal var initcode: String? = nil
-    internal var commonTransactionParams: CommonTransactionParams? = nil
+    internal var bytecodeFileId: String?
+    internal var adminKey: String?
+    internal var gas: String?
+    internal var initialBalance: String?
+    internal var constructorParameters: String?
+    internal var autoRenewPeriod: String?
+    internal var autoRenewAccountId: String?
+    internal var memo: String?
+    internal var stakedAccountId: String?
+    internal var stakedNodeId: String?
+    internal var declineStakingReward: Bool?
+    internal var maxAutomaticTokenAssociations: Int32?
+    internal var initcode: String?
+    internal var commonTransactionParams: CommonTransactionParams?
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .createContract

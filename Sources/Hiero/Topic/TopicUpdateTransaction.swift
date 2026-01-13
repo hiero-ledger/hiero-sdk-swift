@@ -205,7 +205,7 @@ public final class TopicUpdateTransaction: Transaction {
 
     /// The keys that can be used to update the fee schedule for the topic.
     /// Set to `nil` to leave unchanged, or `[]` to clear existing keys.
-    public var feeExemptKeys: [Key]? = nil {
+    public var feeExemptKeys: [Key]? {
         willSet {
             ensureNotFrozen()
         }
@@ -240,7 +240,7 @@ public final class TopicUpdateTransaction: Transaction {
 
     /// The custom fixed fee to be assessed during a message submission to this topic.
     /// Set to `nil` to leave unchanged, or `[]` to clear existing fees.
-    public var customFees: [CustomFixedFee]? = nil {
+    public var customFees: [CustomFixedFee]? {
         willSet {
             ensureNotFrozen()
         }

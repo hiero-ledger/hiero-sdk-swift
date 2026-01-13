@@ -2,9 +2,9 @@
 
 internal struct ContractInfoQueryParams {
 
-    internal var contractId: String? = nil
-    internal var queryPayment: String? = nil
-    internal var maxQueryPayment: String? = nil
+    internal var contractId: String?
+    internal var queryPayment: String?
+    internal var maxQueryPayment: String?
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .contractInfoQuery

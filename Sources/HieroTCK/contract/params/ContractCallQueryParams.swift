@@ -2,12 +2,12 @@
 
 internal struct ContractCallQueryParams {
 
-    internal var contractId: String? = nil
-    internal var gas: String? = nil
-    internal var functionName: String? = nil
-    internal var functionParameters: String? = nil
-    internal var maxQueryPayment: String? = nil
-    internal var senderAccountId: String? = nil
+    internal var contractId: String?
+    internal var gas: String?
+    internal var functionName: String?
+    internal var functionParameters: String?
+    internal var maxQueryPayment: String?
+    internal var senderAccountId: String?
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .contractCallQuery

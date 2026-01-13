@@ -2,10 +2,10 @@
 
 internal struct CreateEthereumTransactionParams {
 
-    internal var ethereumData: String? = nil
-    internal var callDataFileId: String? = nil
-    internal var maxGasAllowance: String? = nil
-    internal var commonTransactionParams: CommonTransactionParams? = nil
+    internal var ethereumData: String?
+    internal var callDataFileId: String?
+    internal var maxGasAllowance: String?
+    internal var commonTransactionParams: CommonTransactionParams?
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .createEthereumTransaction

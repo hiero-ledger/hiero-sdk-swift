@@ -2,11 +2,11 @@
 
 internal struct DeleteContractParams {
 
-    internal var contractId: String? = nil
-    internal var transferAccountId: String? = nil
-    internal var transferContractId: String? = nil
-    internal var permanentRemoval: Bool? = nil
-    internal var commonTransactionParams: CommonTransactionParams? = nil
+    internal var contractId: String?
+    internal var transferAccountId: String?
+    internal var transferContractId: String?
+    internal var permanentRemoval: Bool?
+    internal var commonTransactionParams: CommonTransactionParams?
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .deleteContract

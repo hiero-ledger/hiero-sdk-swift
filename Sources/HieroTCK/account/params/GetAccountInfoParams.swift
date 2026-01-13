@@ -2,8 +2,7 @@
 
 /// Parameters for the `getAccountInfo` JSON-RPC method.
 internal struct GetAccountInfoParams {
-    
-    internal var accountId: String? = nil
+    internal var accountId: String?
 
     internal init(request: JSONRequest) throws {
         guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else {

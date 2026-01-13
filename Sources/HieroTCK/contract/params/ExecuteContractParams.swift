@@ -2,11 +2,11 @@
 
 internal struct ExecuteContractParams {
 
-    internal var contractId: String? = nil
-    internal var gas: String? = nil
-    internal var amount: String? = nil
-    internal var functionParameters: String? = nil
-    internal var commonTransactionParams: CommonTransactionParams? = nil
+    internal var contractId: String?
+    internal var gas: String?
+    internal var amount: String?
+    internal var functionParameters: String?
+    internal var commonTransactionParams: CommonTransactionParams?
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .executeContract

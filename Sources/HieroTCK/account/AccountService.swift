@@ -157,91 +157,35 @@ internal enum AccountService {
     /// Handles the `getAccountInfo` JSON-RPC method.
     internal static func getAccountInfo(from params: GetAccountInfoParams) async throws -> JSONObject {
         let query = AccountInfoQuery()
-
         query.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
-
         let result = try await SDKClient.client.executeQuery(query)
 
-        var response: [String: JSONObject] = [:]
-
-        response["accountId"] = .string(result.accountId.toString())
-        response["contractAccountId"] = result.contractAccountId.isEmpty
-            ? .null : .string(result.contractAccountId)
-        response["isDeleted"] = .bool(result.isDeleted)
-        response["proxyAccountId"] = .null  // Deprecated field, always null
-        response["proxyReceived"] = .string(String(result.proxyReceived.toTinybars()))
-        response["key"] = .string(keyToString(result.key))
-        response["balance"] = .string(String(result.balance.toTinybars()))
-        response["sendRecordThreshold"] = .string("0")  // Deprecated, return 0
-        response["receiveRecordThreshold"] = .string("0")  // Deprecated, return 0
-        response["isReceiverSignatureRequired"] = .bool(result.isReceiverSignatureRequired)
-
-        if let expirationTime = result.expirationTime {
-            response["expirationTime"] = .string(String(expirationTime.seconds))
-        } else {
-            response["expirationTime"] = .null
-        }
-
-        if let autoRenewPeriod = result.autoRenewPeriod {
-            response["autoRenewPeriod"] = .string(String(autoRenewPeriod.seconds))
-        } else {
-            response["autoRenewPeriod"] = .null
-        }
-
-        // liveHashes and tokenRelationships are not exposed by the Swift SDK
-        response["liveHashes"] = .list([])
-        response["tokenRelationships"] = .dictionary([:])
-
-        response["accountMemo"] = .string(result.accountMemo)
-        response["ownedNfts"] = .string(String(result.ownedNfts))
-        response["maxAutomaticTokenAssociations"] = .string(String(result.maxAutomaticTokenAssociations))
-
-        if let aliasKey = result.aliasKey {
-            response["aliasKey"] = .string(aliasKey.toStringDer())
-        } else {
-            response["aliasKey"] = .null
-        }
-
-        response["ledgerId"] = .string(result.ledgerId.toString())
-
-        // Allowances are not returned in AccountInfo query per protobuf spec
-        response["hbarAllowances"] = .list([])
-        response["tokenAllowances"] = .list([])
-        response["nftAllowances"] = .list([])
-
-        response["ethereumNonce"] = .string(String(result.ethereumNonce))
-
-        if let staking = result.staking {
-            var stakingInfo: [String: JSONObject] = [:]
-            stakingInfo["declineStakingReward"] = .bool(staking.declineStakingReward)
-
-            if let stakePeriodStart = staking.stakePeriodStart {
-                stakingInfo["stakePeriodStart"] = .string(String(stakePeriodStart.seconds))
-            } else {
-                stakingInfo["stakePeriodStart"] = .null
-            }
-
-            stakingInfo["pendingReward"] = .string(String(staking.pendingReward.toTinybars()))
-            stakingInfo["stakedToMe"] = .string(String(staking.stakedToMe.toTinybars()))
-
-            if let stakedAccountId = staking.stakedAccountId {
-                stakingInfo["stakedAccountId"] = .string(stakedAccountId.toString())
-            } else {
-                stakingInfo["stakedAccountId"] = .null
-            }
-
-            if let stakedNodeId = staking.stakedNodeId {
-                stakingInfo["stakedNodeId"] = .string(String(stakedNodeId))
-            } else {
-                stakingInfo["stakedNodeId"] = .null
-            }
-
-            response["stakingInfo"] = .dictionary(stakingInfo)
-        } else {
-            response["stakingInfo"] = .null
-        }
-
-        return .dictionary(response)
+        return .dictionary([
+            "accountId": .string(result.accountId.toString()),
+            "contractAccountId": result.contractAccountId.isEmpty ? .null : .string(result.contractAccountId),
+            "isDeleted": .bool(result.isDeleted),
+            "proxyAccountId": .null,
+            "proxyReceived": .string(String(result.proxyReceived.toTinybars())),
+            "key": .string(keyToString(result.key)),
+            "balance": .string(String(result.balance.toTinybars())),
+            "sendRecordThreshold": .string("0"),
+            "receiveRecordThreshold": .string("0"),
+            "isReceiverSignatureRequired": .bool(result.isReceiverSignatureRequired),
+            "expirationTime": timestampToJson(result.expirationTime),
+            "autoRenewPeriod": durationToJson(result.autoRenewPeriod),
+            "liveHashes": .list([]),
+            "tokenRelationships": .dictionary([:]),
+            "accountMemo": .string(result.accountMemo),
+            "ownedNfts": .string(String(result.ownedNfts)),
+            "maxAutomaticTokenAssociations": .string(String(result.maxAutomaticTokenAssociations)),
+            "aliasKey": result.aliasKey.map { .string($0.toStringDer()) } ?? .null,
+            "ledgerId": .string(result.ledgerId.toString()),
+            "hbarAllowances": .list([]),
+            "tokenAllowances": .list([]),
+            "nftAllowances": .list([]),
+            "ethereumNonce": .string(String(result.ethereumNonce)),
+            "stakingInfo": stakingInfoToJson(result.staking),
+        ])
     }
 
     /// Handles the `transferCrypto` JSON-RPC method.
@@ -312,7 +256,28 @@ internal enum AccountService {
         if case .single(let publicKey) = key {
             return publicKey.toStringDer()
         }
-        // For complex keys, return the protobuf bytes as hex
         return key.toBytes().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func timestampToJson(_ timestamp: Timestamp?) -> JSONObject {
+        guard let timestamp = timestamp else { return .null }
+        return .string(String(timestamp.seconds))
+    }
+
+    private static func durationToJson(_ duration: Duration?) -> JSONObject {
+        guard let duration = duration else { return .null }
+        return .string(String(duration.seconds))
+    }
+
+    private static func stakingInfoToJson(_ staking: StakingInfo?) -> JSONObject {
+        guard let staking = staking else { return .null }
+        return .dictionary([
+            "declineStakingReward": .bool(staking.declineStakingReward),
+            "stakePeriodStart": staking.stakePeriodStart.map { .string(String($0.seconds)) } ?? .null,
+            "pendingReward": .string(String(staking.pendingReward.toTinybars())),
+            "stakedToMe": .string(String(staking.stakedToMe.toTinybars())),
+            "stakedAccountId": staking.stakedAccountId.map { .string($0.toString()) } ?? .null,
+            "stakedNodeId": staking.stakedNodeId.map { .string(String($0)) } ?? .null,
+        ])
     }
 }

@@ -4,8 +4,8 @@
 internal struct GetAccountBalanceParams {
     internal let method: JSONRPCMethod = .getAccountBalance
 
-    internal var accountId: String? = nil
-    internal var contractId: String? = nil
+    internal var accountId: String?
+    internal var contractId: String?
 
     internal init(request: JSONRequest) throws {
         guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else {

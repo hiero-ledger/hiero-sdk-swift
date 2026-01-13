@@ -11,7 +11,7 @@ extension Optional {
     ///
     /// - Parameters:
     ///   - target: The variable or property to update when a value exists.
-    func assignIfPresent(to target: inout Wrapped) {
+    internal func assignIfPresent(to target: inout Wrapped) {
         if let value = self { target = value }
     }
 
@@ -20,7 +20,7 @@ extension Optional {
     /// - Parameters:
     ///   - target: The variable or property to update when a value exists.
     ///   - transform: A closure that converts the wrapped value to the target's type.
-    func assignIfPresent<T>(to target: inout T, using transform: (Wrapped) -> T) {
+    internal func assignIfPresent<T>(to target: inout T, using transform: (Wrapped) -> T) {
         if let value = self { target = transform(value) }
     }
 
@@ -31,7 +31,7 @@ extension Optional {
     ///   - target: The variable or property to update when a value exists.
     ///   - transform: A throwing closure that converts the wrapped value to the target's type.
     /// - Throws: Rethrows any error thrown by `transform`.
-    func assignIfPresent<T>(to target: inout T, using transform: (Wrapped) throws -> T) rethrows {
+    internal func assignIfPresent<T>(to target: inout T, using transform: (Wrapped) throws -> T) rethrows {
         if let value = self { target = try transform(value) }
     }
 
@@ -41,7 +41,7 @@ extension Optional {
     ///
     /// - Parameters:
     ///   - action: A closure to execute with the unwrapped value.
-    func ifPresent(_ action: (Wrapped) -> Void) {
+    internal func ifPresent(_ action: (Wrapped) -> Void) {
         if let value = self { action(value) }
     }
 
@@ -50,7 +50,7 @@ extension Optional {
     /// - Parameters:
     ///   - action: A throwing closure to execute with the unwrapped value.
     /// - Throws: Rethrows any error thrown by `action`.
-    func ifPresent(_ action: (Wrapped) throws -> Void) rethrows {
+    internal func ifPresent(_ action: (Wrapped) throws -> Void) rethrows {
         if let value = self { try action(value) }
     }
 }
