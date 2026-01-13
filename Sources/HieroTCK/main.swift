@@ -71,6 +71,12 @@ internal class TCKServer {
             case .deleteAllowance:
                 jsonRpcResponse = try await AccountService.deleteAllowance(
                     from: DeleteAllowanceParams(request: request))
+            case .getAccountBalance:
+                jsonRpcResponse = try await AccountService.getAccountBalance(
+                    from: GetAccountBalanceParams(request: request))
+            case .getAccountInfo:
+                jsonRpcResponse = try await AccountService.getAccountInfo(
+                    from: GetAccountInfoParams(request: request))
             case .transferCrypto:
                 jsonRpcResponse = try await AccountService.transferCrypto(from: TransferCryptoParams(request: request))
             case .updateAccount:

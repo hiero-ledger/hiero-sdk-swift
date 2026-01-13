@@ -128,6 +128,122 @@ internal enum AccountService {
         return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
     }
 
+    /// Handles the `getAccountBalance` JSON-RPC method.
+    internal static func getAccountBalance(from params: GetAccountBalanceParams) async throws -> JSONObject {
+        let query = AccountBalanceQuery()
+
+        query.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
+        query.contractId = try CommonParamsParser.getContractIdIfPresent(from: params.contractId)
+
+        let result = try await SDKClient.client.executeQuery(query)
+
+        var tokenBalances: [String: JSONObject] = [:]
+        for (tokenId, balance) in result.tokenBalances {
+            tokenBalances[tokenId.toString()] = .string(String(balance))
+        }
+
+        var tokenDecimals: [String: JSONObject] = [:]
+        for (tokenId, decimals) in result.tokenDecimalsInner {
+            tokenDecimals[tokenId.toString()] = .int(Int64(decimals))
+        }
+
+        return .dictionary([
+            "hbars": .string(String(result.hbars.toTinybars())),
+            "tokenBalances": .dictionary(tokenBalances),
+            "tokenDecimals": .dictionary(tokenDecimals),
+        ])
+    }
+
+    /// Handles the `getAccountInfo` JSON-RPC method.
+    internal static func getAccountInfo(from params: GetAccountInfoParams) async throws -> JSONObject {
+        let query = AccountInfoQuery()
+
+        query.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
+
+        let result = try await SDKClient.client.executeQuery(query)
+
+        var response: [String: JSONObject] = [:]
+
+        response["accountId"] = .string(result.accountId.toString())
+        response["contractAccountId"] = result.contractAccountId.isEmpty
+            ? .null : .string(result.contractAccountId)
+        response["isDeleted"] = .bool(result.isDeleted)
+        response["proxyAccountId"] = .null  // Deprecated field, always null
+        response["proxyReceived"] = .string(String(result.proxyReceived.toTinybars()))
+        response["key"] = .string(keyToString(result.key))
+        response["balance"] = .string(String(result.balance.toTinybars()))
+        response["sendRecordThreshold"] = .string("0")  // Deprecated, return 0
+        response["receiveRecordThreshold"] = .string("0")  // Deprecated, return 0
+        response["isReceiverSignatureRequired"] = .bool(result.isReceiverSignatureRequired)
+
+        if let expirationTime = result.expirationTime {
+            response["expirationTime"] = .string(String(expirationTime.seconds))
+        } else {
+            response["expirationTime"] = .null
+        }
+
+        if let autoRenewPeriod = result.autoRenewPeriod {
+            response["autoRenewPeriod"] = .string(String(autoRenewPeriod.seconds))
+        } else {
+            response["autoRenewPeriod"] = .null
+        }
+
+        // liveHashes and tokenRelationships are not exposed by the Swift SDK
+        response["liveHashes"] = .list([])
+        response["tokenRelationships"] = .dictionary([:])
+
+        response["accountMemo"] = .string(result.accountMemo)
+        response["ownedNfts"] = .string(String(result.ownedNfts))
+        response["maxAutomaticTokenAssociations"] = .string(String(result.maxAutomaticTokenAssociations))
+
+        if let aliasKey = result.aliasKey {
+            response["aliasKey"] = .string(aliasKey.toStringDer())
+        } else {
+            response["aliasKey"] = .null
+        }
+
+        response["ledgerId"] = .string(result.ledgerId.toString())
+
+        // Allowances are not returned in AccountInfo query per protobuf spec
+        response["hbarAllowances"] = .list([])
+        response["tokenAllowances"] = .list([])
+        response["nftAllowances"] = .list([])
+
+        response["ethereumNonce"] = .string(String(result.ethereumNonce))
+
+        if let staking = result.staking {
+            var stakingInfo: [String: JSONObject] = [:]
+            stakingInfo["declineStakingReward"] = .bool(staking.declineStakingReward)
+
+            if let stakePeriodStart = staking.stakePeriodStart {
+                stakingInfo["stakePeriodStart"] = .string(String(stakePeriodStart.seconds))
+            } else {
+                stakingInfo["stakePeriodStart"] = .null
+            }
+
+            stakingInfo["pendingReward"] = .string(String(staking.pendingReward.toTinybars()))
+            stakingInfo["stakedToMe"] = .string(String(staking.stakedToMe.toTinybars()))
+
+            if let stakedAccountId = staking.stakedAccountId {
+                stakingInfo["stakedAccountId"] = .string(stakedAccountId.toString())
+            } else {
+                stakingInfo["stakedAccountId"] = .null
+            }
+
+            if let stakedNodeId = staking.stakedNodeId {
+                stakingInfo["stakedNodeId"] = .string(String(stakedNodeId))
+            } else {
+                stakingInfo["stakedNodeId"] = .null
+            }
+
+            response["stakingInfo"] = .dictionary(stakingInfo)
+        } else {
+            response["stakingInfo"] = .null
+        }
+
+        return .dictionary(response)
+    }
+
     /// Handles the `transferCrypto` JSON-RPC method.
     internal static func transferCrypto(from params: TransferCryptoParams) async throws -> JSONObject {
         var tx = TransferTransaction()
@@ -188,5 +304,15 @@ internal enum AccountService {
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
+    }
+
+    // MARK: - Helper Functions
+
+    private static func keyToString(_ key: Key) -> String {
+        if case .single(let publicKey) = key {
+            return publicKey.toStringDer()
+        }
+        // For complex keys, return the protobuf bytes as hex
+        return key.toBytes().map { String(format: "%02x", $0) }.joined()
     }
 }
