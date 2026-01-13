@@ -5,10 +5,10 @@ internal struct SubmitTopicMessageParams {
 
     internal var topicId: String?
     internal var message: String?
-    internal var maxChunks: Int64? = nil
-    internal var chunkSize: Int64? = nil
-    internal var customFeeLimits: [CustomFeeLimit]? = nil
-    internal var commonTransactionParams: CommonTransactionParams? = nil
+    internal var maxChunks: Int64?
+    internal var chunkSize: Int64?
+    internal var customFeeLimits: [CustomFeeLimit]?
+    internal var commonTransactionParams: CommonTransactionParams?
 
     internal init(request: JSONRequest) throws {
         let method: JSONRPCMethod = .submitTopicMessage

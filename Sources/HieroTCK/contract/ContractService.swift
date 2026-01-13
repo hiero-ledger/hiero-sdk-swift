@@ -197,8 +197,9 @@ internal enum ContractService {
 
         tx.contractId = try CommonParamsParser.getContractIdIfPresent(from: params.contractId)
         try CommonParamsParser.getGasIfPresent(from: params.gas, for: method).assignIfPresent(to: &tx.gas)
-        try params.amount.assignIfPresent(to: &tx.payableAmount) {
-            Hbar.fromTinybars(try CommonParamsParser.getAmount(from: $0, for: method, using: JSONRPCParam.parseInt64))
+        try params.amount.assignIfPresent(to: &tx.payableAmount) { value in
+            Hbar.fromTinybars(
+                try CommonParamsParser.getAmount(from: value, for: method, using: JSONRPCParam.parseInt64))
         }
         tx.functionParameters = try CommonParamsParser.getFunctionParametersIfPresent(from: params.functionParameters)
         try params.commonTransactionParams?.applyToTransaction(&tx)
