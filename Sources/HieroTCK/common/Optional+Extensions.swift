@@ -41,15 +41,8 @@ extension Optional {
     ///
     /// - Parameters:
     ///   - action: A closure to execute with the unwrapped value.
-    internal func ifPresent(_ action: (Wrapped) -> Void) {
-        if let value = self { action(value) }
-    }
-
-    /// Performs a throwing action with the wrapped value if `self` is `.some`.
-    ///
-    /// - Parameters:
-    ///   - action: A throwing closure to execute with the unwrapped value.
     /// - Throws: Rethrows any error thrown by `action`.
+    /// - Note: Uses `rethrows` to support both throwing and non-throwing closures.
     internal func ifPresent(_ action: (Wrapped) throws -> Void) rethrows {
         if let value = self { try action(value) }
     }
