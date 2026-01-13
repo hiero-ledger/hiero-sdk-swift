@@ -214,6 +214,7 @@ internal enum JSONObject: Codable {
     case int(Int64)
     case double(Double)
     case bool(Bool)
+    case null
     case list([JSONObject])
     case dictionary([String: JSONObject])
 
@@ -301,6 +302,8 @@ internal enum JSONObject: Codable {
             try container.encode(value)
         case .bool(let value):
             try container.encode(value)
+        case .null:
+            try container.encodeNil()
         case .list(let value):
             try container.encode(value)
         case .dictionary(let value):

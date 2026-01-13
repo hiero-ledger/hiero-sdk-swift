@@ -369,4 +369,145 @@ internal enum TokenService {
 
         return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
     }
+
+    /// Handles the `getTokenInfo` JSON-RPC method.
+    internal static func getTokenInfo(from params: GetTokenInfoParams) async throws -> JSONObject {
+        let query = TokenInfoQuery()
+        let method: JSONRPCMethod = .getTokenInfo
+
+        query.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
+        try CommonParamsParser.assignQueryPaymentIfPresent(from: params.queryPayment, to: query, for: method)
+        query.maxPaymentAmount(
+            try CommonParamsParser.getMaxQueryPaymentIfPresent(from: params.maxQueryPayment, for: method))
+
+        let result = try await SDKClient.client.executeQuery(query)
+
+        var response: [String: JSONObject] = [:]
+
+        response["tokenId"] = .string(result.tokenId.toString())
+        response["name"] = .string(result.name)
+        response["symbol"] = .string(result.symbol)
+        response["decimals"] = .int(Int64(result.decimals))
+        response["totalSupply"] = .string(String(result.totalSupply))
+        response["treasuryAccountId"] = .string(result.treasuryAccountId.toString())
+
+        result.adminKey.ifPresent { response["adminKey"] = .string(keyToString($0)) }
+        result.kycKey.ifPresent { response["kycKey"] = .string(keyToString($0)) }
+        result.freezeKey.ifPresent { response["freezeKey"] = .string(keyToString($0)) }
+        result.wipeKey.ifPresent { response["wipeKey"] = .string(keyToString($0)) }
+        result.supplyKey.ifPresent { response["supplyKey"] = .string(keyToString($0)) }
+        result.feeScheduleKey.ifPresent { response["feeScheduleKey"] = .string(keyToString($0)) }
+        result.pauseKey.ifPresent { response["pauseKey"] = .string(keyToString($0)) }
+        result.metadataKey.ifPresent { response["metadataKey"] = .string(keyToString($0)) }
+
+        if let defaultFreezeStatus = result.defaultFreezeStatus {
+            response["defaultFreezeStatus"] = .bool(defaultFreezeStatus)
+        } else {
+            response["defaultFreezeStatus"] = .null
+        }
+
+        if let defaultKycStatus = result.defaultKycStatus {
+            response["defaultKycStatus"] = .bool(defaultKycStatus)
+        } else {
+            response["defaultKycStatus"] = .null
+        }
+
+        response["pauseStatus"] = .string(pauseStatusToString(result.pauseStatus))
+        response["isDeleted"] = .bool(result.isDeleted)
+
+        if let autoRenewAccount = result.autoRenewAccount {
+            response["autoRenewAccountId"] = .string(autoRenewAccount.toString())
+        }
+        if let autoRenewPeriod = result.autoRenewPeriod {
+            response["autoRenewPeriod"] = .string(String(autoRenewPeriod.seconds))
+        }
+        if let expirationTime = result.expirationTime {
+            response["expirationTime"] = .string(String(expirationTime.seconds))
+        }
+
+        response["tokenMemo"] = .string(result.tokenMemo)
+        response["customFees"] = .list(result.customFees.map { serializeCustomFee($0) })
+        response["tokenType"] = .string(tokenTypeToString(result.tokenType))
+        response["supplyType"] = .string(supplyTypeToString(result.supplyType))
+        response["maxSupply"] = .string(String(result.maxSupply))
+        response["metadata"] = .string(result.metadata.map { String(format: "%02x", $0) }.joined())
+        response["ledgerId"] = .string(result.ledgerId.description)
+
+        return .dictionary(response)
+    }
+
+    // MARK: - Private Helpers
+
+    private static func keyToString(_ key: Key) -> String {
+        if case .single(let publicKey) = key {
+            return publicKey.toStringDer()
+        }
+        // For complex keys, return the protobuf bytes as hex
+        return key.toBytes().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func pauseStatusToString(_ pauseStatus: Bool?) -> String {
+        switch pauseStatus {
+        case .none: return "NOT_APPLICABLE"
+        case .some(true): return "PAUSED"
+        case .some(false): return "UNPAUSED"
+        }
+    }
+
+    private static func tokenTypeToString(_ tokenType: TokenType) -> String {
+        switch tokenType {
+        case .fungibleCommon: return "FUNGIBLE_COMMON"
+        case .nonFungibleUnique: return "NON_FUNGIBLE_UNIQUE"
+        }
+    }
+
+    private static func supplyTypeToString(_ supplyType: TokenSupplyType) -> String {
+        switch supplyType {
+        case .infinite: return "INFINITE"
+        case .finite: return "FINITE"
+        }
+    }
+
+    private static func serializeCustomFee(_ fee: AnyCustomFee) -> JSONObject {
+        var result: [String: JSONObject] = [:]
+
+        fee.feeCollectorAccountId.ifPresent { result["feeCollectorAccountId"] = .string($0.toString()) }
+        result["allCollectorsAreExempt"] = .bool(fee.allCollectorsAreExempt)
+
+        switch fee {
+        case .fixed(let fixedFee):
+            var fixedFeeObj: [String: JSONObject] = [:]
+            fixedFeeObj["amount"] = .string(String(fixedFee.amount))
+            if let denominatingTokenId = fixedFee.denominatingTokenId {
+                fixedFeeObj["denominatingTokenId"] = .string(denominatingTokenId.toString())
+            }
+            result["fixedFee"] = .dictionary(fixedFeeObj)
+
+        case .fractional(let fractionalFee):
+            var fractionalFeeObj: [String: JSONObject] = [:]
+            fractionalFeeObj["numerator"] = .string(String(fractionalFee.numerator))
+            fractionalFeeObj["denominator"] = .string(String(fractionalFee.denominator))
+            fractionalFeeObj["minimumAmount"] = .string(String(fractionalFee.minimumAmount))
+            fractionalFeeObj["maximumAmount"] = .string(String(fractionalFee.maximumAmount))
+            fractionalFeeObj["assessmentMethod"] = .string(
+                fractionalFee.assessmentMethod == .exclusive ? "exclusive" : "inclusive")
+            result["fractionalFee"] = .dictionary(fractionalFeeObj)
+
+        case .royalty(let royaltyFee):
+            var royaltyFeeObj: [String: JSONObject] = [:]
+            royaltyFeeObj["numerator"] = .string(String(royaltyFee.numerator))
+            royaltyFeeObj["denominator"] = .string(String(royaltyFee.denominator))
+            if let fallbackFee = royaltyFee.fallbackFee {
+                var fallbackFeeObj: [String: JSONObject] = [:]
+                fallbackFeeObj["amount"] = .string(String(fallbackFee.amount))
+                if let denominatingTokenId = fallbackFee.denominatingTokenId {
+                    fallbackFeeObj["denominatingTokenId"] = .string(denominatingTokenId.toString())
+                }
+                royaltyFeeObj["fallbackFee"] = .dictionary(fallbackFeeObj)
+            }
+            result["royaltyFee"] = .dictionary(royaltyFeeObj)
+        }
+
+        return .dictionary(result)
+    }
 }

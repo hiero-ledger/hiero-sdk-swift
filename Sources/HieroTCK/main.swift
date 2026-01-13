@@ -145,6 +145,8 @@ internal class TCKServer {
                 jsonRpcResponse = try await TokenService.dissociateToken(from: DissociateTokenParams(request: request))
             case .freezeToken:
                 jsonRpcResponse = try await TokenService.freezeToken(from: FreezeTokenParams(request: request))
+            case .getTokenInfo:
+                jsonRpcResponse = try await TokenService.getTokenInfo(from: GetTokenInfoParams(request: request))
             case .grantTokenKyc:
                 jsonRpcResponse = try await TokenService.grantTokenKyc(from: GrantTokenKycParams(request: request))
             case .mintToken:

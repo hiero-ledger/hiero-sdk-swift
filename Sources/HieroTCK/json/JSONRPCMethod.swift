@@ -31,6 +31,7 @@ internal enum JSONRPCMethod: String {
     case executeContract = "executeContract"
     case freezeToken = "freezeToken"
     case generateKey = "generateKey"
+    case getTokenInfo = "getTokenInfo"
     case grantTokenKyc = "grantTokenKyc"
     case mintToken = "mintToken"
     case pauseToken = "pauseToken"
