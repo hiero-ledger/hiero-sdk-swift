@@ -16,11 +16,15 @@ public struct EvmAddress:
     }
 
     internal init<S: StringProtocol>(parsing description: S) throws {
-        guard let description = description.stripPrefix("0x") else {
-            throw HError.basicParse("expected evm address to have `0x` prefix")
+        // Accept EVM addresses with or without the 0x prefix
+        let hexString: String
+        if let stripped = description.stripPrefix("0x") {
+            hexString = String(stripped)
+        } else {
+            hexString = String(description)
         }
 
-        guard let bytes = Data(hexEncoded: description) else {
+        guard let bytes = Data(hexEncoded: hexString) else {
             throw HError.basicParse("invalid evm address")
         }
 

@@ -75,8 +75,8 @@ public class ChunkedTransaction: Transaction {
             return 1
         }
 
-        // div ceil algorithm
-        return (data.count + chunkSize) / chunkSize
+        // div ceil algorithm: (a + b - 1) / b
+        return (data.count + chunkSize - 1) / chunkSize
     }
 
     fileprivate final var maxMessageSize: Int { maxChunks * chunkSize }

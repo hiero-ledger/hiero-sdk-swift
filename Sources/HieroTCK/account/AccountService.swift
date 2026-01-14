@@ -96,19 +96,18 @@ internal enum AccountService {
         let method: JSONRPCMethod = .createAccount
 
         tx.key = try CommonParamsParser.getKeyIfPresent(from: params.key)
-        try params.initialBalance.assign(to: &tx.initialBalance) {
-            Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "initialBalance", from: $0, for: method))
-        }
-        params.receiverSignatureRequired.assign(to: &tx.receiverSignatureRequired)
+        try CommonParamsParser.getInitialBalanceIfPresent(from: params.initialBalance, for: method)
+            .assignIfPresent(to: &tx.initialBalance)
+        params.receiverSignatureRequired.assignIfPresent(to: &tx.receiverSignatureRequired)
         tx.autoRenewPeriod = try CommonParamsParser.getAutoRenewPeriodIfPresent(
             from: params.autoRenewPeriod,
             for: method)
-        params.memo.assign(to: &tx.accountMemo)
-        params.maxAutoTokenAssociations.assign(to: &tx.maxAutomaticTokenAssociations)
-        try params.alias.flatMap { try EvmAddress.fromString($0) }.assign(to: &tx.alias)
+        params.memo.assignIfPresent(to: &tx.accountMemo)
+        params.maxAutoTokenAssociations.assignIfPresent(to: &tx.maxAutomaticTokenAssociations)
+        try params.alias.flatMap { try EvmAddress.fromString($0) }.assignIfPresent(to: &tx.alias)
         tx.stakedAccountId = try CommonParamsParser.getAccountIdIfPresent(from: params.stakedAccountId)
         tx.stakedNodeId = try CommonParamsParser.getStakedNodeIdIfPresent(from: params.stakedNodeId, for: method)
-        params.declineStakingReward.assign(to: &tx.declineStakingReward)
+        params.declineStakingReward.assignIfPresent(to: &tx.declineStakingReward)
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         let txReceipt = try await SDKClient.client.executeTransactionAndGetReceipt(tx)
@@ -127,6 +126,66 @@ internal enum AccountService {
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
+    }
+
+    /// Handles the `getAccountBalance` JSON-RPC method.
+    internal static func getAccountBalance(from params: GetAccountBalanceParams) async throws -> JSONObject {
+        let query = AccountBalanceQuery()
+
+        query.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
+        query.contractId = try CommonParamsParser.getContractIdIfPresent(from: params.contractId)
+
+        let result = try await SDKClient.client.executeQuery(query)
+
+        var tokenBalances: [String: JSONObject] = [:]
+        for (tokenId, balance) in result.tokenBalances {
+            tokenBalances[tokenId.toString()] = .string(String(balance))
+        }
+
+        var tokenDecimals: [String: JSONObject] = [:]
+        for (tokenId, decimals) in result.tokenDecimalsInner {
+            tokenDecimals[tokenId.toString()] = .int(Int64(decimals))
+        }
+
+        return .dictionary([
+            "hbars": .string(String(result.hbars.toTinybars())),
+            "tokenBalances": .dictionary(tokenBalances),
+            "tokenDecimals": .dictionary(tokenDecimals),
+        ])
+    }
+
+    /// Handles the `getAccountInfo` JSON-RPC method.
+    internal static func getAccountInfo(from params: GetAccountInfoParams) async throws -> JSONObject {
+        let query = AccountInfoQuery()
+        query.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
+        let result = try await SDKClient.client.executeQuery(query)
+
+        return .dictionary([
+            "accountId": .string(result.accountId.toString()),
+            "contractAccountId": result.contractAccountId.isEmpty ? .null : .string(result.contractAccountId),
+            "isDeleted": .bool(result.isDeleted),
+            "proxyAccountId": .null,
+            "proxyReceived": .string(String(result.proxyReceived.toTinybars())),
+            "key": .string(keyToString(result.key)),
+            "balance": .string(String(result.balance.toTinybars())),
+            "sendRecordThreshold": .string("0"),
+            "receiveRecordThreshold": .string("0"),
+            "isReceiverSignatureRequired": .bool(result.isReceiverSignatureRequired),
+            "expirationTime": timestampToJson(result.expirationTime),
+            "autoRenewPeriod": durationToJson(result.autoRenewPeriod),
+            "liveHashes": .list([]),
+            "tokenRelationships": .dictionary([:]),
+            "accountMemo": .string(result.accountMemo),
+            "ownedNfts": .string(String(result.ownedNfts)),
+            "maxAutomaticTokenAssociations": .string(String(result.maxAutomaticTokenAssociations)),
+            "aliasKey": result.aliasKey.map { .string($0.toStringDer()) } ?? .null,
+            "ledgerId": .string(result.ledgerId.toString()),
+            "hbarAllowances": .list([]),
+            "tokenAllowances": .list([]),
+            "nftAllowances": .list([]),
+            "ethereumNonce": .string(String(result.ethereumNonce)),
+            "stakingInfo": stakingInfoToJson(result.staking),
+        ])
     }
 
     /// Handles the `transferCrypto` JSON-RPC method.
@@ -189,5 +248,36 @@ internal enum AccountService {
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
+    }
+
+    // MARK: - Helper Functions
+
+    private static func keyToString(_ key: Key) -> String {
+        if case .single(let publicKey) = key {
+            return publicKey.toStringDer()
+        }
+        return key.toBytes().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func timestampToJson(_ timestamp: Timestamp?) -> JSONObject {
+        guard let timestamp = timestamp else { return .null }
+        return .string(String(timestamp.seconds))
+    }
+
+    private static func durationToJson(_ duration: Duration?) -> JSONObject {
+        guard let duration = duration else { return .null }
+        return .string(String(duration.seconds))
+    }
+
+    private static func stakingInfoToJson(_ staking: StakingInfo?) -> JSONObject {
+        guard let staking = staking else { return .null }
+        return .dictionary([
+            "declineStakingReward": .bool(staking.declineStakingReward),
+            "stakePeriodStart": staking.stakePeriodStart.map { .string(String($0.seconds)) } ?? .null,
+            "pendingReward": .string(String(staking.pendingReward.toTinybars())),
+            "stakedToMe": .string(String(staking.stakedToMe.toTinybars())),
+            "stakedAccountId": staking.stakedAccountId.map { .string($0.toString()) } ?? .null,
+            "stakedNodeId": staking.stakedNodeId.map { .string(String($0)) } ?? .null,
+        ])
     }
 }
