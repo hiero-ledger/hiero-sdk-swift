@@ -58,12 +58,6 @@ jobs:
       matrix:
         swift: ["5.9", "5.10"]
     runs-on: hiero-client-sdk-linux-large
-    env:
-      SOLO_CLUSTER_NAME: solo
-      SOLO_NAMESPACE: solo
-      SOLO_CLUSTER_SETUP_NAMESPACE: solo-cluster
-      SOLO_DEPLOYMENT: solo-deployment
-      KIND_IMAGE: kindest/node:v1.32.2   # pin to a stable image
 
     steps:
       - name: Harden Runner
@@ -116,7 +110,7 @@ jobs:
         id: solo
         uses: hiero-ledger/hiero-solo-action@fbca3e7a99ce9aa8a250563a81187abe115e0dad # v0.16.0
         with:
-          soloVersion: v0.52.0
+          soloVersion: v0.53.0
           installMirrorNode: true
           mirrorNodeVersion: v0.145.2
           hieroVersion: v0.69.1
