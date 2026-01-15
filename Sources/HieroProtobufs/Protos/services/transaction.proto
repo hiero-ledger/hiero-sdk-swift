@@ -664,6 +664,13 @@ message TransactionBody {
     }
 
     /**
+     * If set to true, this transaction uses high-volume throttles and pricing
+     * for entity creation. It only affects supported transaction types; otherwise,
+     * it is ignored.
+     */
+    bool high_volume = 77;
+
+    /**
      * A list of maximum custom fees that the users are willing to pay.
      * <p>
      * This field is OPTIONAL.<br/>

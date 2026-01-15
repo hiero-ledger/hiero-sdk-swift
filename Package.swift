@@ -49,6 +49,7 @@ let exampleTargets = [
     "GetAddressBook",
     "GetExchangeRates",
     "GetFileContents",
+    "HighVolumeAccountCreate",
     "InitializeClientWithMirrorNetwork",
     "LongTermScheduledTransaction",
     "MirrorNodeContractQuery",

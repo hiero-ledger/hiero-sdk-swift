@@ -986,6 +986,15 @@ public struct Proto_TransactionBody: @unchecked Sendable {
   }
 
   ///*
+  /// If set to true, this transaction uses high-volume throttles and pricing
+  /// for entity creation. It only affects supported transaction types; otherwise,
+  /// it is ignored.
+  public var highVolume: Bool {
+    get {return _storage._highVolume}
+    set {_uniqueStorage()._highVolume = newValue}
+  }
+
+  ///*
   /// A list of maximum custom fees that the users are willing to pay.
   /// <p>
   /// This field is OPTIONAL.<br/>
@@ -1453,6 +1462,7 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     74: .standard(proto: "atomic_batch"),
     75: .standard(proto: "lambda_sstore"),
     76: .standard(proto: "hook_dispatch"),
+    77: .standard(proto: "high_volume"),
     1001: .standard(proto: "max_custom_fees"),
   ]
 
@@ -1465,6 +1475,7 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     var _memo: String = String()
     var _batchKey: Proto_Key? = nil
     var _data: Proto_TransactionBody.OneOf_Data?
+    var _highVolume: Bool = false
     var _maxCustomFees: [Proto_CustomFeeLimit] = []
 
     #if swift(>=5.10)
@@ -1488,6 +1499,7 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
       _memo = source._memo
       _batchKey = source._batchKey
       _data = source._data
+      _highVolume = source._highVolume
       _maxCustomFees = source._maxCustomFees
     }
   }
@@ -2346,6 +2358,7 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
             _storage._data = .hookDispatch(v)
           }
         }()
+        case 77: try { try decoder.decodeSingularBoolField(value: &_storage._highVolume) }()
         case 1001: try { try decoder.decodeRepeatedMessageField(value: &_storage._maxCustomFees) }()
         default: break
         }
@@ -2642,6 +2655,9 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
       }()
       default: break
       }
+      if _storage._highVolume != false {
+        try visitor.visitSingularBoolField(value: _storage._highVolume, fieldNumber: 77)
+      }
       if !_storage._maxCustomFees.isEmpty {
         try visitor.visitRepeatedMessageField(value: _storage._maxCustomFees, fieldNumber: 1001)
       }
@@ -2662,6 +2678,7 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
         if _storage._memo != rhs_storage._memo {return false}
         if _storage._batchKey != rhs_storage._batchKey {return false}
         if _storage._data != rhs_storage._data {return false}
+        if _storage._highVolume != rhs_storage._highVolume {return false}
         if _storage._maxCustomFees != rhs_storage._maxCustomFees {return false}
         return true
       }
