@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: Apache-2.0
+
+/// Represents the parameters for a `submitTopicMessage` JSON-RPC method call.
+internal struct SubmitTopicMessageParams {
+
+    internal var topicId: String?
+    internal var message: String?
+    internal var maxChunks: Int64?
+    internal var chunkSize: Int64?
+    internal var customFeeLimits: [CustomFeeLimit]?
+    internal var commonTransactionParams: CommonTransactionParams?
+
+    internal init(request: JSONRequest) throws {
+        let method: JSONRPCMethod = .submitTopicMessage
+        guard let params = try JSONRPCParser.getOptionalRequestParamsIfPresent(request: request) else { return }
+
+        self.topicId = try JSONRPCParser.getOptionalParameterIfPresent(name: "topicId", from: params, for: method)
+        self.message = try JSONRPCParser.getOptionalParameterIfPresent(name: "message", from: params, for: method)
+        self.maxChunks = try JSONRPCParser.getOptionalParameterIfPresent(name: "maxChunks", from: params, for: method)
+        self.chunkSize = try JSONRPCParser.getOptionalParameterIfPresent(name: "chunkSize", from: params, for: method)
+        self.customFeeLimits = try JSONRPCParser.getOptionalCustomObjectListIfPresent(
+            name: "customFeeLimits",
+            from: params,
+            for: method,
+            decoder: CustomFeeLimit.jsonObjectDecoder(for: method))
+        self.commonTransactionParams = try JSONRPCParser.getOptionalCustomObjectIfPresent(
+            name: "commonTransactionParams",
+            from: params,
+            for: method,
+            using: CommonTransactionParams.init)
+    }
+}

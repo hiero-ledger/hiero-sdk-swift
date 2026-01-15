@@ -127,8 +127,10 @@ public final class ContractCreateTransaction: Transaction {
         }
         set(value) {
             ensureNotFrozen()
-
-            initcode = value.map(Initcode.bytecode)
+            // Only update initcode when value is non-nil to avoid clearing bytecodeFileId
+            if let value = value {
+                initcode = .bytecode(value)
+            }
         }
     }
 
@@ -149,8 +151,10 @@ public final class ContractCreateTransaction: Transaction {
         }
         set(value) {
             ensureNotFrozen()
-
-            initcode = value.map(Initcode.fileId)
+            // Only update initcode when value is non-nil to avoid clearing bytecode
+            if let value = value {
+                initcode = .fileId(value)
+            }
         }
     }
 
@@ -376,9 +380,9 @@ extension ContractCreateTransaction: ToProtobuf {
             }
 
             adminKey?.toProtobufInto(&proto.adminKey)
-            proto.gas = Int64(gas)
+            proto.gas = Int64(bitPattern: gas)
             proto.initialBalance = initialBalance.toTinybars()
-            autoRenewPeriod?.toProtobufInto(&proto.autoRenewPeriod)
+            (autoRenewPeriod ?? .days(90)).toProtobufInto(&proto.autoRenewPeriod)
             autoRenewAccountId?.toProtobufInto(&proto.autoRenewAccountID)
             proto.constructorParameters = constructorParameters ?? Data()
             proto.memo = contractMemo
@@ -389,7 +393,7 @@ extension ContractCreateTransaction: ToProtobuf {
             }
 
             if let stakedNodeId = stakedNodeId {
-                proto.stakedNodeID = Int64(stakedNodeId)
+                proto.stakedNodeID = Int64(bitPattern: stakedNodeId)
             }
 
             proto.declineReward = declineStakingReward

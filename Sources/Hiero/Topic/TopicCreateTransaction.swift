@@ -229,7 +229,7 @@ extension TopicCreateTransaction: ToProtobuf {
             proto.memo = topicMemo
             adminKey?.toProtobufInto(&proto.adminKey)
             submitKey?.toProtobufInto(&proto.submitKey)
-            autoRenewPeriod?.toProtobufInto(&proto.autoRenewPeriod)
+            (autoRenewPeriod ?? .days(90)).toProtobufInto(&proto.autoRenewPeriod)
             autoRenewAccountId?.toProtobufInto(&proto.autoRenewAccount)
             if let feeScheduleKey = feeScheduleKey {
                 proto.feeScheduleKey = feeScheduleKey.toProtobuf()

@@ -15,9 +15,10 @@ internal enum FileService {
         var tx = FileAppendTransaction()
 
         tx.fileId = try CommonParamsParser.getFileIdIfPresent(from: params.fileId)
-        try CommonParamsParser.getContentsIfPresent(from: params.contents, for: .appendFile).assign(to: &tx.contents)
-        params.maxChunks.assign(to: &tx.maxChunks)
-        params.chunkSize.assign(to: &tx.chunkSize)
+        try CommonParamsParser.getContentsIfPresent(from: params.contents, for: .appendFile).assignIfPresent(
+            to: &tx.contents)
+        params.maxChunks.assignIfPresent(to: &tx.maxChunks)
+        params.chunkSize.assignIfPresent(to: &tx.chunkSize)
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
@@ -28,11 +29,12 @@ internal enum FileService {
         var tx = FileCreateTransaction()
         let method: JSONRPCMethod = .createFile
 
-        try CommonParamsParser.getKeyListIfPresent(from: params.keys).assign(to: &tx.keys)
-        try CommonParamsParser.getContentsIfPresent(from: params.contents, for: method).assign(to: &tx.contents)
-        try CommonParamsParser.getExpirationTimeIfPresent(from: params.expirationTime, for: method).assign(
+        try CommonParamsParser.getKeyListIfPresent(from: params.keys).assignIfPresent(to: &tx.keys)
+        try CommonParamsParser.getContentsIfPresent(from: params.contents, for: method).assignIfPresent(
+            to: &tx.contents)
+        try CommonParamsParser.getExpirationTimeIfPresent(from: params.expirationTime, for: method).assignIfPresent(
             to: &tx.expirationTime)
-        params.memo.assign(to: &tx.fileMemo)
+        params.memo.assignIfPresent(to: &tx.fileMemo)
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         let txReceipt = try await SDKClient.client.executeTransactionAndGetReceipt(tx)
@@ -59,9 +61,10 @@ internal enum FileService {
 
         tx.fileId = try CommonParamsParser.getFileIdIfPresent(from: params.fileId)
         tx.keys = try CommonParamsParser.getKeyListIfPresent(from: params.keys)
-        try CommonParamsParser.getContentsIfPresent(from: params.contents, for: method).assign(to: &tx.contents)
+        try CommonParamsParser.getContentsIfPresent(from: params.contents, for: method).assignIfPresent(
+            to: &tx.contents)
         tx.expirationTime = try CommonParamsParser.getExpirationTimeIfPresent(from: params.expirationTime, for: method)
-        params.memo.assign(to: &tx.fileMemo)
+        params.memo.assignIfPresent(to: &tx.fileMemo)
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
