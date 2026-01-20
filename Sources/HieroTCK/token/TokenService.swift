@@ -45,7 +45,7 @@ internal enum TokenService {
         var tx = TokenAssociateTransaction()
 
         tx.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
-        try CommonParamsParser.getTokenIdsIfPresent(from: params.tokenIds).assign(to: &tx.tokenIds)
+        try CommonParamsParser.getTokenIdsIfPresent(from: params.tokenIds).assignIfPresent(to: &tx.tokenIds)
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
@@ -57,8 +57,8 @@ internal enum TokenService {
         let method: JSONRPCMethod = .burnToken
 
         tx.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
-        try CommonParamsParser.getAmountIfPresent(from: params.amount, for: method).assign(to: &tx.amount)
-        try params.serialNumbers.assign(to: &tx.serials) { serials in
+        try CommonParamsParser.getAmountIfPresent(from: params.amount, for: method).assignIfPresent(to: &tx.amount)
+        try params.serialNumbers.assignIfPresent(to: &tx.serials) { serials in
             try serials.enumerated().map { index, serial in
                 try CommonParamsParser.getSerialNumber(from: serial, for: method, index: index)
             }
@@ -122,47 +122,48 @@ internal enum TokenService {
         var tx = TokenCreateTransaction()
         let method: JSONRPCMethod = .createToken
 
-        params.name.assign(to: &tx.name)
-        params.symbol.assign(to: &tx.symbol)
-        params.decimals.assign(to: &tx.decimals)
+        params.name.assignIfPresent(to: &tx.name)
+        params.symbol.assignIfPresent(to: &tx.symbol)
+        params.decimals.assignIfPresent(to: &tx.decimals)
         try JSONRPCParam.parseUInt64IfPresentReinterpretingSigned(
             name: "initialSupply",
             from: params.initialSupply,
             for: method
-        ).assign(to: &tx.initialSupply)
+        ).assignIfPresent(to: &tx.initialSupply)
         tx.treasuryAccountId = try CommonParamsParser.getAccountIdIfPresent(from: params.treasuryAccountId)
         tx.adminKey = try CommonParamsParser.getKeyIfPresent(from: params.adminKey)
         tx.kycKey = try CommonParamsParser.getKeyIfPresent(from: params.kycKey)
         tx.freezeKey = try CommonParamsParser.getKeyIfPresent(from: params.freezeKey)
         tx.wipeKey = try CommonParamsParser.getKeyIfPresent(from: params.wipeKey)
         tx.supplyKey = try CommonParamsParser.getKeyIfPresent(from: params.supplyKey)
-        params.freezeDefault.assign(to: &tx.freezeDefault)
+        params.freezeDefault.assignIfPresent(to: &tx.freezeDefault)
         tx.expirationTime = try CommonParamsParser.getExpirationTimeIfPresent(from: params.expirationTime, for: method)
         tx.autoRenewAccountId = try CommonParamsParser.getAccountIdIfPresent(from: params.autoRenewAccountId)
         tx.autoRenewPeriod = try CommonParamsParser.getAutoRenewPeriodIfPresent(
             from: params.autoRenewPeriod,
             for: method)
-        params.memo.assign(to: &tx.tokenMemo)
+        params.memo.assignIfPresent(to: &tx.tokenMemo)
         try JSONRPCParam.parseEnumIfPresent(
             name: "tokenType",
             from: params.tokenType,
             map: ["ft": .fungibleCommon, "nft": .nonFungibleUnique],
             for: method
-        ).assign(to: &tx.tokenType)
+        ).assignIfPresent(to: &tx.tokenType)
         try JSONRPCParam.parseEnumIfPresent(
             name: "supplyType",
             from: params.supplyType,
             map: ["finite": .finite, "infinite": .infinite],
             for: method
-        ).assign(to: &tx.tokenSupplyType)
-        try params.maxSupply.assign(to: &tx.maxSupply) {
+        ).assignIfPresent(to: &tx.tokenSupplyType)
+        try params.maxSupply.assignIfPresent(to: &tx.maxSupply) {
             try JSONRPCParam.parseUInt64ReinterpretingSigned(name: "maxSupply", from: $0, for: method)
         }
         tx.feeScheduleKey = try CommonParamsParser.getKeyIfPresent(from: params.feeScheduleKey)
-        try CommonParamsParser.getHieroAnyCustomFeesIfPresent(from: params.customFees, for: method).assign(
+        try CommonParamsParser.getHieroAnyCustomFeesIfPresent(from: params.customFees, for: method).assignIfPresent(
             to: &tx.customFees)
         tx.pauseKey = try CommonParamsParser.getKeyIfPresent(from: params.pauseKey)
-        try CommonParamsParser.getMetadataIfPresent(from: params.metadata, for: method).assign(to: &tx.metadata)
+        try CommonParamsParser.getMetadataIfPresent(from: params.metadata, for: method).assignIfPresent(
+            to: &tx.metadata)
         tx.metadataKey = try CommonParamsParser.getKeyIfPresent(from: params.metadataKey)
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
@@ -188,7 +189,7 @@ internal enum TokenService {
         var tx = TokenDissociateTransaction()
 
         tx.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
-        try CommonParamsParser.getTokenIdsIfPresent(from: params.tokenIds).assign(to: &tx.tokenIds)
+        try CommonParamsParser.getTokenIdsIfPresent(from: params.tokenIds).assignIfPresent(to: &tx.tokenIds)
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
@@ -222,8 +223,8 @@ internal enum TokenService {
         let method: JSONRPCMethod = .mintToken
 
         tx.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
-        try CommonParamsParser.getAmountIfPresent(from: params.amount, for: method).assign(to: &tx.amount)
-        try params.metadata.assign(to: &tx.metadata) { metadata in
+        try CommonParamsParser.getAmountIfPresent(from: params.amount, for: method).assignIfPresent(to: &tx.amount)
+        try params.metadata.assignIfPresent(to: &tx.metadata) { metadata in
             try metadata.enumerated().map { idx, param in
                 try JSONRPCParam.parseUtf8Data(name: "metadata[\(idx)]", from: param, for: method)
             }
@@ -260,7 +261,7 @@ internal enum TokenService {
 
         if let serials = params.serialNumbers {
             var tokenIds = [TokenId]()
-            try CommonParamsParser.getTokenIdsIfPresent(from: params.tokenIds).assign(to: &tokenIds)
+            try CommonParamsParser.getTokenIdsIfPresent(from: params.tokenIds).assignIfPresent(to: &tokenIds)
 
             for (index, serial) in serials.enumerated() {
                 let nftId = NftId(
@@ -269,7 +270,7 @@ internal enum TokenService {
                 tx.addNftId(nftId)
             }
         } else {
-            try CommonParamsParser.getTokenIdsIfPresent(from: params.tokenIds).assign(to: &tx.tokenIds)
+            try CommonParamsParser.getTokenIdsIfPresent(from: params.tokenIds).assignIfPresent(to: &tx.tokenIds)
         }
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
@@ -316,7 +317,7 @@ internal enum TokenService {
         try CommonParamsParser.getHieroAnyCustomFeesIfPresent(
             from: params.customFees,
             for: JSONRPCMethod.updateTokenFeeSchedule
-        ).assign(to: &tx.customFees)
+        ).assignIfPresent(to: &tx.customFees)
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
@@ -328,8 +329,8 @@ internal enum TokenService {
         let method: JSONRPCMethod = .updateToken
 
         tx.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
-        params.name.assign(to: &tx.tokenName)
-        params.symbol.assign(to: &tx.tokenSymbol)
+        params.name.assignIfPresent(to: &tx.tokenName)
+        params.symbol.assignIfPresent(to: &tx.tokenSymbol)
         tx.treasuryAccountId = try CommonParamsParser.getAccountIdIfPresent(from: params.treasuryAccountId)
         tx.adminKey = try CommonParamsParser.getKeyIfPresent(from: params.adminKey)
         tx.kycKey = try CommonParamsParser.getKeyIfPresent(from: params.kycKey)
@@ -349,5 +350,145 @@ internal enum TokenService {
         try params.commonTransactionParams?.applyToTransaction(&tx)
 
         return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
+    }
+
+    /// Handles the `wipeToken` JSON-RPC method.
+    internal static func wipeToken(from params: WipeTokenParams) async throws -> JSONObject {
+        var tx = TokenWipeTransaction()
+        let method: JSONRPCMethod = .wipeToken
+
+        tx.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
+        tx.accountId = try CommonParamsParser.getAccountIdIfPresent(from: params.accountId)
+        try CommonParamsParser.getAmountIfPresent(from: params.amount, for: method).assignIfPresent(to: &tx.amount)
+        try params.serialNumbers.assignIfPresent(to: &tx.serials) { serials in
+            try serials.enumerated().map { index, serial in
+                try CommonParamsParser.getSerialNumber(from: serial, for: method, index: index)
+            }
+        }
+        try params.commonTransactionParams?.applyToTransaction(&tx)
+
+        return try await SDKClient.client.executeTransactionAndGetJsonRpcStatus(tx)
+    }
+
+    /// Handles the `getTokenInfo` JSON-RPC method.
+    internal static func getTokenInfo(from params: GetTokenInfoParams) async throws -> JSONObject {
+        let query = TokenInfoQuery()
+        let method: JSONRPCMethod = .getTokenInfo
+        query.tokenId = try CommonParamsParser.getTokenIdIfPresent(from: params.tokenId)
+        try CommonParamsParser.assignQueryPaymentIfPresent(from: params.queryPayment, to: query, for: method)
+        query.maxPaymentAmount(
+            try CommonParamsParser.getMaxQueryPaymentIfPresent(from: params.maxQueryPayment, for: method))
+
+        let result = try await SDKClient.client.executeQuery(query)
+        var response: [String: JSONObject] = [:]
+
+        response["tokenId"] = .string(result.tokenId.toString())
+        response["name"] = .string(result.name)
+        response["symbol"] = .string(result.symbol)
+        response["decimals"] = .int(Int64(result.decimals))
+        response["totalSupply"] = .string(String(result.totalSupply))
+        response["treasuryAccountId"] = .string(result.treasuryAccountId.toString())
+
+        result.adminKey.ifPresent { response["adminKey"] = .string(keyToString($0)) }
+        result.kycKey.ifPresent { response["kycKey"] = .string(keyToString($0)) }
+        result.freezeKey.ifPresent { response["freezeKey"] = .string(keyToString($0)) }
+        result.wipeKey.ifPresent { response["wipeKey"] = .string(keyToString($0)) }
+        result.supplyKey.ifPresent { response["supplyKey"] = .string(keyToString($0)) }
+        result.feeScheduleKey.ifPresent { response["feeScheduleKey"] = .string(keyToString($0)) }
+        result.pauseKey.ifPresent { response["pauseKey"] = .string(keyToString($0)) }
+        result.metadataKey.ifPresent { response["metadataKey"] = .string(keyToString($0)) }
+
+        response["defaultFreezeStatus"] = result.defaultFreezeStatus.map { .bool($0) } ?? .null
+        response["defaultKycStatus"] = result.defaultKycStatus.map { .bool($0) } ?? .null
+        response["pauseStatus"] = .string(pauseStatusToString(result.pauseStatus))
+        response["isDeleted"] = .bool(result.isDeleted)
+        result.autoRenewAccount.ifPresent { response["autoRenewAccountId"] = .string($0.toString()) }
+        result.autoRenewPeriod.ifPresent { response["autoRenewPeriod"] = .string(String($0.seconds)) }
+        result.expirationTime.ifPresent { response["expirationTime"] = .string(String($0.seconds)) }
+
+        response["tokenMemo"] = .string(result.tokenMemo)
+        response["customFees"] = .list(result.customFees.map { serializeCustomFee($0) })
+        response["tokenType"] = .string(tokenTypeToString(result.tokenType))
+        response["supplyType"] = .string(supplyTypeToString(result.supplyType))
+        response["maxSupply"] = .string(String(result.maxSupply))
+        response["metadata"] = .string(result.metadata.map { String(format: "%02x", $0) }.joined())
+        response["ledgerId"] = .string(result.ledgerId.description)
+
+        return .dictionary(response)
+    }
+
+    // MARK: - Private Helpers
+
+    private static func keyToString(_ key: Key) -> String {
+        if case .single(let publicKey) = key {
+            return publicKey.toStringDer()
+        }
+        // For complex keys, return the protobuf bytes as hex
+        return key.toBytes().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func pauseStatusToString(_ pauseStatus: Bool?) -> String {
+        switch pauseStatus {
+        case .none: return "NOT_APPLICABLE"
+        case .some(true): return "PAUSED"
+        case .some(false): return "UNPAUSED"
+        }
+    }
+
+    private static func tokenTypeToString(_ tokenType: TokenType) -> String {
+        switch tokenType {
+        case .fungibleCommon: return "FUNGIBLE_COMMON"
+        case .nonFungibleUnique: return "NON_FUNGIBLE_UNIQUE"
+        }
+    }
+
+    private static func supplyTypeToString(_ supplyType: TokenSupplyType) -> String {
+        switch supplyType {
+        case .infinite: return "INFINITE"
+        case .finite: return "FINITE"
+        }
+    }
+
+    private static func serializeCustomFee(_ fee: AnyCustomFee) -> JSONObject {
+        var result: [String: JSONObject] = [:]
+
+        fee.feeCollectorAccountId.ifPresent { result["feeCollectorAccountId"] = .string($0.toString()) }
+        result["allCollectorsAreExempt"] = .bool(fee.allCollectorsAreExempt)
+
+        switch fee {
+        case .fixed(let fixedFee):
+            var fixedFeeObj: [String: JSONObject] = [:]
+            fixedFeeObj["amount"] = .string(String(fixedFee.amount))
+            if let denominatingTokenId = fixedFee.denominatingTokenId {
+                fixedFeeObj["denominatingTokenId"] = .string(denominatingTokenId.toString())
+            }
+            result["fixedFee"] = .dictionary(fixedFeeObj)
+
+        case .fractional(let fractionalFee):
+            var fractionalFeeObj: [String: JSONObject] = [:]
+            fractionalFeeObj["numerator"] = .string(String(fractionalFee.numerator))
+            fractionalFeeObj["denominator"] = .string(String(fractionalFee.denominator))
+            fractionalFeeObj["minimumAmount"] = .string(String(fractionalFee.minimumAmount))
+            fractionalFeeObj["maximumAmount"] = .string(String(fractionalFee.maximumAmount))
+            fractionalFeeObj["assessmentMethod"] = .string(
+                fractionalFee.assessmentMethod == .exclusive ? "exclusive" : "inclusive")
+            result["fractionalFee"] = .dictionary(fractionalFeeObj)
+
+        case .royalty(let royaltyFee):
+            var royaltyFeeObj: [String: JSONObject] = [:]
+            royaltyFeeObj["numerator"] = .string(String(royaltyFee.numerator))
+            royaltyFeeObj["denominator"] = .string(String(royaltyFee.denominator))
+            if let fallbackFee = royaltyFee.fallbackFee {
+                var fallbackFeeObj: [String: JSONObject] = [:]
+                fallbackFeeObj["amount"] = .string(String(fallbackFee.amount))
+                if let denominatingTokenId = fallbackFee.denominatingTokenId {
+                    fallbackFeeObj["denominatingTokenId"] = .string(denominatingTokenId.toString())
+                }
+                royaltyFeeObj["fallbackFee"] = .dictionary(fallbackFeeObj)
+            }
+            result["royaltyFee"] = .dictionary(royaltyFeeObj)
+        }
+
+        return .dictionary(result)
     }
 }
