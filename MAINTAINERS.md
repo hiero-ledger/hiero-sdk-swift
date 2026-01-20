@@ -16,8 +16,8 @@ Maintainers are assigned the following scopes in this repository:
 
 |      Name      |  GitHub ID  | Scope      | LFID | Discord ID | Email | Company Affiliation |
 |--------------- | ----------- | ---------- | ---- | ---------- | ----- | ------------------- |
-| Rob Walworth   | rwalworth   | Maintainer |      |            |       | Hashgraph           |
-| Simi Hunjan    | SimiHunjan  | Maintainer |      |            |       | Hashgraph           |
+| Rob Walworth   | rwalworth   | Maintainer |      | robert.walworth | robert.walworth@swirldslabs.com | Hashgraph |
+| Simi Hunjan    | SimiHunjan  | Maintainer |      | simihunjan | simi@swirldslabs.com | Hashgraph |
 
 
 ## Emeritus Maintainers
