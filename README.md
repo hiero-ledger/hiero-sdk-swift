@@ -26,11 +26,13 @@ The Swift SDK for interacting with [Hiero](https://hiero.org)-based networks.
 
 ## Requirements
 
-| Platform | Minimum Version |
-|----------|-----------------|
-| Swift    | 5.6+            |
+| Platform | Minimum Version         |
+|----------|-------------------------|
+| Swift    | 5.6+ (6.0+ recommended) |
 | macOS    | 10.15+ (Catalina, 2019) |
-| iOS      | 13+ (2019)      |
+| iOS      | 13+ (2019)              |
+
+> ⚠️ **Deprecation Notice:** Swift 5.x support is deprecated and will be removed in a future release. Please migrate to Swift 6.0+.
 
 ---
 
