@@ -1,4 +1,5 @@
 // swift-tools-version:5.6
+// ⚠️ DEPRECATION: Swift 5.x support is deprecated. Please use Swift 6.0+.
 
 // SPDX-License-Identifier: Apache-2.0
 
