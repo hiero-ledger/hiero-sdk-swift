@@ -36,12 +36,12 @@ jobs:
       - name: Setup Swift (toolchain)
         uses: SwiftyLab/setup-swift@4bbb093f8c68d1dee1caa8b67c681a3f8fe70a91 # v1.12.0
         with:
-          swift-version: '5.9'
+          swift-version: '6.0'
 
       - name: Build swift-format
         run: |
           set -euxo pipefail
-          git clone --depth=1 --branch 510.1.0 https://github.com/apple/swift-format.git .swift-format-src
+          git clone --depth=1 --branch 600.0.0 https://github.com/apple/swift-format.git .swift-format-src
           pushd .swift-format-src
           swift build -c release
           echo "$PWD/.build/release" >> $GITHUB_PATH
@@ -56,7 +56,7 @@ jobs:
     name: Build and Test SDK
     strategy:
       matrix:
-        swift: ["5.9", "5.10"]
+        swift: ["5.9", "5.10", "6.0", "6.1", "6.2"]
     runs-on: hiero-client-sdk-linux-large
 
     steps:
