@@ -12,9 +12,11 @@ public class AbstractTokenTransferTransaction: Transaction {
         let accountId: AccountId
         var amount: Int64
         let isApproval: Bool
+        var hookCall: FungibleHookCall?
 
         internal func validateChecksums(on ledgerId: LedgerId) throws {
             try accountId.validateChecksums(on: ledgerId)
+            try hookCall?.hookCall.validateChecksums(on: ledgerId)
         }
     }
 
@@ -36,10 +38,14 @@ public class AbstractTokenTransferTransaction: Transaction {
         let receiverAccountId: AccountId
         let serial: UInt64
         let isApproval: Bool
+        var senderHookCall: NftHookCall?
+        var receiverHookCall: NftHookCall?
 
         internal func validateChecksums(on ledgerId: LedgerId) throws {
             try senderAccountId.validateChecksums(on: ledgerId)
             try receiverAccountId.validateChecksums(on: ledgerId)
+            try senderHookCall?.validateChecksums(on: ledgerId)
+            try receiverHookCall?.validateChecksums(on: ledgerId)
         }
     }
 
@@ -147,6 +153,14 @@ public class AbstractTokenTransferTransaction: Transaction {
         doTokenTransferWithDecimals(tokenId, accountId, amount, true, expectedDecimals)
     }
 
+    /// Add a fungible token transfer with a hook to be submitted as part of this TransferTransaction.
+    @discardableResult
+    public func tokenTransferWithHook(
+        _ tokenId: TokenId, _ accountId: AccountId, _ amount: Int64, _ hookCall: FungibleHookCall
+    ) -> Self {
+        doTokenTransferWithHook(tokenId, accountId, amount, false, hookCall)
+    }
+
     /// Add a non-approved nft transfer to the transaction.
     @discardableResult
     public func nftTransfer(_ nftId: NftId, _ senderAccountId: AccountId, _ receiverAccountId: AccountId)
@@ -163,13 +177,27 @@ public class AbstractTokenTransferTransaction: Transaction {
         doNftTransfer(nftId, senderAccountId, receiverAccountId, true)
     }
 
+    /// Add an NFT transfer with separate sender and receiver hook calls to this TransferTransaction.
+    @discardableResult
+    public func nftTransferWithHooks(
+        _ nftId: NftId,
+        _ senderAccountId: AccountId,
+        _ receiverAccountId: AccountId,
+        _ senderHookCall: NftHookCall,
+        _ receiverHookCall: NftHookCall
+    ) -> Self {
+        doNftTransferWithHooks(
+            nftId, senderAccountId, receiverAccountId, false, senderHookCall, receiverHookCall)
+    }
+
     private func doTokenTransfer(
         _ tokenId: TokenId,
         _ accountId: AccountId,
         _ amount: Int64,
         _ approved: Bool
     ) -> Self {
-        let transfer = Transfer(accountId: accountId, amount: amount, isApproval: approved)
+        let transfer = Transfer(
+            accountId: accountId, amount: amount, isApproval: approved, hookCall: nil)
 
         if let firstIndex = tokenTransfersInner.firstIndex(where: { (tokenTransfer) in tokenTransfer.tokenId == tokenId
         }) {
@@ -203,7 +231,8 @@ public class AbstractTokenTransferTransaction: Transaction {
         _ approved: Bool,
         _ expectedDecimals: UInt32
     ) -> Self {
-        let transfer = Transfer(accountId: accountId, amount: amount, isApproval: approved)
+        let transfer = Transfer(
+            accountId: accountId, amount: amount, isApproval: approved, hookCall: nil)
 
         if let firstIndex = tokenTransfersInner.firstIndex(where: { (tokenTransfer) in tokenTransfer.tokenId == tokenId
         }) {
@@ -239,6 +268,42 @@ public class AbstractTokenTransferTransaction: Transaction {
         return self
     }
 
+    private func doTokenTransferWithHook(
+        _ tokenId: TokenId,
+        _ accountId: AccountId,
+        _ amount: Int64,
+        _ approved: Bool,
+        _ hookCall: FungibleHookCall
+    ) -> Self {
+        let transfer = Transfer(
+            accountId: accountId, amount: amount, isApproval: approved, hookCall: hookCall)
+
+        if let firstIndex = tokenTransfersInner.firstIndex(where: { (tokenTransfer) in tokenTransfer.tokenId == tokenId
+        }) {
+            let existingTransfers = tokenTransfersInner[firstIndex].transfers
+
+            if let existingTransferIndex = existingTransfers.firstIndex(where: {
+                $0.accountId == accountId && $0.isApproval == approved
+            }) {
+                tokenTransfersInner[firstIndex].transfers[existingTransferIndex].amount += amount
+                tokenTransfersInner[firstIndex].transfers[existingTransferIndex].hookCall = hookCall
+            } else {
+                tokenTransfersInner[firstIndex].expectedDecimals = nil
+                tokenTransfersInner[firstIndex].transfers.append(transfer)
+            }
+        } else {
+            tokenTransfersInner.append(
+                TokenTransfer(
+                    tokenId: tokenId,
+                    transfers: [transfer],
+                    nftTransfers: [],
+                    expectedDecimals: nil
+                ))
+        }
+
+        return self
+    }
+
     private func doNftTransfer(
         _ nftId: NftId,
         _ senderAccountId: AccountId,
@@ -249,7 +314,44 @@ public class AbstractTokenTransferTransaction: Transaction {
             senderAccountId: senderAccountId,
             receiverAccountId: receiverAccountId,
             serial: nftId.serial,
-            isApproval: approved
+            isApproval: approved,
+            senderHookCall: nil,
+            receiverHookCall: nil
+        )
+
+        if let index = tokenTransfersInner.firstIndex(where: { transfer in transfer.tokenId == nftId.tokenId }) {
+            var tmp = tokenTransfersInner[index]
+            tmp.nftTransfers.append(transfer)
+            tokenTransfersInner[index] = tmp
+        } else {
+            tokenTransfersInner.append(
+                TokenTransfer(
+                    tokenId: nftId.tokenId,
+                    transfers: [],
+                    nftTransfers: [transfer],
+                    expectedDecimals: nil
+                )
+            )
+        }
+
+        return self
+    }
+
+    private func doNftTransferWithHooks(
+        _ nftId: NftId,
+        _ senderAccountId: AccountId,
+        _ receiverAccountId: AccountId,
+        _ approved: Bool,
+        _ senderHookCall: NftHookCall,
+        _ receiverHookCall: NftHookCall
+    ) -> Self {
+        let transfer = NftTransfer(
+            senderAccountId: senderAccountId,
+            receiverAccountId: receiverAccountId,
+            serial: nftId.serial,
+            isApproval: approved,
+            senderHookCall: senderHookCall,
+            receiverHookCall: receiverHookCall
         )
 
         if let index = tokenTransfersInner.firstIndex(where: { transfer in transfer.tokenId == nftId.tokenId }) {
@@ -319,8 +421,19 @@ extension AbstractTokenTransferTransaction.Transfer: TryProtobufCodable {
         self.init(
             accountId: try .fromProtobuf(proto.accountID),
             amount: proto.amount,
-            isApproval: proto.isApproval
+            isApproval: proto.isApproval,
+            hookCall: nil
         )
+
+        // Handle hook calls
+        switch proto.hookCall {
+        case .preTxAllowanceHook(let hookCall):
+            self.hookCall = try FungibleHookCall(protobuf: hookCall)
+        case .prePostTxAllowanceHook(let hookCall):
+            self.hookCall = try FungibleHookCall(protobuf: hookCall)
+        case nil:
+            break
+        }
     }
 
     internal func toProtobuf() -> Protobuf {
@@ -328,6 +441,15 @@ extension AbstractTokenTransferTransaction.Transfer: TryProtobufCodable {
             proto.accountID = accountId.toProtobuf()
             proto.amount = amount
             proto.isApproval = isApproval
+
+            // Handle hook calls
+            if let hookCall = hookCall {
+                if hookCall.hookType == .preTxAllowanceHook {
+                    proto.hookCall = .preTxAllowanceHook(hookCall.toProtobuf())
+                } else if hookCall.hookType == .prePostTxAllowanceHook {
+                    proto.hookCall = .prePostTxAllowanceHook(hookCall.toProtobuf())
+                }
+            }
         }
     }
 }
@@ -366,8 +488,30 @@ extension AbstractTokenTransferTransaction.NftTransfer: TryProtobufCodable {
             senderAccountId: try .fromProtobuf(proto.senderAccountID),
             receiverAccountId: try .fromProtobuf(proto.receiverAccountID),
             serial: UInt64(proto.serialNumber),
-            isApproval: proto.isApproval
+            isApproval: proto.isApproval,
+            senderHookCall: nil,
+            receiverHookCall: nil
         )
+
+        // Handle sender allowance hook calls
+        switch proto.senderAllowanceHookCall {
+        case .preTxSenderAllowanceHook(let hookCall):
+            self.senderHookCall = try NftHookCall(protobuf: hookCall)
+        case .prePostTxSenderAllowanceHook(let hookCall):
+            self.senderHookCall = try NftHookCall(protobuf: hookCall)
+        case nil:
+            break
+        }
+
+        // Handle receiver allowance hook calls
+        switch proto.receiverAllowanceHookCall {
+        case .preTxReceiverAllowanceHook(let hookCall):
+            self.receiverHookCall = try NftHookCall(protobuf: hookCall)
+        case .prePostTxReceiverAllowanceHook(let hookCall):
+            self.receiverHookCall = try NftHookCall(protobuf: hookCall)
+        case nil:
+            break
+        }
     }
 
     internal func toProtobuf() -> Protobuf {
@@ -376,6 +520,20 @@ extension AbstractTokenTransferTransaction.NftTransfer: TryProtobufCodable {
             proto.receiverAccountID = receiverAccountId.toProtobuf()
             proto.serialNumber = Int64(bitPattern: serial)
             proto.isApproval = isApproval
+
+            // Handle sender allowance hook calls
+            if let senderHookCall = senderHookCall {
+                proto.senderAllowanceHookCall = .preTxSenderAllowanceHook(senderHookCall.toProtobuf())
+            } else if let senderHookCall = senderHookCall {
+                proto.senderAllowanceHookCall = .prePostTxSenderAllowanceHook(senderHookCall.toProtobuf())
+            }
+
+            // Handle receiver allowance hook calls
+            if let receiverHookCall = receiverHookCall {
+                proto.receiverAllowanceHookCall = .preTxReceiverAllowanceHook(receiverHookCall.toProtobuf())
+            } else if let receiverHookCall = receiverHookCall {
+                proto.receiverAllowanceHookCall = .prePostTxReceiverAllowanceHook(receiverHookCall.toProtobuf())
+            }
         }
     }
 }
