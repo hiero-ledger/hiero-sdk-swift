@@ -278,7 +278,6 @@ public actor ResourceManager {
         if !cleanupPolicy.cleanupAccounts && !cleanupPolicy.cleanupTokens && !cleanupPolicy.cleanupFiles
             && !cleanupPolicy.cleanupTopics && !cleanupPolicy.cleanupContracts
         {
-            print("Resource cleanup is disabled - skipping")
             return
         }
 
