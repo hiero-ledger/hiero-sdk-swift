@@ -315,4 +315,77 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
             "expected error creating account"
         )
     }
+
+    internal func test_CreateTransactionWithLambdaHook() async throws {
+        // Given
+        let contractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: contractId)
+
+        // When
+        let (accountId, _) = try await createAccountWithHook(hookDetails: hookDetails)
+
+        // Then
+        XCTAssertNotNil(accountId)
+    }
+
+    internal func test_CreateTransactionWithLambdaHookAndStorageUpdates() async throws {
+        // Given
+        let contractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetailsWithStorage(contractId: contractId)
+
+        // When
+        let (accountId, _) = try await createAccountWithHook(hookDetails: hookDetails)
+
+        // Then
+        XCTAssertNotNil(accountId)
+    }
+
+    internal func test_CreateTransactionWithLambdaHookWithNoContractId() async throws {
+        // Given
+        let key = PrivateKey.generateEcdsa()
+
+        // Create hook with no contract ID (invalid)
+        var lambdaEvmHook = LambdaEvmHook()
+
+        var slot = LambdaStorageSlot()
+        slot.key = Data([0x01, 0x23, 0x45])
+        slot.value = Data([0x67, 0x89, 0xAB])
+
+        var update = LambdaStorageUpdate()
+        update.storageSlot = slot
+        lambdaEvmHook.addStorageUpdate(update)
+
+        let hookDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook,
+            hookId: 1,
+            lambdaEvmHook: lambdaEvmHook
+        )
+
+        // When / Then
+        await assertReceiptStatus(
+            try await AccountCreateTransaction()
+                .keyWithoutAlias(.single(key.publicKey))
+                .addHook(hookDetails)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            .invalidHookCreationSpec
+        )
+    }
+
+    internal func test_CreateTransactionWithSameLambdaHookIds() async throws {
+        // Given
+        let key = PrivateKey.generateEcdsa()
+        let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
+        let hookDetails = createHookDetails(contractId: fakeContractId)
+
+        // When / Then
+        await assertPrecheckStatus(
+            try await AccountCreateTransaction()
+                .keyWithoutAlias(.single(key.publicKey))
+                .addHook(hookDetails)
+                .addHook(hookDetails)
+                .execute(testEnv.client),
+            .hookIdRepeatedInCreationDetails
+        )
+    }
 }

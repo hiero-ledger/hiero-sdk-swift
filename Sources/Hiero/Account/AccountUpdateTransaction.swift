@@ -15,6 +15,8 @@ import SwiftProtobuf
 public final class AccountUpdateTransaction: Transaction {
     /// Create a new `AccountCreateTransaction` ready for configuration.
     public override init() {
+        self.hookCreationDetails = []
+        self.hooksToDelete = []
         super.init()
     }
 
@@ -59,6 +61,8 @@ public final class AccountUpdateTransaction: Transaction {
         self.stakedAccountId = stakedAccountId
         self.stakedNodeId = stakedNodeId
         self.declineStakingReward = data.hasDeclineReward ? data.declineReward.value : nil
+        self.hookCreationDetails = try data.hookCreationDetails.map { try HookCreationDetails.fromProtobuf($0) }
+        self.hooksToDelete = data.hookIdsToDelete
 
         try super.init(protobuf: proto)
     }
@@ -288,6 +292,46 @@ public final class AccountUpdateTransaction: Transaction {
         return self
     }
 
+    public var hookCreationDetails: [HookCreationDetails] {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    @discardableResult
+    public func addHookToCreate(_ hook: HookCreationDetails) -> Self {
+        self.hookCreationDetails.append(hook)
+
+        return self
+    }
+
+    @discardableResult
+    public func setHooksToCreate(_ hooks: [HookCreationDetails]) -> Self {
+        self.hookCreationDetails = hooks
+
+        return self
+    }
+
+    public var hooksToDelete: [Int64] {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    @discardableResult
+    public func addHookToDelete(_ hook: Int64) -> Self {
+        self.hooksToDelete.append(hook)
+
+        return self
+    }
+
+    @discardableResult
+    public func setHooksToDelete(_ hooks: [Int64]) -> Self {
+        self.hooksToDelete = hooks
+
+        return self
+    }
+
     internal override func validateChecksums(on ledgerId: LedgerId) throws {
         try accountId?.validateChecksums(on: ledgerId)
         try stakedAccountId?.validateChecksums(on: ledgerId)
@@ -349,6 +393,12 @@ extension AccountUpdateTransaction: ToProtobuf {
             if let declineStakingReward = declineStakingReward {
                 proto.declineReward = Google_Protobuf_BoolValue(declineStakingReward)
             }
+
+            for hook in hookCreationDetails {
+                proto.hookCreationDetails.append(hook.toProtobuf())
+            }
+
+            proto.hookIdsToDelete = hooksToDelete
         }
     }
 }

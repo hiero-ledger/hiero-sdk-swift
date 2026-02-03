@@ -77,6 +77,42 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
         return self
     }
 
+    /// Add an Hbar transfer with a hook to be submitted as part of this TransferTransaction.
+    @discardableResult
+    public func hbarTransferWithHook(_ accountId: AccountId, _ amount: Hbar, _ hookCall: FungibleHookCall) -> Self {
+        doHbarTransferWithHook(accountId, amount.toTinybars(), false, hookCall)
+    }
+
+    private func doHbarTransferWithHook(
+        _ accountId: AccountId,
+        _ amount: Int64,
+        _ approved: Bool,
+        _ hookCall: FungibleHookCall
+    ) -> Self {
+        for (index, transfer) in transfers.enumerated()
+        where transfer.accountId == accountId && transfer.isApproval == approved {
+            let newTinybars = transfer.amount + amount
+            if newTinybars == 0 {
+                transfers.remove(at: index)
+            } else {
+                transfers[index].amount = newTinybars
+                transfers[index].hookCall = hookCall
+            }
+
+            return self
+        }
+
+        transfers.append(
+            Transfer(
+                accountId: accountId,
+                amount: amount,
+                isApproval: approved,
+                hookCall: hookCall
+            ))
+
+        return self
+    }
+
     internal override func validateChecksums(on ledgerId: LedgerId) throws {
         try transfers.validateChecksums(on: ledgerId)
         try tokenTransfersInner.validateChecksums(on: ledgerId)

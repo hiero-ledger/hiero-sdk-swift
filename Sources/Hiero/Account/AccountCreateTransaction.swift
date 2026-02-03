@@ -31,6 +31,7 @@ public final class AccountCreateTransaction: Transaction {
         self.stakedAccountId = stakedAccountId
         self.stakedNodeId = stakedNodeId
         self.declineStakingReward = declineStakingReward
+        self.hookCreationDetails = []
 
         super.init()
     }
@@ -56,6 +57,7 @@ public final class AccountCreateTransaction: Transaction {
 
         self.declineStakingReward = data.declineReward
         self.alias = !data.alias.isEmpty ? try EvmAddress(data.alias) : nil
+        self.hookCreationDetails = try data.hookCreationDetails.map { try HookCreationDetails.fromProtobuf($0) }
 
         try super.init(protobuf: proto)
     }
@@ -289,6 +291,26 @@ public final class AccountCreateTransaction: Transaction {
         return self
     }
 
+    public var hookCreationDetails: [HookCreationDetails] {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    @discardableResult
+    public func addHook(_ hook: HookCreationDetails) -> Self {
+        self.hookCreationDetails.append(hook)
+
+        return self
+    }
+
+    @discardableResult
+    public func setHooks(_ hooks: [HookCreationDetails]) -> Self {
+        self.hookCreationDetails = hooks
+
+        return self
+    }
+
     internal override func validateChecksums(on ledgerId: LedgerId) throws {
         try stakedAccountId?.validateChecksums(on: ledgerId)
         try autoRenewAccountId?.validateChecksums(on: ledgerId)
@@ -338,6 +360,8 @@ extension AccountCreateTransaction: ToProtobuf {
             }
 
             proto.declineReward = declineStakingReward
+
+            proto.hookCreationDetails = hookCreationDetails.map { $0.toProtobuf() }
         }
     }
 }

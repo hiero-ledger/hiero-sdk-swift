@@ -246,4 +246,31 @@ extension HieroIntegrationTestCase {
             XCTAssertGreaterThan(balance.hbars, 0, "Expected positive hbar balance", file: file, line: line)
         }
     }
+
+    // MARK: - Account with Hook Helpers
+
+    /// Creates an account with an attached hook and registers it for cleanup.
+    ///
+    /// - Parameters:
+    ///   - hookDetails: The hook creation details to attach
+    ///   - initialBalance: Optional initial Hbar balance
+    ///   - useAdminClient: Whether to use the admin client (default: false)
+    /// - Returns: Tuple of account ID and private key
+    public func createAccountWithHook(
+        hookDetails: HookCreationDetails,
+        initialBalance: Hbar? = nil,
+        useAdminClient: Bool = false
+    ) async throws -> (accountId: AccountId, key: PrivateKey) {
+        let key = PrivateKey.generateEd25519()
+        let tx = AccountCreateTransaction()
+            .keyWithoutAlias(.single(key.publicKey))
+            .addHook(hookDetails)
+
+        if let initialBalance = initialBalance {
+            tx.initialBalance(initialBalance)
+        }
+
+        let accountId = try await createAccount(tx, key: key, useAdminClient: useAdminClient)
+        return (accountId, key)
+    }
 }
