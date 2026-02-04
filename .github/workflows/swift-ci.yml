@@ -112,7 +112,7 @@ jobs:
         with:
           soloVersion: v0.54.0
           installMirrorNode: true
-          mirrorNodeVersion: v0.146.0
+          mirrorNodeVersion: v0.147.0
           hieroVersion: v0.69.1
           dualMode: true
       
