@@ -12,8 +12,8 @@ import Foundation
 /// ## Example
 /// ```swift
 /// let transaction = TransferTransaction()
-///     .addHbarTransfer(sender, .init(amount: -100))
-///     .addHbarTransfer(receiver, .init(amount: 100))
+///     .hbarTransfer(sender, Hbar.fromTinybars(-100))
+///     .hbarTransfer(receiver, Hbar.fromTinybars(100))
 ///
 /// let response = try await transaction.execute(client)
 /// let hash = response.transactionHash
