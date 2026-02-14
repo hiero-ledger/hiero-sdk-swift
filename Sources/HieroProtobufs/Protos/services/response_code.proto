@@ -1893,7 +1893,6 @@ enum ResponseCodeEnum {
      * The HookCall set in the transaction is invalid
      */
     INVALID_HOOK_CALL = 522;
-
     /**
      *  Hooks are not supported to be used in TokenAirdrop transactions
      */
