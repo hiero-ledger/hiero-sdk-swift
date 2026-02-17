@@ -21,14 +21,14 @@ public final class TokenUnpauseTransaction: Transaction {
         try super.init(protobuf: proto)
     }
 
-    /// The token to be paused.
+    /// The token to be unpaused.
     public var tokenId: TokenId? {
         willSet {
             ensureNotFrozen()
         }
     }
 
-    /// Sets the token to be paused.
+    /// Sets the token to be unpaused.
     @discardableResult
     public func tokenId(_ tokenId: TokenId?) -> Self {
         self.tokenId = tokenId
