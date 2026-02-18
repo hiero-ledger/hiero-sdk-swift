@@ -300,6 +300,7 @@ if __name__ == "__main__":
         "services/state/history/history_types.proto",
         
         "platform/event/state_signature_transaction.proto",
+        "block/stream/chain_of_trust_proof.proto",
 
         "mirror/mirror_network_service.proto",
 
