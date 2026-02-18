@@ -66,4 +66,97 @@ internal final class ContractCreateTransactionIntegrationTests: HieroIntegration
             .invalidFileID
         )
     }
+
+    internal func test_CreateContractWithHook() async throws {
+        // Given
+        let lambdaContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: lambdaContractId)
+
+        // When
+        let txReceipt = try await ContractCreateTransaction()
+            .bytecode(TestConstants.evmHookBytecode)
+            .gas(300_000)
+            .addHook(hookDetails)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // Then
+        XCTAssertNotNil(txReceipt.contractId)
+    }
+
+    internal func test_CreateContractWithHookWithStorageUpdates() async throws {
+        // Given
+        let lambdaContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetailsWithStorage(contractId: lambdaContractId)
+
+        // When
+        let txReceipt = try await ContractCreateTransaction()
+            .bytecode(TestConstants.evmHookBytecode)
+            .gas(300_000)
+            .addHook(hookDetails)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // Then
+        XCTAssertNotNil(txReceipt.contractId)
+    }
+
+    internal func test_CannotCreateContractWithNoContractIdForHook() async throws {
+        // Given - Hook with no contract ID (invalid)
+        let lambdaEvmHook = LambdaEvmHook()
+        let hookDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook,
+            hookId: 1,
+            lambdaEvmHook: lambdaEvmHook
+        )
+
+        // When / Then
+        await assertReceiptStatus(
+            try await ContractCreateTransaction()
+                .bytecode(TestConstants.evmHookBytecode)
+                .gas(300_000)
+                .addHook(hookDetails)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            .invalidHookCreationSpec
+        )
+    }
+
+    internal func test_CannotCreateContractWithDuplicateHookId() async throws {
+        // Given
+        let lambdaContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: lambdaContractId)
+
+        // When / Then
+        await assertPrecheckStatus(
+            try await ContractCreateTransaction()
+                .bytecode(TestConstants.evmHookBytecode)
+                .gas(300_000)
+                .addHook(hookDetails)
+                .addHook(hookDetails)
+                .execute(testEnv.client),
+            .hookIdRepeatedInCreationDetails
+        )
+    }
+
+    internal func test_CreateContractWithHookWithAdminKey() async throws {
+        // Given
+        let adminKey = PrivateKey.generateEcdsa()
+        let lambdaContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(
+            contractId: lambdaContractId,
+            adminKey: .single(adminKey.publicKey)
+        )
+
+        // When
+        let txReceipt = try await ContractCreateTransaction()
+            .bytecode(TestConstants.evmHookBytecode)
+            .gas(300_000)
+            .addHook(hookDetails)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // Then
+        XCTAssertNotNil(txReceipt.contractId)
+    }
 }

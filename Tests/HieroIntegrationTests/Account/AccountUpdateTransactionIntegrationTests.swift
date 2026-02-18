@@ -69,4 +69,170 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
             .existingAutomaticAssociationsExceedGivenLimit
         )
     }
+
+    internal func test_CanAddHookToCreateToAccount() async throws {
+        // Given
+        let (accountId, key) = try await createTestAccount()
+        let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
+        let hookDetails = createHookDetails(contractId: fakeContractId)
+
+        // When / Then
+        do {
+            _ = try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToCreate(hookDetails)
+                .freezeWith(testEnv.client)
+                .sign(key)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        } catch {
+            XCTFail("Unexpected throw: \(error)")
+        }
+    }
+
+    internal func test_CannotUpdateWithMultipleOfSameHook() async throws {
+        // Given
+        let (accountId, key) = try await createTestAccount()
+        let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
+        let hookDetails = createHookDetails(contractId: fakeContractId)
+
+        // When / Then
+        await assertPrecheckStatus(
+            try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToCreate(hookDetails)
+                .addHookToCreate(hookDetails)
+                .freezeWith(testEnv.client)
+                .sign(key)
+                .execute(testEnv.client),
+            .hookIdRepeatedInCreationDetails
+        )
+    }
+
+    internal func test_CannotUpdateWithHookAlreadyInUse() async throws {
+        // Given
+        let (accountId, key) = try await createTestAccount()
+        let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
+        let hookDetails = createHookDetails(contractId: fakeContractId)
+
+        // Add hook once
+        _ = try await AccountUpdateTransaction()
+            .accountId(accountId)
+            .addHookToCreate(hookDetails)
+            .freezeWith(testEnv.client)
+            .sign(key)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // When / Then - Add again should fail
+        await assertReceiptStatus(
+            try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToCreate(hookDetails)
+                .freezeWith(testEnv.client)
+                .sign(key)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            .hookIdInUse
+        )
+    }
+
+    internal func test_CanAddHookToCreateToAccountWithStorageUpdates() async throws {
+        // Given
+        let (accountId, key) = try await createTestAccount()
+        let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
+        let hookDetails = createHookDetailsWithStorage(contractId: fakeContractId)
+
+        // When / Then
+        do {
+            _ = try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToCreate(hookDetails)
+                .freezeWith(testEnv.client)
+                .sign(key)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        } catch {
+            XCTFail("Unexpected throw: \(error)")
+        }
+    }
+
+    internal func test_CanDeleteHook() async throws {
+        // Given
+        let (accountId, key) = try await createTestAccount()
+        let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
+        let hookId: Int64 = 1
+        let hookDetails = createHookDetails(contractId: fakeContractId, hookId: hookId)
+
+        // Add hook first
+        _ = try await AccountUpdateTransaction()
+            .accountId(accountId)
+            .addHookToCreate(hookDetails)
+            .freezeWith(testEnv.client)
+            .sign(key)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // When / Then - Delete hook
+        do {
+            _ = try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToDelete(hookId)
+                .freezeWith(testEnv.client)
+                .sign(key)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        } catch {
+            XCTFail("Unexpected throw: \(error)")
+        }
+    }
+
+    internal func test_CannotDeleteNonExistentHook() async throws {
+        // Given
+        let (accountId, key) = try await createTestAccount()
+        let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
+        let hookDetails = createHookDetails(contractId: fakeContractId)
+
+        // Add a hook first
+        _ = try await AccountUpdateTransaction()
+            .accountId(accountId)
+            .addHookToCreate(hookDetails)
+            .freezeWith(testEnv.client)
+            .sign(key)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // When / Then - Delete non-existent hook
+        await assertReceiptStatus(
+            try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToDelete(999)
+                .freezeWith(testEnv.client)
+                .sign(key)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            .hookNotFound
+        )
+    }
+
+    internal func test_CannotAddAndDeleteSameHook() async throws {
+        // Given
+        let (accountId, key) = try await createTestAccount()
+        let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
+        let hookId: Int64 = 1
+        let hookDetails = createHookDetails(contractId: fakeContractId, hookId: hookId)
+
+        // When / Then
+        await assertReceiptStatus(
+            try await AccountUpdateTransaction()
+                .accountId(accountId)
+                .addHookToCreate(hookDetails)
+                .addHookToDelete(hookId)
+                .freezeWith(testEnv.client)
+                .sign(key)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            .hookNotFound
+        )
+    }
 }
