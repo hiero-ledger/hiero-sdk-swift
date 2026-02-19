@@ -4,7 +4,7 @@ import Foundation
 import HieroProtobufs
 
 /// Possible `FeeData` subtypes.
-public enum FeeDataType {
+public enum FeeDataType: CaseIterable {
     /// The resource prices have no special scope.
     case `default`
 
