@@ -13,7 +13,7 @@ import SwiftProtobuf
 /// signed by both the old key (from before the change) and the new key.
 ///
 public final class AccountUpdateTransaction: Transaction {
-    /// Create a new `AccountCreateTransaction` ready for configuration.
+    /// Create a new `AccountUpdateTransaction` ready for configuration.
     public override init() {
         super.init()
     }
