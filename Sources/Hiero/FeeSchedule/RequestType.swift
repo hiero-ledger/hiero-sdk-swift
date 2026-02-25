@@ -6,7 +6,7 @@ import HieroProtobufs
 // swiftlint:disable file_length
 
 /// The functionality provided by Hiero.
-public enum RequestType {
+public enum RequestType: CaseIterable {
     /// Transfer from one account to another.
     case cryptoTransfer
 

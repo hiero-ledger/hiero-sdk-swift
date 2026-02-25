@@ -16,8 +16,8 @@ Maintainers are assigned the following scopes in this repository:
 
 |      Name      |  GitHub ID  | Scope      | LFID | Discord ID | Email | Company Affiliation |
 |--------------- | ----------- | ---------- | ---- | ---------- | ----- | ------------------- |
-| Rob Walworth   | rwalworth   | Maintainer |      |            |       | Hashgraph           |
-| Simi Hunjan    | SimiHunjan  | Maintainer |      |            |       | Hashgraph           |
+| Rob Walworth   | rwalworth   | Maintainer |      | robert.walworth | robert.walworth@swirldslabs.com | Hashgraph |
+| Simi Hunjan    | SimiHunjan  | Maintainer |      | simihunjan | simi@swirldslabs.com | Hashgraph |
 
 
 ## Emeritus Maintainers
@@ -28,4 +28,4 @@ Maintainers are assigned the following scopes in this repository:
 
 ## The Duties of a Maintainer
 
-Maintainers are expected to perform duties in alignment with **[Hiero-Ledger's defined maintainer guidelines](https://github.com/hiero-ledger/governance/blob/main/roles-and-groups.md#maintainers).**
+Maintainers are expected to perform duties in alignment with **[Hiero-Ledger's defined maintainer guidelines](https://github.com/hiero-ledger/.github/blob/main/CONTRIBUTING.md#about-users-and-maintainers).**
