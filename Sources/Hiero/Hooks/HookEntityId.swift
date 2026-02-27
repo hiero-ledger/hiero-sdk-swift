@@ -2,24 +2,31 @@
 
 import HieroProtobufs
 
+/// Identifies the entity that owns a hook.
+///
+/// An entity can be either an account or a contract. Exactly one of `accountId` or `contractId`
+/// should be set.
 public struct HookEntityId {
-    /// ID of the account that owns a hook.
+    /// The ID of the account that owns the hook, if the owner is an account.
     public var accountId: AccountId? = nil
 
-    /// ID of the contract that owns a hook.
+    /// The ID of the contract that owns the hook, if the owner is a contract.
     public var contractId: ContractId? = nil
 
+    /// Create a new `HookEntityId` with no owner set.
     public init() {}
 
+    /// Create a new `HookEntityId` with an account owner.
     public init(accountId: AccountId) {
         self.accountId = accountId
     }
 
+    /// Create a new `HookEntityId` with a contract owner.
     public init(contractId: ContractId) {
         self.contractId = contractId
     }
 
-    /// Sets the ID of the account that owns a hook.
+    /// Sets the owning account ID, clearing any contract ID.
     @discardableResult
     public mutating func accountId(_ accountId: AccountId) -> Self {
         self.accountId = accountId
@@ -27,7 +34,7 @@ public struct HookEntityId {
         return self
     }
 
-    /// Sets the ID of the contract that owns a hook.
+    /// Sets the owning contract ID, clearing any account ID.
     @discardableResult
     public mutating func contractId(_ contractId: ContractId) -> Self {
         self.contractId = contractId

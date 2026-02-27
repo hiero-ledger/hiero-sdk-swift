@@ -77,7 +77,16 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
         return self
     }
 
-    /// Add an Hbar transfer with a hook to be submitted as part of this TransferTransaction.
+    /// Adds an HBAR transfer with an account allowance hook to this transaction.
+    ///
+    /// The hook referenced by `hookCall` must be an `ACCOUNT_ALLOWANCE_HOOK` installed on
+    /// the account identified by `accountId`. The hook will be invoked as part of the
+    /// `CryptoTransfer` execution to authorize the transfer.
+    ///
+    /// - Parameters:
+    ///   - accountId: The account to transfer HBAR from/to.
+    ///   - amount: The amount of HBAR to transfer.
+    ///   - hookCall: The fungible hook call specifying the hook ID, EVM call details, and hook type.
     @discardableResult
     public func addHbarTransferWithHook(_ accountId: AccountId, _ amount: Hbar, _ hookCall: FungibleHookCall) -> Self {
         doHbarTransferWithHook(accountId, amount.toTinybars(), false, hookCall)

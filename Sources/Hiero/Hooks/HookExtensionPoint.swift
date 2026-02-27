@@ -3,7 +3,16 @@
 import Foundation
 import HieroProtobufs
 
+/// The Hiero extension points that accept a hook.
+///
+/// Extension points define where in the transaction lifecycle a hook can be invoked.
+/// Each extension point specifies a contract between the network and the hook's EVM bytecode,
+/// including what parameters are passed and what return value is expected.
 public enum HookExtensionPoint {
+    /// Used to customize an account's allowances during a `CryptoTransfer` transaction.
+    ///
+    /// When referenced in a transfer, the hook's EVM bytecode is called with the proposed
+    /// transfers. The hook must return `true` for the transfer to proceed.
     case accountAllowanceHook
 }
 

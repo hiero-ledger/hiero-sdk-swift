@@ -3,27 +3,36 @@
 import Foundation
 import HieroProtobufs
 
-/// An ID for a hook.
+/// The fully-qualified identifier for a created hook.
+///
+/// A hook's full ID is a composite of its owning entity's ID and an arbitrary 64-bit hook ID.
+/// The hook ID need not be sequential relative to other hooks owned by the entity, but an
+/// entity may only have one hook with a given ID at a time.
 public struct HookId {
-    /// The hook's owning entity ID.
+    /// The ID of the entity that owns this hook.
     public var entityId: HookEntityId
 
-    /// The ID for the hook.
+    /// The arbitrary 64-bit identifier for this hook within its owning entity.
     public var hookId: Int64
 
+    /// Create a new `HookId`.
+    ///
+    /// - Parameters:
+    ///   - entityId: The ID of the owning entity.
+    ///   - hookId: The hook's 64-bit identifier.
     public init(entityId: HookEntityId = HookEntityId(), hookId: Int64 = 0) {
         self.entityId = entityId
         self.hookId = hookId
     }
 
-    /// Set the ID of the owning entity.
+    /// Sets the ID of the owning entity.
     @discardableResult
     public mutating func entityId(_ entityId: HookEntityId) -> Self {
         self.entityId = entityId
         return self
     }
 
-    /// Set the ID of the hook.
+    /// Sets the hook's 64-bit identifier.
     @discardableResult
     public mutating func hookId(_ hookId: Int64) -> Self {
         self.hookId = hookId

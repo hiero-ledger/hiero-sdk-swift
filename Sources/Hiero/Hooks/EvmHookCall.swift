@@ -4,26 +4,38 @@ import Foundation
 import HieroProtobufs
 
 /// Specifies the details of a call to an EVM hook.
+///
+/// When a transaction references a hook, the `EvmHookCall` provides the extra call data
+/// and gas limit for that specific hook invocation. The payer of the triggering transaction
+/// pays for the upfront gas cost, and will never be charged more gas than the `gasLimit`
+/// specified here.
 public struct EvmHookCall {
-    /// The call data to pass to the hook.
+    /// Extra call data to pass to the hook via the `IHieroHook.HookContext.data` field.
     public var data: Data
 
-    /// The gas limit to use.
+    /// The maximum amount of gas to use for this hook invocation.
+    ///
+    /// The payer will never be charged for more gas than this limit.
     public var gasLimit: UInt64
 
+    /// Create a new `EvmHookCall`.
+    ///
+    /// - Parameters:
+    ///   - data: Extra call data to pass to the hook.
+    ///   - gasLimit: The gas limit for the hook invocation.
     public init(data: Data = Data(), gasLimit: UInt64 = 0) {
         self.data = data
         self.gasLimit = gasLimit
     }
 
-    /// Set the call data to pass to the hook.
+    /// Sets the extra call data to pass to the hook.
     @discardableResult
     public mutating func data(_ callData: Data) -> Self {
         self.data = callData
         return self
     }
 
-    /// Set the gas limit for the hook.
+    /// Sets the maximum gas limit for the hook invocation.
     @discardableResult
     public mutating func gasLimit(_ gasLimit: UInt64) -> Self {
         self.gasLimit = gasLimit

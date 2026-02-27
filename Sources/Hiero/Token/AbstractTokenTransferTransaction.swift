@@ -4,12 +4,16 @@ import GRPC
 import HieroProtobufs
 import SwiftProtobuf
 
+/// Base class for transactions that transfer tokens, providing shared token and NFT transfer logic.
+///
+/// This class is extended by `TransferTransaction` to add HBAR transfer capabilities.
 public class AbstractTokenTransferTransaction: Transaction {
-    // avoid scope collisions by nesting :/
+    /// A single account balance adjustment (HBAR or fungible token).
     struct Transfer: ValidateChecksums {
         let accountId: AccountId
         var amount: Int64
         let isApproval: Bool
+        /// An optional account allowance hook call to authorize this adjustment.
         var hookCall: FungibleHookCall?
 
         internal func validateChecksums(on ledgerId: LedgerId) throws {
@@ -18,6 +22,7 @@ public class AbstractTokenTransferTransaction: Transaction {
         }
     }
 
+    /// A zero-sum list of balance adjustments and NFT ownership changes for a single token.
     struct TokenTransfer: ValidateChecksums {
         let tokenId: TokenId
         var transfers: [AbstractTokenTransferTransaction.Transfer]
@@ -31,12 +36,15 @@ public class AbstractTokenTransferTransaction: Transaction {
         }
     }
 
+    /// A single NFT ownership change from a sender to a receiver.
     struct NftTransfer: ValidateChecksums {
         let senderAccountId: AccountId
         let receiverAccountId: AccountId
         let serial: UInt64
         let isApproval: Bool
+        /// An optional account allowance hook call on the sender.
         var senderHookCall: NftHookCall?
+        /// An optional account allowance hook call on the receiver.
         var receiverHookCall: NftHookCall?
 
         internal func validateChecksums(on ledgerId: LedgerId) throws {
@@ -151,7 +159,20 @@ public class AbstractTokenTransferTransaction: Transaction {
         doTokenTransferWithDecimals(tokenId, accountId, amount, true, expectedDecimals)
     }
 
-    /// Add a fungible token transfer with a hook to be submitted as part of this TransferTransaction.
+    /// Adds a fungible token transfer with an account allowance hook to this transaction.
+    ///
+    /// The hook referenced by `hookCall` must be an `ACCOUNT_ALLOWANCE_HOOK` installed on
+    /// the account identified by `accountId`. The hook will be invoked as part of the
+    /// `CryptoTransfer` execution to authorize the transfer.
+    ///
+    /// `amount` is in the lowest denomination for the token (if the token has `2` decimals
+    /// this would be `0.01` tokens).
+    ///
+    /// - Parameters:
+    ///   - tokenId: The ID of the fungible token to transfer.
+    ///   - accountId: The account to transfer tokens from/to.
+    ///   - amount: The amount of tokens in the lowest denomination.
+    ///   - hookCall: The fungible hook call specifying the hook ID, EVM call details, and hook type.
     @discardableResult
     public func addTokenTransferWithHook(
         _ tokenId: TokenId, _ accountId: AccountId, _ amount: Int64, _ hookCall: FungibleHookCall
@@ -175,7 +196,21 @@ public class AbstractTokenTransferTransaction: Transaction {
         doNftTransfer(nftId, senderAccountId, receiverAccountId, true)
     }
 
-    /// Add an NFT transfer with separate sender and receiver hook calls to this TransferTransaction.
+    /// Adds an NFT transfer with separate sender and receiver account allowance hooks.
+    ///
+    /// The sender hook must be an `ACCOUNT_ALLOWANCE_HOOK` installed on `senderAccountId`,
+    /// and the receiver hook must be installed on `receiverAccountId`. Both hooks will be
+    /// invoked as part of the `CryptoTransfer` execution.
+    ///
+    /// NFT transfers support both sender and receiver hooks on the same transfer, since the
+    /// receiver hook can satisfy `receiver_sig_required=true`.
+    ///
+    /// - Parameters:
+    ///   - nftId: The NFT to transfer (token ID + serial number).
+    ///   - senderAccountId: The account sending the NFT.
+    ///   - receiverAccountId: The account receiving the NFT.
+    ///   - senderHookCall: The hook call for the sender's allowance hook.
+    ///   - receiverHookCall: The hook call for the receiver's allowance hook.
     @discardableResult
     public func addNftTransferWithHook(
         _ nftId: NftId,

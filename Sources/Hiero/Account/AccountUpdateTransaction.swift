@@ -292,12 +292,19 @@ public final class AccountUpdateTransaction: Transaction {
         return self
     }
 
+    /// The hooks to create on this account.
+    ///
+    /// Each ``HookCreationDetails`` specifies the extension point, hook ID, EVM implementation,
+    /// and optional admin key for a hook to attach to the account.
     public var hookCreationDetails: [HookCreationDetails] {
         willSet {
             ensureNotFrozen()
         }
     }
 
+    /// Adds a hook to be created on this account.
+    ///
+    /// - Parameter hook: The creation details for the hook.
     @discardableResult
     public func addHookToCreate(_ hook: HookCreationDetails) -> Self {
         self.hookCreationDetails.append(hook)
@@ -305,6 +312,9 @@ public final class AccountUpdateTransaction: Transaction {
         return self
     }
 
+    /// Sets all hooks to be created on this account, replacing any previously added.
+    ///
+    /// - Parameter hooks: The list of hook creation details.
     @discardableResult
     public func setHooksToCreate(_ hooks: [HookCreationDetails]) -> Self {
         self.hookCreationDetails = hooks
@@ -312,12 +322,21 @@ public final class AccountUpdateTransaction: Transaction {
         return self
     }
 
+    /// The IDs of hooks to delete from this account.
+    ///
+    /// Hook deletions are processed before creations, so the same hook ID can appear in both
+    /// `hooksToDelete` and `hookCreationDetails` to atomically replace a hook. A hook can only
+    /// be deleted when it has zero storage slots; otherwise deletion fails with
+    /// `HOOK_DELETION_REQUIRES_EMPTY_STORAGE`.
     public var hooksToDelete: [Int64] {
         willSet {
             ensureNotFrozen()
         }
     }
 
+    /// Marks a hook for deletion from this account by its hook ID.
+    ///
+    /// - Parameter hook: The 64-bit hook ID to delete.
     @discardableResult
     public func addHookToDelete(_ hook: Int64) -> Self {
         self.hooksToDelete.append(hook)
@@ -325,6 +344,9 @@ public final class AccountUpdateTransaction: Transaction {
         return self
     }
 
+    /// Sets all hook IDs to delete from this account, replacing any previously added.
+    ///
+    /// - Parameter hooks: The list of hook IDs to delete.
     @discardableResult
     public func setHooksToDelete(_ hooks: [Int64]) -> Self {
         self.hooksToDelete = hooks

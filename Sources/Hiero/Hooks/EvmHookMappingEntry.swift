@@ -3,24 +3,39 @@
 import Foundation
 import HieroProtobufs
 
-/// An implicit storage slot specified as a Solidity mapping entry.
+/// A single entry within a Solidity mapping, used for indirect EVM hook storage updates.
+///
+/// An entry is identified by either a raw 32-byte `key` or a `preimage` whose Keccak256
+/// hash forms the key. Exactly one of `key` or `preimage` should be set.
 public struct EvmHookMappingEntry {
-    /// The 32-byte key of the mapping entry.
+    /// The 32-byte key of the mapping entry; leading zeros may be omitted.
+    ///
+    /// Mutually exclusive with `preimage`.
     public var key: Data?
 
-    /// The slot corresponding to the Solidity mapping.
+    /// The bytes whose Keccak256 hash forms the mapping key.
+    ///
+    /// Mutually exclusive with `key`.
     public var preimage: Data?
 
-    /// The 32-byte value of the mapping entry (leave empty to delete).
+    /// The 32-byte value of the mapping entry; leading zeros may be omitted.
+    ///
+    /// Setting this to empty or all zeros clears the entry from the mapping.
     public var value: Data
 
+    /// Create a new `EvmHookMappingEntry`.
+    ///
+    /// - Parameters:
+    ///   - key: The raw 32-byte mapping key (mutually exclusive with `preimage`).
+    ///   - preimage: The preimage whose hash forms the key (mutually exclusive with `key`).
+    ///   - value: The 32-byte value (empty to clear the entry).
     public init(key: Data? = nil, preimage: Data? = nil, value: Data = Data()) {
         self.key = key
         self.preimage = preimage
         self.value = value
     }
 
-    /// Set the key for the mapping entry.
+    /// Sets the raw 32-byte mapping key, clearing any preimage.
     @discardableResult
     public mutating func key(_ key: Data) -> Self {
         self.key = key
@@ -28,7 +43,7 @@ public struct EvmHookMappingEntry {
         return self
     }
 
-    /// Set the Solidity preimage.
+    /// Sets the preimage whose Keccak256 hash forms the mapping key, clearing any raw key.
     @discardableResult
     public mutating func preimage(_ preimage: Data) -> Self {
         self.preimage = preimage
@@ -36,7 +51,9 @@ public struct EvmHookMappingEntry {
         return self
     }
 
-    /// Set the value for the mapping entry.
+    /// Sets the 32-byte value of the mapping entry.
+    ///
+    /// Setting this to empty or all zeros clears the entry from the mapping.
     @discardableResult
     public mutating func value(_ value: Data) -> Self {
         self.value = value

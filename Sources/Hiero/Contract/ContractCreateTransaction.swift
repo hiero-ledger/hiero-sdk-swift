@@ -349,12 +349,19 @@ public final class ContractCreateTransaction: Transaction {
         return self
     }
 
+    /// The hooks to create immediately after creating this contract.
+    ///
+    /// Each ``HookCreationDetails`` specifies the extension point, hook ID, EVM implementation,
+    /// and optional admin key for a hook to attach to the new contract.
     public var hookCreationDetails: [HookCreationDetails] {
         willSet {
             ensureNotFrozen()
         }
     }
 
+    /// Adds a hook to be created with the new contract.
+    ///
+    /// - Parameter hook: The creation details for the hook.
     @discardableResult
     public func addHook(_ hook: HookCreationDetails) -> Self {
         self.hookCreationDetails.append(hook)
@@ -362,6 +369,9 @@ public final class ContractCreateTransaction: Transaction {
         return self
     }
 
+    /// Sets all hooks to be created with the new contract, replacing any previously added.
+    ///
+    /// - Parameter hooks: The list of hook creation details.
     @discardableResult
     public func setHooks(_ hooks: [HookCreationDetails]) -> Self {
         self.hookCreationDetails = hooks

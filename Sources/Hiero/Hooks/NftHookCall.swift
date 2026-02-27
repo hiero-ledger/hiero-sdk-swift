@@ -3,41 +3,51 @@
 import Foundation
 import HieroProtobufs
 
-/// Specifies a call to a hook from within a transaction that interacts with NFTs.
+/// Specifies a call to an account allowance hook for an NFT transfer.
+///
+/// Used with `AbstractTokenTransferTransaction.addNftTransferWithHook` to reference an
+/// allowance hook on either the sender or receiver account of an NFT transfer. Unlike
+/// fungible hooks, NFT transfers support both a sender and a receiver hook on the same
+/// `NftTransfer`, since the receiver hook can satisfy `receiver_sig_required=true`.
 public struct NftHookCall {
-    /// The underlying hook call.
+    /// The underlying hook call details (hook ID and EVM call parameters).
     public var hookCall: HookCall
 
-    /// The type of the NFT hook to call.
+    /// The type of NFT hook invocation (pre-only or pre-and-post).
     public var hookType: NftHookType
 
+    /// Create a new `NftHookCall`.
+    ///
+    /// - Parameters:
+    ///   - hookCall: The underlying hook call details.
+    ///   - hookType: The type of NFT hook invocation.
     public init(hookCall: HookCall = HookCall(), hookType: NftHookType = .uninitialized) {
         self.hookCall = hookCall
         self.hookType = hookType
     }
 
-    /// Set the underlying hook call.
+    /// Sets the underlying hook call details.
     @discardableResult
     public mutating func hookCall(_ hookCall: HookCall) -> Self {
         self.hookCall = hookCall
         return self
     }
 
-    /// Set the type of the NFT hook to call.
+    /// Sets the type of NFT hook invocation.
     @discardableResult
     public mutating func hookType(_ hookType: NftHookType) -> Self {
         self.hookType = hookType
         return self
     }
 
-    /// Set the hook ID.
+    /// Sets the ID of the hook to call on the underlying `HookCall`.
     @discardableResult
     public mutating func hookId(_ hookId: Int64) -> Self {
         self.hookCall.hookId(hookId)
         return self
     }
 
-    /// Set the EVM hook call.
+    /// Sets the EVM-specific call details on the underlying `HookCall`.
     @discardableResult
     public mutating func evmHookCall(_ evmHookCall: EvmHookCall) -> Self {
         self.hookCall.evmHookCall(evmHookCall)

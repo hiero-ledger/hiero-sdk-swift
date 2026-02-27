@@ -2,21 +2,29 @@
 
 import Foundation
 
-/// Enumeration specifying the different types of hooks for fungible tokens (including HBAR).
+/// The type of account allowance hook invocation for a fungible token transfer (including HBAR).
+///
+/// Determines when the hook is called relative to the `CryptoTransfer` business logic and
+/// whether it applies to the sending or receiving account.
+///
+/// - For "pre" hooks, the hook's `allow(HookContext, ProposedTransfers)` method is called
+///   once before the transfer.
+/// - For "pre/post" hooks, `allowPre(HookContext, ProposedTransfers)` is called before the
+///   transfer and `allowPost(HookContext, ProposedTransfers)` is called after.
 public enum FungibleHookType: CaseIterable, Equatable, Hashable {
-    /// Execute the allowance hook before the transaction for the sender.
+    /// Execute the allowance hook once before the transfer for the sending account.
     case preHookSender
 
-    /// Execute the allowance hook before and after the transaction for the sender.
+    /// Execute the allowance hook before and after the transfer for the sending account.
     case prePostHookSender
 
-    /// Execute the allowance hook before the transaction for the receiver.
+    /// Execute the allowance hook once before the transfer for the receiving account.
     case preHookReceiver
 
-    /// Execute the allowance hook before and after the transaction for the receiver.
+    /// Execute the allowance hook before and after the transfer for the receiving account.
     case prePostHookReceiver
 
-    /// Hook type not set.
+    /// Hook type has not been set.
     case uninitialized
 }
 
