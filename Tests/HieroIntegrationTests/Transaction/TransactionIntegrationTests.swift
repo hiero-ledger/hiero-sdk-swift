@@ -69,4 +69,71 @@ internal class TransactionIntegrationTests: HieroIntegrationTestCase {
             .transactionOversize
         )
     }
+
+    // MARK: - HIP-1313 High-Volume Throttle Tests
+
+    /// Test that creating an account with highVolume(true) succeeds.
+    ///
+    /// Note: This test verifies that the highVolume flag is correctly serialized and
+    /// transmitted to the network. The actual high-volume throttle behavior depends
+    /// on network configuration and may not be enabled on all networks.
+    internal func test_CreateAccountWithHighVolume() async throws {
+        // Given
+        let accountKey = PrivateKey.generateEd25519()
+
+        // When
+        let accountId = try await createAccount(
+            AccountCreateTransaction()
+                .keyWithoutAlias(.single(accountKey.publicKey))
+                .initialBalance(TestConstants.testSmallHbarBalance)
+                .highVolume(true)
+                .maxTransactionFee(Hbar(5)),
+            key: accountKey
+        )
+
+        // Then
+        let info = try await AccountInfoQuery(accountId: accountId).execute(testEnv.client)
+        XCTAssertNotNil(info.accountId)
+        XCTAssertEqual(info.key, .single(accountKey.publicKey))
+    }
+
+    /// Test that creating an account with highVolume(true) and maxTransactionFee works.
+    ///
+    /// This verifies that when using high-volume throttles, the maxTransactionFee
+    /// setting is respected.
+    internal func test_CreateAccountWithHighVolumeAndMaxFee() async throws {
+        // Given
+        let accountKey = PrivateKey.generateEd25519()
+        let maxFee = Hbar(10)
+
+        // When
+        let accountId = try await createAccount(
+            AccountCreateTransaction()
+                .keyWithoutAlias(.single(accountKey.publicKey))
+                .highVolume(true)
+                .maxTransactionFee(maxFee),
+            key: accountKey
+        )
+
+        // Then
+        let info = try await AccountInfoQuery(accountId: accountId).execute(testEnv.client)
+        XCTAssertNotNil(info.accountId)
+    }
+
+    /// Test that creating an account with highVolume(true) and a maxTransactionFee that
+    /// is lower than the actual fee required fails with INSUFFICIENT_TX_FEE.
+    internal func test_CreateAccountWithHighVolumeAndLowMaxFeeFails() async throws {
+        // Given
+        let accountKey = PrivateKey.generateEd25519()
+
+        // When / Then
+        await assertPrecheckStatus(
+            try await AccountCreateTransaction()
+                .keyWithoutAlias(.single(accountKey.publicKey))
+                .highVolume(true)
+                .maxTransactionFee(.fromTinybars(1))
+                .execute(testEnv.client),
+            .insufficientTxFee
+        )
+    }
 }

@@ -16,6 +16,7 @@ public class Transaction: ValidateChecksums {
         transactionMemo = proto.memo
         transactionId = (try? .fromProtobuf(proto.transactionID)) ?? nil
         customFeeLimits = try .fromProtobuf(proto.maxCustomFees)
+        highVolume = proto.highVolume
     }
 
     internal private(set) final var signers: [Signer] = []
@@ -196,6 +197,52 @@ public class Transaction: ValidateChecksums {
     @discardableResult
     public func batchKey(_ key: Key) -> Self {
         self.batchKey = key
+
+        return self
+    }
+
+    /// Whether to use high-volume throttles for this transaction.
+    ///
+    /// When `true`, enables high-volume throttles and pricing for entity creation.
+    /// Only affects supported transaction types; otherwise, it is ignored.
+    ///
+    /// Supported transaction types include:
+    /// - `TopicCreateTransaction`
+    /// - `ContractCreateTransaction`
+    /// - `AccountAllowanceApproveTransaction`
+    /// - `AccountCreateTransaction`
+    /// - `TransferTransaction` (for hollow account creation)
+    /// - `FileCreateTransaction`
+    /// - `FileAppendTransaction`
+    /// - `LambdaSStoreTransaction`
+    /// - `ScheduleCreateTransaction`
+    /// - `TokenAirdropTransaction`
+    /// - `TokenAssociateTransaction`
+    /// - `TokenCreateTransaction`
+    /// - `TokenClaimAirdropTransaction`
+    /// - `TokenMintTransaction`
+    ///
+    /// - Important: When using high-volume throttles, always set `maxTransactionFee`
+    ///   to control costs, as fees are dynamic based on throttle utilization.
+    public final var highVolume: Bool = false {
+        willSet {
+            ensureNotFrozen(fieldName: "highVolume")
+        }
+    }
+
+    /// Sets whether to use high-volume throttles for this transaction.
+    ///
+    /// When `true`, enables high-volume throttles and pricing for entity creation.
+    /// Only affects supported transaction types; otherwise, it is ignored.
+    ///
+    /// - Parameter highVolume: If `true`, uses high-volume throttles and pricing.
+    /// - Returns: `self` for method chaining.
+    ///
+    /// - Important: When using high-volume throttles, always set `maxTransactionFee`
+    ///   to control costs, as fees are dynamic based on throttle utilization.
+    @discardableResult
+    public final func highVolume(_ highVolume: Bool) -> Self {
+        self.highVolume = highVolume
 
         return self
     }
@@ -709,6 +756,7 @@ extension Transaction {
 
             proto.generateRecord = false
             proto.transactionFee = UInt64(maxTransactionFee.toTinybars())
+            proto.highVolume = self.highVolume
             if !customFeeLimits.isEmpty {
                 proto.maxCustomFees = customFeeLimits.map { $0.toProtobuf() }
             }
