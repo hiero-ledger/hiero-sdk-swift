@@ -155,7 +155,7 @@ public class AbstractTokenTransferTransaction: Transaction {
 
     /// Add a fungible token transfer with a hook to be submitted as part of this TransferTransaction.
     @discardableResult
-    public func tokenTransferWithHook(
+    public func addTokenTransferWithHook(
         _ tokenId: TokenId, _ accountId: AccountId, _ amount: Int64, _ hookCall: FungibleHookCall
     ) -> Self {
         doTokenTransferWithHook(tokenId, accountId, amount, false, hookCall)
@@ -179,7 +179,7 @@ public class AbstractTokenTransferTransaction: Transaction {
 
     /// Add an NFT transfer with separate sender and receiver hook calls to this TransferTransaction.
     @discardableResult
-    public func nftTransferWithHooks(
+    public func addNftTransferWithHook(
         _ nftId: NftId,
         _ senderAccountId: AccountId,
         _ receiverAccountId: AccountId,
@@ -425,12 +425,15 @@ extension AbstractTokenTransferTransaction.Transfer: TryProtobufCodable {
             hookCall: nil
         )
 
-        // Handle hook calls
         switch proto.hookCall {
         case .preTxAllowanceHook(let hookCall):
-            self.hookCall = try FungibleHookCall(protobuf: hookCall)
+            var call = try FungibleHookCall(protobuf: hookCall)
+            call.hookType = amount < 0 ? .preHookSender : .preHookReceiver
+            self.hookCall = call
         case .prePostTxAllowanceHook(let hookCall):
-            self.hookCall = try FungibleHookCall(protobuf: hookCall)
+            var call = try FungibleHookCall(protobuf: hookCall)
+            call.hookType = amount < 0 ? .prePostHookSender : .prePostHookReceiver
+            self.hookCall = call
         case nil:
             break
         }
@@ -442,12 +445,14 @@ extension AbstractTokenTransferTransaction.Transfer: TryProtobufCodable {
             proto.amount = amount
             proto.isApproval = isApproval
 
-            // Handle hook calls
             if let hookCall = hookCall {
-                if hookCall.hookType == .preTxAllowanceHook {
+                switch hookCall.hookType {
+                case .preHookSender, .preHookReceiver:
                     proto.hookCall = .preTxAllowanceHook(hookCall.toProtobuf())
-                } else if hookCall.hookType == .prePostTxAllowanceHook {
+                case .prePostHookSender, .prePostHookReceiver:
                     proto.hookCall = .prePostTxAllowanceHook(hookCall.toProtobuf())
+                case .uninitialized:
+                    break
                 }
             }
         }
@@ -493,22 +498,28 @@ extension AbstractTokenTransferTransaction.NftTransfer: TryProtobufCodable {
             receiverHookCall: nil
         )
 
-        // Handle sender allowance hook calls
         switch proto.senderAllowanceHookCall {
         case .preTxSenderAllowanceHook(let hookCall):
-            self.senderHookCall = try NftHookCall(protobuf: hookCall)
+            var call = try NftHookCall(protobuf: hookCall)
+            call.hookType = .preHook
+            self.senderHookCall = call
         case .prePostTxSenderAllowanceHook(let hookCall):
-            self.senderHookCall = try NftHookCall(protobuf: hookCall)
+            var call = try NftHookCall(protobuf: hookCall)
+            call.hookType = .prePostHook
+            self.senderHookCall = call
         case nil:
             break
         }
 
-        // Handle receiver allowance hook calls
         switch proto.receiverAllowanceHookCall {
         case .preTxReceiverAllowanceHook(let hookCall):
-            self.receiverHookCall = try NftHookCall(protobuf: hookCall)
+            var call = try NftHookCall(protobuf: hookCall)
+            call.hookType = .preHook
+            self.receiverHookCall = call
         case .prePostTxReceiverAllowanceHook(let hookCall):
-            self.receiverHookCall = try NftHookCall(protobuf: hookCall)
+            var call = try NftHookCall(protobuf: hookCall)
+            call.hookType = .prePostHook
+            self.receiverHookCall = call
         case nil:
             break
         }
@@ -521,18 +532,26 @@ extension AbstractTokenTransferTransaction.NftTransfer: TryProtobufCodable {
             proto.serialNumber = Int64(bitPattern: serial)
             proto.isApproval = isApproval
 
-            // Handle sender allowance hook calls
             if let senderHookCall = senderHookCall {
-                proto.senderAllowanceHookCall = .preTxSenderAllowanceHook(senderHookCall.toProtobuf())
-            } else if let senderHookCall = senderHookCall {
-                proto.senderAllowanceHookCall = .prePostTxSenderAllowanceHook(senderHookCall.toProtobuf())
+                switch senderHookCall.hookType {
+                case .preHook:
+                    proto.senderAllowanceHookCall = .preTxSenderAllowanceHook(senderHookCall.toProtobuf())
+                case .prePostHook:
+                    proto.senderAllowanceHookCall = .prePostTxSenderAllowanceHook(senderHookCall.toProtobuf())
+                case .uninitialized:
+                    break
+                }
             }
 
-            // Handle receiver allowance hook calls
             if let receiverHookCall = receiverHookCall {
-                proto.receiverAllowanceHookCall = .preTxReceiverAllowanceHook(receiverHookCall.toProtobuf())
-            } else if let receiverHookCall = receiverHookCall {
-                proto.receiverAllowanceHookCall = .prePostTxReceiverAllowanceHook(receiverHookCall.toProtobuf())
+                switch receiverHookCall.hookType {
+                case .preHook:
+                    proto.receiverAllowanceHookCall = .preTxReceiverAllowanceHook(receiverHookCall.toProtobuf())
+                case .prePostHook:
+                    proto.receiverAllowanceHookCall = .prePostTxReceiverAllowanceHook(receiverHookCall.toProtobuf())
+                case .uninitialized:
+                    break
+                }
             }
         }
     }

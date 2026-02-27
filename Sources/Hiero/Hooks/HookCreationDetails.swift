@@ -6,18 +6,18 @@ import HieroProtobufs
 public struct HookCreationDetails {
     public var hookExtensionPoint: HookExtensionPoint
     public var hookId: Int64
-    public var lambdaEvmHook: LambdaEvmHook?
+    public var evmHook: EvmHook?
     public var adminKey: Key?
 
     public init(
         hookExtensionPoint: HookExtensionPoint,
         hookId: Int64 = 0,
-        lambdaEvmHook: LambdaEvmHook? = nil,
+        evmHook: EvmHook? = nil,
         adminKey: Key? = nil
     ) {
         self.hookExtensionPoint = hookExtensionPoint
         self.hookId = hookId
-        self.lambdaEvmHook = lambdaEvmHook
+        self.evmHook = evmHook
         self.adminKey = adminKey
     }
 
@@ -34,8 +34,8 @@ public struct HookCreationDetails {
     }
 
     @discardableResult
-    public mutating func lambdaEvmHook(_ hook: LambdaEvmHook) -> Self {
-        self.lambdaEvmHook = hook
+    public mutating func evmHook(_ hook: EvmHook) -> Self {
+        self.evmHook = hook
         return self
     }
 
@@ -53,12 +53,11 @@ extension HookCreationDetails: TryProtobufCodable {
         self.hookExtensionPoint = try HookExtensionPoint(protobuf: proto.extensionPoint)
         self.hookId = proto.hookID
 
-        // Only accept lambda; anything else => nil
         switch proto.hook {
-        case .lambdaEvmHook(let v):
-            self.lambdaEvmHook = try LambdaEvmHook(protobuf: v)
+        case .evmHook(let v):
+            self.evmHook = try EvmHook(protobuf: v)
         default:
-            self.lambdaEvmHook = nil
+            self.evmHook = nil
         }
 
         self.adminKey = proto.hasAdminKey ? try Key(protobuf: proto.adminKey) : nil
@@ -69,16 +68,15 @@ extension HookCreationDetails: TryProtobufCodable {
         proto.extensionPoint = hookExtensionPoint.toProtobuf()
         proto.hookID = hookId
 
-        // Only encode lambda; otherwise leave the oneof unset (nil)
-        if let lambda = lambdaEvmHook {
-            proto.hook = .lambdaEvmHook(lambda.toProtobuf())
+        if let hook = evmHook {
+            proto.hook = .evmHook(hook.toProtobuf())
         } else {
             proto.hook = nil
         }
 
         if let key = adminKey {
             proto.adminKey = key.toProtobuf()
-        }  // else: leave unset
+        }
 
         return proto
     }

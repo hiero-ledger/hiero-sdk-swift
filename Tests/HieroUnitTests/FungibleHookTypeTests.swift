@@ -8,42 +8,48 @@ import XCTest
 final class FungibleHookTypeUnitTests: XCTestCase {
 
     func test_AllCases() {
-        // Given & When
         let allCases = FungibleHookType.allCases
 
-        // Then
-        XCTAssertEqual(allCases.count, 3)
-        XCTAssertTrue(allCases.contains(.preTxAllowanceHook))
-        XCTAssertTrue(allCases.contains(.prePostTxAllowanceHook))
+        XCTAssertEqual(allCases.count, 5)
+        XCTAssertTrue(allCases.contains(.preHookSender))
+        XCTAssertTrue(allCases.contains(.prePostHookSender))
+        XCTAssertTrue(allCases.contains(.preHookReceiver))
+        XCTAssertTrue(allCases.contains(.prePostHookReceiver))
         XCTAssertTrue(allCases.contains(.uninitialized))
     }
 
     func test_Description() {
-        // Given & When & Then
-        XCTAssertEqual(FungibleHookType.preTxAllowanceHook.description, "PRE_TX_ALLOWANCE_HOOK")
-        XCTAssertEqual(FungibleHookType.prePostTxAllowanceHook.description, "PRE_POST_TX_ALLOWANCE_HOOK")
+        XCTAssertEqual(FungibleHookType.preHookSender.description, "PRE_HOOK_SENDER")
+        XCTAssertEqual(FungibleHookType.prePostHookSender.description, "PRE_POST_HOOK_SENDER")
+        XCTAssertEqual(FungibleHookType.preHookReceiver.description, "PRE_HOOK_RECEIVER")
+        XCTAssertEqual(FungibleHookType.prePostHookReceiver.description, "PRE_POST_HOOK_RECEIVER")
         XCTAssertEqual(FungibleHookType.uninitialized.description, "UNINITIALIZED")
     }
 
     func test_Equality() {
-        // Given & When & Then
-        XCTAssertEqual(FungibleHookType.preTxAllowanceHook, FungibleHookType.preTxAllowanceHook)
-        XCTAssertEqual(FungibleHookType.prePostTxAllowanceHook, FungibleHookType.prePostTxAllowanceHook)
+        XCTAssertEqual(FungibleHookType.preHookSender, FungibleHookType.preHookSender)
+        XCTAssertEqual(FungibleHookType.prePostHookSender, FungibleHookType.prePostHookSender)
+        XCTAssertEqual(FungibleHookType.preHookReceiver, FungibleHookType.preHookReceiver)
+        XCTAssertEqual(FungibleHookType.prePostHookReceiver, FungibleHookType.prePostHookReceiver)
         XCTAssertEqual(FungibleHookType.uninitialized, FungibleHookType.uninitialized)
 
-        XCTAssertNotEqual(FungibleHookType.preTxAllowanceHook, FungibleHookType.prePostTxAllowanceHook)
-        XCTAssertNotEqual(FungibleHookType.preTxAllowanceHook, FungibleHookType.uninitialized)
-        XCTAssertNotEqual(FungibleHookType.prePostTxAllowanceHook, FungibleHookType.uninitialized)
+        XCTAssertNotEqual(FungibleHookType.preHookSender, FungibleHookType.prePostHookSender)
+        XCTAssertNotEqual(FungibleHookType.preHookSender, FungibleHookType.preHookReceiver)
+        XCTAssertNotEqual(FungibleHookType.preHookSender, FungibleHookType.uninitialized)
     }
 
     func test_Hashable() {
-        // Given
-        let set: Set<FungibleHookType> = [.preTxAllowanceHook, .prePostTxAllowanceHook, .uninitialized]
+        let set: Set<FungibleHookType> = [
+            .preHookSender, .prePostHookSender,
+            .preHookReceiver, .prePostHookReceiver,
+            .uninitialized,
+        ]
 
-        // When & Then
-        XCTAssertEqual(set.count, 3)
-        XCTAssertTrue(set.contains(.preTxAllowanceHook))
-        XCTAssertTrue(set.contains(.prePostTxAllowanceHook))
+        XCTAssertEqual(set.count, 5)
+        XCTAssertTrue(set.contains(.preHookSender))
+        XCTAssertTrue(set.contains(.prePostHookSender))
+        XCTAssertTrue(set.contains(.preHookReceiver))
+        XCTAssertTrue(set.contains(.prePostHookReceiver))
         XCTAssertTrue(set.contains(.uninitialized))
     }
 }

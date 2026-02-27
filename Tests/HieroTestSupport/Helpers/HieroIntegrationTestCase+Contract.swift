@@ -278,7 +278,7 @@ extension HieroIntegrationTestCase {
 
     /// Creates a simple EVM hook contract for testing hooks.
     ///
-    /// This creates a minimal contract that can be used as a lambda hook target.
+    /// This creates a minimal contract that can be used as an EVM hook target.
     /// The contract is registered for cleanup.
     ///
     /// - Parameter useAdminClient: Whether to use the admin client (default: false)
@@ -291,44 +291,30 @@ extension HieroIntegrationTestCase {
 
     // MARK: - Hook Creation Details Helpers
 
-    /// Creates a LambdaEvmHook with the specified contract ID and optional storage updates.
-    ///
-    /// - Parameters:
-    ///   - contractId: The contract ID for the lambda hook
-    ///   - storageUpdates: Optional array of (key, value) tuples for storage updates
-    /// - Returns: A configured LambdaEvmHook
-    private func createLambdaEvmHook(
+    /// Creates an EvmHook with the specified contract ID and optional storage updates.
+    private func createEvmHookInstance(
         contractId: ContractId,
         storageUpdates: [(key: Data, value: Data)]? = nil
-    ) -> LambdaEvmHook {
-        var lambdaEvmHook = LambdaEvmHook()
-        lambdaEvmHook.spec.contractId = contractId
+    ) -> EvmHook {
+        var evmHook = EvmHook(contractId: contractId)
 
         if let storageUpdates = storageUpdates {
             for (key, value) in storageUpdates {
-                var slot = LambdaStorageSlot()
+                var slot = EvmHookStorageSlot()
                 slot.key = key
                 slot.value = value
 
-                var update = LambdaStorageUpdate()
+                var update = EvmHookStorageUpdate()
                 update.storageSlot = slot
 
-                lambdaEvmHook.addStorageUpdate(update)
+                evmHook.addStorageUpdate(update)
             }
         }
 
-        return lambdaEvmHook
+        return evmHook
     }
 
-    /// Creates a standard HookCreationDetails with a lambda EVM hook.
-    ///
-    /// - Parameters:
-    ///   - contractId: The contract ID for the lambda hook
-    ///   - hookId: The hook identifier (default: 1)
-    ///   - hookExtensionPoint: The hook extension point (default: .accountAllowanceHook)
-    ///   - adminKey: Optional admin key for the hook
-    ///   - storageUpdates: Optional array of (key, value) tuples for storage updates
-    /// - Returns: A configured HookCreationDetails
+    /// Creates a standard HookCreationDetails with an EVM hook.
     public func createHookDetails(
         contractId: ContractId,
         hookId: Int64 = 1,
@@ -336,12 +322,12 @@ extension HieroIntegrationTestCase {
         adminKey: Key? = nil,
         storageUpdates: [(key: Data, value: Data)]? = nil
     ) -> HookCreationDetails {
-        let lambdaEvmHook = createLambdaEvmHook(contractId: contractId, storageUpdates: storageUpdates)
+        let evmHook = createEvmHookInstance(contractId: contractId, storageUpdates: storageUpdates)
 
         return HookCreationDetails(
             hookExtensionPoint: hookExtensionPoint,
             hookId: hookId,
-            lambdaEvmHook: lambdaEvmHook,
+            evmHook: evmHook,
             adminKey: adminKey
         )
     }
@@ -351,7 +337,7 @@ extension HieroIntegrationTestCase {
     /// Uses default storage key `[0x01, 0x23, 0x45]` and value `[0x67, 0x89, 0xAB]`.
     ///
     /// - Parameters:
-    ///   - contractId: The contract ID for the lambda hook
+    ///   - contractId: The contract ID for the EVM hook
     ///   - hookId: The hook identifier (default: 1)
     /// - Returns: A configured HookCreationDetails with storage updates
     public func createHookDetailsWithStorage(

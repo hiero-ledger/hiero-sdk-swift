@@ -35,7 +35,7 @@ let exampleTargets = [
     "GetExchangeRates",
     "GetFileContents",
     "InitializeClientWithMirrorNetwork",
-    "LambdaSStore",
+    "HookStore",
     "LongTermScheduledTransaction",
     "MirrorNodeContractQuery",
     "ModifyTokenKeys",

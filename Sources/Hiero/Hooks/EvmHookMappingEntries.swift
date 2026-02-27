@@ -13,14 +13,14 @@ import HieroProtobufs
 /// mapping's entries. If only raw slots could be updated, then a block stream consumer
 /// following the metaprotocol would have to invert the Keccak256 hash to determine
 /// which mapping entry was being updated, which is not possible.
-public struct LambdaMappingEntries {
+public struct EvmHookMappingEntries {
     /// The slot corresponding to the Solidity mapping.
     public var mappingSlot: Data
 
     /// The mapping entries for this mapping slot.
-    public var entries: [LambdaMappingEntry]
+    public var entries: [EvmHookMappingEntry]
 
-    public init(mappingSlot: Data = Data(), entries: [LambdaMappingEntry] = []) {
+    public init(mappingSlot: Data = Data(), entries: [EvmHookMappingEntry] = []) {
         self.mappingSlot = mappingSlot
         self.entries = entries
     }
@@ -34,14 +34,14 @@ public struct LambdaMappingEntries {
 
     /// Add a mapping entry.
     @discardableResult
-    public mutating func addEntry(_ entry: LambdaMappingEntry) -> Self {
+    public mutating func addEntry(_ entry: EvmHookMappingEntry) -> Self {
         self.entries.append(entry)
         return self
     }
 
     /// Set all mapping entries.
     @discardableResult
-    public mutating func setEntries(_ entries: [LambdaMappingEntry]) -> Self {
+    public mutating func setEntries(_ entries: [EvmHookMappingEntry]) -> Self {
         self.entries = entries
         return self
     }
@@ -54,13 +54,13 @@ public struct LambdaMappingEntries {
     }
 }
 
-extension LambdaMappingEntries: TryProtobufCodable {
-    internal typealias Protobuf = Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries
+extension EvmHookMappingEntries: TryProtobufCodable {
+    internal typealias Protobuf = Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntries
 
     /// Construct from protobuf.
     internal init(protobuf proto: Protobuf) throws {
         self.mappingSlot = proto.mappingSlot
-        self.entries = try proto.entries.map { try LambdaMappingEntry(protobuf: $0) }
+        self.entries = try proto.entries.map { try EvmHookMappingEntry(protobuf: $0) }
     }
 
     /// Convert to protobuf.

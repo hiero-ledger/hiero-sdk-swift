@@ -4,7 +4,7 @@ import Foundation
 import HieroProtobufs
 
 /// An explicit storage slot update.
-public struct LambdaStorageSlot {
+public struct EvmHookStorageSlot {
     /// The 32-byte storage slot key.
     public var key: Data
 
@@ -31,8 +31,8 @@ public struct LambdaStorageSlot {
     }
 }
 
-extension LambdaStorageSlot: TryProtobufCodable {
-    internal typealias Protobuf = Com_Hedera_Hapi_Node_Hooks_LambdaStorageSlot
+extension EvmHookStorageSlot: TryProtobufCodable {
+    internal typealias Protobuf = Com_Hedera_Hapi_Node_Hooks_EvmHookStorageSlot
 
     /// Construct from protobuf.
     internal init(protobuf proto: Protobuf) throws {

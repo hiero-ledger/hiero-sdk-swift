@@ -4,9 +4,9 @@ import Foundation
 import GRPC
 import HieroProtobufs
 
-/// Updates storage for a Lambda EVM hook.
-public final class LambdaSStoreTransaction: Transaction {
-    /// Create a new `LambdaSStoreTransaction` ready for configuration.
+/// Adds or removes key/value pairs in the storage of an EVM hook.
+public final class HookStoreTransaction: Transaction {
+    /// Create a new `HookStoreTransaction` ready for configuration.
     public override init() {
         super.init()
     }
@@ -17,7 +17,7 @@ public final class LambdaSStoreTransaction: Transaction {
     }
 
     /// The storage updates to apply to the hook.
-    public var storageUpdates: [LambdaStorageUpdate] = [] {
+    public var storageUpdates: [EvmHookStorageUpdate] = [] {
         willSet { ensureNotFrozen() }
     }
 
@@ -30,14 +30,14 @@ public final class LambdaSStoreTransaction: Transaction {
 
     /// Adds a storage update.
     @discardableResult
-    public func addStorageUpdate(_ update: LambdaStorageUpdate) -> Self {
+    public func addStorageUpdate(_ update: EvmHookStorageUpdate) -> Self {
         storageUpdates.append(update)
         return self
     }
 
     /// Sets all storage updates.
     @discardableResult
-    public func storageUpdates(_ updates: [LambdaStorageUpdate]) -> Self {
+    public func storageUpdates(_ updates: [EvmHookStorageUpdate]) -> Self {
         self.storageUpdates = updates
         return self
     }
@@ -49,45 +49,36 @@ public final class LambdaSStoreTransaction: Transaction {
         return self
     }
 
-    /// Construct from `TransactionBody` and the concrete Lambda SSTORE body.
     internal init(
         protobuf proto: Proto_TransactionBody,
-        _ data: Com_Hedera_Hapi_Node_Hooks_LambdaSStoreTransactionBody
+        _ data: Com_Hedera_Hapi_Node_Hooks_HookStoreTransactionBody
     ) throws {
-        // hookID (message presence); treat default instance as nil if your SDK does that.
         self.hookId = try HookId(protobuf: data.hookID)
-
-        // storageUpdates (repeated)
-        self.storageUpdates = try data.storageUpdates.map { try LambdaStorageUpdate(protobuf: $0) }
-
+        self.storageUpdates = try data.storageUpdates.map { try EvmHookStorageUpdate(protobuf: $0) }
         try super.init(protobuf: proto)
     }
 
     internal override func validateChecksums(on ledgerId: LedgerId) throws {
-        // If HookId/HookEntityId/AccountId supports checksum validation, invoke it here.
-        // Example (adjust to your actual API):
-        // try hookId?.entityId.accountId?.validateChecksums(on: ledgerId)
         try super.validateChecksums(on: ledgerId)
     }
 
     internal override func transactionExecute(
         _ channel: GRPCChannel,
-        _ request: Proto_Transaction
+        _ request: Proto_Transaction,
+        _ deadline: TimeInterval
     ) async throws -> Proto_TransactionResponse {
-        // TODO: Adjust the service/type name to your generated gRPC client and method.
-        // This is the conventional naming SwiftProtobuf generates for a `HooksService` with rpc `lambdaSStore`.
         return try await Proto_SmartContractServiceAsyncClient(channel: channel)
-            .lambdaSStore(request, callOptions: applyGrpcHeader())
+            .hookStore(request, callOptions: applyGrpcHeader(deadline: deadline))
     }
 
     internal override func toTransactionDataProtobuf(_ chunkInfo: ChunkInfo) -> Proto_TransactionBody.OneOf_Data {
         _ = chunkInfo.assertSingleTransaction()
-        return .lambdaSstore(toProtobuf())
+        return .hookStore(toProtobuf())
     }
 }
 
-extension LambdaSStoreTransaction: ToProtobuf {
-    internal typealias Protobuf = Com_Hedera_Hapi_Node_Hooks_LambdaSStoreTransactionBody
+extension HookStoreTransaction: ToProtobuf {
+    internal typealias Protobuf = Com_Hedera_Hapi_Node_Hooks_HookStoreTransactionBody
 
     internal func toProtobuf() -> Protobuf {
         .with { proto in

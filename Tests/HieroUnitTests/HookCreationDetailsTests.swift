@@ -8,47 +8,47 @@ import XCTest
 
 final class HookCreationDetailsUnitTests: XCTestCase {
 
-    private func makeStorageSlot(_ key: Data, _ value: Data) -> LambdaStorageSlot {
-        var s = LambdaStorageSlot()
+    private func makeStorageSlot(_ key: Data, _ value: Data) -> EvmHookStorageSlot {
+        var s = EvmHookStorageSlot()
         s.key(key)
         s.value(value)
         return s
     }
 
-    private func makeEntryWithKey(_ key: Data, _ value: Data) -> LambdaMappingEntry {
-        var e = LambdaMappingEntry()
+    private func makeEntryWithKey(_ key: Data, _ value: Data) -> EvmHookMappingEntry {
+        var e = EvmHookMappingEntry()
         e.key(key)
         e.value(value)
         return e
     }
 
-    private func makeEntryWithPreimage(_ preimage: Data, _ value: Data) -> LambdaMappingEntry {
-        var e = LambdaMappingEntry()
+    private func makeEntryWithPreimage(_ preimage: Data, _ value: Data) -> EvmHookMappingEntry {
+        var e = EvmHookMappingEntry()
         e.preimage(preimage)
         e.value(value)
         return e
     }
 
-    private func makeMappingEntries(_ mappingSlot: Data, _ entries: [LambdaMappingEntry]) -> LambdaMappingEntries {
-        var me = LambdaMappingEntries()
+    private func makeMappingEntries(_ mappingSlot: Data, _ entries: [EvmHookMappingEntry]) -> EvmHookMappingEntries {
+        var me = EvmHookMappingEntries()
         me.setEntries(entries)
         me.mappingSlot(mappingSlot)
         return me
     }
 
-    private func makeStorageUpdateStorageSlot(_ slot: LambdaStorageSlot) -> LambdaStorageUpdate {
-        var u = LambdaStorageUpdate()
+    private func makeStorageUpdateStorageSlot(_ slot: EvmHookStorageSlot) -> EvmHookStorageUpdate {
+        var u = EvmHookStorageUpdate()
         u.setStorageSlot(slot)
         return u
     }
 
-    private func makeStorageUpdateMappingEntries(_ entries: LambdaMappingEntries) -> LambdaStorageUpdate {
-        var u = LambdaStorageUpdate()
+    private func makeStorageUpdateMappingEntries(_ entries: EvmHookMappingEntries) -> EvmHookStorageUpdate {
+        var u = EvmHookStorageUpdate()
         u.setMappingEntries(entries)
         return u
     }
 
-    private func makeLambdaEvmHook() -> LambdaEvmHook {
+    private func makeEvmHook() -> EvmHook {
         let key1 = Data([0x01, 0x23, 0x45])
         let key2 = Data([0x67, 0x89, 0xAB])
         let preimage = Data([0xCD, 0xEF, 0x02])
@@ -67,7 +67,7 @@ final class HookCreationDetailsUnitTests: XCTestCase {
         let me = makeMappingEntries(mappingSlot, [e1, e2])
         let update2 = makeStorageUpdateMappingEntries(me)
 
-        var hook = LambdaEvmHook()
+        var hook = EvmHook()
         hook.addStorageUpdate(update1)
         hook.addStorageUpdate(update2)
         return hook
@@ -79,79 +79,63 @@ final class HookCreationDetailsUnitTests: XCTestCase {
     }
 
     func test_GetSetHookId() throws {
-        // Given
         var details = HookCreationDetails(hookExtensionPoint: .accountAllowanceHook)
 
-        // When
         details.hookId(1)
 
-        // Then
         XCTAssertEqual(details.hookId, 1)
     }
 
-    func test_GetSetLambdaEvmHook() {
-        // Given
+    func test_GetSetEvmHook() {
         var details = HookCreationDetails(hookExtensionPoint: .accountAllowanceHook)
-        let lambda = makeLambdaEvmHook()
+        let hook = makeEvmHook()
 
-        // When
-        details.lambdaEvmHook(lambda)
+        details.evmHook(hook)
 
-        // Then
-        XCTAssertNotNil(details.lambdaEvmHook)
-        XCTAssertEqual(details.lambdaEvmHook?.storageUpdates.count, lambda.storageUpdates.count)
+        XCTAssertNotNil(details.evmHook)
+        XCTAssertEqual(details.evmHook?.storageUpdates.count, hook.storageUpdates.count)
     }
 
     func test_GetSetAdminKey() throws {
-        // Given
         var details = HookCreationDetails(hookExtensionPoint: .accountAllowanceHook)
         let key = try makeAdminKey()
 
-        // When
         details.adminKey(key)
 
-        // Then
-        // Round-trip bytes check if your Key exposes them; otherwise just assert non-nil.
         XCTAssertNotNil(details.adminKey)
         XCTAssertEqual(details.adminKey?.toBytes(), key.toBytes())
     }
 
     func test_FromProtobuf() throws {
-        // Given
         var proto = Com_Hedera_Hapi_Node_Hooks_HookCreationDetails()
         proto.extensionPoint = HookExtensionPoint.accountAllowanceHook.toProtobuf()
         proto.hookID = 1
-        proto.lambdaEvmHook = makeLambdaEvmHook().toProtobuf()
+        proto.hook = .evmHook(makeEvmHook().toProtobuf())
 
         let key = try makeAdminKey()
         proto.adminKey = key.toProtobuf()
 
-        // When
         let decoded = try HookCreationDetails.fromProtobuf(proto)
 
-        // Then
         XCTAssertEqual(decoded.hookExtensionPoint, .accountAllowanceHook)
         XCTAssertEqual(decoded.hookId, 1)
-        XCTAssertNotNil(decoded.lambdaEvmHook)
+        XCTAssertNotNil(decoded.evmHook)
         XCTAssertNotNil(decoded.adminKey)
     }
 
     func test_ToProtobuf() throws {
-        // Given
         var details = HookCreationDetails(hookExtensionPoint: .accountAllowanceHook)
         details.hookId(1)
-        details.lambdaEvmHook(makeLambdaEvmHook())
+        details.evmHook(makeEvmHook())
 
         let key = try makeAdminKey()
         details.adminKey(key)
 
-        // When
         let proto = details.toProtobuf()
 
-        // Then
         XCTAssertEqual(proto.extensionPoint, HookExtensionPoint.accountAllowanceHook.toProtobuf())
         XCTAssertEqual(proto.hookID, 1)
-        XCTAssertEqual(proto.hook, .lambdaEvmHook(proto.lambdaEvmHook))
+        XCTAssertEqual(proto.hook, .evmHook(proto.evmHook))
         XCTAssertTrue(proto.hasAdminKey)
     }
 }

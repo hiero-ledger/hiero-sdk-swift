@@ -4,11 +4,17 @@ import Foundation
 
 /// Enumeration specifying the different types of hooks for fungible tokens (including HBAR).
 public enum FungibleHookType: CaseIterable {
-    /// Execute the allowance hook before the transaction.
-    case preTxAllowanceHook
+    /// Execute the allowance hook before the transaction for the sender.
+    case preHookSender
 
-    /// Execute the allowance hook before and after the transaction.
-    case prePostTxAllowanceHook
+    /// Execute the allowance hook before and after the transaction for the sender.
+    case prePostHookSender
+
+    /// Execute the allowance hook before the transaction for the receiver.
+    case preHookReceiver
+
+    /// Execute the allowance hook before and after the transaction for the receiver.
+    case prePostHookReceiver
 
     /// Hook type not set.
     case uninitialized
@@ -17,10 +23,14 @@ public enum FungibleHookType: CaseIterable {
 extension FungibleHookType: CustomStringConvertible {
     public var description: String {
         switch self {
-        case .preTxAllowanceHook:
-            return "PRE_TX_ALLOWANCE_HOOK"
-        case .prePostTxAllowanceHook:
-            return "PRE_POST_TX_ALLOWANCE_HOOK"
+        case .preHookSender:
+            return "PRE_HOOK_SENDER"
+        case .prePostHookSender:
+            return "PRE_POST_HOOK_SENDER"
+        case .preHookReceiver:
+            return "PRE_HOOK_RECEIVER"
+        case .prePostHookReceiver:
+            return "PRE_POST_HOOK_RECEIVER"
         case .uninitialized:
             return "UNINITIALIZED"
         }
@@ -30,8 +40,10 @@ extension FungibleHookType: CustomStringConvertible {
 extension FungibleHookType: Equatable {
     public static func == (lhs: FungibleHookType, rhs: FungibleHookType) -> Bool {
         switch (lhs, rhs) {
-        case (.preTxAllowanceHook, .preTxAllowanceHook),
-            (.prePostTxAllowanceHook, .prePostTxAllowanceHook),
+        case (.preHookSender, .preHookSender),
+            (.prePostHookSender, .prePostHookSender),
+            (.preHookReceiver, .preHookReceiver),
+            (.prePostHookReceiver, .prePostHookReceiver),
             (.uninitialized, .uninitialized):
             return true
         default:
@@ -43,12 +55,16 @@ extension FungibleHookType: Equatable {
 extension FungibleHookType: Hashable {
     public func hash(into hasher: inout Hasher) {
         switch self {
-        case .preTxAllowanceHook:
+        case .preHookSender:
             hasher.combine(0)
-        case .prePostTxAllowanceHook:
+        case .prePostHookSender:
             hasher.combine(1)
-        case .uninitialized:
+        case .preHookReceiver:
             hasher.combine(2)
+        case .prePostHookReceiver:
+            hasher.combine(3)
+        case .uninitialized:
+            hasher.combine(4)
         }
     }
 }

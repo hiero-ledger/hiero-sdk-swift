@@ -10,7 +10,7 @@ final class HookIdUnitTests: XCTestCase {
     private let testAccountId = AccountId(shard: 1, realm: 2, num: 3)
     private let testHookId: Int64 = 4
     private var testHookEntityId: HookEntityId {
-        return HookEntityId(testAccountId)
+        return HookEntityId(accountId: testAccountId)
     }
 
     func test_GetSetEntityId() {

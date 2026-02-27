@@ -49,8 +49,8 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     internal func test_CanAddHookToContract() async throws {
         // Given
         let contractId = try await createStandardContract()
-        let lambdaContractId = try await createUnmanagedEvmHookContract()
-        let hookDetails = createHookDetails(contractId: lambdaContractId)
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId)
 
         // When / Then
         do {
@@ -67,8 +67,8 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     internal func test_CannotAddDuplicateHooksToContract() async throws {
         // Given
         let contractId = try await createStandardContract()
-        let lambdaContractId = try await createUnmanagedEvmHookContract()
-        let hookDetails = createHookDetails(contractId: lambdaContractId)
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId)
 
         // When / Then
         await assertPrecheckStatus(
@@ -84,8 +84,8 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     internal func test_CannotAddHookToContractThatAlreadyExists() async throws {
         // Given
         let contractId = try await createStandardContract()
-        let lambdaContractId = try await createUnmanagedEvmHookContract()
-        let hookDetails = createHookDetails(contractId: lambdaContractId)
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId)
 
         // Add hook first
         _ = try await ContractUpdateTransaction()
@@ -110,8 +110,8 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     internal func test_CanAddHookToContractWithStorageUpdates() async throws {
         // Given
         let contractId = try await createStandardContract()
-        let lambdaContractId = try await createUnmanagedEvmHookContract()
-        let hookDetails = createHookDetailsWithStorage(contractId: lambdaContractId)
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetailsWithStorage(contractId: hookContractId)
 
         // When / Then
         do {
@@ -129,9 +129,9 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     internal func test_CanDeleteHookFromContract() async throws {
         // Given
         let contractId = try await createStandardContract()
-        let lambdaContractId = try await createUnmanagedEvmHookContract()
+        let hookContractId = try await createUnmanagedEvmHookContract()
         let hookId: Int64 = 1
-        let hookDetails = createHookDetails(contractId: lambdaContractId, hookId: hookId)
+        let hookDetails = createHookDetails(contractId: hookContractId, hookId: hookId)
 
         // Add hook first
         _ = try await ContractUpdateTransaction()
@@ -158,8 +158,8 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     internal func test_CannotDeleteNonExistentHookFromContract() async throws {
         // Given
         let contractId = try await createStandardContract()
-        let lambdaContractId = try await createUnmanagedEvmHookContract()
-        let hookDetails = createHookDetails(contractId: lambdaContractId)
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId)
 
         // Add a hook first
         _ = try await ContractUpdateTransaction()
@@ -182,9 +182,9 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     internal func test_CannotAddAndDeleteSameHookFromContract() async throws {
         // Given
         let contractId = try await createStandardContract()
-        let lambdaContractId = try await createUnmanagedEvmHookContract()
+        let hookContractId = try await createUnmanagedEvmHookContract()
         let hookId: Int64 = 1
-        let hookDetails = createHookDetails(contractId: lambdaContractId, hookId: hookId)
+        let hookDetails = createHookDetails(contractId: hookContractId, hookId: hookId)
 
         // When / Then
         await assertReceiptStatus(
@@ -201,9 +201,9 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     internal func test_CannotDeleteAlreadyDeletedHookFromContract() async throws {
         // Given
         let contractId = try await createStandardContract()
-        let lambdaContractId = try await createUnmanagedEvmHookContract()
+        let hookContractId = try await createUnmanagedEvmHookContract()
         let hookId: Int64 = 1
-        let hookDetails = createHookDetails(contractId: lambdaContractId, hookId: hookId)
+        let hookDetails = createHookDetails(contractId: hookContractId, hookId: hookId)
 
         // Add hook
         _ = try await ContractUpdateTransaction()

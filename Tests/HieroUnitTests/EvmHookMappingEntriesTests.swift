@@ -6,9 +6,8 @@ import XCTest
 
 @testable import Hiero
 
-final class LambdaMappingEntriesUnitTests: XCTestCase {
+final class EvmHookMappingEntriesUnitTests: XCTestCase {
 
-    // Fixture-equivalent constants
     private let mappingSlot = Data([0x17, 0x19, 0x1B])
 
     private let key1 = Data([0x01, 0x23, 0x45])
@@ -19,62 +18,53 @@ final class LambdaMappingEntriesUnitTests: XCTestCase {
     private let value2 = Data([0x0A, 0x0C, 0x0E])
     private let value3 = Data([0x11, 0x13, 0x15])
 
-    private func makeEntry1() -> LambdaMappingEntry {
-        var e = LambdaMappingEntry()
+    private func makeEntry1() -> EvmHookMappingEntry {
+        var e = EvmHookMappingEntry()
         e.key(key1)
         e.value(value1)
         return e
     }
 
-    private func makeEntry2() -> LambdaMappingEntry {
-        var e = LambdaMappingEntry()
+    private func makeEntry2() -> EvmHookMappingEntry {
+        var e = EvmHookMappingEntry()
         e.preimage(preimage2)
         e.value(value2)
         return e
     }
 
-    private func makeEntry3() -> LambdaMappingEntry {
-        var e = LambdaMappingEntry()
+    private func makeEntry3() -> EvmHookMappingEntry {
+        var e = EvmHookMappingEntry()
         e.key(key3)
         e.value(value3)
         return e
     }
 
-    private func makeEntries() -> [LambdaMappingEntry] {
+    private func makeEntries() -> [EvmHookMappingEntry] {
         [makeEntry1(), makeEntry2(), makeEntry3()]
     }
 
     func test_GetSetMappingSlot() {
-        // Given
-        var entries = LambdaMappingEntries()
+        var entries = EvmHookMappingEntries()
 
-        // When
         entries.mappingSlot(mappingSlot)
 
-        // Then
         XCTAssertEqual(entries.mappingSlot, mappingSlot)
     }
 
     func test_GetSetEntries() {
-        // Given
-        var entries = LambdaMappingEntries()
+        var entries = EvmHookMappingEntries()
 
-        // When
         entries.setEntries(makeEntries())
 
-        // Then
         XCTAssertEqual(entries.entries.count, makeEntries().count)
     }
 
     func test_AddEntry() {
-        // Given
-        var entries = LambdaMappingEntries()
+        var entries = EvmHookMappingEntries()
         let e1 = makeEntry1()
 
-        // When
         entries.addEntry(e1)
 
-        // Then
         XCTAssertEqual(entries.entries.count, 1)
         XCTAssertNotNil(entries.entries[0].key)
         XCTAssertEqual(entries.entries[0].key, key1)
@@ -82,41 +72,32 @@ final class LambdaMappingEntriesUnitTests: XCTestCase {
     }
 
     func test_ClearEntries() {
-        // Given
-        var entries = LambdaMappingEntries()
+        var entries = EvmHookMappingEntries()
         entries.setEntries(makeEntries())
 
-        // When
         entries.clearEntries()
 
-        // Then
         XCTAssertTrue(entries.entries.isEmpty)
     }
 
     func test_FromProtobuf() throws {
-        // Given
-        var proto = Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries()
+        var proto = Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntries()
         proto.mappingSlot = mappingSlot
         proto.entries = makeEntries().map { $0.toProtobuf() }
 
-        // When
-        let decoded = try LambdaMappingEntries.fromProtobuf(proto)
+        let decoded = try EvmHookMappingEntries.fromProtobuf(proto)
 
-        // Then
         XCTAssertEqual(decoded.mappingSlot, mappingSlot)
         XCTAssertEqual(decoded.entries.count, makeEntries().count)
     }
 
     func test_ToProtobuf() {
-        // Given
-        var entries = LambdaMappingEntries()
+        var entries = EvmHookMappingEntries()
         entries.mappingSlot(mappingSlot)
         entries.setEntries(makeEntries())
 
-        // When
         let proto = entries.toProtobuf()
 
-        // Then
         XCTAssertEqual(proto.mappingSlot, mappingSlot)
         XCTAssertEqual(proto.entries.count, makeEntries().count)
     }

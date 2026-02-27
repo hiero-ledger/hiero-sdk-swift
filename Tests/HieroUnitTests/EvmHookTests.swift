@@ -6,50 +6,49 @@ import XCTest
 
 @testable import Hiero
 
-final class LambdaEvmHookUnitTests: XCTestCase {
+final class EvmHookUnitTests: XCTestCase {
 
-    private func makeStorageSlot(key: Data, value: Data) -> LambdaStorageSlot {
-        var s = LambdaStorageSlot()
+    private func makeStorageSlot(key: Data, value: Data) -> EvmHookStorageSlot {
+        var s = EvmHookStorageSlot()
         s.key(key)
         s.value(value)
         return s
     }
 
-    private func makeEntryWithKey(_ key: Data, value: Data) -> LambdaMappingEntry {
-        var e = LambdaMappingEntry()
+    private func makeEntryWithKey(_ key: Data, value: Data) -> EvmHookMappingEntry {
+        var e = EvmHookMappingEntry()
         e.key(key)
         e.value(value)
         return e
     }
 
-    private func makeEntryWithPreimage(_ preimage: Data, value: Data) -> LambdaMappingEntry {
-        var e = LambdaMappingEntry()
+    private func makeEntryWithPreimage(_ preimage: Data, value: Data) -> EvmHookMappingEntry {
+        var e = EvmHookMappingEntry()
         e.preimage(preimage)
         e.value(value)
         return e
     }
 
-    private func makeMappingEntries(mappingSlot: Data, _ entries: [LambdaMappingEntry]) -> LambdaMappingEntries {
-        var me = LambdaMappingEntries()
+    private func makeMappingEntries(mappingSlot: Data, _ entries: [EvmHookMappingEntry]) -> EvmHookMappingEntries {
+        var me = EvmHookMappingEntries()
         me.mappingSlot(mappingSlot)
         me.setEntries(entries)
         return me
     }
 
-    private func makeStorageUpdateStorageSlot(_ slot: LambdaStorageSlot) -> LambdaStorageUpdate {
-        var u = LambdaStorageUpdate()
+    private func makeStorageUpdateStorageSlot(_ slot: EvmHookStorageSlot) -> EvmHookStorageUpdate {
+        var u = EvmHookStorageUpdate()
         u.setStorageSlot(slot)
         return u
     }
 
-    private func makeStorageUpdateMappingEntries(_ entries: LambdaMappingEntries) -> LambdaStorageUpdate {
-        var u = LambdaStorageUpdate()
+    private func makeStorageUpdateMappingEntries(_ entries: EvmHookMappingEntries) -> EvmHookStorageUpdate {
+        var u = EvmHookStorageUpdate()
         u.setMappingEntries(entries)
         return u
     }
 
-    private func makeUpdates() -> [LambdaStorageUpdate] {
-        // test bytes
+    private func makeUpdates() -> [EvmHookStorageUpdate] {
         let key1 = Data([0x01, 0x23, 0x45])
         let key2 = Data([0x67, 0x89, 0xAB])
         let preimage = Data([0xCD, 0xEF, 0x02])
@@ -72,65 +71,70 @@ final class LambdaEvmHookUnitTests: XCTestCase {
     }
 
     func test_GetSetStorageUpdates() {
-        // Given
-        var hook = LambdaEvmHook()
+        var hook = EvmHook()
         let updates = makeUpdates()
 
-        // When
         hook.setStorageUpdates(updates)
 
-        // Then
         XCTAssertEqual(hook.storageUpdates.count, updates.count)
     }
 
     func test_AddStorageUpdate() {
-        // Given
-        var hook = LambdaEvmHook()
+        var hook = EvmHook()
         let updates = makeUpdates()
 
-        // When
         for u in updates {
             hook.addStorageUpdate(u)
         }
 
-        // Then
         XCTAssertEqual(hook.storageUpdates.count, updates.count)
     }
 
     func test_ClearStorageUpdates() {
-        // Given
-        var hook = LambdaEvmHook()
+        var hook = EvmHook()
         hook.setStorageUpdates(makeUpdates())
 
-        // When
         hook.clearStorageUpdates()
 
-        // Then
         XCTAssertTrue(hook.storageUpdates.isEmpty)
     }
 
+    func test_GetSetContractId() {
+        let contractId = ContractId(shard: 1, realm: 2, num: 3)
+        var hook = EvmHook()
+
+        hook.contractId(contractId)
+
+        XCTAssertEqual(hook.contractId, contractId)
+    }
+
     func test_FromProtobuf() throws {
-        // Given
-        var proto = Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook()
+        var proto = Com_Hedera_Hapi_Node_Hooks_EvmHook()
+        var spec = Com_Hedera_Hapi_Node_Hooks_EvmHookSpec()
+        spec.bytecodeSource = .contractID(ContractId(shard: 1, realm: 2, num: 3).toProtobuf())
+        proto.spec = spec
         proto.storageUpdates = makeUpdates().map { $0.toProtobuf() }
 
-        // When
-        let decoded = try LambdaEvmHook.fromProtobuf(proto)
+        let decoded = try EvmHook.fromProtobuf(proto)
 
-        // Then
+        XCTAssertEqual(decoded.contractId, ContractId(shard: 1, realm: 2, num: 3))
         XCTAssertEqual(decoded.storageUpdates.count, proto.storageUpdates.count)
     }
 
     func test_ToProtobuf() {
-        // Given
-        var hook = LambdaEvmHook()
+        let contractId = ContractId(shard: 1, realm: 2, num: 3)
+        var hook = EvmHook()
+        hook.contractId(contractId)
         let updates = makeUpdates()
         hook.setStorageUpdates(updates)
 
-        // When
         let proto = hook.toProtobuf()
 
-        // Then
         XCTAssertEqual(proto.storageUpdates.count, updates.count)
+        guard case .contractID(let protoContractId)? = proto.spec.bytecodeSource else {
+            XCTFail("Expected bytecodeSource to be .contractID")
+            return
+        }
+        XCTAssertEqual(UInt64(truncatingIfNeeded: protoContractId.contractNum), contractId.num)
     }
 }

@@ -4,7 +4,7 @@ import Foundation
 import HieroProtobufs
 
 /// An implicit storage slot specified as a Solidity mapping entry.
-public struct LambdaMappingEntry {
+public struct EvmHookMappingEntry {
     /// The 32-byte key of the mapping entry.
     public var key: Data?
 
@@ -24,7 +24,7 @@ public struct LambdaMappingEntry {
     @discardableResult
     public mutating func key(_ key: Data) -> Self {
         self.key = key
-        self.preimage = nil  // Reset preimage when setting key
+        self.preimage = nil
         return self
     }
 
@@ -32,7 +32,7 @@ public struct LambdaMappingEntry {
     @discardableResult
     public mutating func preimage(_ preimage: Data) -> Self {
         self.preimage = preimage
-        self.key = nil  // Reset key when setting preimage
+        self.key = nil
         return self
     }
 
@@ -44,8 +44,8 @@ public struct LambdaMappingEntry {
     }
 }
 
-extension LambdaMappingEntry: TryProtobufCodable {
-    internal typealias Protobuf = Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntry
+extension EvmHookMappingEntry: TryProtobufCodable {
+    internal typealias Protobuf = Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntry
 
     /// Construct from protobuf.
     internal init(protobuf proto: Protobuf) throws {

@@ -303,6 +303,17 @@ public struct Proto_TransactionRecord: @unchecked Sendable {
     set {_uniqueStorage()._newPendingAirdrops = newValue}
   }
 
+  ///*
+  /// A high volume pricing multiplier.
+  /// <p>
+  /// This SHALL be the multiplier that is applied to the transaction
+  /// fees charged for this transaction if the high volume flag is set.
+  /// This is scaled by 1000.
+  public var highVolumePricingMultiplier: UInt64 {
+    get {return _storage._highVolumePricingMultiplier}
+    set {_uniqueStorage()._highVolumePricingMultiplier = newValue}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_Body: Equatable, Sendable {
@@ -412,6 +423,7 @@ extension Proto_TransactionRecord: SwiftProtobuf.Message, SwiftProtobuf._Message
     20: .standard(proto: "prng_number"),
     21: .standard(proto: "evm_address"),
     22: .standard(proto: "new_pending_airdrops"),
+    23: .standard(proto: "high_volume_pricing_multiplier"),
   ]
 
   fileprivate class _StorageClass {
@@ -434,6 +446,7 @@ extension Proto_TransactionRecord: SwiftProtobuf.Message, SwiftProtobuf._Message
     var _entropy: Proto_TransactionRecord.OneOf_Entropy?
     var _evmAddress: Data = Data()
     var _newPendingAirdrops: [Proto_PendingAirdropRecord] = []
+    var _highVolumePricingMultiplier: UInt64 = 0
 
     #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
@@ -467,6 +480,7 @@ extension Proto_TransactionRecord: SwiftProtobuf.Message, SwiftProtobuf._Message
       _entropy = source._entropy
       _evmAddress = source._evmAddress
       _newPendingAirdrops = source._newPendingAirdrops
+      _highVolumePricingMultiplier = source._highVolumePricingMultiplier
     }
   }
 
@@ -544,6 +558,7 @@ extension Proto_TransactionRecord: SwiftProtobuf.Message, SwiftProtobuf._Message
         }()
         case 21: try { try decoder.decodeSingularBytesField(value: &_storage._evmAddress) }()
         case 22: try { try decoder.decodeRepeatedMessageField(value: &_storage._newPendingAirdrops) }()
+        case 23: try { try decoder.decodeSingularUInt64Field(value: &_storage._highVolumePricingMultiplier) }()
         default: break
         }
       }
@@ -629,6 +644,9 @@ extension Proto_TransactionRecord: SwiftProtobuf.Message, SwiftProtobuf._Message
       if !_storage._newPendingAirdrops.isEmpty {
         try visitor.visitRepeatedMessageField(value: _storage._newPendingAirdrops, fieldNumber: 22)
       }
+      if _storage._highVolumePricingMultiplier != 0 {
+        try visitor.visitSingularUInt64Field(value: _storage._highVolumePricingMultiplier, fieldNumber: 23)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -657,6 +675,7 @@ extension Proto_TransactionRecord: SwiftProtobuf.Message, SwiftProtobuf._Message
         if _storage._entropy != rhs_storage._entropy {return false}
         if _storage._evmAddress != rhs_storage._evmAddress {return false}
         if _storage._newPendingAirdrops != rhs_storage._newPendingAirdrops {return false}
+        if _storage._highVolumePricingMultiplier != rhs_storage._highVolumePricingMultiplier {return false}
         return true
       }
       if !storagesAreEqual {return false}

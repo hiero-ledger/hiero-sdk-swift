@@ -216,9 +216,9 @@ extension Transaction {
             let value = try intoOnlyValue(value)
             return try BatchTransaction(protobuf: firstBody, value)
 
-        case .lambdaSstore(let value):
+        case .hookStore(let value):
             let value = try intoOnlyValue(value)
-            return try LambdaSStoreTransaction(protobuf: firstBody, value)
+            return try HookStoreTransaction(protobuf: firstBody, value)
 
         case .hookDispatch(let code):
             throw HError.fromProtobuf("unrecognized: hookDispatch `\(code)`")

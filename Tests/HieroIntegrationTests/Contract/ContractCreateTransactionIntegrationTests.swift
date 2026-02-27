@@ -69,8 +69,8 @@ internal final class ContractCreateTransactionIntegrationTests: HieroIntegration
 
     internal func test_CreateContractWithHook() async throws {
         // Given
-        let lambdaContractId = try await createUnmanagedEvmHookContract()
-        let hookDetails = createHookDetails(contractId: lambdaContractId)
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId)
 
         // When
         let txReceipt = try await ContractCreateTransaction()
@@ -86,8 +86,8 @@ internal final class ContractCreateTransactionIntegrationTests: HieroIntegration
 
     internal func test_CreateContractWithHookWithStorageUpdates() async throws {
         // Given
-        let lambdaContractId = try await createUnmanagedEvmHookContract()
-        let hookDetails = createHookDetailsWithStorage(contractId: lambdaContractId)
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetailsWithStorage(contractId: hookContractId)
 
         // When
         let txReceipt = try await ContractCreateTransaction()
@@ -103,11 +103,11 @@ internal final class ContractCreateTransactionIntegrationTests: HieroIntegration
 
     internal func test_CannotCreateContractWithNoContractIdForHook() async throws {
         // Given - Hook with no contract ID (invalid)
-        let lambdaEvmHook = LambdaEvmHook()
+        let evmHook = EvmHook()
         let hookDetails = HookCreationDetails(
             hookExtensionPoint: .accountAllowanceHook,
             hookId: 1,
-            lambdaEvmHook: lambdaEvmHook
+            evmHook: evmHook
         )
 
         // When / Then
@@ -124,8 +124,8 @@ internal final class ContractCreateTransactionIntegrationTests: HieroIntegration
 
     internal func test_CannotCreateContractWithDuplicateHookId() async throws {
         // Given
-        let lambdaContractId = try await createUnmanagedEvmHookContract()
-        let hookDetails = createHookDetails(contractId: lambdaContractId)
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId)
 
         // When / Then
         await assertPrecheckStatus(
@@ -142,9 +142,9 @@ internal final class ContractCreateTransactionIntegrationTests: HieroIntegration
     internal func test_CreateContractWithHookWithAdminKey() async throws {
         // Given
         let adminKey = PrivateKey.generateEcdsa()
-        let lambdaContractId = try await createUnmanagedEvmHookContract()
+        let hookContractId = try await createUnmanagedEvmHookContract()
         let hookDetails = createHookDetails(
-            contractId: lambdaContractId,
+            contractId: hookContractId,
             adminKey: .single(adminKey.publicKey)
         )
 

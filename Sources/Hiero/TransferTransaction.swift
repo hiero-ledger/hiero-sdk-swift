@@ -79,7 +79,7 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
 
     /// Add an Hbar transfer with a hook to be submitted as part of this TransferTransaction.
     @discardableResult
-    public func hbarTransferWithHook(_ accountId: AccountId, _ amount: Hbar, _ hookCall: FungibleHookCall) -> Self {
+    public func addHbarTransferWithHook(_ accountId: AccountId, _ amount: Hbar, _ hookCall: FungibleHookCall) -> Self {
         doHbarTransferWithHook(accountId, amount.toTinybars(), false, hookCall)
     }
 

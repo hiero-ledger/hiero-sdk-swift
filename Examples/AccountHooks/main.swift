@@ -23,12 +23,9 @@ internal enum Program {
 
         let contractKey = PrivateKey.generateEd25519()
         let contractResponse = try await ContractCreateTransaction()
-            .bytecode(
-                Data(
-                    hexEncoded:
-                        "608060405234801561001057600080fd5b50610167806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80632f570a2314610030575b600080fd5b61004a600480360381019061004591906100b6565b610060565b604051610057919061010a565b60405180910390f35b60006001905092915050565b60008083601f84011261007e57600080fd5b8235905067ffffffffffffffff81111561009757600080fd5b6020830191508360018202830111156100af57600080fd5b9250929050565b600080602083850312156100c957600080fd5b600083013567ffffffffffffffff8111156100e357600080fd5b6100ef8582860161006c565b92509250509250929050565b61010481610125565b82525050565b600060208201905061011f60008301846100fb565b92915050565b6000811515905091905056fea264697066735822122097fc0c3ac3155b53596be3af3b4d2c05eb5e273c020ee447f01b72abc3416e1264736f6c63430008000033"
-                )!
-            )
+            .bytecode(dataFromHex(
+                "608060405234801561001057600080fd5b50610167806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80632f570a2314610030575b600080fd5b61004a600480360381019061004591906100b6565b610060565b604051610057919061010a565b60405180910390f35b60006001905092915050565b60008083601f84011261007e57600080fd5b8235905067ffffffffffffffff81111561009757600080fd5b6020830191508360018202830111156100af57600080fd5b9250929050565b600080602083850312156100c957600080fd5b600083013567ffffffffffffffff8111156100e357600080fd5b6100ef8582860161006c565b92509250509250929050565b61010481610125565b82525050565b600060208201905061011f60008301846100fb565b92915050565b6000811515905091905056fea264697066735822122097fc0c3ac3155b53596be3af3b4d2c05eb5e273c020ee447f01b72abc3416e1264736f6c63430008000033"
+            ))
             .adminKey(.single(contractKey.publicKey))
             .gas(100000)
             .execute(client)
@@ -37,15 +34,12 @@ internal enum Program {
 
         print("Created hook contract: \(contractId)")
 
-        // Create Lambda EVM Hook specification
-        print("Creating Lambda EVM Hook specification...")
+        print("Creating EVM Hook specification...")
 
-        let evmHookSpec = EvmHookSpec(contractId: contractId)
-        let lambdaEvmHook = LambdaEvmHook(spec: evmHookSpec)
+        let evmHook = EvmHook(contractId: contractId)
 
-        // Create hook creation details
         let hookCreationDetails = HookCreationDetails(
-            hookExtensionPoint: .accountAllowanceHook, lambdaEvmHook: lambdaEvmHook,
+            hookExtensionPoint: .accountAllowanceHook, evmHook: evmHook,
             adminKey: Key.single(contractKey.publicKey))
 
         // Example 1: Create account with hooks
@@ -66,7 +60,7 @@ internal enum Program {
         print("Example 2: Updating account to add more hooks")
 
         let hookCreationDetails2 = HookCreationDetails(
-            hookExtensionPoint: .accountAllowanceHook, lambdaEvmHook: lambdaEvmHook,
+            hookExtensionPoint: .accountAllowanceHook, evmHook: evmHook,
             adminKey: Key.single(contractKey.publicKey))
 
         let updateResponse = try await AccountUpdateTransaction()
@@ -106,6 +100,19 @@ internal enum Program {
         print("Cleanup completed")
         print("\nAccount Hooks Example completed successfully!")
     }
+}
+
+private func dataFromHex(_ hex: String) -> Data {
+    var data = Data(capacity: hex.count / 2)
+    var index = hex.startIndex
+    while index < hex.endIndex {
+        let nextIndex = hex.index(index, offsetBy: 2)
+        if let byte = UInt8(hex[index..<nextIndex], radix: 16) {
+            data.append(byte)
+        }
+        index = nextIndex
+    }
+    return data
 }
 
 extension Environment {

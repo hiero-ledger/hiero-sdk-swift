@@ -50,16 +50,12 @@ struct TransferWithHooksExample {
 
         print("Created hook contract: \(hookContractId)")
 
-        // Create hook details
-        var evmHookSpec = EvmHookSpec()
-        evmHookSpec.contractId = hookContractId
-
-        let lambdaHook = LambdaEvmHook(spec: evmHookSpec)
+        let evmHook = EvmHook(contractId: hookContractId)
 
         let hookDetails = HookCreationDetails(
             hookExtensionPoint: .accountAllowanceHook,
             hookId: 1,
-            lambdaEvmHook: lambdaHook
+            evmHook: evmHook
         )
 
         // Create sender account
@@ -167,7 +163,7 @@ struct TransferWithHooksExample {
 
         let hbarHook = FungibleHookCall(
             hookCall: HookCall(hookId: 1, evmHookCall: hbarEvmHookCall),
-            hookType: .preTxAllowanceHook
+            hookType: .preHookSender
         )
 
         // NFT sender hook (pre-hook)
@@ -197,7 +193,7 @@ struct TransferWithHooksExample {
 
         let fungibleTokenHook = FungibleHookCall(
             hookCall: HookCall(hookId: 1, evmHookCall: fungibleTokenEvmHookCall),
-            hookType: .prePostTxAllowanceHook
+            hookType: .prePostHookSender
         )
 
         // Build separate TransferTransactions with hooks (demonstration)
@@ -206,7 +202,7 @@ struct TransferWithHooksExample {
         // Transaction 1: HBAR transfers with hook
         print("\n1. Building HBAR TransferTransaction with hook...")
         let hbarTransferResponse = try await TransferTransaction()
-            .hbarTransferWithHook(senderAccountId, Hbar(-1), hbarHook)
+            .addHbarTransferWithHook(senderAccountId, Hbar(-1), hbarHook)
             .hbarTransfer(receiverAccountId, Hbar(1))
             .execute(client)
 
@@ -216,7 +212,7 @@ struct TransferWithHooksExample {
         // Transaction 2: NFT transfer with sender and receiver hooks
         print("\n2. Building NFT TransferTransaction with hooks...")
         let nftTransferResponse = try await TransferTransaction()
-            .nftTransferWithHooks(nftId, senderAccountId, receiverAccountId, nftSenderHook, nftReceiverHook)
+            .addNftTransferWithHook(nftId, senderAccountId, receiverAccountId, nftSenderHook, nftReceiverHook)
             .execute(client)
 
         let nftTransferReceipt = try await nftTransferResponse.getReceipt(client)
@@ -225,7 +221,7 @@ struct TransferWithHooksExample {
         // Transaction 3: Fungible token transfers with hook
         print("\n3. Building Fungible Token TransferTransaction with hook...")
         let fungibleTransferResponse = try await TransferTransaction()
-            .tokenTransferWithHook(fungibleTokenId, senderAccountId, -1000, fungibleTokenHook)
+            .addTokenTransferWithHook(fungibleTokenId, senderAccountId, -1000, fungibleTokenHook)
             .tokenTransfer(fungibleTokenId, receiverAccountId, 1000)
             .execute(client)
 

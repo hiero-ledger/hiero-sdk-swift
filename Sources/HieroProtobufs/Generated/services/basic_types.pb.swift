@@ -982,12 +982,32 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
   case atomicBatch // = 108
 
   ///*
-  /// Update one or more storage slots in an lambda EVM hook.
+  /// (DEPRECATED) Remove once no production throttle assets reference it.
   case lambdaSstore // = 109
 
   ///*
   /// (Internal-only) Dispatch a hook action.
   case hookDispatch // = 110
+
+  ///*
+  /// Update one or more storage slots in an EVM hook.
+  case hookStore // = 111
+
+  ///*
+  /// (Internal-only) Publish a new ledger id and chain-of-trust key.
+  case ledgerIDPublication // = 112
+
+  ///*
+  /// Create a registered node
+  case registeredNodeCreate // = 113
+
+  ///*
+  /// Update a registered node
+  case registeredNodeUpdate // = 114
+
+  ///*
+  /// Delete a registered node
+  case registeredNodeDelete // = 115
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -1089,6 +1109,11 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 108: self = .atomicBatch
     case 109: self = .lambdaSstore
     case 110: self = .hookDispatch
+    case 111: self = .hookStore
+    case 112: self = .ledgerIDPublication
+    case 113: self = .registeredNodeCreate
+    case 114: self = .registeredNodeUpdate
+    case 115: self = .registeredNodeDelete
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -1188,6 +1213,11 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .atomicBatch: return 108
     case .lambdaSstore: return 109
     case .hookDispatch: return 110
+    case .hookStore: return 111
+    case .ledgerIDPublication: return 112
+    case .registeredNodeCreate: return 113
+    case .registeredNodeUpdate: return 114
+    case .registeredNodeDelete: return 115
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -1287,6 +1317,11 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
     .atomicBatch,
     .lambdaSstore,
     .hookDispatch,
+    .hookStore,
+    .ledgerIDPublication,
+    .registeredNodeCreate,
+    .registeredNodeUpdate,
+    .registeredNodeDelete,
   ]
 
 }
@@ -2079,7 +2114,7 @@ public struct Proto_TransferList: Sendable {
 /// Each `NftTransfer` SHALL be contained in another message (typically
 /// `TokenTransferList`) that details which `Token` type applies to this NFT
 /// transfer.
-public struct Proto_NftTransfer: @unchecked Sendable {
+public struct Proto_NftTransfer: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -2087,31 +2122,28 @@ public struct Proto_NftTransfer: @unchecked Sendable {
   ///*
   /// An Account identifier for the sender.
   public var senderAccountID: Proto_AccountID {
-    get {return _storage._senderAccountID ?? Proto_AccountID()}
-    set {_uniqueStorage()._senderAccountID = newValue}
+    get {return _senderAccountID ?? Proto_AccountID()}
+    set {_senderAccountID = newValue}
   }
   /// Returns true if `senderAccountID` has been explicitly set.
-  public var hasSenderAccountID: Bool {return _storage._senderAccountID != nil}
+  public var hasSenderAccountID: Bool {return self._senderAccountID != nil}
   /// Clears the value of `senderAccountID`. Subsequent reads from it will return its default value.
-  public mutating func clearSenderAccountID() {_uniqueStorage()._senderAccountID = nil}
+  public mutating func clearSenderAccountID() {self._senderAccountID = nil}
 
   ///*
   /// An Account identifier for the receiver.
   public var receiverAccountID: Proto_AccountID {
-    get {return _storage._receiverAccountID ?? Proto_AccountID()}
-    set {_uniqueStorage()._receiverAccountID = newValue}
+    get {return _receiverAccountID ?? Proto_AccountID()}
+    set {_receiverAccountID = newValue}
   }
   /// Returns true if `receiverAccountID` has been explicitly set.
-  public var hasReceiverAccountID: Bool {return _storage._receiverAccountID != nil}
+  public var hasReceiverAccountID: Bool {return self._receiverAccountID != nil}
   /// Clears the value of `receiverAccountID`. Subsequent reads from it will return its default value.
-  public mutating func clearReceiverAccountID() {_uniqueStorage()._receiverAccountID = nil}
+  public mutating func clearReceiverAccountID() {self._receiverAccountID = nil}
 
   ///*
   /// A serial number for the NFT to transfer.
-  public var serialNumber: Int64 {
-    get {return _storage._serialNumber}
-    set {_uniqueStorage()._serialNumber = newValue}
-  }
+  public var serialNumber: Int64 = 0
 
   ///*
   /// An approved allowance flag.<br/>
@@ -2122,81 +2154,7 @@ public struct Proto_NftTransfer: @unchecked Sendable {
   /// If set, the `senderAccountID` MUST be the "payer" account for
   /// the transaction <br/>
   /// The default value SHALL be false (unset).
-  public var isApproval: Bool {
-    get {return _storage._isApproval}
-    set {_uniqueStorage()._isApproval = newValue}
-  }
-
-  ///*
-  /// If set, a call to a hook of type `ACCOUNT_ALLOWANCE_HOOK` installed on
-  /// senderAccountID that must succeed for the transaction to occur.
-  /// <p>
-  /// Cannot be set if `is_approval` is true.
-  public var senderAllowanceHookCall: OneOf_SenderAllowanceHookCall? {
-    get {return _storage._senderAllowanceHookCall}
-    set {_uniqueStorage()._senderAllowanceHookCall = newValue}
-  }
-
-  ///*
-  /// A single call made before attempting the CryptoTransfer, to a
-  /// method with logical signature allow(HookContext, ProposedTransfers)
-  public var preTxSenderAllowanceHook: Proto_HookCall {
-    get {
-      if case .preTxSenderAllowanceHook(let v)? = _storage._senderAllowanceHookCall {return v}
-      return Proto_HookCall()
-    }
-    set {_uniqueStorage()._senderAllowanceHookCall = .preTxSenderAllowanceHook(newValue)}
-  }
-
-  ///*
-  /// Two calls, the first call before attempting the CryptoTransfer, to a
-  /// method with logical signature allowPre(HookContext, ProposedTransfers);
-  /// and the second call after attempting the CryptoTransfer, to a method
-  /// with logical signature allowPost(HookContext, ProposedTransfers).
-  public var prePostTxSenderAllowanceHook: Proto_HookCall {
-    get {
-      if case .prePostTxSenderAllowanceHook(let v)? = _storage._senderAllowanceHookCall {return v}
-      return Proto_HookCall()
-    }
-    set {_uniqueStorage()._senderAllowanceHookCall = .prePostTxSenderAllowanceHook(newValue)}
-  }
-
-  ///*
-  /// If set, a call to a hook of type `ACCOUNT_ALLOWANCE_HOOK` installed on
-  /// receiverAccountID that must succeed for the transaction to occur.
-  /// <p>
-  /// May be set even if `is_approval` is true. In this case, the approval applies
-  /// to the sender authorization, and the hook applies to the receiver authorization
-  /// (if needed, e.g. because of a fallback royalty fee or receiver signature
-  /// requirement).
-  public var receiverAllowanceHookCall: OneOf_ReceiverAllowanceHookCall? {
-    get {return _storage._receiverAllowanceHookCall}
-    set {_uniqueStorage()._receiverAllowanceHookCall = newValue}
-  }
-
-  ///*
-  /// A single call made before attempting the CryptoTransfer, to a
-  /// method with logical signature allow(HookContext, ProposedTransfers)
-  public var preTxReceiverAllowanceHook: Proto_HookCall {
-    get {
-      if case .preTxReceiverAllowanceHook(let v)? = _storage._receiverAllowanceHookCall {return v}
-      return Proto_HookCall()
-    }
-    set {_uniqueStorage()._receiverAllowanceHookCall = .preTxReceiverAllowanceHook(newValue)}
-  }
-
-  ///*
-  /// Two calls, the first call before attempting the CryptoTransfer, to a
-  /// method with logical signature allowPre(HookContext, ProposedTransfers);
-  /// and the second call after attempting the CryptoTransfer, to a method
-  /// with logical signature allowPost(HookContext, ProposedTransfers).
-  public var prePostTxReceiverAllowanceHook: Proto_HookCall {
-    get {
-      if case .prePostTxReceiverAllowanceHook(let v)? = _storage._receiverAllowanceHookCall {return v}
-      return Proto_HookCall()
-    }
-    set {_uniqueStorage()._receiverAllowanceHookCall = .prePostTxReceiverAllowanceHook(newValue)}
-  }
+  public var isApproval: Bool = false
 
   ///*
   /// If set, a call to a hook of type `ACCOUNT_ALLOWANCE_HOOK` installed on
@@ -2308,7 +2266,8 @@ public struct Proto_NftTransfer: @unchecked Sendable {
 
   public init() {}
 
-  fileprivate var _storage = _StorageClass.defaultInstance
+  fileprivate var _senderAccountID: Proto_AccountID? = nil
+  fileprivate var _receiverAccountID: Proto_AccountID? = nil
 }
 
 ///*
@@ -4195,6 +4154,11 @@ extension Proto_HederaFunctionality: SwiftProtobuf._ProtoNameProviding {
     108: .same(proto: "AtomicBatch"),
     109: .same(proto: "LambdaSStore"),
     110: .same(proto: "HookDispatch"),
+    111: .same(proto: "HookStore"),
+    112: .same(proto: "LedgerIdPublication"),
+    113: .same(proto: "RegisteredNodeCreate"),
+    114: .same(proto: "RegisteredNodeUpdate"),
+    115: .same(proto: "RegisteredNodeDelete"),
   ]
 }
 
@@ -5028,43 +4992,6 @@ extension Proto_NftTransfer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
     8: .standard(proto: "pre_post_tx_receiver_allowance_hook"),
   ]
 
-  fileprivate class _StorageClass {
-    var _senderAccountID: Proto_AccountID? = nil
-    var _receiverAccountID: Proto_AccountID? = nil
-    var _serialNumber: Int64 = 0
-    var _isApproval: Bool = false
-    var _senderAllowanceHookCall: Proto_NftTransfer.OneOf_SenderAllowanceHookCall?
-    var _receiverAllowanceHookCall: Proto_NftTransfer.OneOf_ReceiverAllowanceHookCall?
-
-    #if swift(>=5.10)
-      // This property is used as the initial default value for new instances of the type.
-      // The type itself is protecting the reference to its storage via CoW semantics.
-      // This will force a copy to be made of this reference when the first mutation occurs;
-      // hence, it is safe to mark this as `nonisolated(unsafe)`.
-      static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
-
-    private init() {}
-
-    init(copying source: _StorageClass) {
-      _senderAccountID = source._senderAccountID
-      _receiverAccountID = source._receiverAccountID
-      _serialNumber = source._serialNumber
-      _isApproval = source._isApproval
-      _senderAllowanceHookCall = source._senderAllowanceHookCall
-      _receiverAllowanceHookCall = source._receiverAllowanceHookCall
-    }
-  }
-
-  fileprivate mutating func _uniqueStorage() -> _StorageClass {
-    if !isKnownUniquelyReferenced(&_storage) {
-      _storage = _StorageClass(copying: _storage)
-    }
-    return _storage
-  }
-
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
@@ -5133,45 +5060,21 @@ extension Proto_NftTransfer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every if/case branch local when no optimizations
-      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-      // https://github.com/apple/swift-protobuf/issues/1182
-      try { if let v = _storage._senderAccountID {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-      } }()
-      try { if let v = _storage._receiverAccountID {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-      } }()
-      if _storage._serialNumber != 0 {
-        try visitor.visitSingularInt64Field(value: _storage._serialNumber, fieldNumber: 3)
-      }
-      if _storage._isApproval != false {
-        try visitor.visitSingularBoolField(value: _storage._isApproval, fieldNumber: 4)
-      }
-      switch _storage._senderAllowanceHookCall {
-      case .preTxSenderAllowanceHook?: try {
-        guard case .preTxSenderAllowanceHook(let v)? = _storage._senderAllowanceHookCall else { preconditionFailure() }
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
-      }()
-      case .prePostTxSenderAllowanceHook?: try {
-        guard case .prePostTxSenderAllowanceHook(let v)? = _storage._senderAllowanceHookCall else { preconditionFailure() }
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
-      }()
-      case nil: break
-      }
-      switch _storage._receiverAllowanceHookCall {
-      case .preTxReceiverAllowanceHook?: try {
-        guard case .preTxReceiverAllowanceHook(let v)? = _storage._receiverAllowanceHookCall else { preconditionFailure() }
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
-      }()
-      case .prePostTxReceiverAllowanceHook?: try {
-        guard case .prePostTxReceiverAllowanceHook(let v)? = _storage._receiverAllowanceHookCall else { preconditionFailure() }
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
-      }()
-      case nil: break
-      }
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._senderAccountID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._receiverAccountID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    if self.serialNumber != 0 {
+      try visitor.visitSingularInt64Field(value: self.serialNumber, fieldNumber: 3)
+    }
+    if self.isApproval != false {
+      try visitor.visitSingularBoolField(value: self.isApproval, fieldNumber: 4)
     }
     switch self.senderAllowanceHookCall {
     case .preTxSenderAllowanceHook?: try {

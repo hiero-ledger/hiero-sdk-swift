@@ -7,9 +7,8 @@ import XCTest
 internal final class TransferTransactionHooks: HieroIntegrationTestCase {
 
     internal func test_HbarTransferWithPreTxHook() async throws {
-        // Given
-        let lambdaId = try await createEvmHookContract()
-        let hookDetails = createHookDetails(contractId: lambdaId, hookId: 2)
+        let hookContractId = try await createEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId, hookId: 2)
         let (accountId, _) = try await createAccountWithHook(
             hookDetails: hookDetails,
             initialBalance: Hbar(1)
@@ -17,24 +16,21 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
 
         let hookCall = FungibleHookCall(
             hookCall: HookCall(hookId: 2, evmHookCall: EvmHookCall(gasLimit: 25000)),
-            hookType: .preTxAllowanceHook
+            hookType: .preHookReceiver
         )
 
-        // When
         let txReceipt = TransferTransaction()
-            .hbarTransferWithHook(accountId, Hbar(1), hookCall)
+            .addHbarTransferWithHook(accountId, Hbar(1), hookCall)
             .hbarTransfer(testEnv.operator.accountId, Hbar(-1))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
-        // Then
         XCTAssertEqual(txReceipt.status, .success)
     }
 
     internal func test_HbarTransferWithPrePostTxHook() async throws {
-        // Given
-        let lambdaId = try await createEvmHookContract()
-        let hookDetails = createHookDetails(contractId: lambdaId, hookId: 2)
+        let hookContractId = try await createEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId, hookId: 2)
         let (accountId, _) = try await createAccountWithHook(
             hookDetails: hookDetails,
             initialBalance: Hbar(1)
@@ -42,24 +38,21 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
 
         let hookCall = FungibleHookCall(
             hookCall: HookCall(hookId: 2, evmHookCall: EvmHookCall(gasLimit: 25000)),
-            hookType: .prePostTxAllowanceHook
+            hookType: .prePostHookReceiver
         )
 
-        // When
         let txReceipt = TransferTransaction()
-            .hbarTransferWithHook(accountId, Hbar(1), hookCall)
+            .addHbarTransferWithHook(accountId, Hbar(1), hookCall)
             .hbarTransfer(testEnv.operator.accountId, Hbar(-1))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
-        // Then
         XCTAssertEqual(txReceipt.status, .success)
     }
 
     internal func test_TokenTransferWithPreTxHook() async throws {
-        // Given
-        let lambdaId = try await createEvmHookContract()
-        let hookDetails = createHookDetails(contractId: lambdaId, hookId: 2)
+        let hookContractId = try await createEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId, hookId: 2)
         let (accountId, accountKey) = try await createAccountWithHook(
             hookDetails: hookDetails,
             initialBalance: Hbar(1)
@@ -78,25 +71,22 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
 
         let hookCall = FungibleHookCall(
             hookCall: HookCall(hookId: 2, evmHookCall: EvmHookCall(gasLimit: 25000)),
-            hookType: .preTxAllowanceHook
+            hookType: .preHookReceiver
         )
 
-        // When
         let txReceipt = TransferTransaction()
-            .tokenTransferWithHook(tokenId, accountId, 1000, hookCall)
+            .addTokenTransferWithHook(tokenId, accountId, 1000, hookCall)
             .tokenTransfer(tokenId, testEnv.operator.accountId, -1000)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
-        // Then
         XCTAssertEqual(txReceipt.status, .success)
     }
 
     internal func disabled_test_NftTransferWithSenderAndReceiverHooks() async throws {
-        // Given
-        let lambdaId = try await createEvmHookContract()
+        let hookContractId = try await createEvmHookContract()
 
-        let senderHookDetails = createHookDetails(contractId: lambdaId, hookId: 1)
+        let senderHookDetails = createHookDetails(contractId: hookContractId, hookId: 1)
         let senderKey = PrivateKey.generateEd25519()
         let senderTx = AccountCreateTransaction()
             .keyWithoutAlias(.single(senderKey.publicKey))
@@ -106,7 +96,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
             .sign(senderKey)
         let senderAccountId = try await createAccount(senderTx, key: senderKey)
 
-        let receiverHookDetails = createHookDetails(contractId: lambdaId, hookId: 2)
+        let receiverHookDetails = createHookDetails(contractId: hookContractId, hookId: 2)
         let receiverKey = PrivateKey.generateEd25519()
         let receiverTx = AccountCreateTransaction()
             .keyWithoutAlias(.single(receiverKey.publicKey))
@@ -150,13 +140,11 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
 
         let nftId = NftId(tokenId: tokenId, serial: 1)
 
-        // When
         let txReceipt = TransferTransaction()
-            .nftTransferWithHooks(nftId, senderAccountId, receiverAccountId, senderCall, receiverCall)
+            .addNftTransferWithHook(nftId, senderAccountId, receiverAccountId, senderCall, receiverCall)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
-        // Then
         XCTAssertEqual(txReceipt.status, .success)
     }
 }

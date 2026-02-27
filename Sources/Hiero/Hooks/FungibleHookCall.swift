@@ -30,13 +30,6 @@ public struct FungibleHookCall {
         return self
     }
 
-    /// Set the full hook ID.
-    @discardableResult
-    public mutating func fullHookId(_ hookId: HookId) -> Self {
-        self.hookCall.fullHookId(hookId)
-        return self
-    }
-
     /// Set the hook ID.
     @discardableResult
     public mutating func hookId(_ hookId: Int64) -> Self {

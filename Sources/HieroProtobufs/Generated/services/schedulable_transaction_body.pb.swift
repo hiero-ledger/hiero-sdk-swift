@@ -603,6 +603,36 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
   }
 
   ///*
+  /// Create a new registered node in the network address book.
+  public var registeredNodeCreate: Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeCreateTransactionBody {
+    get {
+      if case .registeredNodeCreate(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeCreateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .registeredNodeCreate(newValue)}
+  }
+
+  ///*
+  /// Update a registered node in the network address book.
+  public var registeredNodeUpdate: Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeUpdateTransactionBody {
+    get {
+      if case .registeredNodeUpdate(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeUpdateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .registeredNodeUpdate(newValue)}
+  }
+
+  ///*
+  /// Delete a registered node from the network address book.
+  public var registeredNodeDelete: Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeDeleteTransactionBody {
+    get {
+      if case .registeredNodeDelete(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeDeleteTransactionBody()
+    }
+    set {_uniqueStorage()._data = .registeredNodeDelete(newValue)}
+  }
+
+  ///*
   /// A list of maximum custom fees that the users are willing to pay.
   /// <p>
   /// This field is OPTIONAL.<br/>
@@ -826,6 +856,15 @@ public struct Proto_SchedulableTransactionBody: @unchecked Sendable {
     /// is recorded as a "pending" airdrop which must be "claimed".  All
     /// other recipients receive the "airdropped" tokens immediately.
     case tokenAirdrop(Proto_TokenAirdropTransactionBody)
+    ///*
+    /// Create a new registered node in the network address book.
+    case registeredNodeCreate(Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeCreateTransactionBody)
+    ///*
+    /// Update a registered node in the network address book.
+    case registeredNodeUpdate(Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeUpdateTransactionBody)
+    ///*
+    /// Delete a registered node from the network address book.
+    case registeredNodeDelete(Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeDeleteTransactionBody)
 
   }
 
@@ -889,6 +928,9 @@ extension Proto_SchedulableTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
     46: .same(proto: "tokenCancelAirdrop"),
     47: .same(proto: "tokenClaimAirdrop"),
     48: .same(proto: "tokenAirdrop"),
+    49: .same(proto: "registeredNodeCreate"),
+    50: .same(proto: "registeredNodeUpdate"),
+    51: .same(proto: "registeredNodeDelete"),
     1001: .standard(proto: "max_custom_fees"),
   ]
 
@@ -1533,6 +1575,45 @@ extension Proto_SchedulableTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
             _storage._data = .tokenAirdrop(v)
           }
         }()
+        case 49: try {
+          var v: Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeCreateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .registeredNodeCreate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .registeredNodeCreate(v)
+          }
+        }()
+        case 50: try {
+          var v: Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeUpdateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .registeredNodeUpdate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .registeredNodeUpdate(v)
+          }
+        }()
+        case 51: try {
+          var v: Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeDeleteTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .registeredNodeDelete(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .registeredNodeDelete(v)
+          }
+        }()
         case 1001: try { try decoder.decodeRepeatedMessageField(value: &_storage._maxCustomFees) }()
         default: break
         }
@@ -1736,6 +1817,18 @@ extension Proto_SchedulableTransactionBody: SwiftProtobuf.Message, SwiftProtobuf
       case .tokenAirdrop?: try {
         guard case .tokenAirdrop(let v)? = _storage._data else { preconditionFailure() }
         try visitor.visitSingularMessageField(value: v, fieldNumber: 48)
+      }()
+      case .registeredNodeCreate?: try {
+        guard case .registeredNodeCreate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 49)
+      }()
+      case .registeredNodeUpdate?: try {
+        guard case .registeredNodeUpdate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 50)
+      }()
+      case .registeredNodeDelete?: try {
+        guard case .registeredNodeDelete(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 51)
       }()
       case nil: break
       }

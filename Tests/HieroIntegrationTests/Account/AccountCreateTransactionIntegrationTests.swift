@@ -316,7 +316,7 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
         )
     }
 
-    internal func test_CreateTransactionWithLambdaHook() async throws {
+    internal func test_CreateTransactionWithEvmHook() async throws {
         // Given
         let contractId = try await createUnmanagedEvmHookContract()
         let hookDetails = createHookDetails(contractId: contractId)
@@ -328,7 +328,7 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
         XCTAssertNotNil(accountId)
     }
 
-    internal func test_CreateTransactionWithLambdaHookAndStorageUpdates() async throws {
+    internal func test_CreateTransactionWithEvmHookAndStorageUpdates() async throws {
         // Given
         let contractId = try await createUnmanagedEvmHookContract()
         let hookDetails = createHookDetailsWithStorage(contractId: contractId)
@@ -340,25 +340,24 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
         XCTAssertNotNil(accountId)
     }
 
-    internal func test_CreateTransactionWithLambdaHookWithNoContractId() async throws {
+    internal func test_CreateTransactionWithEvmHookWithNoContractId() async throws {
         // Given
         let key = PrivateKey.generateEcdsa()
 
-        // Create hook with no contract ID (invalid)
-        var lambdaEvmHook = LambdaEvmHook()
+        var evmHook = EvmHook()
 
-        var slot = LambdaStorageSlot()
+        var slot = EvmHookStorageSlot()
         slot.key = Data([0x01, 0x23, 0x45])
         slot.value = Data([0x67, 0x89, 0xAB])
 
-        var update = LambdaStorageUpdate()
+        var update = EvmHookStorageUpdate()
         update.storageSlot = slot
-        lambdaEvmHook.addStorageUpdate(update)
+        evmHook.addStorageUpdate(update)
 
         let hookDetails = HookCreationDetails(
             hookExtensionPoint: .accountAllowanceHook,
             hookId: 1,
-            lambdaEvmHook: lambdaEvmHook
+            evmHook: evmHook
         )
 
         // When / Then
@@ -372,7 +371,7 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
         )
     }
 
-    internal func test_CreateTransactionWithSameLambdaHookIds() async throws {
+    internal func test_CreateTransactionWithSameEvmHookIds() async throws {
         // Given
         let key = PrivateKey.generateEcdsa()
         let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
