@@ -265,6 +265,7 @@ extension HieroIntegrationTestCase {
         let tx = AccountCreateTransaction()
             .keyWithoutAlias(.single(key.publicKey))
             .addHook(hookDetails)
+            .maxTransactionFee(Hbar(20))
 
         if let initialBalance = initialBalance {
             tx.initialBalance(initialBalance)

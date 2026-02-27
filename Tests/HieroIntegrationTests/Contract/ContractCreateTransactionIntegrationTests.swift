@@ -75,7 +75,7 @@ internal final class ContractCreateTransactionIntegrationTests: HieroIntegration
         // When
         let txReceipt = try await ContractCreateTransaction()
             .bytecode(TestConstants.evmHookBytecode)
-            .gas(300_000)
+            .gas(1_000_000)
             .addHook(hookDetails)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -92,7 +92,7 @@ internal final class ContractCreateTransactionIntegrationTests: HieroIntegration
         // When
         let txReceipt = try await ContractCreateTransaction()
             .bytecode(TestConstants.evmHookBytecode)
-            .gas(300_000)
+            .gas(1_000_000)
             .addHook(hookDetails)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -114,7 +114,7 @@ internal final class ContractCreateTransactionIntegrationTests: HieroIntegration
         await assertReceiptStatus(
             try await ContractCreateTransaction()
                 .bytecode(TestConstants.evmHookBytecode)
-                .gas(300_000)
+                .gas(1_000_000)
                 .addHook(hookDetails)
                 .execute(testEnv.client)
                 .getReceipt(testEnv.client),
@@ -131,7 +131,7 @@ internal final class ContractCreateTransactionIntegrationTests: HieroIntegration
         await assertPrecheckStatus(
             try await ContractCreateTransaction()
                 .bytecode(TestConstants.evmHookBytecode)
-                .gas(300_000)
+                .gas(1_000_000)
                 .addHook(hookDetails)
                 .addHook(hookDetails)
                 .execute(testEnv.client),
@@ -151,7 +151,7 @@ internal final class ContractCreateTransactionIntegrationTests: HieroIntegration
         // When
         let txReceipt = try await ContractCreateTransaction()
             .bytecode(TestConstants.evmHookBytecode)
-            .gas(300_000)
+            .gas(1_000_000)
             .addHook(hookDetails)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)

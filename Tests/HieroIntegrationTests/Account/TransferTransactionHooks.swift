@@ -22,6 +22,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
         let txReceipt = try await TransferTransaction()
             .addHbarTransferWithHook(accountId, Hbar(1), hookCall)
             .hbarTransfer(testEnv.operator.accountId, Hbar(-1))
+            .maxTransactionFee(Hbar(20))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
@@ -44,6 +45,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
         let txReceipt = try await TransferTransaction()
             .addHbarTransferWithHook(accountId, Hbar(1), hookCall)
             .hbarTransfer(testEnv.operator.accountId, Hbar(-1))
+            .maxTransactionFee(Hbar(20))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
@@ -77,6 +79,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
         let txReceipt = try await TransferTransaction()
             .addTokenTransferWithHook(tokenId, accountId, 1000, hookCall)
             .tokenTransfer(tokenId, testEnv.operator.accountId, -1000)
+            .maxTransactionFee(Hbar(20))
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
@@ -92,6 +95,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
             .keyWithoutAlias(.single(senderKey.publicKey))
             .initialBalance(Hbar(2))
             .addHook(senderHookDetails)
+            .maxTransactionFee(Hbar(20))
             .freezeWith(testEnv.client)
             .sign(senderKey)
         let senderAccountId = try await createAccount(senderTx, key: senderKey)
@@ -102,6 +106,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
             .keyWithoutAlias(.single(receiverKey.publicKey))
             .initialBalance(Hbar(2))
             .addHook(receiverHookDetails)
+            .maxTransactionFee(Hbar(20))
             .freezeWith(testEnv.client)
             .sign(receiverKey)
         let receiverAccountId = try await createAccount(receiverTx, key: receiverKey)
@@ -115,7 +120,6 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
                 .initialSupply(0)
                 .treasuryAccountId(senderAccountId)
                 .supplyKey(.single(supplyKey.publicKey))
-                .freezeWith(testEnv.client)
                 .sign(senderKey),
             supplyKey: supplyKey
         )
@@ -142,6 +146,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
 
         let txReceipt = try await TransferTransaction()
             .addNftTransferWithHook(nftId, senderAccountId, receiverAccountId, senderCall, receiverCall)
+            .maxTransactionFee(Hbar(20))
             .freezeWith(testEnv.client)
             .sign(senderKey)
             .execute(testEnv.client)

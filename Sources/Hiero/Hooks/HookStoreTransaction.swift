@@ -6,6 +6,10 @@ import HieroProtobufs
 
 /// Adds or removes key/value pairs in the storage of an EVM hook.
 public final class HookStoreTransaction: Transaction {
+    internal override var defaultMaxTransactionFee: Hbar {
+        20
+    }
+
     /// Create a new `HookStoreTransaction` ready for configuration.
     public override init() {
         super.init()

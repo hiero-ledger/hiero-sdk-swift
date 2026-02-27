@@ -271,7 +271,7 @@ extension HieroIntegrationTestCase {
         try await createUnmanagedContract(
             ContractCreateTransaction()
                 .bytecode(TestConstants.evmHookBytecode)
-                .gas(300_000),
+                .gas(1_000_000),
             useAdminClient: useAdminClient
         )
     }
