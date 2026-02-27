@@ -13,14 +13,31 @@ tasks:
             - swift build
 
     format:
+        deps: [swift-format:install]
         cmds:
-            - swift format --configuration .swift-format.json --recursive --in-place --parallel Sources/ Tests/ Examples/ Package.swift
+            - .build/swift-format/swift-format --configuration .swift-format.json --recursive --in-place --parallel Sources/ Tests/ Examples/ Package.swift
 
     lint:
+        deps: [swift-format:install]
         cmds:
             - cmd: swiftlint --quiet
               ignore_error: true
-            - swift format lint --configuration .swift-format.json --recursive --parallel Sources/ Tests/ Examples/ Package.swift
+            - .build/swift-format/swift-format lint --configuration .swift-format.json --recursive --parallel Sources/ Tests/ Examples/ Package.swift
+
+    swift-format:install:
+        desc: "Install swift-format 600.0.0 (matches CI)"
+        vars:
+            SWIFT_FORMAT_VERSION: "600.0.0"
+        status:
+            - test -f .build/swift-format/swift-format
+        cmds:
+            - rm -rf .build/swift-format-src .build/swift-format
+            - git clone --depth=1 --branch {{.SWIFT_FORMAT_VERSION}} https://github.com/apple/swift-format.git .build/swift-format-src
+            - cd .build/swift-format-src && swift build -c release
+            - mkdir -p .build/swift-format
+            - cp .build/swift-format-src/.build/release/swift-format .build/swift-format/
+            - rm -rf .build/swift-format-src
+            - echo "Installed swift-format {{.SWIFT_FORMAT_VERSION}}"
 
     package:
         desc: "Build package"

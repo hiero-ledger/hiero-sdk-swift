@@ -1086,7 +1086,7 @@ public enum Status: Equatable {
     /// A HAPI client cannot set the SignedTransaction#use_serialized_tx_message_hash_algorithm field.
     case invalidSerializedTxMessageHashAlgorithm  // = 401
 
-    /// A LambdaSStore referenced a valid entity number but with the wrong entity type.
+    /// A HookStore referenced a valid entity number but with the wrong entity type.
     case wrongHookEntityType  // = 499
 
     /// An EVM hook execution was throttled due to high network gas utilization.
@@ -1104,16 +1104,16 @@ public enum Status: Equatable {
     /// A hook id was not found.
     case hookNotFound  // = 504
 
-    /// A lambda mapping slot, storage key, or storage value exceeded 32 bytes.
+    /// An EVM hook mapping slot, storage key, or storage value exceeded 32 bytes.
     case lambdaStorageUpdateBytesTooLong  // = 505
 
-    /// A lambda mapping slot, storage key, or storage value failed to use the minimal representation (i.e., no leading zeros).
+    /// An EVM hook's mapping slot, storage key, or storage value failed to use the minimal representation (i.e., no leading zeros).
     case lambdaStorageUpdateBytesMustUseMinimalRepresentation  // = 506
 
     /// A hook id was invalid.
     case invalidHookID  // = 507
 
-    /// A lambda storage update had no contents.
+    /// An EVM hook storage update had no contents.
     case emptyLambdaStorageUpdate  // = 508
 
     /// A user repeated the same hook id in a creation details list.
@@ -1122,19 +1122,19 @@ public enum Status: Equatable {
     /// Hooks are not not enabled on the target Hiero network.
     case hooksNotEnabled  // = 510
 
-    /// The target hook is not a lambda.
+    /// The target hook is not an EVM hook.
     case hookIsNotALambda  // = 511
 
     /// A hook was deleted.
     case hookDeleted  // = 512
 
-    /// The LambdaSStore tried to update too many storage slots in a single transaction.
+    /// The HookStore tried to update too many storage slots in a single transaction.
     case tooManyLambdaStorageUpdates  // = 513
 
-    /// A lambda mapping slot, storage key, or storage value failed to use the minimal representation (i.e., no leading zeros).
+    /// An EVM hook mapping slot, storage key, or storage value failed to use the minimal representation (i.e., no leading zeros).
     case hookCreationBytesMustUseMinimalRepresentation  // = 514
 
-    /// A lambda mapping slot, storage key, or storage value exceeded 32 bytes.
+    /// A EVM hook mapping slot, storage key, or storage value exceeded 32 bytes.
     case hookCreationBytesTooLong  // = 515
 
     /// A hook creation spec was not found.
@@ -1169,6 +1169,12 @@ public enum Status: Equatable {
 
     /// This operation cannot be completed because the target account has a zero balance.<br/> Node accounts require a positive balance. The transaction may be resubmitted once the account has been funded.
     case nodeAccountHasZeroBalance  // = 526
+
+    /// This operation cannot be completed because the target account is a "Fee Collection Account".<br/> Any attempt to transfer to a fee collection account is not permitted.
+    case transferToFeeCollectionAccountNotAllowed  // = 527
+
+    /// The number of hook invocations exceeds the maximum allowed per transaction.
+    case tooManyHookInvocations  // = 528
 
     /// swift-format-ignore: AlwaysUseLowerCamelCase
     case unrecognized(Int32)
@@ -1565,6 +1571,8 @@ public enum Status: Equatable {
         case 524: self = .accountIsLinkedToANode
         case 525: self = .hooksExecutionsRequireTopLevelCryptoTransfer
         case 526: self = .nodeAccountHasZeroBalance
+        case 527: self = .transferToFeeCollectionAccountNotAllowed
+        case 528: self = .tooManyHookInvocations
         default: self = .unrecognized(rawValue)
         }
     }
@@ -1959,6 +1967,8 @@ public enum Status: Equatable {
         case .accountIsLinkedToANode: return 524
         case .hooksExecutionsRequireTopLevelCryptoTransfer: return 525
         case .nodeAccountHasZeroBalance: return 526
+        case .transferToFeeCollectionAccountNotAllowed: return 527
+        case .tooManyHookInvocations: return 528
         case .unrecognized(let i): return i
         }
     }
@@ -2356,6 +2366,8 @@ extension Status: CaseIterable {
         .accountIsLinkedToANode,
         .hooksExecutionsRequireTopLevelCryptoTransfer,
         .nodeAccountHasZeroBalance,
+        .transferToFeeCollectionAccountNotAllowed,
+        .tooManyHookInvocations,
     ]
 }
 
@@ -2751,6 +2763,8 @@ extension Status {
             524: "ACCOUNT_IS_LINKED_TO_A_NODE",
             525: "HOOKS_EXECUTIONS_REQUIRE_TOP_LEVEL_CRYPTO_TRANSFER",
             526: "NODE_ACCOUNT_HAS_ZERO_BALANCE",
+            527: "TRANSFER_TO_FEE_COLLECTION_ACCOUNT_NOT_ALLOWED",
+            528: "TOO_MANY_HOOK_INVOCATIONS",
         ]
 }
 

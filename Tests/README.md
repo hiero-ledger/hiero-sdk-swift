@@ -97,19 +97,22 @@ HIERO_OPERATOR_KEY=302e020100300506032b657004220420...
 HIERO_ENVIRONMENT_TYPE=testnet
 ```
 
-### Local Node Setup
+### Solo Setup
 
-For testing against [hiero-local-node](https://github.com/hiero-ledger/hiero-local-node):
+For local development and testing, we recommend using [Hiero Solo](https://github.com/hiero-ledger/solo). Solo provides a lightweight, local Hiero network running in Kubernetes.
 
 ```bash
 HIERO_OPERATOR_ID=0.0.2
 HIERO_OPERATOR_KEY=3030020100300706052b8104000a042204205bc004059ffa2943965d306f2c44d266255318b3775bacfec42a77ca83e998f2
-HIERO_ENVIRONMENT_TYPE=local
+HIERO_ENVIRONMENT_TYPE=custom
+HIERO_CONSENSUS_NODES=127.0.0.1:50211,127.0.0.1:51211
+HIERO_CONSENSUS_NODE_ACCOUNT_IDS=0.0.3,0.0.4
+HIERO_MIRROR_NODES=127.0.0.1:5600
 ```
 
 #### Kubernetes DNS Configuration (Required for Node Update Tests)
 
-When running against a local Kubernetes-based Hedera network (e.g., solo), some tests that trigger address book updates (like `NodeUpdateTransactionIntegrationTests`) require `/etc/hosts` entries for the Kubernetes internal DNS names.
+When running against Solo, some tests that trigger address book updates (like `NodeUpdateTransactionIntegrationTests`) require `/etc/hosts` entries for the Kubernetes internal DNS names.
 
 Add the following to your `/etc/hosts` file:
 
@@ -143,9 +146,9 @@ HIERO_PROFILE=local
 
 | Profile | Description |
 |---------|-------------|
-| `local` | Local development with local node (default) |
+| `local` | Local development with Solo (default) |
 | `ciUnit` | CI unit tests - unit environment |
-| `ciIntegration` | CI integration tests - local environment, verbose logging |
+| `ciIntegration` | CI integration tests - Solo environment, verbose logging |
 | `development` | Development against remote networks (testnet) |
 
 ### Feature Flags

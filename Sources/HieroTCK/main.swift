@@ -24,6 +24,7 @@ internal class TCKServer {
         defer { app.shutdown() }
 
         app.http.server.configuration.port = 8544
+        app.routes.defaultMaxBodySize = "10mb"
         app.post { req -> Response in
             var jsonRpcRequest: JSONRequest
 
@@ -32,6 +33,10 @@ internal class TCKServer {
                 jsonRpcRequest = try req.content.decode(JSONRequest.self)
             } catch let error as JSONError {
                 return try encodeJsonRpcResponseToHttpResponse(jsonResponse: JSONResponse(id: nil, error: error))
+            } catch {
+                print("Request decode error (not JSONError): \(type(of: error)) - \(error)")
+                return try encodeJsonRpcResponseToHttpResponse(
+                    jsonResponse: JSONResponse(id: nil, error: JSONError.parseError("Parse error: \(error)")))
             }
 
             // Process the JSON-RPC request and encode the response.
@@ -66,10 +71,40 @@ internal class TCKServer {
             case .deleteAllowance:
                 jsonRpcResponse = try await AccountService.deleteAllowance(
                     from: DeleteAllowanceParams(request: request))
+            case .getAccountBalance:
+                jsonRpcResponse = try await AccountService.getAccountBalance(
+                    from: GetAccountBalanceParams(request: request))
+            case .getAccountInfo:
+                jsonRpcResponse = try await AccountService.getAccountInfo(
+                    from: GetAccountInfoParams(request: request))
             case .transferCrypto:
                 jsonRpcResponse = try await AccountService.transferCrypto(from: TransferCryptoParams(request: request))
             case .updateAccount:
                 jsonRpcResponse = try await AccountService.updateAccount(from: UpdateAccountParams(request: request))
+
+            // MARK: - ContractService Methods
+
+            case .contractByteCodeQuery:
+                jsonRpcResponse = try await ContractService.contractByteCodeQuery(
+                    from: ContractByteCodeQueryParams(request: request))
+            case .contractCallQuery:
+                jsonRpcResponse = try await ContractService.contractCallQuery(
+                    from: ContractCallQueryParams(request: request))
+            case .contractInfoQuery:
+                jsonRpcResponse = try await ContractService.contractInfoQuery(
+                    from: ContractInfoQueryParams(request: request))
+            case .createContract:
+                jsonRpcResponse = try await ContractService.createContract(from: CreateContractParams(request: request))
+            case .createEthereumTransaction:
+                jsonRpcResponse = try await ContractService.createEthereumTransaction(
+                    from: CreateEthereumTransactionParams(request: request))
+            case .deleteContract:
+                jsonRpcResponse = try await ContractService.deleteContract(from: DeleteContractParams(request: request))
+            case .executeContract:
+                jsonRpcResponse = try await ContractService.executeContract(
+                    from: ExecuteContractParams(request: request))
+            case .updateContract:
+                jsonRpcResponse = try await ContractService.updateContract(from: UpdateContractParams(request: request))
 
             // MARK: - FileService Methods
 
@@ -90,9 +125,11 @@ internal class TCKServer {
             // MARK: - SDKClient Methods
 
             case .reset:
-                jsonRpcResponse = try SDKClient.client.reset(from: ResetParams(request: request))
+                jsonRpcResponse = try await SDKClient.client.reset(from: ResetParams(request: request))
+            case .setOperator:
+                jsonRpcResponse = try SDKClient.client.setOperator(from: SetOperatorParams(request: request))
             case .setup:
-                jsonRpcResponse = try SDKClient.client.setup(from: SetupParams(request: request))
+                jsonRpcResponse = try await SDKClient.client.setup(from: SetupParams(request: request))
 
             // MARK: - TokenService Methods
 
@@ -114,6 +151,8 @@ internal class TCKServer {
                 jsonRpcResponse = try await TokenService.dissociateToken(from: DissociateTokenParams(request: request))
             case .freezeToken:
                 jsonRpcResponse = try await TokenService.freezeToken(from: FreezeTokenParams(request: request))
+            case .getTokenInfo:
+                jsonRpcResponse = try await TokenService.getTokenInfo(from: GetTokenInfoParams(request: request))
             case .grantTokenKyc:
                 jsonRpcResponse = try await TokenService.grantTokenKyc(from: GrantTokenKycParams(request: request))
             case .mintToken:
@@ -133,6 +172,20 @@ internal class TCKServer {
                     from: UpdateTokenFeeScheduleParams(request: request))
             case .updateToken:
                 jsonRpcResponse = try await TokenService.updateToken(from: UpdateTokenParams(request: request))
+            case .wipeToken:
+                jsonRpcResponse = try await TokenService.wipeToken(from: WipeTokenParams(request: request))
+
+            // MARK: - TopicService Methods
+
+            case .createTopic:
+                jsonRpcResponse = try await TopicService.createTopic(from: CreateTopicParams(request: request))
+            case .deleteTopic:
+                jsonRpcResponse = try await TopicService.deleteTopic(from: DeleteTopicParams(request: request))
+            case .submitTopicMessage:
+                jsonRpcResponse = try await TopicService.submitTopicMessage(
+                    from: SubmitTopicMessageParams(request: request))
+            case .updateTopic:
+                jsonRpcResponse = try await TopicService.updateTopic(from: UpdateTopicParams(request: request))
 
             // MARK: - Unsupported Method
             case .unsupported:
@@ -142,12 +195,14 @@ internal class TCKServer {
             return JSONResponse(id: request.id, result: jsonRpcResponse)
 
         } catch let error as JSONError {
+            print("JSONError: \(error)")
             return JSONResponse(id: request.id, error: error)
 
         } catch let error as HError {
             switch error.kind {
             case .transactionPreCheckStatus(let status, _),
                 .queryPreCheckStatus(let status, _),
+                .queryPaymentPreCheckStatus(let status, _),
                 .receiptStatus(let status, _):
                 print(error.description)
                 return JSONResponse(
@@ -160,8 +215,20 @@ internal class TCKServer {
                         ])
                     )
                 )
+            case .queryNoPaymentPreCheckStatus(let status):
+                print(error.description)
+                return JSONResponse(
+                    id: request.id,
+                    error: JSONError.hieroError(
+                        "Hiero error",
+                        .dictionary([
+                            "status": .string(Status.nameMap[status.rawValue]!),
+                            "message": .string(error.description),
+                        ])
+                    )
+                )
             default:
-                print(error)
+                print("HError (unhandled kind): \(error)")
                 return JSONResponse(
                     id: request.id,
                     error: JSONError.internalError(
@@ -173,6 +240,7 @@ internal class TCKServer {
                 )
             }
         } catch let error {
+            print("Unexpected error type: \(type(of: error)) - \(error)")
             // Fallback for unexpected errors.
             return JSONResponse(
                 id: request.id,
@@ -188,7 +256,15 @@ internal class TCKServer {
 
     /// Encodes a `JSONResponse` into an HTTP response with JSON content.
     private static func encodeJsonRpcResponseToHttpResponse(jsonResponse: JSONResponse) throws -> Response {
-        let responseData = try JSONEncoder().encode(jsonResponse)
-        return Response(status: .ok, headers: ["Content-Type": "application/json"], body: .init(data: responseData))
+        do {
+            let responseData = try JSONEncoder().encode(jsonResponse)
+            if let errorCode = jsonResponse.error?.code {
+                print("Returning error code: \(errorCode)")
+            }
+            return Response(status: .ok, headers: ["Content-Type": "application/json"], body: .init(data: responseData))
+        } catch {
+            print("Encoding failed: \(error)")
+            throw error
+        }
     }
 }

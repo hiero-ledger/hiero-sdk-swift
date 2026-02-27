@@ -37,7 +37,7 @@ import Foundation
 ///     for: method)
 ///
 /// // Conditionally assign:
-/// memoData.assign(to: &tx.memo)
+/// memoData.assignIfPresent(to: &tx.memo)
 /// ```
 internal enum JSONRPCParam {
 

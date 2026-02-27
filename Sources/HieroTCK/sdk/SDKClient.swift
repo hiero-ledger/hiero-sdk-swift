@@ -19,13 +19,25 @@ internal class SDKClient {
     // MARK: - JSON-RPC Methods
 
     /// Handles the `reset` JSON-RPC method.
-    internal func reset(from params: ResetParams) throws -> JSONObject {
+    internal func reset(from params: ResetParams) async throws -> JSONObject {
         self.client = try Client.forNetwork([String: AccountId]())
+        await self.client.setNetworkUpdatePeriod(nanoseconds: nil)
+        return .dictionary(["status": .string("SUCCESS")])
+    }
+
+    /// Handles the `setOperator` JSON-RPC method.
+    ///
+    /// Updates the operator (payer) on the existing client without recreating it.
+    internal func setOperator(from params: SetOperatorParams) throws -> JSONObject {
+        let operatorAccountId = try AccountId.fromString(params.operatorAccountId)
+        let operatorPrivateKey = try PrivateKey.fromStringDer(params.operatorPrivateKey)
+
+        self.client.setOperator(operatorAccountId, operatorPrivateKey)
         return .dictionary(["status": .string("SUCCESS")])
     }
 
     /// Handles the `setup` JSON-RPC method.
-    internal func setup(from params: SetupParams) throws -> JSONObject {
+    internal func setup(from params: SetupParams) async throws -> JSONObject {
         let operatorAccountId = try AccountId.fromString(params.operatorAccountId)
         let operatorPrivateKey = try PrivateKey.fromStringDer(params.operatorPrivateKey)
 
@@ -47,6 +59,9 @@ internal class SDKClient {
         }
 
         self.client.setOperator(operatorAccountId, operatorPrivateKey)
+
+        // Disable automatic network updates
+        await self.client.setNetworkUpdatePeriod(nanoseconds: nil)
 
         return .dictionary([
             "message": .string("Successfully setup \(clientType) client."),
@@ -101,12 +116,26 @@ internal class SDKClient {
         try tx.freezeWith(client)
     }
 
+    /// Executes a Hiero query and returns its result.
+    ///
+    /// This submits the query to the Hiero network and returns the response.
+    ///
+    /// - Parameters:
+    ///   - query: The Hiero query to execute.
+    /// - Returns: The query response.
+    /// - Throws: Any error that occurs during execution.
+    internal func executeQuery<Q: Query<R>, R>(_ query: Q) async throws -> R {
+        return try await query.execute(client)
+    }
+
     // MARK: - Private
 
-    /// Initializes with a default testnet client.
-    /// This placeholder is meant to be overwritten via the `setup` JSON-RPC method.
-    fileprivate init() {
-        self.client = Client.forTestnet()
+    /// Initializes with a placeholder empty client.
+    ///
+    /// This is meant to be overwritten via the `setup` JSON-RPC method.
+    private init() {
+        // Create an empty client - will be replaced by setup()
+        self.client = try! Client.forNetwork([String: AccountId]())
     }
 
     /// Internal client instance wrapped by this class.
