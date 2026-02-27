@@ -120,24 +120,20 @@ internal class TransactionIntegrationTests: HieroIntegrationTestCase {
         XCTAssertNotNil(info.accountId)
     }
 
-    /// Test that the highVolume flag is correctly preserved through serialization.
-    internal func test_HighVolumeFlagSerializationRoundTrip() async throws {
+    /// Test that creating an account with highVolume(true) and a maxTransactionFee that
+    /// is lower than the actual fee required fails with INSUFFICIENT_TX_FEE.
+    internal func test_CreateAccountWithHighVolumeAndLowMaxFeeFails() async throws {
         // Given
         let accountKey = PrivateKey.generateEd25519()
-        let tx = try AccountCreateTransaction()
-            .keyWithoutAlias(.single(accountKey.publicKey))
-            .initialBalance(TestConstants.testSmallHbarBalance)
-            .highVolume(true)
-            .maxTransactionFee(Hbar(5))
-            .nodeAccountIds([AccountId(3)])
-            .transactionId(TransactionId.generate(testEnv.operator.accountId))
-            .freeze()
 
-        // When
-        let bytes = try tx.toBytes()
-        let deserializedTx = try Transaction.fromBytes(bytes)
-
-        // Then
-        XCTAssertTrue(deserializedTx.highVolume)
+        // When / Then
+        await assertPrecheckStatus(
+            try await AccountCreateTransaction()
+                .keyWithoutAlias(.single(accountKey.publicKey))
+                .highVolume(true)
+                .maxTransactionFee(.fromTinybars(1))
+                .execute(testEnv.client),
+            .insufficientTxFee
+        )
     }
 }

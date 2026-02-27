@@ -1462,7 +1462,7 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     74: .standard(proto: "atomic_batch"),
     75: .standard(proto: "lambda_sstore"),
     76: .standard(proto: "hook_dispatch"),
-    77: .standard(proto: "high_volume"),
+    1002: .standard(proto: "high_volume"),
     1001: .standard(proto: "max_custom_fees"),
   ]
 
@@ -2358,7 +2358,7 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
             _storage._data = .hookDispatch(v)
           }
         }()
-        case 77: try { try decoder.decodeSingularBoolField(value: &_storage._highVolume) }()
+        case 1002: try { try decoder.decodeSingularBoolField(value: &_storage._highVolume) }()
         case 1001: try { try decoder.decodeRepeatedMessageField(value: &_storage._maxCustomFees) }()
         default: break
         }
@@ -2656,7 +2656,7 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
       default: break
       }
       if _storage._highVolume != false {
-        try visitor.visitSingularBoolField(value: _storage._highVolume, fieldNumber: 77)
+        try visitor.visitSingularBoolField(value: _storage._highVolume, fieldNumber: 1002)
       }
       if !_storage._maxCustomFees.isEmpty {
         try visitor.visitRepeatedMessageField(value: _storage._maxCustomFees, fieldNumber: 1001)
