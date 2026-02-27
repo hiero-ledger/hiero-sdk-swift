@@ -14,9 +14,8 @@ extension HookExtensionPoint: TryProtobufCodable {
         switch proto {
         case .accountAllowanceHook:
             self = .accountAllowanceHook
-        case .UNRECOGNIZED:
-            // Default / fallback
-            self = .accountAllowanceHook
+        case .UNRECOGNIZED(let code):
+            throw HError.fromProtobuf("unrecognized HookExtensionPoint `\(code)`")
         }
     }
 

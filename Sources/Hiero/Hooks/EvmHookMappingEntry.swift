@@ -14,7 +14,7 @@ public struct EvmHookMappingEntry {
     /// The 32-byte value of the mapping entry (leave empty to delete).
     public var value: Data
 
-    public init(key: Data = Data(), preimage: Data = Data(), value: Data = Data()) {
+    public init(key: Data? = nil, preimage: Data? = nil, value: Data = Data()) {
         self.key = key
         self.preimage = preimage
         self.value = value

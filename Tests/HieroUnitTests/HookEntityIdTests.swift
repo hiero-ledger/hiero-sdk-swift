@@ -11,7 +11,7 @@ final class HookEntityIdUnitTests: XCTestCase {
     private let testContractId = ContractId(shard: 4, realm: 5, num: 6)
 
     func test_GetSetAccountId() {
-        let hookEntityId = HookEntityId()
+        var hookEntityId = HookEntityId()
 
         hookEntityId.accountId(testAccountId)
 
@@ -20,7 +20,7 @@ final class HookEntityIdUnitTests: XCTestCase {
     }
 
     func test_GetSetContractId() {
-        let hookEntityId = HookEntityId()
+        var hookEntityId = HookEntityId()
 
         hookEntityId.contractId(testContractId)
 
@@ -29,7 +29,7 @@ final class HookEntityIdUnitTests: XCTestCase {
     }
 
     func test_SetAccountIdResetsContractId() {
-        let hookEntityId = HookEntityId()
+        var hookEntityId = HookEntityId()
 
         hookEntityId.contractId(testContractId)
         hookEntityId.accountId(testAccountId)
@@ -39,7 +39,7 @@ final class HookEntityIdUnitTests: XCTestCase {
     }
 
     func test_SetContractIdResetsAccountId() {
-        let hookEntityId = HookEntityId()
+        var hookEntityId = HookEntityId()
 
         hookEntityId.accountId(testAccountId)
         hookEntityId.contractId(testContractId)

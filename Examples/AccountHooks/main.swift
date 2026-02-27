@@ -39,7 +39,7 @@ internal enum Program {
         let evmHook = EvmHook(contractId: contractId)
 
         let hookCreationDetails = HookCreationDetails(
-            hookExtensionPoint: .accountAllowanceHook, evmHook: evmHook,
+            hookExtensionPoint: .accountAllowanceHook, hookId: 1, evmHook: evmHook,
             adminKey: Key.single(contractKey.publicKey))
 
         // Example 1: Create account with hooks
@@ -60,7 +60,7 @@ internal enum Program {
         print("Example 2: Updating account to add more hooks")
 
         let hookCreationDetails2 = HookCreationDetails(
-            hookExtensionPoint: .accountAllowanceHook, evmHook: evmHook,
+            hookExtensionPoint: .accountAllowanceHook, hookId: 2, evmHook: evmHook,
             adminKey: Key.single(contractKey.publicKey))
 
         let updateResponse = try await AccountUpdateTransaction()

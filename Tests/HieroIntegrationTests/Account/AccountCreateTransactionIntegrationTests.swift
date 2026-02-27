@@ -384,7 +384,23 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
                 .addHook(hookDetails)
                 .addHook(hookDetails)
                 .execute(testEnv.client),
-            .hookIdRepeatedInCreationDetails
+            .hookIDRepeatedInCreationDetails
         )
+    }
+
+    internal func test_CreateTransactionWithEvmHookWithAdminKey() async throws {
+        // Given
+        let adminKey = PrivateKey.generateEcdsa()
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(
+            contractId: hookContractId,
+            adminKey: .single(adminKey.publicKey)
+        )
+
+        // When
+        let (accountId, _) = try await createAccountWithHook(hookDetails: hookDetails)
+
+        // Then
+        XCTAssertNotNil(accountId)
     }
 }

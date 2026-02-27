@@ -135,7 +135,7 @@ internal final class ContractCreateTransactionIntegrationTests: HieroIntegration
                 .addHook(hookDetails)
                 .addHook(hookDetails)
                 .execute(testEnv.client),
-            .hookIdRepeatedInCreationDetails
+            .hookIDRepeatedInCreationDetails
         )
     }
 

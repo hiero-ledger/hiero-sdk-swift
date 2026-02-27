@@ -19,7 +19,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
             hookType: .preHookReceiver
         )
 
-        let txReceipt = TransferTransaction()
+        let txReceipt = try await TransferTransaction()
             .addHbarTransferWithHook(accountId, Hbar(1), hookCall)
             .hbarTransfer(testEnv.operator.accountId, Hbar(-1))
             .execute(testEnv.client)
@@ -41,7 +41,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
             hookType: .prePostHookReceiver
         )
 
-        let txReceipt = TransferTransaction()
+        let txReceipt = try await TransferTransaction()
             .addHbarTransferWithHook(accountId, Hbar(1), hookCall)
             .hbarTransfer(testEnv.operator.accountId, Hbar(-1))
             .execute(testEnv.client)
@@ -74,7 +74,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
             hookType: .preHookReceiver
         )
 
-        let txReceipt = TransferTransaction()
+        let txReceipt = try await TransferTransaction()
             .addTokenTransferWithHook(tokenId, accountId, 1000, hookCall)
             .tokenTransfer(tokenId, testEnv.operator.accountId, -1000)
             .execute(testEnv.client)
@@ -83,12 +83,12 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
         XCTAssertEqual(txReceipt.status, .success)
     }
 
-    internal func disabled_test_NftTransferWithSenderAndReceiverHooks() async throws {
+    internal func test_NftTransferWithSenderAndReceiverHooks() async throws {
         let hookContractId = try await createEvmHookContract()
 
         let senderHookDetails = createHookDetails(contractId: hookContractId, hookId: 1)
         let senderKey = PrivateKey.generateEd25519()
-        let senderTx = AccountCreateTransaction()
+        let senderTx = try AccountCreateTransaction()
             .keyWithoutAlias(.single(senderKey.publicKey))
             .initialBalance(Hbar(2))
             .addHook(senderHookDetails)
@@ -98,7 +98,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
 
         let receiverHookDetails = createHookDetails(contractId: hookContractId, hookId: 2)
         let receiverKey = PrivateKey.generateEd25519()
-        let receiverTx = AccountCreateTransaction()
+        let receiverTx = try AccountCreateTransaction()
             .keyWithoutAlias(.single(receiverKey.publicKey))
             .initialBalance(Hbar(2))
             .addHook(receiverHookDetails)
@@ -140,8 +140,10 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
 
         let nftId = NftId(tokenId: tokenId, serial: 1)
 
-        let txReceipt = TransferTransaction()
+        let txReceipt = try await TransferTransaction()
             .addNftTransferWithHook(nftId, senderAccountId, receiverAccountId, senderCall, receiverCall)
+            .freezeWith(testEnv.client)
+            .sign(senderKey)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 

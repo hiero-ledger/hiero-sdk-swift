@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
-// SPDX-License-Identifier: Apache-2.0
-
 import GRPC
 import HieroProtobufs
 import SwiftProtobuf

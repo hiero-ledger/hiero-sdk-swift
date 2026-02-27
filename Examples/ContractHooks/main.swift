@@ -39,7 +39,7 @@ internal enum Program {
         let evmHook = EvmHook(contractId: hookContractId)
 
         let hookCreationDetails = HookCreationDetails(
-            hookExtensionPoint: .accountAllowanceHook, evmHook: evmHook,
+            hookExtensionPoint: .accountAllowanceHook, hookId: 1, evmHook: evmHook,
             adminKey: Key.single(hookContractKey.publicKey))
 
         // Example 1: Create contract with hooks
@@ -63,7 +63,7 @@ internal enum Program {
         print("Example 2: Updating contract to add more hooks")
 
         let hookCreationDetails2 = HookCreationDetails(
-            hookExtensionPoint: .accountAllowanceHook, evmHook: evmHook,
+            hookExtensionPoint: .accountAllowanceHook, hookId: 2, evmHook: evmHook,
             adminKey: Key.single(hookContractKey.publicKey))
 
         let updateResponse = try await ContractUpdateTransaction()
@@ -84,18 +84,6 @@ internal enum Program {
         let deleteReceipt = try await deleteResponse.getReceipt(client)
 
         print("Updated contract to delete hooks: \(deleteReceipt.status)")
-
-        // Example 4: Execute contract with hooks
-        print("Example 4: Executing contract with hooks")
-
-        let executeResponse = try await ContractExecuteTransaction()
-            .contractId(contractId)
-            .gas(100000)
-            .function("someFunction")
-            .execute(client)
-        let executeReceipt = try await executeResponse.getReceipt(client)
-
-        print("Executed contract with hooks: \(executeReceipt.status)")
 
         // Cleanup
         print("Cleaning up...")

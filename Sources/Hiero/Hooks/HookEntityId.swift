@@ -2,7 +2,7 @@
 
 import HieroProtobufs
 
-public final class HookEntityId {
+public struct HookEntityId {
     /// ID of the account that owns a hook.
     public var accountId: AccountId? = nil
 
@@ -21,7 +21,7 @@ public final class HookEntityId {
 
     /// Sets the ID of the account that owns a hook.
     @discardableResult
-    public func accountId(_ accountId: AccountId) -> Self {
+    public mutating func accountId(_ accountId: AccountId) -> Self {
         self.accountId = accountId
         self.contractId = nil
         return self
@@ -29,7 +29,7 @@ public final class HookEntityId {
 
     /// Sets the ID of the contract that owns a hook.
     @discardableResult
-    public func contractId(_ contractId: ContractId) -> Self {
+    public mutating func contractId(_ contractId: ContractId) -> Self {
         self.contractId = contractId
         self.accountId = nil
         return self
@@ -39,7 +39,7 @@ public final class HookEntityId {
 extension HookEntityId: TryProtobufCodable {
     internal typealias Protobuf = Proto_HookEntityId
 
-    internal convenience init(protobuf proto: Protobuf) throws {
+    internal init(protobuf proto: Protobuf) throws {
         self.init()
         switch proto.entityID {
         case .accountID(let id):

@@ -105,7 +105,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
                 .freezeWith(testEnv.client)
                 .sign(key)
                 .execute(testEnv.client),
-            .hookIdRepeatedInCreationDetails
+            .hookIDRepeatedInCreationDetails
         )
     }
 
@@ -133,7 +133,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
                 .sign(key)
                 .execute(testEnv.client)
                 .getReceipt(testEnv.client),
-            .hookIdInUse
+            .hookIDInUse
         )
     }
 
@@ -227,6 +227,44 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
             try await AccountUpdateTransaction()
                 .accountId(accountId)
                 .addHookToCreate(hookDetails)
+                .addHookToDelete(hookId)
+                .freezeWith(testEnv.client)
+                .sign(key)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            .hookNotFound
+        )
+    }
+
+    internal func test_CannotDeleteAlreadyDeletedHook() async throws {
+        // Given
+        let (accountId, key) = try await createTestAccount()
+        let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
+        let hookId: Int64 = 1
+        let hookDetails = createHookDetails(contractId: fakeContractId, hookId: hookId)
+
+        // Add hook
+        _ = try await AccountUpdateTransaction()
+            .accountId(accountId)
+            .addHookToCreate(hookDetails)
+            .freezeWith(testEnv.client)
+            .sign(key)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // Delete hook once
+        _ = try await AccountUpdateTransaction()
+            .accountId(accountId)
+            .addHookToDelete(hookId)
+            .freezeWith(testEnv.client)
+            .sign(key)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // When / Then - Delete the same hook again
+        await assertReceiptStatus(
+            try await AccountUpdateTransaction()
+                .accountId(accountId)
                 .addHookToDelete(hookId)
                 .freezeWith(testEnv.client)
                 .sign(key)

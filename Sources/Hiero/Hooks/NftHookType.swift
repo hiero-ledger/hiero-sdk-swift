@@ -3,7 +3,7 @@
 import Foundation
 
 /// Enumeration specifying the different types of hooks for NFTs.
-public enum NftHookType: CaseIterable {
+public enum NftHookType: CaseIterable, Equatable, Hashable {
     /// Execute the hook before the transaction.
     case preHook
 
@@ -23,32 +23,6 @@ extension NftHookType: CustomStringConvertible {
             return "PRE_POST_HOOK"
         case .uninitialized:
             return "UNINITIALIZED"
-        }
-    }
-}
-
-extension NftHookType: Equatable {
-    public static func == (lhs: NftHookType, rhs: NftHookType) -> Bool {
-        switch (lhs, rhs) {
-        case (.preHook, .preHook),
-            (.prePostHook, .prePostHook),
-            (.uninitialized, .uninitialized):
-            return true
-        default:
-            return false
-        }
-    }
-}
-
-extension NftHookType: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        switch self {
-        case .preHook:
-            hasher.combine(0)
-        case .prePostHook:
-            hasher.combine(1)
-        case .uninitialized:
-            hasher.combine(2)
         }
     }
 }

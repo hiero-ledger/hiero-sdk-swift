@@ -3,7 +3,7 @@
 import Foundation
 
 /// Enumeration specifying the different types of hooks for fungible tokens (including HBAR).
-public enum FungibleHookType: CaseIterable {
+public enum FungibleHookType: CaseIterable, Equatable, Hashable {
     /// Execute the allowance hook before the transaction for the sender.
     case preHookSender
 
@@ -33,38 +33,6 @@ extension FungibleHookType: CustomStringConvertible {
             return "PRE_POST_HOOK_RECEIVER"
         case .uninitialized:
             return "UNINITIALIZED"
-        }
-    }
-}
-
-extension FungibleHookType: Equatable {
-    public static func == (lhs: FungibleHookType, rhs: FungibleHookType) -> Bool {
-        switch (lhs, rhs) {
-        case (.preHookSender, .preHookSender),
-            (.prePostHookSender, .prePostHookSender),
-            (.preHookReceiver, .preHookReceiver),
-            (.prePostHookReceiver, .prePostHookReceiver),
-            (.uninitialized, .uninitialized):
-            return true
-        default:
-            return false
-        }
-    }
-}
-
-extension FungibleHookType: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        switch self {
-        case .preHookSender:
-            hasher.combine(0)
-        case .prePostHookSender:
-            hasher.combine(1)
-        case .preHookReceiver:
-            hasher.combine(2)
-        case .prePostHookReceiver:
-            hasher.combine(3)
-        case .uninitialized:
-            hasher.combine(4)
         }
     }
 }

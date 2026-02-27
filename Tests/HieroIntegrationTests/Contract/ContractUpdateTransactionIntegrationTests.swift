@@ -77,7 +77,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
                 .addHookToCreate(hookDetails)
                 .addHookToCreate(hookDetails)
                 .execute(testEnv.client),
-            .hookIdRepeatedInCreationDetails
+            .hookIDRepeatedInCreationDetails
         )
     }
 
@@ -103,7 +103,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
                 .addHookToCreate(hookDetails)
                 .execute(testEnv.client)
                 .getReceipt(testEnv.client),
-            .hookIdInUse
+            .hookIDInUse
         )
     }
 
