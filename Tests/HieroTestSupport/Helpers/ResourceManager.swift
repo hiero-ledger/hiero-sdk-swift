@@ -92,7 +92,8 @@ public actor ResourceManager {
 
         if cleanupPolicy.cleanupContracts {
             await registerCleanup(priority: .clearHookStorage) {
-                guard let contract = self.contracts[contractId] else { return }
+                let contractsCopy = self.contracts
+                guard let contract = contractsCopy[contractId] else { return }
                 let hookEntityId = HookEntityId(contractId: contractId)
                 for h in contract.hooks where !h.storageKeys.isEmpty && h.hookId == hookId {
                     try await self.clearHookStorage(entityId: hookEntityId, hook: h, signingKeys: contract.adminKeys)
@@ -159,7 +160,8 @@ public actor ResourceManager {
 
         if cleanupPolicy.cleanupAccounts {
             await registerCleanup(priority: .clearHookStorage) {
-                guard let account = self.accounts[accountId] else { return }
+                let accountsCopy = self.accounts
+                guard let account = accountsCopy[accountId] else { return }
                 let hookEntityId = HookEntityId(accountId: accountId)
                 for h in account.hooks where !h.storageKeys.isEmpty && h.hookId == hookId {
                     try await self.clearHookStorage(entityId: hookEntityId, hook: h, signingKeys: account.keys)
