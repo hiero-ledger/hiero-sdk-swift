@@ -92,14 +92,7 @@ public actor ResourceManager {
 
         if cleanupPolicy.cleanupContracts {
             await registerCleanup(priority: .clearHookStorage) {
-                guard let contract = self.contracts[contractId] else { return }
-                let hookEntityId = HookEntityId(contractId: contractId)
-                try await self.clearMatchingHookStorage(
-                    hookId: hookId, hooks: contract.hooks, entityId: hookEntityId, signingKeys: contract.adminKeys)
-                if var contract = self.contracts[contractId] {
-                    self.clearStorageKeysForHook(hookId: hookId, in: &contract.hooks)
-                    self.contracts[contractId] = contract
-                }
+                try await self.clearContractHookStorage(contractId: contractId, hookId: hookId)
             }
             await registerCleanup(priority: .removeHooks) {
                 try await self.removeHooksFromContract(contractId)
@@ -159,14 +152,7 @@ public actor ResourceManager {
 
         if cleanupPolicy.cleanupAccounts {
             await registerCleanup(priority: .clearHookStorage) {
-                guard let account = self.accounts[accountId] else { return }
-                let hookEntityId = HookEntityId(accountId: accountId)
-                try await self.clearMatchingHookStorage(
-                    hookId: hookId, hooks: account.hooks, entityId: hookEntityId, signingKeys: account.keys)
-                if var account = self.accounts[accountId] {
-                    self.clearStorageKeysForHook(hookId: hookId, in: &account.hooks)
-                    self.accounts[accountId] = account
-                }
+                try await self.clearAccountHookStorage(accountId: accountId, hookId: hookId)
             }
             await registerCleanup(priority: .removeHooks) {
                 try await self.removeHooksFromAccount(accountId)
@@ -181,6 +167,28 @@ public actor ResourceManager {
     }
 
     // MARK: - Hook Cleanup
+
+    private func clearContractHookStorage(contractId: ContractId, hookId: Int64) async throws {
+        guard let contract = contracts[contractId] else { return }
+        let hookEntityId = HookEntityId(contractId: contractId)
+        try await clearMatchingHookStorage(
+            hookId: hookId, hooks: contract.hooks, entityId: hookEntityId, signingKeys: contract.adminKeys)
+        if var updated = contracts[contractId] {
+            clearStorageKeysForHook(hookId: hookId, in: &updated.hooks)
+            contracts[contractId] = updated
+        }
+    }
+
+    private func clearAccountHookStorage(accountId: AccountId, hookId: Int64) async throws {
+        guard let account = accounts[accountId] else { return }
+        let hookEntityId = HookEntityId(accountId: accountId)
+        try await clearMatchingHookStorage(
+            hookId: hookId, hooks: account.hooks, entityId: hookEntityId, signingKeys: account.keys)
+        if var updated = accounts[accountId] {
+            clearStorageKeysForHook(hookId: hookId, in: &updated.hooks)
+            accounts[accountId] = updated
+        }
+    }
 
     private func clearMatchingHookStorage(
         hookId: Int64, hooks: [TestHook], entityId: HookEntityId, signingKeys: [PrivateKey]
