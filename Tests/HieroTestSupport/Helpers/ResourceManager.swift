@@ -96,7 +96,10 @@ public actor ResourceManager {
                 let hookEntityId = HookEntityId(contractId: contractId)
                 try await self.clearMatchingHookStorage(
                     hookId: hookId, hooks: contract.hooks, entityId: hookEntityId, signingKeys: contract.adminKeys)
-                self.clearStorageKeysForHook(hookId: hookId, in: &self.contracts[contractId]?.hooks)
+                if var contract = self.contracts[contractId] {
+                    self.clearStorageKeysForHook(hookId: hookId, in: &contract.hooks)
+                    self.contracts[contractId] = contract
+                }
             }
             await registerCleanup(priority: .removeHooks) {
                 try await self.removeHooksFromContract(contractId)
@@ -160,7 +163,10 @@ public actor ResourceManager {
                 let hookEntityId = HookEntityId(accountId: accountId)
                 try await self.clearMatchingHookStorage(
                     hookId: hookId, hooks: account.hooks, entityId: hookEntityId, signingKeys: account.keys)
-                self.clearStorageKeysForHook(hookId: hookId, in: &self.accounts[accountId]?.hooks)
+                if var account = self.accounts[accountId] {
+                    self.clearStorageKeysForHook(hookId: hookId, in: &account.hooks)
+                    self.accounts[accountId] = account
+                }
             }
             await registerCleanup(priority: .removeHooks) {
                 try await self.removeHooksFromAccount(accountId)
@@ -184,9 +190,9 @@ public actor ResourceManager {
         }
     }
 
-    private func clearStorageKeysForHook(hookId: Int64, in hooks: inout [TestHook]?) {
-        if let idx = hooks?.firstIndex(where: { $0.hookId == hookId }) {
-            hooks?[idx].storageKeys.removeAll()
+    private func clearStorageKeysForHook(hookId: Int64, in hooks: inout [TestHook]) {
+        if let idx = hooks.firstIndex(where: { $0.hookId == hookId }) {
+            hooks[idx].storageKeys.removeAll()
         }
     }
 
