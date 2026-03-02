@@ -6,12 +6,12 @@ import XCTest
 
 @testable import Hiero
 
-final class EvmHookCallUnitTests: XCTestCase {
+internal final class EvmHookCallUnitTests: XCTestCase {
 
     private let testCallData = Data([0x01, 0x23, 0x45])
     private let testGasLimit: UInt64 = 1_000_000
 
-    func test_GetSetCallData() {
+    internal func test_GetSetCallData() {
         // Given
         var evmHookCall = EvmHookCall()
 
@@ -22,7 +22,7 @@ final class EvmHookCallUnitTests: XCTestCase {
         XCTAssertEqual(evmHookCall.data, testCallData)
     }
 
-    func test_GetSetGasLimit() {
+    internal func test_GetSetGasLimit() {
         // Given
         var evmHookCall = EvmHookCall()
 
@@ -34,7 +34,7 @@ final class EvmHookCallUnitTests: XCTestCase {
     }
 
     // MARK: - TEST_F(EvmHookCallUnitTests, FromProtobuf)
-    func test_FromProtobuf() throws {
+    internal func test_FromProtobuf() throws {
         // Given
         var protoMsg = Proto_EvmHookCall()
         protoMsg.data = testCallData
@@ -49,7 +49,7 @@ final class EvmHookCallUnitTests: XCTestCase {
     }
 
     // MARK: - TEST_F(EvmHookCallUnitTests, ToProtobuf)
-    func test_ToProtobuf() {
+    internal func test_ToProtobuf() {
         // Given
         var evmHookCall = EvmHookCall()
         evmHookCall.data = testCallData

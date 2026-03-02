@@ -14,7 +14,7 @@ public class AbstractTokenTransferTransaction: Transaction {
         var amount: Int64
         let isApproval: Bool
         /// An optional account allowance hook call to authorize this adjustment.
-        var hookCall: FungibleHookCall?
+        internal var hookCall: FungibleHookCall?
 
         internal func validateChecksums(on ledgerId: LedgerId) throws {
             try accountId.validateChecksums(on: ledgerId)
@@ -43,9 +43,9 @@ public class AbstractTokenTransferTransaction: Transaction {
         let serial: UInt64
         let isApproval: Bool
         /// An optional account allowance hook call on the sender.
-        var senderHookCall: NftHookCall?
+        internal var senderHookCall: NftHookCall?
         /// An optional account allowance hook call on the receiver.
-        var receiverHookCall: NftHookCall?
+        internal var receiverHookCall: NftHookCall?
 
         internal func validateChecksums(on ledgerId: LedgerId) throws {
             try senderAccountId.validateChecksums(on: ledgerId)
