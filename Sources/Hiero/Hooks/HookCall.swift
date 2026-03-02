@@ -15,9 +15,6 @@ public struct HookCall {
     /// The specification of how to call the EVM hook, including call data and gas limit.
     public var evmHookCall: EvmHookCall?
 
-    /// Create a new `HookCall` with default values.
-    public init() {}
-
     /// Create a new `HookCall`.
     ///
     /// - Parameters:

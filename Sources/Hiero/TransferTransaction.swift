@@ -58,7 +58,8 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
     private func doHbarTransfer(
         _ accountId: AccountId,
         _ amount: Int64,
-        _ approved: Bool
+        _ approved: Bool,
+        hookCall: FungibleHookCall? = nil
     ) -> Self {
         for (index, transfer) in transfers.enumerated()
         where transfer.accountId == accountId && transfer.isApproval == approved {
@@ -67,12 +68,16 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
                 transfers.remove(at: index)
             } else {
                 transfers[index].amount = newTinybars
+                if let hookCall = hookCall {
+                    transfers[index].hookCall = hookCall
+                }
             }
 
             return self
         }
 
-        transfers.append(Transfer(accountId: accountId, amount: amount, isApproval: approved))
+        transfers.append(
+            Transfer(accountId: accountId, amount: amount, isApproval: approved, hookCall: hookCall))
 
         return self
     }
@@ -89,37 +94,7 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
     ///   - hookCall: The fungible hook call specifying the hook ID, EVM call details, and hook type.
     @discardableResult
     public func addHbarTransferWithHook(_ accountId: AccountId, _ amount: Hbar, _ hookCall: FungibleHookCall) -> Self {
-        doHbarTransferWithHook(accountId, amount.toTinybars(), false, hookCall)
-    }
-
-    private func doHbarTransferWithHook(
-        _ accountId: AccountId,
-        _ amount: Int64,
-        _ approved: Bool,
-        _ hookCall: FungibleHookCall
-    ) -> Self {
-        for (index, transfer) in transfers.enumerated()
-        where transfer.accountId == accountId && transfer.isApproval == approved {
-            let newTinybars = transfer.amount + amount
-            if newTinybars == 0 {
-                transfers.remove(at: index)
-            } else {
-                transfers[index].amount = newTinybars
-                transfers[index].hookCall = hookCall
-            }
-
-            return self
-        }
-
-        transfers.append(
-            Transfer(
-                accountId: accountId,
-                amount: amount,
-                isApproval: approved,
-                hookCall: hookCall
-            ))
-
-        return self
+        doHbarTransfer(accountId, amount.toTinybars(), false, hookCall: hookCall)
     }
 
     internal override func validateChecksums(on ledgerId: LedgerId) throws {

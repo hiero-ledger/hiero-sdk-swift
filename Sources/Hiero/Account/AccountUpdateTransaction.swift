@@ -416,10 +416,7 @@ extension AccountUpdateTransaction: ToProtobuf {
                 proto.declineReward = Google_Protobuf_BoolValue(declineStakingReward)
             }
 
-            for hook in hookCreationDetails {
-                proto.hookCreationDetails.append(hook.toProtobuf())
-            }
-
+            proto.hookCreationDetails = hookCreationDetails.map { $0.toProtobuf() }
             proto.hookIdsToDelete = hooksToDelete
         }
     }

@@ -43,14 +43,14 @@ public struct FungibleHookCall {
     /// Sets the ID of the hook to call on the underlying `HookCall`.
     @discardableResult
     public mutating func hookId(_ hookId: Int64) -> Self {
-        self.hookCall.hookId(hookId)
+        self.hookCall.hookId = hookId
         return self
     }
 
     /// Sets the EVM-specific call details on the underlying `HookCall`.
     @discardableResult
     public mutating func evmHookCall(_ evmHookCall: EvmHookCall) -> Self {
-        self.hookCall.evmHookCall(evmHookCall)
+        self.hookCall.evmHookCall = evmHookCall
         return self
     }
 }

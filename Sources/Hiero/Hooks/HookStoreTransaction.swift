@@ -73,6 +73,7 @@ public final class HookStoreTransaction: Transaction {
     }
 
     internal override func validateChecksums(on ledgerId: LedgerId) throws {
+        try hookId?.validateChecksums(on: ledgerId)
         try super.validateChecksums(on: ledgerId)
     }
 

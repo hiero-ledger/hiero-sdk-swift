@@ -64,25 +64,28 @@ public struct EvmHookMappingEntry {
 extension EvmHookMappingEntry: TryProtobufCodable {
     internal typealias Protobuf = Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntry
 
-    /// Construct from protobuf.
     internal init(protobuf proto: Protobuf) throws {
-        self.key = proto.key
-        self.preimage = proto.preimage
+        switch proto.entryKey {
+        case .key(let v):
+            self.key = v
+            self.preimage = nil
+        case .preimage(let v):
+            self.key = nil
+            self.preimage = v
+        case nil:
+            self.key = nil
+            self.preimage = nil
+        }
         self.value = proto.value
     }
 
-    /// Convert to protobuf.
     internal func toProtobuf() -> Protobuf {
         var proto = Protobuf()
-
         if let key = key {
-            proto.key = key
+            proto.entryKey = .key(key)
+        } else if let preimage = preimage {
+            proto.entryKey = .preimage(preimage)
         }
-
-        if let preimage = preimage {
-            proto.preimage = preimage
-        }
-
         proto.value = value
         return proto
     }
