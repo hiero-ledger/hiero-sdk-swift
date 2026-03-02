@@ -16,49 +16,66 @@ internal enum Program {
         print("Hook Store Example")
         print("==================")
 
+        let (contractId, contractKey) = try await createHookContract(client)
+        let (accountId, hookId) = try await createAccountWithHook(
+            client, contractId: contractId, contractKey: contractKey)
+
+        try await updateStorageSlot(client, hookId: hookId)
+        let (storageUpdate, storageUpdate2) = try await updateMappingEntries(client, hookId: hookId)
+        try await applyMultipleStorageUpdates(client, hookId: hookId, updates: [storageUpdate, storageUpdate2])
+        try await clearStorageUpdates(client, hookId: hookId)
+
+        try await cleanup(
+            client, accountId: accountId, contractId: contractId, operatorAccountId: env.operatorAccountId)
+
+        print("\nHook Store Example completed successfully!")
+    }
+
+    private static func createHookContract(_ client: Client) async throws -> (ContractId, PrivateKey) {
         print("Creating hook contract...")
 
         let contractKey = PrivateKey.generateEd25519()
-        let hookBytecodeHex =
-            "608060405234801561001057600080fd5b50610167806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80632f570a2314610030575b600080fd5b61004a600480360381019061004591906100b6565b610060565b604051610057919061010a565b60405180910390f35b60006001905092915050565b60008083601f84011261007e57600080fd5b8235905067ffffffffffffffff81111561009757600080fd5b6020830191508360018202830111156100af57600080fd5b9250929050565b600080602083850312156100c957600080fd5b600083013567ffffffffffffffff8111156100e357600080fd5b6100ef8582860161006c565b92509250509250929050565b61010481610125565b82525050565b600060208201905061011f60008301846100fb565b92915050565b6000811515905091905056fea264697066735822122097fc0c3ac3155b53596be3af3b4d2c05eb5e273c020ee447f01b72abc3416e1264736f6c63430008000033"
-        let hookBytecode = dataFromHex(hookBytecodeHex)
-        let contractResponse = try await ContractCreateTransaction()
-            .bytecode(hookBytecode)
+        let contractId = try await ContractCreateTransaction()
+            .bytecode(dataFromHex(hookBytecodeHex))
             .adminKey(.single(contractKey.publicKey))
             .gas(100000)
             .execute(client)
-        let contractReceipt = try await contractResponse.getReceipt(client)
-        let contractId = contractReceipt.contractId!
+            .getReceipt(client)
+            .contractId!
 
         print("Created hook contract: \(contractId)")
+        return (contractId, contractKey)
+    }
 
+    private static func createAccountWithHook(
+        _ client: Client, contractId: ContractId, contractKey: PrivateKey
+    ) async throws -> (AccountId, HookId) {
         print("Creating account with hooks...")
 
         let evmHook = EvmHook(contractId: contractId)
-
         let hookCreationDetails = HookCreationDetails(
             hookExtensionPoint: .accountAllowanceHook, evmHook: evmHook,
             adminKey: Key.single(contractKey.publicKey))
 
         let accountKey = PrivateKey.generateEd25519()
-        let accountResponse = try await AccountCreateTransaction()
+        let accountId = try await AccountCreateTransaction()
             .keyWithoutAlias(.single(accountKey.publicKey))
             .initialBalance(10)
             .addHook(hookCreationDetails)
             .execute(client)
-        let accountReceipt = try await accountResponse.getReceipt(client)
-        let accountId = accountReceipt.accountId!
+            .getReceipt(client)
+            .accountId!
 
         print("Created account with hooks: \(accountId)")
 
-        print("Creating HookId...")
-
         let hookEntityId = HookEntityId(accountId: accountId)
         let hookId = HookId(entityId: hookEntityId, hookId: 1)
-
         print("Created HookId: \(hookId)")
 
-        // Example 1: Update storage slot
+        return (accountId, hookId)
+    }
+
+    private static func updateStorageSlot(_ client: Client, hookId: HookId) async throws {
         print("Example 1: Updating storage slot")
 
         var storageSlot = EvmHookStorageSlot()
@@ -68,15 +85,18 @@ internal enum Program {
         var storageUpdate = EvmHookStorageUpdate()
         storageUpdate = storageUpdate.setStorageSlot(storageSlot)
 
-        let storeResponse1 = try await HookStoreTransaction()
+        let receipt = try await HookStoreTransaction()
             .hookId(hookId)
             .addStorageUpdate(storageUpdate)
             .execute(client)
-        let storeReceipt1 = try await storeResponse1.getReceipt(client)
+            .getReceipt(client)
 
-        print("Updated storage slot: \(storeReceipt1.status)")
+        print("Updated storage slot: \(receipt.status)")
+    }
 
-        // Example 2: Update mapping entries
+    private static func updateMappingEntries(
+        _ client: Client, hookId: HookId
+    ) async throws -> (EvmHookStorageUpdate, EvmHookStorageUpdate) {
         print("Example 2: Updating mapping entries")
 
         var mappingEntry1 = EvmHookMappingEntry()
@@ -94,61 +114,74 @@ internal enum Program {
         var mappingUpdate = EvmHookStorageUpdate()
         mappingUpdate = mappingUpdate.setMappingEntries(mappingEntries)
 
-        let storeResponse2 = try await HookStoreTransaction()
+        let receipt = try await HookStoreTransaction()
             .hookId(hookId)
             .addStorageUpdate(mappingUpdate)
             .execute(client)
-        let storeReceipt2 = try await storeResponse2.getReceipt(client)
+            .getReceipt(client)
 
-        print("Updated mapping entries: \(storeReceipt2.status)")
+        print("Updated mapping entries: \(receipt.status)")
 
-        // Example 3: Multiple storage updates
+        var storageSlot = EvmHookStorageSlot()
+        storageSlot = storageSlot.key(Data([0x1D, 0x1E, 0x1F, 0x20]))
+        storageSlot = storageSlot.value(Data([0x21, 0x22, 0x23, 0x24]))
+
+        var storageUpdate = EvmHookStorageUpdate()
+        storageUpdate = storageUpdate.setStorageSlot(storageSlot)
+
+        return (mappingUpdate, storageUpdate)
+    }
+
+    private static func applyMultipleStorageUpdates(
+        _ client: Client, hookId: HookId, updates: [EvmHookStorageUpdate]
+    ) async throws {
         print("Example 3: Multiple storage updates")
 
-        var storageSlot2 = EvmHookStorageSlot()
-        storageSlot2 = storageSlot2.key(Data([0x1D, 0x1E, 0x1F, 0x20]))
-        storageSlot2 = storageSlot2.value(Data([0x21, 0x22, 0x23, 0x24]))
-
-        var storageUpdate2 = EvmHookStorageUpdate()
-        storageUpdate2 = storageUpdate2.setStorageSlot(storageSlot2)
-
-        let storeResponse3 = try await HookStoreTransaction()
+        let receipt = try await HookStoreTransaction()
             .hookId(hookId)
-            .storageUpdates([storageUpdate, storageUpdate2])
+            .storageUpdates(updates)
             .execute(client)
-        let storeReceipt3 = try await storeResponse3.getReceipt(client)
+            .getReceipt(client)
 
-        print("Applied multiple storage updates: \(storeReceipt3.status)")
+        print("Applied multiple storage updates: \(receipt.status)")
+    }
 
-        // Example 4: Clear storage updates
+    private static func clearStorageUpdates(_ client: Client, hookId: HookId) async throws {
         print("Example 4: Clearing storage updates")
 
-        let storeResponse4 = try await HookStoreTransaction()
+        let receipt = try await HookStoreTransaction()
             .hookId(hookId)
             .clearStorageUpdates()
             .execute(client)
-        let storeReceipt4 = try await storeResponse4.getReceipt(client)
+            .getReceipt(client)
 
-        print("Cleared storage updates: \(storeReceipt4.status)")
+        print("Cleared storage updates: \(receipt.status)")
+    }
 
+    private static func cleanup(
+        _ client: Client, accountId: AccountId, contractId: ContractId, operatorAccountId: AccountId
+    ) async throws {
         print("Cleaning up...")
 
         _ = try await AccountDeleteTransaction()
             .accountId(accountId)
-            .transferAccountId(env.operatorAccountId)
+            .transferAccountId(operatorAccountId)
             .execute(client)
             .getReceipt(client)
 
         _ = try await ContractDeleteTransaction()
             .contractId(contractId)
-            .transferAccountId(env.operatorAccountId)
+            .transferAccountId(operatorAccountId)
             .execute(client)
             .getReceipt(client)
 
         print("Cleanup completed")
-        print("\nHook Store Example completed successfully!")
     }
 }
+
+// swiftlint:disable:next line_length
+private let hookBytecodeHex =
+    "608060405234801561001057600080fd5b50610167806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80632f570a2314610030575b600080fd5b61004a600480360381019061004591906100b6565b610060565b604051610057919061010a565b60405180910390f35b60006001905092915050565b60008083601f84011261007e57600080fd5b8235905067ffffffffffffffff81111561009757600080fd5b6020830191508360018202830111156100af57600080fd5b9250929050565b600080602083850312156100c957600080fd5b600083013567ffffffffffffffff8111156100e357600080fd5b6100ef8582860161006c565b92509250509250929050565b61010481610125565b82525050565b600060208201905061011f60008301846100fb565b92915050565b6000811515905091905056fea264697066735822122097fc0c3ac3155b53596be3af3b4d2c05eb5e273c020ee447f01b72abc3416e1264736f6c63430008000033"
 
 private func dataFromHex(_ hex: String) -> Data {
     var data = Data(capacity: hex.count / 2)

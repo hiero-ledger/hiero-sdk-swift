@@ -92,15 +92,11 @@ public actor ResourceManager {
 
         if cleanupPolicy.cleanupContracts {
             await registerCleanup(priority: .clearHookStorage) {
-                let contractsCopy = self.contracts
-                guard let contract = contractsCopy[contractId] else { return }
+                guard let contract = self.contracts[contractId] else { return }
                 let hookEntityId = HookEntityId(contractId: contractId)
-                for h in contract.hooks where !h.storageKeys.isEmpty && h.hookId == hookId {
-                    try await self.clearHookStorage(entityId: hookEntityId, hook: h, signingKeys: contract.adminKeys)
-                }
-                if let idx = self.contracts[contractId]?.hooks.firstIndex(where: { $0.hookId == hookId }) {
-                    self.contracts[contractId]?.hooks[idx].storageKeys.removeAll()
-                }
+                try await self.clearMatchingHookStorage(
+                    hookId: hookId, hooks: contract.hooks, entityId: hookEntityId, signingKeys: contract.adminKeys)
+                self.clearStorageKeysForHook(hookId: hookId, in: &self.contracts[contractId]?.hooks)
             }
             await registerCleanup(priority: .removeHooks) {
                 try await self.removeHooksFromContract(contractId)
@@ -160,15 +156,11 @@ public actor ResourceManager {
 
         if cleanupPolicy.cleanupAccounts {
             await registerCleanup(priority: .clearHookStorage) {
-                let accountsCopy = self.accounts
-                guard let account = accountsCopy[accountId] else { return }
+                guard let account = self.accounts[accountId] else { return }
                 let hookEntityId = HookEntityId(accountId: accountId)
-                for h in account.hooks where !h.storageKeys.isEmpty && h.hookId == hookId {
-                    try await self.clearHookStorage(entityId: hookEntityId, hook: h, signingKeys: account.keys)
-                }
-                if let idx = self.accounts[accountId]?.hooks.firstIndex(where: { $0.hookId == hookId }) {
-                    self.accounts[accountId]?.hooks[idx].storageKeys.removeAll()
-                }
+                try await self.clearMatchingHookStorage(
+                    hookId: hookId, hooks: account.hooks, entityId: hookEntityId, signingKeys: account.keys)
+                self.clearStorageKeysForHook(hookId: hookId, in: &self.accounts[accountId]?.hooks)
             }
             await registerCleanup(priority: .removeHooks) {
                 try await self.removeHooksFromAccount(accountId)
@@ -183,6 +175,20 @@ public actor ResourceManager {
     }
 
     // MARK: - Hook Cleanup
+
+    private func clearMatchingHookStorage(
+        hookId: Int64, hooks: [TestHook], entityId: HookEntityId, signingKeys: [PrivateKey]
+    ) async throws {
+        for hook in hooks where !hook.storageKeys.isEmpty && hook.hookId == hookId {
+            try await clearHookStorage(entityId: entityId, hook: hook, signingKeys: signingKeys)
+        }
+    }
+
+    private func clearStorageKeysForHook(hookId: Int64, in hooks: inout [TestHook]?) {
+        if let idx = hooks?.firstIndex(where: { $0.hookId == hookId }) {
+            hooks?[idx].storageKeys.removeAll()
+        }
+    }
 
     private func clearHookStorage(entityId: HookEntityId, hook: TestHook, signingKeys: [PrivateKey]) async throws {
         guard !hook.storageKeys.isEmpty else { return }
@@ -411,28 +417,28 @@ public actor ResourceManager {
 // MARK: - Internal Test Resource Types
 
 /// Tracks a hook attached to a test entity for cleanup.
-struct TestHook {
-    let hookId: Int64
-    var storageKeys: [Data]
+internal struct TestHook {
+    internal let hookId: Int64
+    internal var storageKeys: [Data]
 }
 
 /// Internal struct for tracking accounts during cleanup
-struct TestAccount {
-    let id: AccountId
-    let keys: [PrivateKey]
-    var hooks: [TestHook] = []
+internal struct TestAccount {
+    internal let id: AccountId
+    internal let keys: [PrivateKey]
+    internal var hooks: [TestHook] = []
 
     /// Single key convenience accessor (returns first key)
-    var key: PrivateKey {
+    internal var key: PrivateKey {
         keys[0]
     }
 
-    init(id: AccountId, key: PrivateKey) {
+    internal init(id: AccountId, key: PrivateKey) {
         self.id = id
         self.keys = [key]
     }
 
-    init(id: AccountId, keys: [PrivateKey]) {
+    internal init(id: AccountId, keys: [PrivateKey]) {
         precondition(!keys.isEmpty, "TestAccount requires at least one key")
         self.id = id
         self.keys = keys
@@ -440,22 +446,22 @@ struct TestAccount {
 }
 
 /// Internal struct for tracking contracts during cleanup
-struct TestContract {
-    let id: ContractId
-    let adminKeys: [PrivateKey]
-    var hooks: [TestHook] = []
+internal struct TestContract {
+    internal let id: ContractId
+    internal let adminKeys: [PrivateKey]
+    internal var hooks: [TestHook] = []
 
     /// Single key convenience accessor (returns first key)
-    var adminKey: PrivateKey {
+    internal var adminKey: PrivateKey {
         adminKeys[0]
     }
 
-    init(id: ContractId, key: PrivateKey) {
+    internal init(id: ContractId, key: PrivateKey) {
         self.id = id
         self.adminKeys = [key]
     }
 
-    init(id: ContractId, keys: [PrivateKey]) {
+    internal init(id: ContractId, keys: [PrivateKey]) {
         precondition(!keys.isEmpty, "TestContract requires at least one key")
         self.id = id
         self.adminKeys = keys

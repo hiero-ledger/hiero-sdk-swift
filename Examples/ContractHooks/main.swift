@@ -23,7 +23,8 @@ internal enum Program {
         let contractId = try await createContractWithHooks(client, evmHook: evmHook, hookContractKey: hookContractKey)
         try await addHooksToContract(client, contractId: contractId, evmHook: evmHook, hookContractKey: hookContractKey)
         try await deleteHooksFromContract(client, contractId: contractId)
-        try await cleanup(client, contractId: contractId, hookContractId: hookContractId, operatorAccountId: env.operatorAccountId)
+        try await cleanup(
+            client, contractId: contractId, hookContractId: hookContractId, operatorAccountId: env.operatorAccountId)
 
         print("\nContract Hooks Example completed successfully!")
     }
