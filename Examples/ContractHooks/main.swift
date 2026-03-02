@@ -8,106 +8,117 @@ import SwiftDotenv
 @main
 internal enum Program {
     internal static func main() async throws {
-        /// Grab the environment variables.
         let env = try Dotenv.load()
 
-        /// Initialize the client based on the provided environment.
         let client = try Client.forName(env.networkName)
         client.setOperator(env.operatorAccountId, env.operatorKey)
 
         print("Contract Hooks Example")
         print("=====================")
 
-        // Create a contract that will serve as our hook
+        let (hookContractId, hookContractKey) = try await createHookContract(client)
+
+        let evmHook = EvmHook(contractId: hookContractId)
+
+        let contractId = try await createContractWithHooks(client, evmHook: evmHook, hookContractKey: hookContractKey)
+        try await addHooksToContract(client, contractId: contractId, evmHook: evmHook, hookContractKey: hookContractKey)
+        try await deleteHooksFromContract(client, contractId: contractId)
+        try await cleanup(client, contractId: contractId, hookContractId: hookContractId, operatorAccountId: env.operatorAccountId)
+
+        print("\nContract Hooks Example completed successfully!")
+    }
+
+    private static func createHookContract(_ client: Client) async throws -> (ContractId, PrivateKey) {
         print("Creating hook contract...")
 
         let hookContractKey = PrivateKey.generateEd25519()
         let hookContractResponse = try await ContractCreateTransaction()
-            .bytecode(
-                dataFromHex(
-                    "608060405234801561001057600080fd5b50610167806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80632f570a2314610030575b600080fd5b61004a600480360381019061004591906100b6565b610060565b604051610057919061010a565b60405180910390f35b60006001905092915050565b60008083601f84011261007e57600080fd5b8235905067ffffffffffffffff81111561009757600080fd5b6020830191508360018202830111156100af57600080fd5b9250929050565b600080602083850312156100c957600080fd5b600083013567ffffffffffffffff8111156100e357600080fd5b6100ef8582860161006c565b92509250509250929050565b61010481610125565b82525050565b600060208201905061011f60008301846100fb565b92915050565b6000811515905091905056fea264697066735822122097fc0c3ac3155b53596be3af3b4d2c05eb5e273c020ee447f01b72abc3416e1264736f6c63430008000033"
-                )
-            )
+            .bytecode(dataFromHex(hookBytecode))
             .adminKey(.single(hookContractKey.publicKey))
             .gas(100000)
             .execute(client)
-        let hookContractReceipt = try await hookContractResponse.getReceipt(client)
-        let hookContractId = hookContractReceipt.contractId!
+        let hookContractId = try await hookContractResponse.getReceipt(client).contractId!
 
         print("Created hook contract: \(hookContractId)")
+        return (hookContractId, hookContractKey)
+    }
 
-        print("Creating EVM Hook specification...")
-
-        let evmHook = EvmHook(contractId: hookContractId)
+    private static func createContractWithHooks(
+        _ client: Client, evmHook: EvmHook, hookContractKey: PrivateKey
+    ) async throws -> ContractId {
+        print("Example 1: Creating contract with hooks")
 
         let hookCreationDetails = HookCreationDetails(
             hookExtensionPoint: .accountAllowanceHook, hookId: 1, evmHook: evmHook,
             adminKey: Key.single(hookContractKey.publicKey))
 
-        // Example 1: Create contract with hooks
-        print("Example 1: Creating contract with hooks")
-
         let contractKey = PrivateKey.generateEd25519()
         let contractResponse = try await ContractCreateTransaction()
-            .bytecode(
-                dataFromHex(
-                    "608060405234801561001057600080fd5b50610167806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80632f570a2314610030575b600080fd5b61004a600480360381019061004591906100b6565b610060565b604051610057919061010a565b60405180910390f35b60006001905092915050565b60008083601f84011261007e57600080fd5b8235905067ffffffffffffffff81111561009757600080fd5b6020830191508360018202830111156100af57600080fd5b9250929050565b600080602083850312156100c957600080fd5b600083013567ffffffffffffffff8111156100e357600080fd5b6100ef8582860161006c565b92509250509250929050565b61010481610125565b82525050565b600060208201905061011f60008301846100fb565b92915050565b6000811515905091905056fea264697066735822122097fc0c3ac3155b53596be3af3b4d2c05eb5e273c020ee447f01b72abc3416e1264736f6c63430008000033"
-                )
-            )
+            .bytecode(dataFromHex(hookBytecode))
             .adminKey(.single(contractKey.publicKey))
             .gas(200000)
             .addHook(hookCreationDetails)
             .execute(client)
-        let contractReceipt = try await contractResponse.getReceipt(client)
-        let contractId = contractReceipt.contractId!
+        let contractId = try await contractResponse.getReceipt(client).contractId!
 
         print("Created contract with hooks: \(contractId)")
+        return contractId
+    }
 
-        // Example 2: Update contract to add more hooks
+    private static func addHooksToContract(
+        _ client: Client, contractId: ContractId, evmHook: EvmHook, hookContractKey: PrivateKey
+    ) async throws {
         print("Example 2: Updating contract to add more hooks")
 
-        let hookCreationDetails2 = HookCreationDetails(
+        let hookCreationDetails = HookCreationDetails(
             hookExtensionPoint: .accountAllowanceHook, hookId: 2, evmHook: evmHook,
             adminKey: Key.single(hookContractKey.publicKey))
 
-        let updateResponse = try await ContractUpdateTransaction()
+        let updateReceipt = try await ContractUpdateTransaction()
             .contractId(contractId)
-            .addHookToCreate(hookCreationDetails2)
+            .addHookToCreate(hookCreationDetails)
             .execute(client)
-        let updateReceipt = try await updateResponse.getReceipt(client)
+            .getReceipt(client)
 
         print("Updated contract with additional hooks: \(updateReceipt.status)")
+    }
 
-        // Example 3: Update contract to delete hooks
+    private static func deleteHooksFromContract(_ client: Client, contractId: ContractId) async throws {
         print("Example 3: Updating contract to delete hooks")
 
-        let deleteResponse = try await ContractUpdateTransaction()
+        let deleteReceipt = try await ContractUpdateTransaction()
             .contractId(contractId)
-            .addHookToDelete(1)  // Delete hook with ID 1
+            .addHookToDelete(1)
             .execute(client)
-        let deleteReceipt = try await deleteResponse.getReceipt(client)
+            .getReceipt(client)
 
         print("Updated contract to delete hooks: \(deleteReceipt.status)")
+    }
 
-        // Cleanup
+    private static func cleanup(
+        _ client: Client, contractId: ContractId, hookContractId: ContractId, operatorAccountId: AccountId
+    ) async throws {
         print("Cleaning up...")
 
         _ = try await ContractDeleteTransaction()
             .contractId(contractId)
-            .transferAccountId(env.operatorAccountId)
+            .transferAccountId(operatorAccountId)
             .execute(client)
             .getReceipt(client)
 
         _ = try await ContractDeleteTransaction()
             .contractId(hookContractId)
-            .transferAccountId(env.operatorAccountId)
+            .transferAccountId(operatorAccountId)
             .execute(client)
             .getReceipt(client)
 
         print("Cleanup completed")
-        print("\nContract Hooks Example completed successfully!")
     }
 }
+
+// swiftlint:disable:next line_length
+private let hookBytecode =
+    "608060405234801561001057600080fd5b50610167806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80632f570a2314610030575b600080fd5b61004a600480360381019061004591906100b6565b610060565b604051610057919061010a565b60405180910390f35b60006001905092915050565b60008083601f84011261007e57600080fd5b8235905067ffffffffffffffff81111561009757600080fd5b6020830191508360018202830111156100af57600080fd5b9250929050565b600080602083850312156100c957600080fd5b600083013567ffffffffffffffff8111156100e357600080fd5b6100ef8582860161006c565b92509250509250929050565b61010481610125565b82525050565b600060208201905061011f60008301846100fb565b92915050565b6000811515905091905056fea264697066735822122097fc0c3ac3155b53596be3af3b4d2c05eb5e273c020ee447f01b72abc3416e1264736f6c63430008000033"
 
 private func dataFromHex(_ hex: String) -> Data {
     var data = Data(capacity: hex.count / 2)
