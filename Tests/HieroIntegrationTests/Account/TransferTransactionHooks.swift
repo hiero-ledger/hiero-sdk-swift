@@ -90,26 +90,16 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
         let hookContractId = try await createEvmHookContract()
 
         let senderHookDetails = createHookDetails(contractId: hookContractId, hookId: 1)
-        let senderKey = PrivateKey.generateEd25519()
-        let senderTx = try AccountCreateTransaction()
-            .keyWithoutAlias(.single(senderKey.publicKey))
-            .initialBalance(Hbar(2))
-            .addHook(senderHookDetails)
-            .maxTransactionFee(Hbar(20))
-            .freezeWith(testEnv.client)
-            .sign(senderKey)
-        let senderAccountId = try await createAccount(senderTx, key: senderKey)
+        let (senderAccountId, senderKey) = try await createAccountWithHook(
+            hookDetails: senderHookDetails,
+            initialBalance: Hbar(2)
+        )
 
         let receiverHookDetails = createHookDetails(contractId: hookContractId, hookId: 2)
-        let receiverKey = PrivateKey.generateEd25519()
-        let receiverTx = try AccountCreateTransaction()
-            .keyWithoutAlias(.single(receiverKey.publicKey))
-            .initialBalance(Hbar(2))
-            .addHook(receiverHookDetails)
-            .maxTransactionFee(Hbar(20))
-            .freezeWith(testEnv.client)
-            .sign(receiverKey)
-        let receiverAccountId = try await createAccount(receiverTx, key: receiverKey)
+        let (receiverAccountId, receiverKey) = try await createAccountWithHook(
+            hookDetails: receiverHookDetails,
+            initialBalance: Hbar(2)
+        )
 
         let supplyKey = PrivateKey.generateEd25519()
         let tokenId = try await createToken(

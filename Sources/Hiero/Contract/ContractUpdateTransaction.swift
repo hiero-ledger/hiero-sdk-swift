@@ -83,6 +83,10 @@ public final class ContractUpdateTransaction: Transaction {
         try super.init(protobuf: proto)
     }
 
+    internal override var defaultMaxTransactionFee: Hbar {
+        20
+    }
+
     /// The contract to be updated.
     public var contractId: ContractId? {
         willSet {

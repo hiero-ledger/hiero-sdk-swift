@@ -34,6 +34,7 @@ internal final class HookStoreTransactionIntegrationTests: HieroIntegrationTestC
                 .sign(accountKey)
                 .execute(testEnv.client)
                 .getReceipt(testEnv.client)
+            await registerAccountHookStorageKey(accountId, hookId: 1, key: Data([0x01]))
         } catch {
             XCTFail("Unexpected throw: \(error)")
         }

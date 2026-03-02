@@ -365,6 +365,7 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
             try await AccountCreateTransaction()
                 .keyWithoutAlias(.single(key.publicKey))
                 .addHook(hookDetails)
+                .maxTransactionFee(Hbar(20))
                 .execute(testEnv.client)
                 .getReceipt(testEnv.client),
             .invalidHookCreationSpec

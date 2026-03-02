@@ -78,13 +78,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
 
         // When / Then
         do {
-            _ = try await AccountUpdateTransaction()
-                .accountId(accountId)
-                .addHookToCreate(hookDetails)
-                .freezeWith(testEnv.client)
-                .sign(key)
-                .execute(testEnv.client)
-                .getReceipt(testEnv.client)
+            try await addHookToAccount(accountId, accountKey: key, hook: hookDetails)
         } catch {
             XCTFail("Unexpected throw: \(error)")
         }
@@ -116,13 +110,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
         let hookDetails = createHookDetails(contractId: fakeContractId)
 
         // Add hook once
-        _ = try await AccountUpdateTransaction()
-            .accountId(accountId)
-            .addHookToCreate(hookDetails)
-            .freezeWith(testEnv.client)
-            .sign(key)
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
+        try await addHookToAccount(accountId, accountKey: key, hook: hookDetails)
 
         // When / Then - Add again should fail
         await assertReceiptStatus(
@@ -145,13 +133,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
 
         // When / Then
         do {
-            _ = try await AccountUpdateTransaction()
-                .accountId(accountId)
-                .addHookToCreate(hookDetails)
-                .freezeWith(testEnv.client)
-                .sign(key)
-                .execute(testEnv.client)
-                .getReceipt(testEnv.client)
+            try await addHookToAccount(accountId, accountKey: key, hook: hookDetails)
         } catch {
             XCTFail("Unexpected throw: \(error)")
         }
@@ -164,7 +146,6 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
         let hookId: Int64 = 1
         let hookDetails = createHookDetails(contractId: fakeContractId, hookId: hookId)
 
-        // Add hook first
         _ = try await AccountUpdateTransaction()
             .accountId(accountId)
             .addHookToCreate(hookDetails)
@@ -194,13 +175,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
         let hookDetails = createHookDetails(contractId: fakeContractId)
 
         // Add a hook first
-        _ = try await AccountUpdateTransaction()
-            .accountId(accountId)
-            .addHookToCreate(hookDetails)
-            .freezeWith(testEnv.client)
-            .sign(key)
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
+        try await addHookToAccount(accountId, accountKey: key, hook: hookDetails)
 
         // When / Then - Delete non-existent hook
         await assertReceiptStatus(
@@ -243,7 +218,6 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
         let hookId: Int64 = 1
         let hookDetails = createHookDetails(contractId: fakeContractId, hookId: hookId)
 
-        // Add hook
         _ = try await AccountUpdateTransaction()
             .accountId(accountId)
             .addHookToCreate(hookDetails)

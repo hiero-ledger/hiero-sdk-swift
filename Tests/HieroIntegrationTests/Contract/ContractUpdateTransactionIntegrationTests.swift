@@ -54,11 +54,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
 
         // When / Then
         do {
-            _ = try await ContractUpdateTransaction()
-                .contractId(contractId)
-                .addHookToCreate(hookDetails)
-                .execute(testEnv.client)
-                .getReceipt(testEnv.client)
+            try await addHookToContract(contractId, hook: hookDetails)
         } catch {
             XCTFail("Unexpected throw: \(error)")
         }
@@ -88,13 +84,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
         let hookDetails = createHookDetails(contractId: hookContractId)
 
         // Add hook first
-        _ = try await ContractUpdateTransaction()
-            .contractId(contractId)
-            .addHookToCreate(hookDetails)
-            .freezeWith(testEnv.client)
-            .sign(testEnv.operator.privateKey)
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
+        try await addHookToContract(contractId, hook: hookDetails)
 
         // When / Then - Adding same hook again should fail
         await assertReceiptStatus(
@@ -115,12 +105,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
 
         // When / Then
         do {
-            _ = try await ContractUpdateTransaction()
-                .contractId(contractId)
-                .addHookToCreate(hookDetails)
-                .freezeWith(testEnv.client)
-                .execute(testEnv.client)
-                .getReceipt(testEnv.client)
+            try await addHookToContract(contractId, hook: hookDetails)
         } catch {
             XCTFail("Unexpected throw: \(error)")
         }
@@ -133,12 +118,9 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
         let hookId: Int64 = 1
         let hookDetails = createHookDetails(contractId: hookContractId, hookId: hookId)
 
-        // Add hook first
         _ = try await ContractUpdateTransaction()
             .contractId(contractId)
             .addHookToCreate(hookDetails)
-            .freezeWith(testEnv.client)
-            .sign(testEnv.operator.privateKey)
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
 
@@ -162,11 +144,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
         let hookDetails = createHookDetails(contractId: hookContractId)
 
         // Add a hook first
-        _ = try await ContractUpdateTransaction()
-            .contractId(contractId)
-            .addHookToCreate(hookDetails)
-            .execute(testEnv.client)
-            .getReceipt(testEnv.client)
+        try await addHookToContract(contractId, hook: hookDetails)
 
         // When / Then - Delete non-existent hook
         await assertReceiptStatus(
@@ -205,7 +183,6 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
         let hookId: Int64 = 1
         let hookDetails = createHookDetails(contractId: hookContractId, hookId: hookId)
 
-        // Add hook
         _ = try await ContractUpdateTransaction()
             .contractId(contractId)
             .addHookToCreate(hookDetails)
