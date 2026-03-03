@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
+
+/// Contains SDK version information.
 public enum VersionInfo {
-    public static let version = "v0.47.0-dev"
+    /// The current version of the Hiero SDK.
+    public static let version = "v0.48.0"
 }
