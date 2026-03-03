@@ -226,7 +226,7 @@ public class Transaction: ValidateChecksums {
     }
 
     internal func addSignatureSigner(_ signer: Signer) -> Data {
-        precondition(isFrozen)
+        precondition(isFrozen || sources != nil, "Transaction must be frozen before adding signatures")
 
         precondition(nodeAccountIds?.count == 1, "cannot manually add a signature to a transaction with multiple nodes")
 
@@ -406,7 +406,9 @@ public class Transaction: ValidateChecksums {
             self.nodeAccountIds = client.consensus.selectHealthyNodeSample()
         }
 
-        self.maxTransactionFee = self.maxTransactionFee ?? client?.maxTransactionFee
+        if self.maxTransactionFee == nil {
+            self.maxTransactionFee = client?.maxTransactionFee
+        }
 
         isFrozen = true
 
@@ -573,6 +575,9 @@ public class Transaction: ValidateChecksums {
                 !isFrozen,
                 "`\(type(of: self))` is immutable; it has at least one signature or has been explicitly frozen")
         }
+
+        // Invalidate cached sources when any property changes
+        sources = nil
     }
 }
 
