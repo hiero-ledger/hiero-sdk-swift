@@ -45,4 +45,171 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
             .modifyingImmutableContract
         )
     }
+
+    internal func test_CanAddHookToContract() async throws {
+        // Given
+        let contractId = try await createStandardContract()
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId)
+
+        // When / Then
+        do {
+            try await addHookToContract(contractId, hook: hookDetails)
+        } catch {
+            XCTFail("Unexpected throw: \(error)")
+        }
+    }
+
+    internal func test_CannotAddDuplicateHooksToContract() async throws {
+        // Given
+        let contractId = try await createStandardContract()
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId)
+
+        // When / Then
+        await assertPrecheckStatus(
+            try await ContractUpdateTransaction()
+                .contractId(contractId)
+                .addHookToCreate(hookDetails)
+                .addHookToCreate(hookDetails)
+                .execute(testEnv.client),
+            .hookIDRepeatedInCreationDetails
+        )
+    }
+
+    internal func test_CannotAddHookToContractThatAlreadyExists() async throws {
+        // Given
+        let contractId = try await createStandardContract()
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId)
+
+        // Add hook first
+        try await addHookToContract(contractId, hook: hookDetails)
+
+        // When / Then - Adding same hook again should fail
+        await assertReceiptStatus(
+            try await ContractUpdateTransaction()
+                .contractId(contractId)
+                .addHookToCreate(hookDetails)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            .hookIDInUse
+        )
+    }
+
+    internal func test_CanAddHookToContractWithStorageUpdates() async throws {
+        // Given
+        let contractId = try await createStandardContract()
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetailsWithStorage(contractId: hookContractId)
+
+        // When / Then
+        do {
+            try await addHookToContract(contractId, hook: hookDetails)
+        } catch {
+            XCTFail("Unexpected throw: \(error)")
+        }
+    }
+
+    internal func test_CanDeleteHookFromContract() async throws {
+        // Given
+        let contractId = try await createStandardContract()
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookId: Int64 = 1
+        let hookDetails = createHookDetails(contractId: hookContractId, hookId: hookId)
+
+        _ = try await ContractUpdateTransaction()
+            .contractId(contractId)
+            .addHookToCreate(hookDetails)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // When / Then - Delete hook
+        do {
+            _ = try await ContractUpdateTransaction()
+                .contractId(contractId)
+                .addHookToDelete(hookId)
+                .freezeWith(testEnv.client)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client)
+        } catch {
+            XCTFail("Unexpected throw: \(error)")
+        }
+    }
+
+    internal func test_CannotDeleteNonExistentHookFromContract() async throws {
+        // Given
+        let contractId = try await createStandardContract()
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: hookContractId)
+
+        // Add a hook first
+        try await addHookToContract(contractId, hook: hookDetails)
+
+        // When / Then - Delete non-existent hook
+        await assertReceiptStatus(
+            try await ContractUpdateTransaction()
+                .contractId(contractId)
+                .addHookToDelete(999)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            .hookNotFound
+        )
+    }
+
+    internal func test_CannotAddAndDeleteSameHookFromContract() async throws {
+        // Given
+        let contractId = try await createStandardContract()
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookId: Int64 = 1
+        let hookDetails = createHookDetails(contractId: hookContractId, hookId: hookId)
+
+        // When / Then
+        await assertReceiptStatus(
+            try await ContractUpdateTransaction()
+                .contractId(contractId)
+                .addHookToCreate(hookDetails)
+                .addHookToDelete(hookId)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            .hookNotFound
+        )
+    }
+
+    internal func test_CannotDeleteAlreadyDeletedHookFromContract() async throws {
+        // Given
+        let contractId = try await createStandardContract()
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookId: Int64 = 1
+        let hookDetails = createHookDetails(contractId: hookContractId, hookId: hookId)
+
+        _ = try await ContractUpdateTransaction()
+            .contractId(contractId)
+            .addHookToCreate(hookDetails)
+            .freezeWith(testEnv.client)
+            .sign(testEnv.operator.privateKey)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // Delete hook once
+        _ = try await ContractUpdateTransaction()
+            .contractId(contractId)
+            .addHookToDelete(hookId)
+            .freezeWith(testEnv.client)
+            .sign(testEnv.operator.privateKey)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        // When / Then
+        await assertReceiptStatus(
+            try await ContractUpdateTransaction()
+                .contractId(contractId)
+                .addHookToDelete(hookId)
+                .freezeWith(testEnv.client)
+                .sign(testEnv.operator.privateKey)
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            .hookNotFound
+        )
+    }
 }

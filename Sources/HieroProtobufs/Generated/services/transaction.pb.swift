@@ -966,13 +966,13 @@ public struct Proto_TransactionBody: @unchecked Sendable {
   }
 
   ///*
-  /// A transaction body for updating the storage of a EVM lambda hook.
-  public var lambdaSstore: Com_Hedera_Hapi_Node_Hooks_LambdaSStoreTransactionBody {
+  /// A transaction body for updating the storage of an EVM hook.
+  public var hookStore: Com_Hedera_Hapi_Node_Hooks_HookStoreTransactionBody {
     get {
-      if case .lambdaSstore(let v)? = _storage._data {return v}
-      return Com_Hedera_Hapi_Node_Hooks_LambdaSStoreTransactionBody()
+      if case .hookStore(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Hooks_HookStoreTransactionBody()
     }
-    set {_uniqueStorage()._data = .lambdaSstore(newValue)}
+    set {_uniqueStorage()._data = .hookStore(newValue)}
   }
 
   ///*
@@ -986,6 +986,55 @@ public struct Proto_TransactionBody: @unchecked Sendable {
   }
 
   ///*
+  /// An internal-only transaction body for publishing the ledger id.
+  public var ledgerIDPublication: Com_Hedera_Hapi_Node_Tss_LedgerIdPublicationTransactionBody {
+    get {
+      if case .ledgerIDPublication(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Tss_LedgerIdPublicationTransactionBody()
+    }
+    set {_uniqueStorage()._data = .ledgerIDPublication(newValue)}
+  }
+
+  ///*
+  /// Create a new registered node in the network address book.
+  /// <p>
+  /// This transaction SHALL create a new registered node record and add
+  /// that record to the network state.
+  public var registeredNodeCreate: Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeCreateTransactionBody {
+    get {
+      if case .registeredNodeCreate(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeCreateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .registeredNodeCreate(newValue)}
+  }
+
+  ///*
+  /// Update a registered node in the network address book.
+  /// <p>
+  /// This transaction SHALL update an existing registered node record in
+  /// the network state.
+  public var registeredNodeUpdate: Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeUpdateTransactionBody {
+    get {
+      if case .registeredNodeUpdate(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeUpdateTransactionBody()
+    }
+    set {_uniqueStorage()._data = .registeredNodeUpdate(newValue)}
+  }
+
+  ///*
+  /// Delete a registered node from the network address book.
+  /// <p>
+  /// This transaction SHALL mark an existing registered node record as
+  /// deleted.
+  public var registeredNodeDelete: Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeDeleteTransactionBody {
+    get {
+      if case .registeredNodeDelete(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeDeleteTransactionBody()
+    }
+    set {_uniqueStorage()._data = .registeredNodeDelete(newValue)}
+  }
+
+  ///*
   /// A list of maximum custom fees that the users are willing to pay.
   /// <p>
   /// This field is OPTIONAL.<br/>
@@ -994,6 +1043,15 @@ public struct Proto_TransactionBody: @unchecked Sendable {
   public var maxCustomFees: [Proto_CustomFeeLimit] {
     get {return _storage._maxCustomFees}
     set {_uniqueStorage()._maxCustomFees = newValue}
+  }
+
+  ///*
+  /// If set to true, this transaction uses high-volume throttles and pricing
+  /// for entity creation. It only affects supported transaction types; otherwise,
+  /// it is ignored.
+  public var highVolume: Bool {
+    get {return _storage._highVolume}
+    set {_uniqueStorage()._highVolume = newValue}
   }
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1286,11 +1344,32 @@ public struct Proto_TransactionBody: @unchecked Sendable {
     /// A transaction body for handling a set of transactions atomically.
     case atomicBatch(Proto_AtomicBatchTransactionBody)
     ///*
-    /// A transaction body for updating the storage of a EVM lambda hook.
-    case lambdaSstore(Com_Hedera_Hapi_Node_Hooks_LambdaSStoreTransactionBody)
+    /// A transaction body for updating the storage of an EVM hook.
+    case hookStore(Com_Hedera_Hapi_Node_Hooks_HookStoreTransactionBody)
     ///*
     /// An internal-only transaction body for dispatching a hook CRUD operation.
     case hookDispatch(Com_Hedera_Hapi_Node_Hooks_HookDispatchTransactionBody)
+    ///*
+    /// An internal-only transaction body for publishing the ledger id.
+    case ledgerIDPublication(Com_Hedera_Hapi_Node_Tss_LedgerIdPublicationTransactionBody)
+    ///*
+    /// Create a new registered node in the network address book.
+    /// <p>
+    /// This transaction SHALL create a new registered node record and add
+    /// that record to the network state.
+    case registeredNodeCreate(Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeCreateTransactionBody)
+    ///*
+    /// Update a registered node in the network address book.
+    /// <p>
+    /// This transaction SHALL update an existing registered node record in
+    /// the network state.
+    case registeredNodeUpdate(Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeUpdateTransactionBody)
+    ///*
+    /// Delete a registered node from the network address book.
+    /// <p>
+    /// This transaction SHALL mark an existing registered node record as
+    /// deleted.
+    case registeredNodeDelete(Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeDeleteTransactionBody)
 
   }
 
@@ -1451,9 +1530,14 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     71: .standard(proto: "history_proof_vote"),
     72: .standard(proto: "crs_publication"),
     74: .standard(proto: "atomic_batch"),
-    75: .standard(proto: "lambda_sstore"),
+    75: .standard(proto: "hook_store"),
     76: .standard(proto: "hook_dispatch"),
+    77: .standard(proto: "ledger_id_publication"),
+    78: .same(proto: "registeredNodeCreate"),
+    79: .same(proto: "registeredNodeUpdate"),
+    80: .same(proto: "registeredNodeDelete"),
     1001: .standard(proto: "max_custom_fees"),
+    1002: .standard(proto: "high_volume"),
   ]
 
   fileprivate class _StorageClass {
@@ -1466,6 +1550,7 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     var _batchKey: Proto_Key? = nil
     var _data: Proto_TransactionBody.OneOf_Data?
     var _maxCustomFees: [Proto_CustomFeeLimit] = []
+    var _highVolume: Bool = false
 
     #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
@@ -1489,6 +1574,7 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
       _batchKey = source._batchKey
       _data = source._data
       _maxCustomFees = source._maxCustomFees
+      _highVolume = source._highVolume
     }
   }
 
@@ -2321,16 +2407,16 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
           }
         }()
         case 75: try {
-          var v: Com_Hedera_Hapi_Node_Hooks_LambdaSStoreTransactionBody?
+          var v: Com_Hedera_Hapi_Node_Hooks_HookStoreTransactionBody?
           var hadOneofValue = false
           if let current = _storage._data {
             hadOneofValue = true
-            if case .lambdaSstore(let m) = current {v = m}
+            if case .hookStore(let m) = current {v = m}
           }
           try decoder.decodeSingularMessageField(value: &v)
           if let v = v {
             if hadOneofValue {try decoder.handleConflictingOneOf()}
-            _storage._data = .lambdaSstore(v)
+            _storage._data = .hookStore(v)
           }
         }()
         case 76: try {
@@ -2346,7 +2432,60 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
             _storage._data = .hookDispatch(v)
           }
         }()
+        case 77: try {
+          var v: Com_Hedera_Hapi_Node_Tss_LedgerIdPublicationTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .ledgerIDPublication(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .ledgerIDPublication(v)
+          }
+        }()
+        case 78: try {
+          var v: Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeCreateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .registeredNodeCreate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .registeredNodeCreate(v)
+          }
+        }()
+        case 79: try {
+          var v: Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeUpdateTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .registeredNodeUpdate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .registeredNodeUpdate(v)
+          }
+        }()
+        case 80: try {
+          var v: Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeDeleteTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .registeredNodeDelete(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .registeredNodeDelete(v)
+          }
+        }()
         case 1001: try { try decoder.decodeRepeatedMessageField(value: &_storage._maxCustomFees) }()
+        case 1002: try { try decoder.decodeSingularBoolField(value: &_storage._highVolume) }()
         default: break
         }
       }
@@ -2632,18 +2771,37 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
         guard case .atomicBatch(let v)? = _storage._data else { preconditionFailure() }
         try visitor.visitSingularMessageField(value: v, fieldNumber: 74)
       }()
-      case .lambdaSstore?: try {
-        guard case .lambdaSstore(let v)? = _storage._data else { preconditionFailure() }
+      case .hookStore?: try {
+        guard case .hookStore(let v)? = _storage._data else { preconditionFailure() }
         try visitor.visitSingularMessageField(value: v, fieldNumber: 75)
       }()
       case .hookDispatch?: try {
         guard case .hookDispatch(let v)? = _storage._data else { preconditionFailure() }
         try visitor.visitSingularMessageField(value: v, fieldNumber: 76)
       }()
+      case .ledgerIDPublication?: try {
+        guard case .ledgerIDPublication(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 77)
+      }()
+      case .registeredNodeCreate?: try {
+        guard case .registeredNodeCreate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 78)
+      }()
+      case .registeredNodeUpdate?: try {
+        guard case .registeredNodeUpdate(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 79)
+      }()
+      case .registeredNodeDelete?: try {
+        guard case .registeredNodeDelete(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 80)
+      }()
       default: break
       }
       if !_storage._maxCustomFees.isEmpty {
         try visitor.visitRepeatedMessageField(value: _storage._maxCustomFees, fieldNumber: 1001)
+      }
+      if _storage._highVolume != false {
+        try visitor.visitSingularBoolField(value: _storage._highVolume, fieldNumber: 1002)
       }
     }
     try unknownFields.traverse(visitor: &visitor)
@@ -2663,6 +2821,7 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
         if _storage._batchKey != rhs_storage._batchKey {return false}
         if _storage._data != rhs_storage._data {return false}
         if _storage._maxCustomFees != rhs_storage._maxCustomFees {return false}
+        if _storage._highVolume != rhs_storage._highVolume {return false}
         return true
       }
       if !storagesAreEqual {return false}

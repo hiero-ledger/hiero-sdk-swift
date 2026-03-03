@@ -32,6 +32,8 @@ public final class ContractUpdateTransaction: Transaction {
         self.stakedAccountId = stakedAccountId
         self.stakedNodeId = stakedNodeId
         self.declineStakingReward = declineStakingReward
+        self.hookCreationDetails = []
+        self.hooksToDelete = []
 
         super.init()
     }
@@ -75,8 +77,14 @@ public final class ContractUpdateTransaction: Transaction {
         self.stakedAccountId = stakedAccountId
         self.stakedNodeId = stakedNodeId
         self.declineStakingReward = data.hasDeclineReward ? data.declineReward.value : nil
+        self.hookCreationDetails = try data.hookCreationDetails.map { try HookCreationDetails.fromProtobuf($0) }
+        self.hooksToDelete = data.hookIdsToDelete
 
         try super.init(protobuf: proto)
+    }
+
+    internal override var defaultMaxTransactionFee: Hbar {
+        20
     }
 
     /// The contract to be updated.
@@ -177,7 +185,7 @@ public final class ContractUpdateTransaction: Transaction {
     }
 
     /// The account to be used at the contract's expiration time to extend the
-
+    /// life of the contract.
     public var autoRenewAccountId: AccountId? {
         willSet {
             ensureNotFrozen()
@@ -289,6 +297,68 @@ public final class ContractUpdateTransaction: Transaction {
         return self
     }
 
+    /// The hooks to create on this contract.
+    ///
+    /// Each ``HookCreationDetails`` specifies the extension point, hook ID, EVM implementation,
+    /// and optional admin key for a hook to attach to the contract.
+    public var hookCreationDetails: [HookCreationDetails] {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// Adds a hook to be created on this contract.
+    ///
+    /// - Parameter hook: The creation details for the hook.
+    @discardableResult
+    public func addHookToCreate(_ hook: HookCreationDetails) -> Self {
+        self.hookCreationDetails.append(hook)
+
+        return self
+    }
+
+    /// Sets all hooks to be created on this contract, replacing any previously added.
+    ///
+    /// - Parameter hooks: The list of hook creation details.
+    @discardableResult
+    public func setHooksToCreate(_ hooks: [HookCreationDetails]) -> Self {
+        self.hookCreationDetails = hooks
+
+        return self
+    }
+
+    /// The IDs of hooks to delete from this contract.
+    ///
+    /// Hook deletions are processed before creations, so the same hook ID can appear in both
+    /// `hooksToDelete` and `hookCreationDetails` to atomically replace a hook. A hook can only
+    /// be deleted when it has zero storage slots; otherwise deletion fails with
+    /// `HOOK_DELETION_REQUIRES_EMPTY_STORAGE`.
+    public var hooksToDelete: [Int64] {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// Marks a hook for deletion from this contract by its hook ID.
+    ///
+    /// - Parameter hook: The 64-bit hook ID to delete.
+    @discardableResult
+    public func addHookToDelete(_ hook: Int64) -> Self {
+        self.hooksToDelete.append(hook)
+
+        return self
+    }
+
+    /// Sets all hook IDs to delete from this contract, replacing any previously added.
+    ///
+    /// - Parameter hooks: The list of hook IDs to delete.
+    @discardableResult
+    public func setHooksToDelete(_ hooks: [Int64]) -> Self {
+        self.hooksToDelete = hooks
+
+        return self
+    }
+
     internal override func transactionExecute(
         _ channel: GRPCChannel, _ request: Proto_Transaction, _ deadline: TimeInterval
     ) async throws
@@ -357,6 +427,9 @@ extension ContractUpdateTransaction: ToProtobuf {
             if let contractMemo = contractMemo {
                 proto.memoWrapper = .init(contractMemo)
             }
+
+            proto.hookCreationDetails = hookCreationDetails.map { $0.toProtobuf() }
+            proto.hookIdsToDelete = hooksToDelete
         }
     }
 }

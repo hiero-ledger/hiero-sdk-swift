@@ -213,6 +213,155 @@ extension HieroIntegrationTestCase {
             .constructorParameters(TestConstants.standardContractConstructorParameters())
     }
 
+    // MARK: - Contract Hook Helpers
+
+    /// Registers a hook on a contract for cleanup before the contract is deleted.
+    ///
+    /// - Parameters:
+    ///   - contractId: The contract that owns the hook
+    ///   - hookId: The hook identifier
+    ///   - storageKeys: Storage slot keys that have been written to this hook
+    public func registerContractHook(_ contractId: ContractId, hookId: Int64, storageKeys: [Data] = []) async {
+        await resourceManager.registerContractHook(contractId, hookId: hookId, storageKeys: storageKeys)
+    }
+
+    /// Registers an additional storage key on an already-registered contract hook.
+    ///
+    /// - Parameters:
+    ///   - contractId: The contract that owns the hook
+    ///   - hookId: The hook identifier
+    ///   - key: The storage slot key to track
+    public func registerContractHookStorageKey(_ contractId: ContractId, hookId: Int64, key: Data) async {
+        await resourceManager.registerContractHookStorageKey(contractId, hookId: hookId, key: key)
+    }
+
+    /// Adds a hook to an existing contract via `ContractUpdateTransaction` and registers it for cleanup.
+    ///
+    /// Constructs, freezes, signs, executes, and gets the receipt for the update transaction,
+    /// then registers the hook (including any initial storage keys) for proper teardown.
+    ///
+    /// - Parameters:
+    ///   - contractId: The contract to add the hook to
+    ///   - adminKey: The contract's admin private key for signing the update. Defaults to the operator key.
+    ///   - hook: The hook creation details
+    public func addHookToContract(
+        _ contractId: ContractId,
+        adminKey: PrivateKey? = nil,
+        hook: HookCreationDetails
+    ) async throws {
+        let signingKey = adminKey ?? testEnv.operator.privateKey
+        _ = try await ContractUpdateTransaction()
+            .contractId(contractId)
+            .addHookToCreate(hook)
+            .freezeWith(testEnv.client)
+            .sign(signingKey)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        let storageKeys = hook.evmHook?.storageUpdates.compactMap { $0.storageSlot?.key } ?? []
+        await registerContractHook(contractId, hookId: hook.hookId, storageKeys: storageKeys)
+    }
+
+    /// Creates an unmanaged EVM hook contract for testing hooks.
+    ///
+    /// Use this when you need a hook contract that won't be automatically cleaned up.
+    ///
+    /// - Parameter useAdminClient: Whether to use the admin client (default: false)
+    /// - Returns: The created contract ID
+    public func createUnmanagedEvmHookContract(useAdminClient: Bool = false) async throws -> ContractId {
+        try await createUnmanagedContract(
+            ContractCreateTransaction()
+                .bytecode(TestConstants.evmHookBytecode)
+                .gas(1_000_000),
+            useAdminClient: useAdminClient
+        )
+    }
+
+    /// Creates an EVM hook contract for testing hooks, registered for cleanup.
+    ///
+    /// Unlike `createUnmanagedEvmHookContract`, this version creates the contract
+    /// with an admin key so it can be deleted during test teardown.
+    ///
+    /// - Parameter useAdminClient: Whether to use the admin client (default: false)
+    /// - Returns: The created contract ID
+    public func createEvmHookContract(useAdminClient: Bool = false) async throws -> ContractId {
+        let transaction = ContractCreateTransaction()
+            .bytecode(TestConstants.evmHookBytecode)
+            .gas(1_000_000)
+            .adminKey(.single(testEnv.operator.privateKey.publicKey))
+        let contractId = try await createUnmanagedContract(transaction, useAdminClient: useAdminClient)
+        await registerContract(contractId, adminKey: testEnv.operator.privateKey)
+        return contractId
+    }
+
+    /// Creates an EvmHook with the specified contract ID and optional storage updates.
+    private func createEvmHookInstance(
+        contractId: ContractId,
+        storageUpdates: [(key: Data, value: Data)]? = nil
+    ) -> EvmHook {
+        var evmHook = EvmHook(contractId: contractId)
+
+        if let storageUpdates = storageUpdates {
+            for (key, value) in storageUpdates {
+                var slot = EvmHookStorageSlot()
+                slot.key = key
+                slot.value = value
+
+                var update = EvmHookStorageUpdate()
+                update.storageSlot = slot
+
+                evmHook.addStorageUpdate(update)
+            }
+        }
+
+        return evmHook
+    }
+
+    /// Creates a standard `HookCreationDetails` with an EVM hook.
+    ///
+    /// - Parameters:
+    ///   - contractId: The contract ID for the EVM hook bytecode
+    ///   - hookId: The hook identifier (default: 1)
+    ///   - hookExtensionPoint: The extension point for the hook (default: `.accountAllowanceHook`)
+    ///   - adminKey: Optional admin key for the hook
+    ///   - storageUpdates: Optional initial storage slot key/value pairs
+    /// - Returns: A configured `HookCreationDetails`
+    public func createHookDetails(
+        contractId: ContractId,
+        hookId: Int64 = 1,
+        hookExtensionPoint: HookExtensionPoint = .accountAllowanceHook,
+        adminKey: Key? = nil,
+        storageUpdates: [(key: Data, value: Data)]? = nil
+    ) -> HookCreationDetails {
+        let evmHook = createEvmHookInstance(contractId: contractId, storageUpdates: storageUpdates)
+
+        return HookCreationDetails(
+            hookExtensionPoint: hookExtensionPoint,
+            hookId: hookId,
+            evmHook: evmHook,
+            adminKey: adminKey
+        )
+    }
+
+    /// Convenience: Creates HookCreationDetails with default storage updates.
+    ///
+    /// Uses default storage key `[0x01, 0x23, 0x45]` and value `[0x67, 0x89, 0xAB]`.
+    ///
+    /// - Parameters:
+    ///   - contractId: The contract ID for the EVM hook
+    ///   - hookId: The hook identifier (default: 1)
+    /// - Returns: A configured HookCreationDetails with storage updates
+    public func createHookDetailsWithStorage(
+        contractId: ContractId,
+        hookId: Int64 = 1
+    ) -> HookCreationDetails {
+        createHookDetails(
+            contractId: contractId,
+            hookId: hookId,
+            storageUpdates: [(key: Data([0x01, 0x23, 0x45]), value: Data([0x67, 0x89, 0xAB]))]
+        )
+    }
+
     // MARK: - ContractInfo Assertions
 
     /// Asserts standard contract info properties.
