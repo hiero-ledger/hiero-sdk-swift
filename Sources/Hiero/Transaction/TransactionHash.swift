@@ -2,17 +2,17 @@
 
 import Foundation
 
-/// The public struct that represents the SHA-384 hash of a transaction. It is used to uniquely identify the transaction.
+/// The SHA-384 hash of a transaction, used to uniquely identify transactions on the network.
 public struct TransactionHash: CustomStringConvertible {
     /// Computes a SHA-384 cryptographic hash of the input data.
     internal init(hashing data: Data) {
         self.data = Sha2.sha384(data)
     }
 
-    /// Stores the raw hash value.
+    /// The raw bytes of the SHA-384 hash.
     public let data: Data
 
-    /// Returns the hash value converted to a hexadecimal string.
+    /// Returns the hash as a hex-encoded string.
     public var description: String {
         data.hexStringEncoded()
     }
