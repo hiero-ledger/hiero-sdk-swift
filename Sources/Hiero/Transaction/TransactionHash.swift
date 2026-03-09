@@ -4,7 +4,7 @@ import Foundation
 
 /// The SHA-384 hash of a transaction, used to uniquely identify transactions on the network.
 public struct TransactionHash: CustomStringConvertible {
-    /// Computes a SHA-384 cryptographic hash of the input data.
+    /// Creates a transaction hash by computing SHA-384 of the given data.
     internal init(hashing data: Data) {
         self.data = Sha2.sha384(data)
     }
