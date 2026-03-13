@@ -35,7 +35,8 @@ public final class NodeCreateTransaction: Transaction {
         grpcCertificateHash: Data? = nil,
         adminKey: Key? = nil,
         grpcWebProxyEndpoint: Endpoint? = nil,
-        declineRewards: Bool? = nil
+        declineRewards: Bool? = nil,
+        associatedRegisteredNodes: [UInt64] = []
     ) {
         self.accountId = accountId
         self.description = description
@@ -47,6 +48,7 @@ public final class NodeCreateTransaction: Transaction {
         self.adminKey = adminKey
         self.grpcWebProxyEndpoint = grpcWebProxyEndpoint
         self.declineRewards = declineRewards
+        self.associatedRegisteredNodes = associatedRegisteredNodes
 
         super.init()
     }
@@ -63,6 +65,7 @@ public final class NodeCreateTransaction: Transaction {
         self.adminKey = data.hasAdminKey ? try .fromProtobuf(data.adminKey) : nil
         self.grpcWebProxyEndpoint = data.hasGrpcProxyEndpoint ? try Endpoint(protobuf: data.grpcProxyEndpoint) : nil
         self.declineRewards = data.declineReward
+        self.associatedRegisteredNodes = data.associatedRegisteredNode
 
         try super.init(protobuf: proto)
     }
@@ -218,6 +221,29 @@ public final class NodeCreateTransaction: Transaction {
         return self
     }
 
+    /// A list of registered node IDs operated by the same entity as this consensus node.
+    public var associatedRegisteredNodes: [UInt64] {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// Sets the list of associated registered node IDs.
+    @discardableResult
+    public func associatedRegisteredNodes(_ associatedRegisteredNodes: [UInt64]) -> Self {
+        self.associatedRegisteredNodes = associatedRegisteredNodes
+
+        return self
+    }
+
+    /// Add an associated registered node ID.
+    @discardableResult
+    public func addAssociatedRegisteredNode(_ registeredNodeId: UInt64) -> Self {
+        self.associatedRegisteredNodes.append(registeredNodeId)
+
+        return self
+    }
+
     internal override func validateChecksums(on ledgerId: LedgerId) throws {
         try accountId?.validateChecksums(on: ledgerId)
         try super.validateChecksums(on: ledgerId)
@@ -259,6 +285,7 @@ extension NodeCreateTransaction: ToProtobuf {
             if let declineRewards = declineRewards {
                 proto.declineReward = declineRewards
             }
+            proto.associatedRegisteredNode = associatedRegisteredNodes
         }
     }
 }

@@ -284,6 +284,21 @@ public enum RequestType: CaseIterable {
     /// Hook dispatch transaction
     case hookDispatch
 
+    /// Hook store transaction
+    case hookStore
+
+    /// Ledger ID publication transaction
+    case ledgerIdPublication
+
+    /// Registered node create transaction
+    case registeredNodeCreate
+
+    /// Registered node update transaction
+    case registeredNodeUpdate
+
+    /// Registered node delete transaction
+    case registeredNodeDelete
+
     // swiftlint:disable:next function_body_length
     internal init?(protobuf proto: Proto_HederaFunctionality) throws {
         switch proto {
@@ -380,6 +395,11 @@ public enum RequestType: CaseIterable {
         case .atomicBatch: self = .atomicBatch
         case .lambdaSstore: self = .lambdaSstore
         case .hookDispatch: self = .hookDispatch
+        case .hookStore: self = .hookStore
+        case .ledgerIDPublication: self = .ledgerIdPublication
+        case .registeredNodeCreate: self = .registeredNodeCreate
+        case .registeredNodeUpdate: self = .registeredNodeUpdate
+        case .registeredNodeDelete: self = .registeredNodeDelete
         case .UNRECOGNIZED(let code):
             throw HError.fromProtobuf("unrecognized RequestType: `\(code)`")
         }
@@ -479,6 +499,11 @@ public enum RequestType: CaseIterable {
         case .atomicBatch: return .atomicBatch
         case .lambdaSstore: return .lambdaSstore
         case .hookDispatch: return .hookDispatch
+        case .hookStore: return .hookStore
+        case .ledgerIdPublication: return .ledgerIDPublication
+        case .registeredNodeCreate: return .registeredNodeCreate
+        case .registeredNodeUpdate: return .registeredNodeUpdate
+        case .registeredNodeDelete: return .registeredNodeDelete
         }
     }
 }

@@ -30,7 +30,8 @@ public final class NodeUpdateTransaction: Transaction {
         grpcCertificateHash: Data? = nil,
         adminKey: Key? = nil,
         grpcWebProxyEndpoint: Endpoint? = nil,
-        declineRewards: Bool? = nil
+        declineRewards: Bool? = nil,
+        associatedRegisteredNodes: [UInt64]? = nil
     ) {
         self.nodeId = nodeId
         self.accountId = accountId
@@ -42,6 +43,7 @@ public final class NodeUpdateTransaction: Transaction {
         self.adminKey = adminKey
         self.grpcWebProxyEndpoint = grpcWebProxyEndpoint
         self.declineRewards = declineRewards
+        self.associatedRegisteredNodes = associatedRegisteredNodes
 
         super.init()
     }
@@ -59,6 +61,9 @@ public final class NodeUpdateTransaction: Transaction {
         self.adminKey = data.hasAdminKey ? try .fromProtobuf(data.adminKey) : nil
         self.grpcWebProxyEndpoint = data.hasGrpcProxyEndpoint ? try Endpoint(protobuf: data.grpcProxyEndpoint) : nil
         self.declineRewards = data.hasDeclineReward ? data.declineReward.value : nil
+        self.associatedRegisteredNodes =
+            data.hasAssociatedRegisteredNodeList
+            ? data.associatedRegisteredNodeList.associatedRegisteredNode : nil
 
         try super.init(protobuf: proto)
     }
@@ -229,6 +234,44 @@ public final class NodeUpdateTransaction: Transaction {
         return self
     }
 
+    /// A list of registered node IDs operated by the same entity as this consensus node.
+    ///
+    /// - `nil` (default): the existing associations are unchanged.
+    /// - Empty array: all existing associations are cleared.
+    /// - Non-empty array: the existing associations are replaced entirely.
+    public var associatedRegisteredNodes: [UInt64]? {
+        willSet {
+            ensureNotFrozen()
+        }
+    }
+
+    /// Sets the list of associated registered node IDs.
+    @discardableResult
+    public func associatedRegisteredNodes(_ associatedRegisteredNodes: [UInt64]) -> Self {
+        self.associatedRegisteredNodes = associatedRegisteredNodes
+
+        return self
+    }
+
+    /// Add an associated registered node ID.
+    @discardableResult
+    public func addAssociatedRegisteredNode(_ registeredNodeId: UInt64) -> Self {
+        if self.associatedRegisteredNodes == nil {
+            self.associatedRegisteredNodes = []
+        }
+        self.associatedRegisteredNodes?.append(registeredNodeId)
+
+        return self
+    }
+
+    /// Clear all associated registered node IDs.
+    @discardableResult
+    public func clearAssociatedRegisteredNodes() -> Self {
+        self.associatedRegisteredNodes = []
+
+        return self
+    }
+
     internal override func validateChecksums(on ledgerId: LedgerId) throws {
         try accountId?.validateChecksums(on: ledgerId)
         try super.validateChecksums(on: ledgerId)
@@ -282,6 +325,12 @@ extension NodeUpdateTransaction: ToProtobuf {
 
             if let declineRewards = declineRewards {
                 proto.declineReward = Google_Protobuf_BoolValue(declineRewards)
+            }
+
+            if let associatedRegisteredNodes = associatedRegisteredNodes {
+                proto.associatedRegisteredNodeList = .with {
+                    $0.associatedRegisteredNode = associatedRegisteredNodes
+                }
             }
         }
     }
