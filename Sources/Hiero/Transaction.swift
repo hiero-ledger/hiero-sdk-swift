@@ -478,6 +478,43 @@ public class Transaction: ValidateChecksums {
 
         }
 
+        // SECURITY: Only chunked transaction types (consensusSubmitMessage, fileAppend) legitimately
+        // have multiple TransactionId groups. Reject all other types unconditionally to prevent
+        // cross-group body forgery attacks where a hidden group carries a different operation.
+        if sources.chunksCount > 1 {
+            switch transactionBodies[0].data {
+            case .consensusSubmitMessage, .fileAppend:
+                break
+            default:
+                throw HError.fromProtobuf("non-chunked transaction must not have multiple transaction ID groups")
+            }
+        }
+
+        // For consensusSubmitMessage with chunkInfo, validate that the actual group count matches
+        // chunkInfo.total and that chunk numbers are sequential. This bounds the attack surface for
+        // chunked types: post-signing the body bytes (including chunkInfo.total) are locked by the
+        // signature, so an attacker must set chunkInfo.total == actual group count upfront, making
+        // any injected groups visible in the victim's reconstructed message via SDK getters.
+        if case .consensusSubmitMessage(let msg) = transactionBodies[0].data, msg.hasChunkInfo {
+            let declaredTotal = Int(msg.chunkInfo.total)
+            guard sources.chunksCount == declaredTotal else {
+                throw HError.fromProtobuf(
+                    "chunked transaction has \(sources.chunksCount) groups but chunkInfo.total declares \(declaredTotal)"
+                )
+            }
+            for (chunkIndex, chunk) in sources.chunks.enumerated() {
+                let chunkBody = transactionBodies[chunk.range.lowerBound]
+                if case .consensusSubmitMessage(let chunkMsg) = chunkBody.data, chunkMsg.hasChunkInfo {
+                    guard chunkMsg.chunkInfo.number == Int32(chunkIndex + 1) else {
+                        throw HError.fromProtobuf(
+                            "chunk number out of order at group \(chunkIndex): "
+                                + "expected \(chunkIndex + 1), got \(chunkMsg.chunkInfo.number)"
+                        )
+                    }
+                }
+            }
+        }
+
         let transactionData =
             try sources
             .chunks

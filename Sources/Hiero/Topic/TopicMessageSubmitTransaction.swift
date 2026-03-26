@@ -28,7 +28,7 @@ public final class TopicMessageSubmitTransaction: ChunkedTransaction {
         var message: Data = first.message
         var largestChunkSize = max(first.message.count, 1)
 
-        // note: no other SDK checks for correctness here... so let's not do it here either?
+        // Chunk structure (count, sequential numbers) is validated in Transaction.fromBytes.
         for item in iter {
             largestChunkSize = max(largestChunkSize, item.message.count)
             message.append(item.message)
