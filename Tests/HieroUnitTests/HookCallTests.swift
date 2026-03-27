@@ -6,7 +6,7 @@ import XCTest
 
 @testable import Hiero
 
-final class HookCallUnitTests: XCTestCase {
+internal final class HookCallUnitTests: XCTestCase {
 
     private let testHookId: Int64 = 4
     private let testCallData = Data([0x56, 0x78, 0x9A])
@@ -19,7 +19,7 @@ final class HookCallUnitTests: XCTestCase {
         return c
     }
 
-    func test_GetSetHookId() {
+    internal func test_GetSetHookId() {
         var hookCall = HookCall()
 
         hookCall.hookId(testHookId)
@@ -27,7 +27,7 @@ final class HookCallUnitTests: XCTestCase {
         XCTAssertEqual(hookCall.hookId, testHookId)
     }
 
-    func test_GetSetEvmHookCall() {
+    internal func test_GetSetEvmHookCall() {
         var hookCall = HookCall()
 
         hookCall.evmHookCall(testEvmHookCall)
@@ -37,7 +37,7 @@ final class HookCallUnitTests: XCTestCase {
         XCTAssertEqual(hookCall.evmHookCall?.gasLimit, testGasLimit)
     }
 
-    func test_FromProtobuf() throws {
+    internal func test_FromProtobuf() throws {
         var protoWithEvmCall = Proto_HookCall()
         var protoHookIdOnly = Proto_HookCall()
 
@@ -57,7 +57,7 @@ final class HookCallUnitTests: XCTestCase {
         XCTAssertEqual(hookCallHookOnly.hookId, testHookId)
     }
 
-    func test_ToProtobuf() {
+    internal func test_ToProtobuf() {
         var hookCallWithEvm = HookCall()
         var hookCallHookOnly = HookCall()
 

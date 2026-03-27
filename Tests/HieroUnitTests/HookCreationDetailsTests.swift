@@ -6,7 +6,7 @@ import XCTest
 
 @testable import Hiero
 
-final class HookCreationDetailsUnitTests: XCTestCase {
+internal final class HookCreationDetailsUnitTests: XCTestCase {
 
     private func makeStorageSlot(_ key: Data, _ value: Data) -> EvmHookStorageSlot {
         var s = EvmHookStorageSlot()
@@ -78,7 +78,7 @@ final class HookCreationDetailsUnitTests: XCTestCase {
         return .single(priv.publicKey)
     }
 
-    func test_GetSetHookId() throws {
+    internal func test_GetSetHookId() throws {
         var details = HookCreationDetails(hookExtensionPoint: .accountAllowanceHook)
 
         details.hookId(1)
@@ -86,7 +86,7 @@ final class HookCreationDetailsUnitTests: XCTestCase {
         XCTAssertEqual(details.hookId, 1)
     }
 
-    func test_GetSetEvmHook() {
+    internal func test_GetSetEvmHook() {
         var details = HookCreationDetails(hookExtensionPoint: .accountAllowanceHook)
         let hook = makeEvmHook()
 
@@ -96,7 +96,7 @@ final class HookCreationDetailsUnitTests: XCTestCase {
         XCTAssertEqual(details.evmHook?.storageUpdates.count, hook.storageUpdates.count)
     }
 
-    func test_GetSetAdminKey() throws {
+    internal func test_GetSetAdminKey() throws {
         var details = HookCreationDetails(hookExtensionPoint: .accountAllowanceHook)
         let key = try makeAdminKey()
 
@@ -106,7 +106,7 @@ final class HookCreationDetailsUnitTests: XCTestCase {
         XCTAssertEqual(details.adminKey?.toBytes(), key.toBytes())
     }
 
-    func test_FromProtobuf() throws {
+    internal func test_FromProtobuf() throws {
         var proto = Com_Hedera_Hapi_Node_Hooks_HookCreationDetails()
         proto.extensionPoint = HookExtensionPoint.accountAllowanceHook.toProtobuf()
         proto.hookID = 1
@@ -123,7 +123,7 @@ final class HookCreationDetailsUnitTests: XCTestCase {
         XCTAssertNotNil(decoded.adminKey)
     }
 
-    func test_ToProtobuf() throws {
+    internal func test_ToProtobuf() throws {
         var details = HookCreationDetails(hookExtensionPoint: .accountAllowanceHook)
         details.hookId(1)
         details.evmHook(makeEvmHook())

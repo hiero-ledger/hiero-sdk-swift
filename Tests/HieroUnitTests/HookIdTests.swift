@@ -5,7 +5,7 @@ import XCTest
 
 @testable import Hiero
 
-final class HookIdUnitTests: XCTestCase {
+internal final class HookIdUnitTests: XCTestCase {
 
     private let testAccountId = AccountId(shard: 1, realm: 2, num: 3)
     private let testHookId: Int64 = 4
@@ -13,7 +13,7 @@ final class HookIdUnitTests: XCTestCase {
         return HookEntityId(accountId: testAccountId)
     }
 
-    func test_GetSetEntityId() {
+    internal func test_GetSetEntityId() {
         // Given
         var hookId = HookId()
 
@@ -25,7 +25,7 @@ final class HookIdUnitTests: XCTestCase {
         XCTAssertEqual(hookId.entityId.accountId, testAccountId)
     }
 
-    func test_GetSetHookId() {
+    internal func test_GetSetHookId() {
         // Given
         var hookId = HookId()
 
@@ -36,7 +36,7 @@ final class HookIdUnitTests: XCTestCase {
         XCTAssertEqual(hookId.hookId, testHookId)
     }
 
-    func test_FromProtobuf() throws {
+    internal func test_FromProtobuf() throws {
         // Given
         var proto = Proto_HookId()
         proto.entityID = testHookEntityId.toProtobuf()
@@ -51,7 +51,7 @@ final class HookIdUnitTests: XCTestCase {
         XCTAssertEqual(hookId.hookId, testHookId)
     }
 
-    func test_ToProtobuf() {
+    internal func test_ToProtobuf() {
         // Given
         let hookId = HookId(entityId: testHookEntityId, hookId: testHookId)
 

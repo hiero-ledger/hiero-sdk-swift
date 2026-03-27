@@ -6,7 +6,7 @@ import XCTest
 
 @testable import Hiero
 
-final class FungibleHookCallUnitTests: XCTestCase {
+internal final class FungibleHookCallUnitTests: XCTestCase {
 
     private let testHookId: Int64 = 4
     private let testCallData = Data([0x56, 0x78, 0x9A])
@@ -19,7 +19,7 @@ final class FungibleHookCallUnitTests: XCTestCase {
         return c
     }
 
-    func test_DefaultInitialization() {
+    internal func test_DefaultInitialization() {
         let fungibleHookCall = FungibleHookCall()
 
         XCTAssertEqual(fungibleHookCall.hookType, .uninitialized)
@@ -27,7 +27,7 @@ final class FungibleHookCallUnitTests: XCTestCase {
         XCTAssertNil(fungibleHookCall.hookCall.evmHookCall)
     }
 
-    func test_CustomInitialization() {
+    internal func test_CustomInitialization() {
         let hookCall = HookCall()
         let hookType = FungibleHookType.preHookSender
 
@@ -38,7 +38,7 @@ final class FungibleHookCallUnitTests: XCTestCase {
         XCTAssertNil(fungibleHookCall.hookCall.evmHookCall)
     }
 
-    func test_SetHookCall() {
+    internal func test_SetHookCall() {
         var fungibleHookCall = FungibleHookCall()
         let hookCall = HookCall()
 
@@ -48,7 +48,7 @@ final class FungibleHookCallUnitTests: XCTestCase {
         XCTAssertNil(fungibleHookCall.hookCall.evmHookCall)
     }
 
-    func test_SetHookType() {
+    internal func test_SetHookType() {
         var fungibleHookCall = FungibleHookCall()
 
         fungibleHookCall.hookType(.preHookSender)
@@ -56,7 +56,7 @@ final class FungibleHookCallUnitTests: XCTestCase {
         XCTAssertEqual(fungibleHookCall.hookType, .preHookSender)
     }
 
-    func test_SetHookId() {
+    internal func test_SetHookId() {
         var fungibleHookCall = FungibleHookCall()
 
         fungibleHookCall.hookId(testHookId)
@@ -64,7 +64,7 @@ final class FungibleHookCallUnitTests: XCTestCase {
         XCTAssertEqual(fungibleHookCall.hookCall.hookId, testHookId)
     }
 
-    func test_SetEvmHookCall() {
+    internal func test_SetEvmHookCall() {
         var fungibleHookCall = FungibleHookCall()
 
         fungibleHookCall.evmHookCall(testEvmHookCall)
@@ -74,7 +74,7 @@ final class FungibleHookCallUnitTests: XCTestCase {
         XCTAssertEqual(fungibleHookCall.hookCall.evmHookCall?.gasLimit, testGasLimit)
     }
 
-    func test_FromProtobuf() throws {
+    internal func test_FromProtobuf() throws {
         var proto = Proto_HookCall()
         proto.hookID = testHookId
         proto.evmHookCall = testEvmHookCall.toProtobuf()
@@ -88,7 +88,7 @@ final class FungibleHookCallUnitTests: XCTestCase {
         XCTAssertEqual(fungibleHookCall.hookType, .uninitialized)
     }
 
-    func test_ToProtobuf() {
+    internal func test_ToProtobuf() {
         var fungibleHookCall = FungibleHookCall()
         fungibleHookCall.hookCall.hookId = testHookId
         fungibleHookCall.hookCall.evmHookCall = testEvmHookCall

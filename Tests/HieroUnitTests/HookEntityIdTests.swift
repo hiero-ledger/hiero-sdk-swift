@@ -5,12 +5,12 @@ import XCTest
 
 @testable import Hiero
 
-final class HookEntityIdUnitTests: XCTestCase {
+internal final class HookEntityIdUnitTests: XCTestCase {
 
     private let testAccountId = AccountId(shard: 1, realm: 2, num: 3)
     private let testContractId = ContractId(shard: 4, realm: 5, num: 6)
 
-    func test_GetSetAccountId() {
+    internal func test_GetSetAccountId() {
         var hookEntityId = HookEntityId()
 
         hookEntityId.accountId(testAccountId)
@@ -19,7 +19,7 @@ final class HookEntityIdUnitTests: XCTestCase {
         XCTAssertNil(hookEntityId.contractId)
     }
 
-    func test_GetSetContractId() {
+    internal func test_GetSetContractId() {
         var hookEntityId = HookEntityId()
 
         hookEntityId.contractId(testContractId)
@@ -28,7 +28,7 @@ final class HookEntityIdUnitTests: XCTestCase {
         XCTAssertNil(hookEntityId.accountId)
     }
 
-    func test_SetAccountIdResetsContractId() {
+    internal func test_SetAccountIdResetsContractId() {
         var hookEntityId = HookEntityId()
 
         hookEntityId.contractId(testContractId)
@@ -38,7 +38,7 @@ final class HookEntityIdUnitTests: XCTestCase {
         XCTAssertNil(hookEntityId.contractId)
     }
 
-    func test_SetContractIdResetsAccountId() {
+    internal func test_SetContractIdResetsAccountId() {
         var hookEntityId = HookEntityId()
 
         hookEntityId.accountId(testAccountId)
@@ -48,7 +48,7 @@ final class HookEntityIdUnitTests: XCTestCase {
         XCTAssertNil(hookEntityId.accountId)
     }
 
-    func test_FromProtobufAccountId() throws {
+    internal func test_FromProtobufAccountId() throws {
         var protoMsg = Proto_HookEntityId()
         protoMsg.entityID = .accountID(testAccountId.toProtobuf())
 
@@ -58,7 +58,7 @@ final class HookEntityIdUnitTests: XCTestCase {
         XCTAssertNil(hookEntityId.contractId)
     }
 
-    func test_FromProtobufContractId() throws {
+    internal func test_FromProtobufContractId() throws {
         var protoMsg = Proto_HookEntityId()
         protoMsg.entityID = .contractID(testContractId.toProtobuf())
 
@@ -68,7 +68,7 @@ final class HookEntityIdUnitTests: XCTestCase {
         XCTAssertNil(hookEntityId.accountId)
     }
 
-    func test_ToProtobufAccountId() {
+    internal func test_ToProtobufAccountId() {
         let hookEntityId = HookEntityId(accountId: testAccountId)
 
         let protoMsg = hookEntityId.toProtobuf()
@@ -82,7 +82,7 @@ final class HookEntityIdUnitTests: XCTestCase {
         XCTAssertEqual(UInt64(truncatingIfNeeded: protoAccountId.accountNum), testAccountId.num)
     }
 
-    func test_ToProtobufContractId() {
+    internal func test_ToProtobufContractId() {
         let hookEntityId = HookEntityId(contractId: testContractId)
 
         let protoMsg = hookEntityId.toProtobuf()

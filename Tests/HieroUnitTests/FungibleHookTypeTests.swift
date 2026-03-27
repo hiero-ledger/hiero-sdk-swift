@@ -5,9 +5,9 @@ import XCTest
 
 @testable import Hiero
 
-final class FungibleHookTypeUnitTests: XCTestCase {
+internal final class FungibleHookTypeUnitTests: XCTestCase {
 
-    func test_AllCases() {
+    internal func test_AllCases() {
         let allCases = FungibleHookType.allCases
 
         XCTAssertEqual(allCases.count, 5)
@@ -18,7 +18,7 @@ final class FungibleHookTypeUnitTests: XCTestCase {
         XCTAssertTrue(allCases.contains(.uninitialized))
     }
 
-    func test_Description() {
+    internal func test_Description() {
         XCTAssertEqual(FungibleHookType.preHookSender.description, "PRE_HOOK_SENDER")
         XCTAssertEqual(FungibleHookType.prePostHookSender.description, "PRE_POST_HOOK_SENDER")
         XCTAssertEqual(FungibleHookType.preHookReceiver.description, "PRE_HOOK_RECEIVER")
@@ -26,7 +26,7 @@ final class FungibleHookTypeUnitTests: XCTestCase {
         XCTAssertEqual(FungibleHookType.uninitialized.description, "UNINITIALIZED")
     }
 
-    func test_Equality() {
+    internal func test_Equality() {
         XCTAssertEqual(FungibleHookType.preHookSender, FungibleHookType.preHookSender)
         XCTAssertEqual(FungibleHookType.prePostHookSender, FungibleHookType.prePostHookSender)
         XCTAssertEqual(FungibleHookType.preHookReceiver, FungibleHookType.preHookReceiver)
@@ -38,7 +38,7 @@ final class FungibleHookTypeUnitTests: XCTestCase {
         XCTAssertNotEqual(FungibleHookType.preHookSender, FungibleHookType.uninitialized)
     }
 
-    func test_Hashable() {
+    internal func test_Hashable() {
         let set: Set<FungibleHookType> = [
             .preHookSender, .prePostHookSender,
             .preHookReceiver, .prePostHookReceiver,

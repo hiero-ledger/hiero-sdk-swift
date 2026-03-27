@@ -6,7 +6,7 @@ import XCTest
 
 @testable import Hiero
 
-final class NFTHookCallUnitTests: XCTestCase {
+internal final class NFTHookCallUnitTests: XCTestCase {
 
     private let testHookId: Int64 = 4
     private let testCallData = Data([0x56, 0x78, 0x9A])
@@ -19,7 +19,7 @@ final class NFTHookCallUnitTests: XCTestCase {
         return c
     }
 
-    func test_DefaultInitialization() {
+    internal func test_DefaultInitialization() {
         let nftHookCall = NftHookCall()
 
         XCTAssertEqual(nftHookCall.hookType, .uninitialized)
@@ -27,7 +27,7 @@ final class NFTHookCallUnitTests: XCTestCase {
         XCTAssertNil(nftHookCall.hookCall.evmHookCall)
     }
 
-    func test_CustomInitialization() {
+    internal func test_CustomInitialization() {
         let hookCall = HookCall()
         let hookType = NftHookType.preHook
 
@@ -38,7 +38,7 @@ final class NFTHookCallUnitTests: XCTestCase {
         XCTAssertNil(nftHookCall.hookCall.evmHookCall)
     }
 
-    func test_SetHookCall() {
+    internal func test_SetHookCall() {
         var nftHookCall = NftHookCall()
         let hookCall = HookCall()
 
@@ -48,7 +48,7 @@ final class NFTHookCallUnitTests: XCTestCase {
         XCTAssertNil(nftHookCall.hookCall.evmHookCall)
     }
 
-    func test_SetHookType() {
+    internal func test_SetHookType() {
         var nftHookCall = NftHookCall()
 
         nftHookCall.hookType(.preHook)
@@ -56,7 +56,7 @@ final class NFTHookCallUnitTests: XCTestCase {
         XCTAssertEqual(nftHookCall.hookType, .preHook)
     }
 
-    func test_SetHookId() {
+    internal func test_SetHookId() {
         var nftHookCall = NftHookCall()
 
         nftHookCall.hookId(testHookId)
@@ -64,7 +64,7 @@ final class NFTHookCallUnitTests: XCTestCase {
         XCTAssertEqual(nftHookCall.hookCall.hookId, testHookId)
     }
 
-    func test_SetEvmHookCall() {
+    internal func test_SetEvmHookCall() {
         var nftHookCall = NftHookCall()
 
         nftHookCall.evmHookCall(testEvmHookCall)
@@ -74,7 +74,7 @@ final class NFTHookCallUnitTests: XCTestCase {
         XCTAssertEqual(nftHookCall.hookCall.evmHookCall?.gasLimit, testGasLimit)
     }
 
-    func test_FromProtobuf() throws {
+    internal func test_FromProtobuf() throws {
         var proto = Proto_HookCall()
         proto.hookID = testHookId
         proto.evmHookCall = testEvmHookCall.toProtobuf()
@@ -88,7 +88,7 @@ final class NFTHookCallUnitTests: XCTestCase {
         XCTAssertEqual(nftHookCall.hookType, .uninitialized)
     }
 
-    func test_ToProtobuf() {
+    internal func test_ToProtobuf() {
         var nftHookCall = NftHookCall()
         nftHookCall.hookCall.hookId = testHookId
         nftHookCall.hookCall.evmHookCall = testEvmHookCall

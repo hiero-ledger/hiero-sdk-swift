@@ -6,7 +6,7 @@ import XCTest
 
 @testable import Hiero
 
-final class EvmHookUnitTests: XCTestCase {
+internal final class EvmHookUnitTests: XCTestCase {
 
     private func makeStorageSlot(key: Data, value: Data) -> EvmHookStorageSlot {
         var s = EvmHookStorageSlot()
@@ -70,7 +70,7 @@ final class EvmHookUnitTests: XCTestCase {
         return [update1, update2]
     }
 
-    func test_GetSetStorageUpdates() {
+    internal func test_GetSetStorageUpdates() {
         var hook = EvmHook()
         let updates = makeUpdates()
 
@@ -79,7 +79,7 @@ final class EvmHookUnitTests: XCTestCase {
         XCTAssertEqual(hook.storageUpdates.count, updates.count)
     }
 
-    func test_AddStorageUpdate() {
+    internal func test_AddStorageUpdate() {
         var hook = EvmHook()
         let updates = makeUpdates()
 
@@ -90,7 +90,7 @@ final class EvmHookUnitTests: XCTestCase {
         XCTAssertEqual(hook.storageUpdates.count, updates.count)
     }
 
-    func test_ClearStorageUpdates() {
+    internal func test_ClearStorageUpdates() {
         var hook = EvmHook()
         hook.setStorageUpdates(makeUpdates())
 
@@ -99,7 +99,7 @@ final class EvmHookUnitTests: XCTestCase {
         XCTAssertTrue(hook.storageUpdates.isEmpty)
     }
 
-    func test_GetSetContractId() {
+    internal func test_GetSetContractId() {
         let contractId = ContractId(shard: 1, realm: 2, num: 3)
         var hook = EvmHook()
 
@@ -108,7 +108,7 @@ final class EvmHookUnitTests: XCTestCase {
         XCTAssertEqual(hook.contractId, contractId)
     }
 
-    func test_FromProtobuf() throws {
+    internal func test_FromProtobuf() throws {
         var proto = Com_Hedera_Hapi_Node_Hooks_EvmHook()
         var spec = Com_Hedera_Hapi_Node_Hooks_EvmHookSpec()
         spec.bytecodeSource = .contractID(ContractId(shard: 1, realm: 2, num: 3).toProtobuf())
@@ -121,7 +121,7 @@ final class EvmHookUnitTests: XCTestCase {
         XCTAssertEqual(decoded.storageUpdates.count, proto.storageUpdates.count)
     }
 
-    func test_ToProtobuf() {
+    internal func test_ToProtobuf() {
         let contractId = ContractId(shard: 1, realm: 2, num: 3)
         var hook = EvmHook()
         hook.contractId(contractId)

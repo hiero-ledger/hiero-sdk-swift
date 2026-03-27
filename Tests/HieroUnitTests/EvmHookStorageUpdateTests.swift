@@ -6,7 +6,7 @@ import XCTest
 
 @testable import Hiero
 
-final class EvmHookStorageUpdateUnitTests: XCTestCase {
+internal final class EvmHookStorageUpdateUnitTests: XCTestCase {
 
     private let mappingSlot = Data([0x17, 0x19, 0x1B])
 
@@ -54,7 +54,7 @@ final class EvmHookStorageUpdateUnitTests: XCTestCase {
         return s
     }
 
-    func test_GetSetStorageSlot() {
+    internal func test_GetSetStorageSlot() {
         var update = EvmHookStorageUpdate()
 
         update.setStorageSlot(makeStorageSlot())
@@ -64,7 +64,7 @@ final class EvmHookStorageUpdateUnitTests: XCTestCase {
         XCTAssertEqual(update.storageSlot?.value, value1)
     }
 
-    func test_GetSetMappingEntries() {
+    internal func test_GetSetMappingEntries() {
         var update = EvmHookStorageUpdate()
         let entries = makeEntries()
 
@@ -74,7 +74,7 @@ final class EvmHookStorageUpdateUnitTests: XCTestCase {
         XCTAssertEqual(update.mappingEntries?.entries.count, entries.entries.count)
     }
 
-    func test_SetStorageSlotResetsMappingEntries() {
+    internal func test_SetStorageSlotResetsMappingEntries() {
         var update = EvmHookStorageUpdate()
 
         update.setMappingEntries(makeEntries())
@@ -83,7 +83,7 @@ final class EvmHookStorageUpdateUnitTests: XCTestCase {
         XCTAssertNil(update.mappingEntries)
     }
 
-    func test_SetMappingEntriesResetsStorageSlot() {
+    internal func test_SetMappingEntriesResetsStorageSlot() {
         var update = EvmHookStorageUpdate()
 
         update.setStorageSlot(makeStorageSlot())
@@ -92,7 +92,7 @@ final class EvmHookStorageUpdateUnitTests: XCTestCase {
         XCTAssertNil(update.storageSlot)
     }
 
-    func test_FromProtobuf() throws {
+    internal func test_FromProtobuf() throws {
         var protoSlot = Com_Hedera_Hapi_Node_Hooks_EvmHookStorageUpdate()
         protoSlot.storageSlot = makeStorageSlot().toProtobuf()
 
@@ -110,7 +110,7 @@ final class EvmHookStorageUpdateUnitTests: XCTestCase {
         XCTAssertEqual(decodedEntries.mappingEntries?.entries.count, 3)
     }
 
-    func test_ToProtobuf() {
+    internal func test_ToProtobuf() {
         var updateSlot = EvmHookStorageUpdate()
         var updateEntries = EvmHookStorageUpdate()
 
