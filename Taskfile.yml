@@ -7,7 +7,10 @@ tasks:
         cmds:
             - |
                 echo "// SPDX-License-Identifier: Apache-2.0
+
+                /// Contains SDK version information.
                 public enum VersionInfo {
+                    /// The current version of the Hiero SDK.
                     public static let version = \"$(git describe --tags $(git rev-list --tags --max-count=1))-dev\"
                 }" > Sources/Hiero/Version.swift
             - swift build
@@ -44,7 +47,10 @@ tasks:
         cmds:
             - |
                 echo "// SPDX-License-Identifier: Apache-2.0
+
+                /// Contains SDK version information.
                 public enum VersionInfo {
+                    /// The current version of the Hiero SDK.
                     public static let version = \"$(git describe --tags)\"
                 }" > Sources/Hiero/Version.swift
             - swift build -c release
