@@ -235,22 +235,49 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: @unche
   /// HIP-1137) that are operated by the same entity that operates this
   /// consensus node.
   /// <p>
-  /// This field is OPTIONAL and MAY be empty.<br/>
+  /// This field is OPTIONAL.<br/>
+  /// If this field is not set, the current list SHALL NOT change.<br/>
+  /// If this field is set, but contains an empty list, any existing
+  /// associated registered nodes SHALL be removed.<br/>
   /// This field MUST NOT contain more than twenty(20) entries.<br/>
   /// Every entry in this list MUST be a valid `registered_node_id` for a
   /// current registered node.
-  /// <p>
-  /// If set, the new list SHALL replace the existing list.
-  public var associatedRegisteredNode: [UInt64] {
-    get {return _storage._associatedRegisteredNode}
-    set {_uniqueStorage()._associatedRegisteredNode = newValue}
+  public var associatedRegisteredNodeList: Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList {
+    get {return _storage._associatedRegisteredNodeList ?? Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList()}
+    set {_uniqueStorage()._associatedRegisteredNodeList = newValue}
   }
+  /// Returns true if `associatedRegisteredNodeList` has been explicitly set.
+  public var hasAssociatedRegisteredNodeList: Bool {return _storage._associatedRegisteredNodeList != nil}
+  /// Clears the value of `associatedRegisteredNodeList`. Subsequent reads from it will return its default value.
+  public mutating func clearAssociatedRegisteredNodeList() {_uniqueStorage()._associatedRegisteredNodeList = nil}
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
 
   fileprivate var _storage = _StorageClass.defaultInstance
+}
+
+///*
+/// A wrapper around a list of associated registered node identifiers.<br/>
+/// This wrapper exists to enable an update transaction to differentiate
+/// between a field that is not set and an empty list of values.
+/// <p>
+/// An _unset_ field of this type SHALL NOT modify existing values.<br/>
+/// A _set_ field of this type with an empty list SHALL remove any
+/// existing values.
+public struct Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  ///*
+  /// A list of registered node identifiers.
+  public var associatedRegisteredNode: [UInt64] = []
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -270,7 +297,7 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: SwiftProto
     8: .standard(proto: "admin_key"),
     9: .standard(proto: "decline_reward"),
     10: .standard(proto: "grpc_proxy_endpoint"),
-    11: .standard(proto: "associated_registered_node"),
+    11: .standard(proto: "associated_registered_node_list"),
   ]
 
   fileprivate class _StorageClass {
@@ -284,7 +311,7 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: SwiftProto
     var _adminKey: Proto_Key? = nil
     var _declineReward: SwiftProtobuf.Google_Protobuf_BoolValue? = nil
     var _grpcProxyEndpoint: Proto_ServiceEndpoint? = nil
-    var _associatedRegisteredNode: [UInt64] = []
+    var _associatedRegisteredNodeList: Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList? = nil
 
     #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
@@ -309,7 +336,7 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: SwiftProto
       _adminKey = source._adminKey
       _declineReward = source._declineReward
       _grpcProxyEndpoint = source._grpcProxyEndpoint
-      _associatedRegisteredNode = source._associatedRegisteredNode
+      _associatedRegisteredNodeList = source._associatedRegisteredNodeList
     }
   }
 
@@ -338,7 +365,7 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: SwiftProto
         case 8: try { try decoder.decodeSingularMessageField(value: &_storage._adminKey) }()
         case 9: try { try decoder.decodeSingularMessageField(value: &_storage._declineReward) }()
         case 10: try { try decoder.decodeSingularMessageField(value: &_storage._grpcProxyEndpoint) }()
-        case 11: try { try decoder.decodeRepeatedUInt64Field(value: &_storage._associatedRegisteredNode) }()
+        case 11: try { try decoder.decodeSingularMessageField(value: &_storage._associatedRegisteredNodeList) }()
         default: break
         }
       }
@@ -381,9 +408,9 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: SwiftProto
       try { if let v = _storage._grpcProxyEndpoint {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
       } }()
-      if !_storage._associatedRegisteredNode.isEmpty {
-        try visitor.visitPackedUInt64Field(value: _storage._associatedRegisteredNode, fieldNumber: 11)
-      }
+      try { if let v = _storage._associatedRegisteredNodeList {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 11)
+      } }()
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -403,11 +430,43 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: SwiftProto
         if _storage._adminKey != rhs_storage._adminKey {return false}
         if _storage._declineReward != rhs_storage._declineReward {return false}
         if _storage._grpcProxyEndpoint != rhs_storage._grpcProxyEndpoint {return false}
-        if _storage._associatedRegisteredNode != rhs_storage._associatedRegisteredNode {return false}
+        if _storage._associatedRegisteredNodeList != rhs_storage._associatedRegisteredNodeList {return false}
         return true
       }
       if !storagesAreEqual {return false}
     }
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".AssociatedRegisteredNodeList"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "associated_registered_node"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeRepeatedUInt64Field(value: &self.associatedRegisteredNode) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.associatedRegisteredNode.isEmpty {
+      try visitor.visitPackedUInt64Field(value: self.associatedRegisteredNode, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList, rhs: Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList) -> Bool {
+    if lhs.associatedRegisteredNode != rhs.associatedRegisteredNode {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
