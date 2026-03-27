@@ -6,12 +6,12 @@ import XCTest
 
 @testable import Hiero
 
-final class EvmHookStorageSlotUnitTests: XCTestCase {
+internal final class EvmHookStorageSlotUnitTests: XCTestCase {
 
     private let testKey = Data([0x01, 0x23, 0x45])
     private let testValue = Data([0x67, 0x89, 0xAB])
 
-    func test_GetSetKey() {
+    internal func test_GetSetKey() {
         var slot = EvmHookStorageSlot()
 
         slot.key(testKey)
@@ -19,7 +19,7 @@ final class EvmHookStorageSlotUnitTests: XCTestCase {
         XCTAssertEqual(slot.key, testKey)
     }
 
-    func test_GetSetValue() {
+    internal func test_GetSetValue() {
         var slot = EvmHookStorageSlot()
 
         slot.value(testValue)
@@ -27,7 +27,7 @@ final class EvmHookStorageSlotUnitTests: XCTestCase {
         XCTAssertEqual(slot.value, testValue)
     }
 
-    func test_FromProtobuf() throws {
+    internal func test_FromProtobuf() throws {
         var proto = Com_Hedera_Hapi_Node_Hooks_EvmHookStorageSlot()
         proto.key = testKey
         proto.value = testValue
@@ -38,7 +38,7 @@ final class EvmHookStorageSlotUnitTests: XCTestCase {
         XCTAssertEqual(slot.value, testValue)
     }
 
-    func test_ToProtobuf() {
+    internal func test_ToProtobuf() {
         var slot = EvmHookStorageSlot()
         slot.key(testKey)
         slot.value(testValue)

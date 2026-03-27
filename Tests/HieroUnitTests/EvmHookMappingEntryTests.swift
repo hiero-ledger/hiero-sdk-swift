@@ -6,13 +6,13 @@ import XCTest
 
 @testable import Hiero
 
-final class EvmHookMappingEntryUnitTests: XCTestCase {
+internal final class EvmHookMappingEntryUnitTests: XCTestCase {
 
     private let testKey = Data([0x01, 0x23, 0x45])
     private let testPreimage = Data([0x67, 0x89, 0xAB])
     private let testValue = Data([0xCD, 0xEF, 0x02])
 
-    func test_GetSetKey() {
+    internal func test_GetSetKey() {
         var entry = EvmHookMappingEntry()
 
         entry.key(testKey)
@@ -21,7 +21,7 @@ final class EvmHookMappingEntryUnitTests: XCTestCase {
         XCTAssertEqual(entry.key, testKey)
     }
 
-    func test_GetSetKeyResetPreimage() {
+    internal func test_GetSetKeyResetPreimage() {
         var entry = EvmHookMappingEntry()
 
         entry.key(testKey)
@@ -30,7 +30,7 @@ final class EvmHookMappingEntryUnitTests: XCTestCase {
         XCTAssertNil(entry.key)
     }
 
-    func test_GetSetPreimage() {
+    internal func test_GetSetPreimage() {
         var entry = EvmHookMappingEntry()
 
         entry.preimage(testPreimage)
@@ -39,7 +39,7 @@ final class EvmHookMappingEntryUnitTests: XCTestCase {
         XCTAssertEqual(entry.preimage, testPreimage)
     }
 
-    func test_GetSetPreimageResetsKey() {
+    internal func test_GetSetPreimageResetsKey() {
         var entry = EvmHookMappingEntry()
 
         entry.preimage(testPreimage)
@@ -48,7 +48,7 @@ final class EvmHookMappingEntryUnitTests: XCTestCase {
         XCTAssertNil(entry.preimage)
     }
 
-    func test_GetSetValue() {
+    internal func test_GetSetValue() {
         var entry = EvmHookMappingEntry()
 
         entry.value(testValue)
@@ -56,7 +56,7 @@ final class EvmHookMappingEntryUnitTests: XCTestCase {
         XCTAssertEqual(entry.value, testValue)
     }
 
-    func test_FromProtobuf() throws {
+    internal func test_FromProtobuf() throws {
         var protoKey = Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntry()
         var protoPreimage = Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntry()
 
@@ -76,7 +76,7 @@ final class EvmHookMappingEntryUnitTests: XCTestCase {
         XCTAssertEqual(entryPreimage.preimage, testPreimage)
     }
 
-    func test_ToProtobuf() {
+    internal func test_ToProtobuf() {
         var entryKey = EvmHookMappingEntry()
         var entryPreimage = EvmHookMappingEntry()
 

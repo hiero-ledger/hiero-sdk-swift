@@ -8,10 +8,10 @@ import HieroProtobufs
 /// should be set.
 public struct HookEntityId {
     /// The ID of the account that owns the hook, if the owner is an account.
-    public var accountId: AccountId? = nil
+    public var accountId: AccountId?
 
     /// The ID of the contract that owns the hook, if the owner is a contract.
-    public var contractId: ContractId? = nil
+    public var contractId: ContractId?
 
     /// Create a new `HookEntityId` with no owner set.
     public init() {}

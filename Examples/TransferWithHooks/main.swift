@@ -36,12 +36,9 @@ internal enum Program {
 
         try await cleanup(
             client,
-            senderAccountId: senderAccountId,
-            senderKey: senderKey,
-            receiverAccountId: receiverAccountId,
-            receiverKey: receiverKey,
-            hookContractId: hookContractId,
-            hookContractKey: hookContractKey,
+            sender: (senderAccountId, senderKey),
+            receiver: (receiverAccountId, receiverKey),
+            hookContract: (hookContractId, hookContractKey),
             operatorAccountId: env.operatorAccountId
         )
 
@@ -144,37 +141,34 @@ internal enum Program {
 
     private static func cleanup(
         _ client: Client,
-        senderAccountId: AccountId,
-        senderKey: PrivateKey,
-        receiverAccountId: AccountId,
-        receiverKey: PrivateKey,
-        hookContractId: ContractId,
-        hookContractKey: PrivateKey,
+        sender: (AccountId, PrivateKey),
+        receiver: (AccountId, PrivateKey),
+        hookContract: (ContractId, PrivateKey),
         operatorAccountId: AccountId
     ) async throws {
         print("\nCleaning up...")
 
         _ = try await AccountDeleteTransaction()
-            .accountId(senderAccountId)
+            .accountId(sender.0)
             .transferAccountId(operatorAccountId)
             .freezeWith(client)
-            .sign(senderKey)
+            .sign(sender.1)
             .execute(client)
             .getReceipt(client)
 
         _ = try await AccountDeleteTransaction()
-            .accountId(receiverAccountId)
+            .accountId(receiver.0)
             .transferAccountId(operatorAccountId)
             .freezeWith(client)
-            .sign(receiverKey)
+            .sign(receiver.1)
             .execute(client)
             .getReceipt(client)
 
         _ = try await ContractDeleteTransaction()
-            .contractId(hookContractId)
+            .contractId(hookContract.0)
             .transferAccountId(operatorAccountId)
             .freezeWith(client)
-            .sign(hookContractKey)
+            .sign(hookContract.1)
             .execute(client)
             .getReceipt(client)
 

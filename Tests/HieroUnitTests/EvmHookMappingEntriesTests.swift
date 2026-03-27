@@ -6,7 +6,7 @@ import XCTest
 
 @testable import Hiero
 
-final class EvmHookMappingEntriesUnitTests: XCTestCase {
+internal final class EvmHookMappingEntriesUnitTests: XCTestCase {
 
     private let mappingSlot = Data([0x17, 0x19, 0x1B])
 
@@ -43,7 +43,7 @@ final class EvmHookMappingEntriesUnitTests: XCTestCase {
         [makeEntry1(), makeEntry2(), makeEntry3()]
     }
 
-    func test_GetSetMappingSlot() {
+    internal func test_GetSetMappingSlot() {
         var entries = EvmHookMappingEntries()
 
         entries.mappingSlot(mappingSlot)
@@ -51,7 +51,7 @@ final class EvmHookMappingEntriesUnitTests: XCTestCase {
         XCTAssertEqual(entries.mappingSlot, mappingSlot)
     }
 
-    func test_GetSetEntries() {
+    internal func test_GetSetEntries() {
         var entries = EvmHookMappingEntries()
 
         entries.setEntries(makeEntries())
@@ -59,7 +59,7 @@ final class EvmHookMappingEntriesUnitTests: XCTestCase {
         XCTAssertEqual(entries.entries.count, makeEntries().count)
     }
 
-    func test_AddEntry() {
+    internal func test_AddEntry() {
         var entries = EvmHookMappingEntries()
         let e1 = makeEntry1()
 
@@ -71,7 +71,7 @@ final class EvmHookMappingEntriesUnitTests: XCTestCase {
         XCTAssertEqual(entries.entries[0].value, value1)
     }
 
-    func test_ClearEntries() {
+    internal func test_ClearEntries() {
         var entries = EvmHookMappingEntries()
         entries.setEntries(makeEntries())
 
@@ -80,7 +80,7 @@ final class EvmHookMappingEntriesUnitTests: XCTestCase {
         XCTAssertTrue(entries.entries.isEmpty)
     }
 
-    func test_FromProtobuf() throws {
+    internal func test_FromProtobuf() throws {
         var proto = Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntries()
         proto.mappingSlot = mappingSlot
         proto.entries = makeEntries().map { $0.toProtobuf() }
@@ -91,7 +91,7 @@ final class EvmHookMappingEntriesUnitTests: XCTestCase {
         XCTAssertEqual(decoded.entries.count, makeEntries().count)
     }
 
-    func test_ToProtobuf() {
+    internal func test_ToProtobuf() {
         var entries = EvmHookMappingEntries()
         entries.mappingSlot(mappingSlot)
         entries.setEntries(makeEntries())
