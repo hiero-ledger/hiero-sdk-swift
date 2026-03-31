@@ -39,6 +39,7 @@ let exampleTargets = [
     "MultiAppTransfer",
     "MultiSigOffline",
     "Prng",
+    "RegisteredNodeLifecycle",
     "Schedule",
     "ScheduledTransactionMultiSigThreshold",
     "ScheduledTransfer",

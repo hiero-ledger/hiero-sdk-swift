@@ -68,6 +68,24 @@ public struct RegisteredServiceEndpoint {
             endpointType: .blockNode(endpointApi)
         )
     }
+
+    /// Create a mirror node service endpoint.
+    public static func mirrorNode(
+        address: Address? = nil,
+        port: UInt32 = 0,
+        requiresTls: Bool = false
+    ) -> RegisteredServiceEndpoint {
+        RegisteredServiceEndpoint(address: address, port: port, requiresTls: requiresTls, endpointType: .mirrorNode)
+    }
+
+    /// Create an RPC relay service endpoint.
+    public static func rpcRelay(
+        address: Address? = nil,
+        port: UInt32 = 0,
+        requiresTls: Bool = false
+    ) -> RegisteredServiceEndpoint {
+        RegisteredServiceEndpoint(address: address, port: port, requiresTls: requiresTls, endpointType: .rpcRelay)
+    }
 }
 
 extension RegisteredServiceEndpoint: TryProtobufCodable {
