@@ -63,7 +63,7 @@ internal enum ServicesTransactionDataList {
     case hintsPartialSignature([Com_Hedera_Hapi_Services_Auxiliary_Hints_HintsPartialSignatureTransactionBody])
     case crsPublication([Com_Hedera_Hapi_Services_Auxiliary_Hints_CrsPublicationTransactionBody])
     case atomicBatch([Proto_AtomicBatchTransactionBody])
-    case lambdaSstore([Com_Hedera_Hapi_Node_Hooks_LambdaSStoreTransactionBody])
+    case hookStore([Com_Hedera_Hapi_Node_Hooks_HookStoreTransactionBody])
     case hookDispatch([Com_Hedera_Hapi_Node_Hooks_HookDispatchTransactionBody])
 
     internal mutating func append(_ transaction: Proto_TransactionBody.OneOf_Data) throws {
@@ -300,9 +300,9 @@ internal enum ServicesTransactionDataList {
             array.append(data)
             self = .atomicBatch(array)
 
-        case (.lambdaSstore(var array), .lambdaSstore(let data)):
+        case (.hookStore(var array), .hookStore(let data)):
             array.append(data)
-            self = .lambdaSstore(array)
+            self = .hookStore(array)
 
         case (.hookDispatch(var array), .hookDispatch(let data)):
             array.append(data)
@@ -380,7 +380,7 @@ extension ServicesTransactionDataList: TryFromProtobuf {
         case .tokenCancelAirdrop(let data): value = .tokenCancelAirdrop([data])
         case .tokenClaimAirdrop(let data): value = .tokenClaimAirdrop([data])
         case .atomicBatch(let data): value = .atomicBatch([data])
-        case .lambdaSstore(let data): value = .lambdaSstore([data])
+        case .hookStore(let data): value = .hookStore([data])
         case .hookDispatch(let data): value = .hookDispatch([data])
         case .stateSignatureTransaction:
             throw HError.fromProtobuf("Unsupported transaction `StateSignatureTransaction`")
@@ -398,6 +398,14 @@ extension ServicesTransactionDataList: TryFromProtobuf {
             throw HError.fromProtobuf("Unsupported transaction `HistoryProofVoteTransaction`")
         case .crsPublication:
             throw HError.fromProtobuf("Unsupported transaction `CrsPublicationTransaction`")
+        case .ledgerIDPublication:
+            throw HError.fromProtobuf("Unsupported transaction `LedgerIdPublicationTransaction`")
+        case .registeredNodeCreate:
+            throw HError.fromProtobuf("Unsupported transaction `RegisteredNodeCreateTransaction`")
+        case .registeredNodeUpdate:
+            throw HError.fromProtobuf("Unsupported transaction `RegisteredNodeUpdateTransaction`")
+        case .registeredNodeDelete:
+            throw HError.fromProtobuf("Unsupported transaction `RegisteredNodeDeleteTransaction`")
         }
 
         for transaction in iter {

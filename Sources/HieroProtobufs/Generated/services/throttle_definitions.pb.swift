@@ -126,6 +126,10 @@ public struct Proto_ThrottleBucket: Sendable {
   /// This list MUST contain at least one entry.
   public var throttleGroups: [Proto_ThrottleGroup] = []
 
+  ///*
+  /// If set to true, this bucket is used for high-volume throttles.
+  public var highVolume: Bool = false
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -207,6 +211,7 @@ extension Proto_ThrottleBucket: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     1: .same(proto: "name"),
     2: .same(proto: "burstPeriodMs"),
     3: .same(proto: "throttleGroups"),
+    4: .standard(proto: "high_volume"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -218,6 +223,7 @@ extension Proto_ThrottleBucket: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
       case 1: try { try decoder.decodeSingularStringField(value: &self.name) }()
       case 2: try { try decoder.decodeSingularUInt64Field(value: &self.burstPeriodMs) }()
       case 3: try { try decoder.decodeRepeatedMessageField(value: &self.throttleGroups) }()
+      case 4: try { try decoder.decodeSingularBoolField(value: &self.highVolume) }()
       default: break
       }
     }
@@ -233,6 +239,9 @@ extension Proto_ThrottleBucket: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     if !self.throttleGroups.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.throttleGroups, fieldNumber: 3)
     }
+    if self.highVolume != false {
+      try visitor.visitSingularBoolField(value: self.highVolume, fieldNumber: 4)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -240,6 +249,7 @@ extension Proto_ThrottleBucket: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     if lhs.name != rhs.name {return false}
     if lhs.burstPeriodMs != rhs.burstPeriodMs {return false}
     if lhs.throttleGroups != rhs.throttleGroups {return false}
+    if lhs.highVolume != rhs.highVolume {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

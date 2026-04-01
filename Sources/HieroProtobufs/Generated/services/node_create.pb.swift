@@ -174,6 +174,18 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeCreateTransactionBody: @unche
   /// Clears the value of `grpcProxyEndpoint`. Subsequent reads from it will return its default value.
   public mutating func clearGrpcProxyEndpoint() {self._grpcProxyEndpoint = nil}
 
+  ///*
+  /// A list of registered nodes operated by the same entity as this node.<br/>
+  /// This value may contain a list of "registered nodes" (as described in
+  /// HIP-1137) that are operated by the same entity that operates this
+  /// consensus node.
+  /// <p>
+  /// This field is OPTIONAL and MAY be empty.<br/>
+  /// This field MUST NOT contain more than twenty(20) entries.<br/>
+  /// Every entry in this list MUST be a valid `registered_node_id` for a
+  /// current registered node.
+  public var associatedRegisteredNode: [UInt64] = []
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -199,6 +211,7 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeCreateTransactionBody: SwiftProto
     7: .standard(proto: "admin_key"),
     8: .standard(proto: "decline_reward"),
     9: .standard(proto: "grpc_proxy_endpoint"),
+    10: .standard(proto: "associated_registered_node"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -216,6 +229,7 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeCreateTransactionBody: SwiftProto
       case 7: try { try decoder.decodeSingularMessageField(value: &self._adminKey) }()
       case 8: try { try decoder.decodeSingularBoolField(value: &self.declineReward) }()
       case 9: try { try decoder.decodeSingularMessageField(value: &self._grpcProxyEndpoint) }()
+      case 10: try { try decoder.decodeRepeatedUInt64Field(value: &self.associatedRegisteredNode) }()
       default: break
       }
     }
@@ -253,6 +267,9 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeCreateTransactionBody: SwiftProto
     try { if let v = self._grpcProxyEndpoint {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
     } }()
+    if !self.associatedRegisteredNode.isEmpty {
+      try visitor.visitPackedUInt64Field(value: self.associatedRegisteredNode, fieldNumber: 10)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -266,6 +283,7 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeCreateTransactionBody: SwiftProto
     if lhs._adminKey != rhs._adminKey {return false}
     if lhs.declineReward != rhs.declineReward {return false}
     if lhs._grpcProxyEndpoint != rhs._grpcProxyEndpoint {return false}
+    if lhs.associatedRegisteredNode != rhs.associatedRegisteredNode {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

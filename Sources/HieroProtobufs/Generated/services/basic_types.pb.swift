@@ -982,12 +982,32 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
   case atomicBatch // = 108
 
   ///*
-  /// Update one or more storage slots in an lambda EVM hook.
+  /// (DEPRECATED) Remove once no production throttle assets reference it.
   case lambdaSstore // = 109
 
   ///*
   /// (Internal-only) Dispatch a hook action.
   case hookDispatch // = 110
+
+  ///*
+  /// Update one or more storage slots in an EVM hook.
+  case hookStore // = 111
+
+  ///*
+  /// (Internal-only) Publish a new ledger id and chain-of-trust key.
+  case ledgerIDPublication // = 112
+
+  ///*
+  /// Create a registered node
+  case registeredNodeCreate // = 113
+
+  ///*
+  /// Update a registered node
+  case registeredNodeUpdate // = 114
+
+  ///*
+  /// Delete a registered node
+  case registeredNodeDelete // = 115
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -1089,6 +1109,11 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 108: self = .atomicBatch
     case 109: self = .lambdaSstore
     case 110: self = .hookDispatch
+    case 111: self = .hookStore
+    case 112: self = .ledgerIDPublication
+    case 113: self = .registeredNodeCreate
+    case 114: self = .registeredNodeUpdate
+    case 115: self = .registeredNodeDelete
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -1188,6 +1213,11 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .atomicBatch: return 108
     case .lambdaSstore: return 109
     case .hookDispatch: return 110
+    case .hookStore: return 111
+    case .ledgerIDPublication: return 112
+    case .registeredNodeCreate: return 113
+    case .registeredNodeUpdate: return 114
+    case .registeredNodeDelete: return 115
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -1287,6 +1317,11 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
     .atomicBatch,
     .lambdaSstore,
     .hookDispatch,
+    .hookStore,
+    .ledgerIDPublication,
+    .registeredNodeCreate,
+    .registeredNodeUpdate,
+    .registeredNodeDelete,
   ]
 
 }
@@ -4119,6 +4154,11 @@ extension Proto_HederaFunctionality: SwiftProtobuf._ProtoNameProviding {
     108: .same(proto: "AtomicBatch"),
     109: .same(proto: "LambdaSStore"),
     110: .same(proto: "HookDispatch"),
+    111: .same(proto: "HookStore"),
+    112: .same(proto: "LedgerIdPublication"),
+    113: .same(proto: "RegisteredNodeCreate"),
+    114: .same(proto: "RegisteredNodeUpdate"),
+    115: .same(proto: "RegisteredNodeDelete"),
   ]
 }
 

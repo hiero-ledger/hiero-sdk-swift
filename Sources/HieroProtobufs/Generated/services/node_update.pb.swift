@@ -38,7 +38,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 ///
 /// ### Block Stream Effects
 /// None.
-public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendable {
+public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -49,7 +49,10 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   /// The node identified MUST exist in the network address book.<br/>
   /// The node identified MUST NOT be deleted.<br/>
   /// This value is REQUIRED.
-  public var nodeID: UInt64 = 0
+  public var nodeID: UInt64 {
+    get {return _storage._nodeID}
+    set {_uniqueStorage()._nodeID = newValue}
+  }
 
   ///*
   /// An account identifier.
@@ -58,13 +61,13 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   /// If set, this transaction MUST be signed by the active `key` for _both_
   /// the current node account _and_ the identified new node account.
   public var accountID: Proto_AccountID {
-    get {return _accountID ?? Proto_AccountID()}
-    set {_accountID = newValue}
+    get {return _storage._accountID ?? Proto_AccountID()}
+    set {_uniqueStorage()._accountID = newValue}
   }
   /// Returns true if `accountID` has been explicitly set.
-  public var hasAccountID: Bool {return self._accountID != nil}
+  public var hasAccountID: Bool {return _storage._accountID != nil}
   /// Clears the value of `accountID`. Subsequent reads from it will return its default value.
-  public mutating func clearAccountID() {self._accountID = nil}
+  public mutating func clearAccountID() {_uniqueStorage()._accountID = nil}
 
   ///*
   /// A short description of the node.
@@ -73,13 +76,13 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   /// (default 100) bytes when encoded as UTF-8.<br/>
   /// If set, this value SHALL replace the previous value.
   public var description_p: SwiftProtobuf.Google_Protobuf_StringValue {
-    get {return _description_p ?? SwiftProtobuf.Google_Protobuf_StringValue()}
-    set {_description_p = newValue}
+    get {return _storage._description_p ?? SwiftProtobuf.Google_Protobuf_StringValue()}
+    set {_uniqueStorage()._description_p = newValue}
   }
   /// Returns true if `description_p` has been explicitly set.
-  public var hasDescription_p: Bool {return self._description_p != nil}
+  public var hasDescription_p: Bool {return _storage._description_p != nil}
   /// Clears the value of `description_p`. Subsequent reads from it will return its default value.
-  public mutating func clearDescription_p() {self._description_p = nil}
+  public mutating func clearDescription_p() {_uniqueStorage()._description_p = nil}
 
   ///*
   /// A list of service endpoints for gossip.
@@ -108,7 +111,10 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   /// </blockquote></blockquote>
   /// <p>
   /// If set, the new list SHALL replace the existing list.
-  public var gossipEndpoint: [Proto_ServiceEndpoint] = []
+  public var gossipEndpoint: [Proto_ServiceEndpoint] {
+    get {return _storage._gossipEndpoint}
+    set {_uniqueStorage()._gossipEndpoint = newValue}
+  }
 
   ///*
   /// A list of service endpoints for gRPC calls.
@@ -128,7 +134,10 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   /// details.
   /// <p>
   /// If set, the new list SHALL replace the existing list.
-  public var serviceEndpoint: [Proto_ServiceEndpoint] = []
+  public var serviceEndpoint: [Proto_ServiceEndpoint] {
+    get {return _storage._serviceEndpoint}
+    set {_uniqueStorage()._serviceEndpoint = newValue}
+  }
 
   ///*
   /// A certificate used to sign gossip events.
@@ -139,13 +148,13 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   /// <p>
   /// If set, the new value SHALL replace the existing bytes value.
   public var gossipCaCertificate: SwiftProtobuf.Google_Protobuf_BytesValue {
-    get {return _gossipCaCertificate ?? SwiftProtobuf.Google_Protobuf_BytesValue()}
-    set {_gossipCaCertificate = newValue}
+    get {return _storage._gossipCaCertificate ?? SwiftProtobuf.Google_Protobuf_BytesValue()}
+    set {_uniqueStorage()._gossipCaCertificate = newValue}
   }
   /// Returns true if `gossipCaCertificate` has been explicitly set.
-  public var hasGossipCaCertificate: Bool {return self._gossipCaCertificate != nil}
+  public var hasGossipCaCertificate: Bool {return _storage._gossipCaCertificate != nil}
   /// Clears the value of `gossipCaCertificate`. Subsequent reads from it will return its default value.
-  public mutating func clearGossipCaCertificate() {self._gossipCaCertificate = nil}
+  public mutating func clearGossipCaCertificate() {_uniqueStorage()._gossipCaCertificate = nil}
 
   ///*
   /// A hash of the node gRPC TLS certificate.
@@ -159,13 +168,13 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   /// <p>
   /// If set, the new value SHALL replace the existing hash value.
   public var grpcCertificateHash: SwiftProtobuf.Google_Protobuf_BytesValue {
-    get {return _grpcCertificateHash ?? SwiftProtobuf.Google_Protobuf_BytesValue()}
-    set {_grpcCertificateHash = newValue}
+    get {return _storage._grpcCertificateHash ?? SwiftProtobuf.Google_Protobuf_BytesValue()}
+    set {_uniqueStorage()._grpcCertificateHash = newValue}
   }
   /// Returns true if `grpcCertificateHash` has been explicitly set.
-  public var hasGrpcCertificateHash: Bool {return self._grpcCertificateHash != nil}
+  public var hasGrpcCertificateHash: Bool {return _storage._grpcCertificateHash != nil}
   /// Clears the value of `grpcCertificateHash`. Subsequent reads from it will return its default value.
-  public mutating func clearGrpcCertificateHash() {self._grpcCertificateHash = nil}
+  public mutating func clearGrpcCertificateHash() {_uniqueStorage()._grpcCertificateHash = nil}
 
   ///*
   /// An administrative key controlled by the node operator.
@@ -177,13 +186,13 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   /// If set, this field MUST contain a valid `Key` value.<br/>
   /// If set, this field MUST NOT be set to an empty `KeyList`.
   public var adminKey: Proto_Key {
-    get {return _adminKey ?? Proto_Key()}
-    set {_adminKey = newValue}
+    get {return _storage._adminKey ?? Proto_Key()}
+    set {_uniqueStorage()._adminKey = newValue}
   }
   /// Returns true if `adminKey` has been explicitly set.
-  public var hasAdminKey: Bool {return self._adminKey != nil}
+  public var hasAdminKey: Bool {return _storage._adminKey != nil}
   /// Clears the value of `adminKey`. Subsequent reads from it will return its default value.
-  public mutating func clearAdminKey() {self._adminKey = nil}
+  public mutating func clearAdminKey() {_uniqueStorage()._adminKey = nil}
 
   ///*
   /// A boolean indicating that this node has chosen to decline node rewards
@@ -191,13 +200,13 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   /// <p>
   /// This node SHALL NOT receive reward if this value is set, and `true`.
   public var declineReward: SwiftProtobuf.Google_Protobuf_BoolValue {
-    get {return _declineReward ?? SwiftProtobuf.Google_Protobuf_BoolValue()}
-    set {_declineReward = newValue}
+    get {return _storage._declineReward ?? SwiftProtobuf.Google_Protobuf_BoolValue()}
+    set {_uniqueStorage()._declineReward = newValue}
   }
   /// Returns true if `declineReward` has been explicitly set.
-  public var hasDeclineReward: Bool {return self._declineReward != nil}
+  public var hasDeclineReward: Bool {return _storage._declineReward != nil}
   /// Clears the value of `declineReward`. Subsequent reads from it will return its default value.
-  public mutating func clearDeclineReward() {self._declineReward = nil}
+  public mutating func clearDeclineReward() {_uniqueStorage()._declineReward = nil}
 
   ///*
   /// A web proxy for gRPC from non-gRPC clients.
@@ -212,25 +221,63 @@ public struct Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: Sendab
   /// This field MAY be set to `ServiceEndpoint.DEFAULT` to remove a previously-valid
   /// web proxy.
   public var grpcProxyEndpoint: Proto_ServiceEndpoint {
-    get {return _grpcProxyEndpoint ?? Proto_ServiceEndpoint()}
-    set {_grpcProxyEndpoint = newValue}
+    get {return _storage._grpcProxyEndpoint ?? Proto_ServiceEndpoint()}
+    set {_uniqueStorage()._grpcProxyEndpoint = newValue}
   }
   /// Returns true if `grpcProxyEndpoint` has been explicitly set.
-  public var hasGrpcProxyEndpoint: Bool {return self._grpcProxyEndpoint != nil}
+  public var hasGrpcProxyEndpoint: Bool {return _storage._grpcProxyEndpoint != nil}
   /// Clears the value of `grpcProxyEndpoint`. Subsequent reads from it will return its default value.
-  public mutating func clearGrpcProxyEndpoint() {self._grpcProxyEndpoint = nil}
+  public mutating func clearGrpcProxyEndpoint() {_uniqueStorage()._grpcProxyEndpoint = nil}
+
+  ///*
+  /// A list of registered nodes operated by the same entity as this node.<br/>
+  /// This value may contain a list of "registered nodes" (as described in
+  /// HIP-1137) that are operated by the same entity that operates this
+  /// consensus node.
+  /// <p>
+  /// This field is OPTIONAL.<br/>
+  /// If this field is not set, the current list SHALL NOT change.<br/>
+  /// If this field is set, but contains an empty list, any existing
+  /// associated registered nodes SHALL be removed.<br/>
+  /// This field MUST NOT contain more than twenty(20) entries.<br/>
+  /// Every entry in this list MUST be a valid `registered_node_id` for a
+  /// current registered node.
+  public var associatedRegisteredNodeList: Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList {
+    get {return _storage._associatedRegisteredNodeList ?? Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList()}
+    set {_uniqueStorage()._associatedRegisteredNodeList = newValue}
+  }
+  /// Returns true if `associatedRegisteredNodeList` has been explicitly set.
+  public var hasAssociatedRegisteredNodeList: Bool {return _storage._associatedRegisteredNodeList != nil}
+  /// Clears the value of `associatedRegisteredNodeList`. Subsequent reads from it will return its default value.
+  public mutating func clearAssociatedRegisteredNodeList() {_uniqueStorage()._associatedRegisteredNodeList = nil}
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
 
-  fileprivate var _accountID: Proto_AccountID? = nil
-  fileprivate var _description_p: SwiftProtobuf.Google_Protobuf_StringValue? = nil
-  fileprivate var _gossipCaCertificate: SwiftProtobuf.Google_Protobuf_BytesValue? = nil
-  fileprivate var _grpcCertificateHash: SwiftProtobuf.Google_Protobuf_BytesValue? = nil
-  fileprivate var _adminKey: Proto_Key? = nil
-  fileprivate var _declineReward: SwiftProtobuf.Google_Protobuf_BoolValue? = nil
-  fileprivate var _grpcProxyEndpoint: Proto_ServiceEndpoint? = nil
+  fileprivate var _storage = _StorageClass.defaultInstance
+}
+
+///*
+/// A wrapper around a list of associated registered node identifiers.<br/>
+/// This wrapper exists to enable an update transaction to differentiate
+/// between a field that is not set and an empty list of values.
+/// <p>
+/// An _unset_ field of this type SHALL NOT modify existing values.<br/>
+/// A _set_ field of this type with an empty list SHALL remove any
+/// existing values.
+public struct Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  ///*
+  /// A list of registered node identifiers.
+  public var associatedRegisteredNode: [UInt64] = []
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -250,6 +297,153 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: SwiftProto
     8: .standard(proto: "admin_key"),
     9: .standard(proto: "decline_reward"),
     10: .standard(proto: "grpc_proxy_endpoint"),
+    11: .standard(proto: "associated_registered_node_list"),
+  ]
+
+  fileprivate class _StorageClass {
+    var _nodeID: UInt64 = 0
+    var _accountID: Proto_AccountID? = nil
+    var _description_p: SwiftProtobuf.Google_Protobuf_StringValue? = nil
+    var _gossipEndpoint: [Proto_ServiceEndpoint] = []
+    var _serviceEndpoint: [Proto_ServiceEndpoint] = []
+    var _gossipCaCertificate: SwiftProtobuf.Google_Protobuf_BytesValue? = nil
+    var _grpcCertificateHash: SwiftProtobuf.Google_Protobuf_BytesValue? = nil
+    var _adminKey: Proto_Key? = nil
+    var _declineReward: SwiftProtobuf.Google_Protobuf_BoolValue? = nil
+    var _grpcProxyEndpoint: Proto_ServiceEndpoint? = nil
+    var _associatedRegisteredNodeList: Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList? = nil
+
+    #if swift(>=5.10)
+      // This property is used as the initial default value for new instances of the type.
+      // The type itself is protecting the reference to its storage via CoW semantics.
+      // This will force a copy to be made of this reference when the first mutation occurs;
+      // hence, it is safe to mark this as `nonisolated(unsafe)`.
+      static nonisolated(unsafe) let defaultInstance = _StorageClass()
+    #else
+      static let defaultInstance = _StorageClass()
+    #endif
+
+    private init() {}
+
+    init(copying source: _StorageClass) {
+      _nodeID = source._nodeID
+      _accountID = source._accountID
+      _description_p = source._description_p
+      _gossipEndpoint = source._gossipEndpoint
+      _serviceEndpoint = source._serviceEndpoint
+      _gossipCaCertificate = source._gossipCaCertificate
+      _grpcCertificateHash = source._grpcCertificateHash
+      _adminKey = source._adminKey
+      _declineReward = source._declineReward
+      _grpcProxyEndpoint = source._grpcProxyEndpoint
+      _associatedRegisteredNodeList = source._associatedRegisteredNodeList
+    }
+  }
+
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
+    }
+    return _storage
+  }
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularUInt64Field(value: &_storage._nodeID) }()
+        case 2: try { try decoder.decodeSingularMessageField(value: &_storage._accountID) }()
+        case 3: try { try decoder.decodeSingularMessageField(value: &_storage._description_p) }()
+        case 4: try { try decoder.decodeRepeatedMessageField(value: &_storage._gossipEndpoint) }()
+        case 5: try { try decoder.decodeRepeatedMessageField(value: &_storage._serviceEndpoint) }()
+        case 6: try { try decoder.decodeSingularMessageField(value: &_storage._gossipCaCertificate) }()
+        case 7: try { try decoder.decodeSingularMessageField(value: &_storage._grpcCertificateHash) }()
+        case 8: try { try decoder.decodeSingularMessageField(value: &_storage._adminKey) }()
+        case 9: try { try decoder.decodeSingularMessageField(value: &_storage._declineReward) }()
+        case 10: try { try decoder.decodeSingularMessageField(value: &_storage._grpcProxyEndpoint) }()
+        case 11: try { try decoder.decodeSingularMessageField(value: &_storage._associatedRegisteredNodeList) }()
+        default: break
+        }
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      if _storage._nodeID != 0 {
+        try visitor.visitSingularUInt64Field(value: _storage._nodeID, fieldNumber: 1)
+      }
+      try { if let v = _storage._accountID {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+      } }()
+      try { if let v = _storage._description_p {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+      } }()
+      if !_storage._gossipEndpoint.isEmpty {
+        try visitor.visitRepeatedMessageField(value: _storage._gossipEndpoint, fieldNumber: 4)
+      }
+      if !_storage._serviceEndpoint.isEmpty {
+        try visitor.visitRepeatedMessageField(value: _storage._serviceEndpoint, fieldNumber: 5)
+      }
+      try { if let v = _storage._gossipCaCertificate {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+      } }()
+      try { if let v = _storage._grpcCertificateHash {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+      } }()
+      try { if let v = _storage._adminKey {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
+      } }()
+      try { if let v = _storage._declineReward {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
+      } }()
+      try { if let v = _storage._grpcProxyEndpoint {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
+      } }()
+      try { if let v = _storage._associatedRegisteredNodeList {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 11)
+      } }()
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody, rhs: Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody) -> Bool {
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._nodeID != rhs_storage._nodeID {return false}
+        if _storage._accountID != rhs_storage._accountID {return false}
+        if _storage._description_p != rhs_storage._description_p {return false}
+        if _storage._gossipEndpoint != rhs_storage._gossipEndpoint {return false}
+        if _storage._serviceEndpoint != rhs_storage._serviceEndpoint {return false}
+        if _storage._gossipCaCertificate != rhs_storage._gossipCaCertificate {return false}
+        if _storage._grpcCertificateHash != rhs_storage._grpcCertificateHash {return false}
+        if _storage._adminKey != rhs_storage._adminKey {return false}
+        if _storage._declineReward != rhs_storage._declineReward {return false}
+        if _storage._grpcProxyEndpoint != rhs_storage._grpcProxyEndpoint {return false}
+        if _storage._associatedRegisteredNodeList != rhs_storage._associatedRegisteredNodeList {return false}
+        return true
+      }
+      if !storagesAreEqual {return false}
+    }
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".AssociatedRegisteredNodeList"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "associated_registered_node"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -258,70 +452,21 @@ extension Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody: SwiftProto
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.nodeID) }()
-      case 2: try { try decoder.decodeSingularMessageField(value: &self._accountID) }()
-      case 3: try { try decoder.decodeSingularMessageField(value: &self._description_p) }()
-      case 4: try { try decoder.decodeRepeatedMessageField(value: &self.gossipEndpoint) }()
-      case 5: try { try decoder.decodeRepeatedMessageField(value: &self.serviceEndpoint) }()
-      case 6: try { try decoder.decodeSingularMessageField(value: &self._gossipCaCertificate) }()
-      case 7: try { try decoder.decodeSingularMessageField(value: &self._grpcCertificateHash) }()
-      case 8: try { try decoder.decodeSingularMessageField(value: &self._adminKey) }()
-      case 9: try { try decoder.decodeSingularMessageField(value: &self._declineReward) }()
-      case 10: try { try decoder.decodeSingularMessageField(value: &self._grpcProxyEndpoint) }()
+      case 1: try { try decoder.decodeRepeatedUInt64Field(value: &self.associatedRegisteredNode) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    if self.nodeID != 0 {
-      try visitor.visitSingularUInt64Field(value: self.nodeID, fieldNumber: 1)
+    if !self.associatedRegisteredNode.isEmpty {
+      try visitor.visitPackedUInt64Field(value: self.associatedRegisteredNode, fieldNumber: 1)
     }
-    try { if let v = self._accountID {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    } }()
-    try { if let v = self._description_p {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    } }()
-    if !self.gossipEndpoint.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.gossipEndpoint, fieldNumber: 4)
-    }
-    if !self.serviceEndpoint.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.serviceEndpoint, fieldNumber: 5)
-    }
-    try { if let v = self._gossipCaCertificate {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
-    } }()
-    try { if let v = self._grpcCertificateHash {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
-    } }()
-    try { if let v = self._adminKey {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
-    } }()
-    try { if let v = self._declineReward {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
-    } }()
-    try { if let v = self._grpcProxyEndpoint {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
-    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody, rhs: Com_Hedera_Hapi_Node_Addressbook_NodeUpdateTransactionBody) -> Bool {
-    if lhs.nodeID != rhs.nodeID {return false}
-    if lhs._accountID != rhs._accountID {return false}
-    if lhs._description_p != rhs._description_p {return false}
-    if lhs.gossipEndpoint != rhs.gossipEndpoint {return false}
-    if lhs.serviceEndpoint != rhs.serviceEndpoint {return false}
-    if lhs._gossipCaCertificate != rhs._gossipCaCertificate {return false}
-    if lhs._grpcCertificateHash != rhs._grpcCertificateHash {return false}
-    if lhs._adminKey != rhs._adminKey {return false}
-    if lhs._declineReward != rhs._declineReward {return false}
-    if lhs._grpcProxyEndpoint != rhs._grpcProxyEndpoint {return false}
+  public static func ==(lhs: Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList, rhs: Com_Hedera_Hapi_Node_Addressbook_AssociatedRegisteredNodeList) -> Bool {
+    if lhs.associatedRegisteredNode != rhs.associatedRegisteredNode {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
