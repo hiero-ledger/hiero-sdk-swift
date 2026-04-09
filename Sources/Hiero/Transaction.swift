@@ -317,7 +317,7 @@ public class Transaction: ValidateChecksums {
     @discardableResult
     public final func signWithOperator(_ client: Client) throws -> Self {
         guard let `operator` = client.operator else {
-            fatalError("todo: error here (Client had no operator)")
+            throw HError.noPayerAccountOrTransactionId
         }
 
         try freezeWith(client)
