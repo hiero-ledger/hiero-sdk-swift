@@ -120,6 +120,9 @@ public final class FeeEstimateQuery: ValidateChecksums {
 
     /// Send a fee estimate request for a transaction to the mirror node REST API.
     ///
+    /// Retries on HTTP 503 (service unavailable) and request timeout errors, up to the
+    /// client's configured `maxAttempts`. Does not retry on HTTP 400 (malformed transaction).
+    ///
     /// - Parameters:
     ///   - client: The client providing mirror node configuration.
     ///   - transaction: The protobuf-encoded transaction to estimate.
@@ -148,10 +151,62 @@ public final class FeeEstimateQuery: ValidateChecksums {
             request.timeoutInterval = timeout
         }
 
-        // Send the request (platform-specific implementation)
+        let maxAttempts = client.maxAttempts
+        var attempt = 0
+        var lastError: Error = HError.basicParse("Fee estimate request failed: No attempts made")
+
+        while attempt < maxAttempts {
+            attempt += 1
+            do {
+                let (data, response) = try await performHTTPRequest(request)
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw HError.basicParse("Fee estimate request failed: Invalid HTTP response")
+                }
+
+                // HTTP 400: malformed transaction — do not retry
+                if httpResponse.statusCode == 400 {
+                    let body = String(data: data, encoding: .utf8) ?? "Unknown error"
+                    throw HError.basicParse("Fee estimate request failed: HTTP 400 - \(body)")
+                }
+
+                // HTTP 503: service unavailable — retryable
+                if httpResponse.statusCode == 503 {
+                    let body = String(data: data, encoding: .utf8) ?? "Unknown error"
+                    lastError = HError.basicParse("Fee estimate request failed: HTTP 503 - \(body)")
+                    if attempt < maxAttempts {
+                        try await Task.sleep(nanoseconds: backoffNanoseconds(attempt: attempt, client: client))
+                    }
+                    continue
+                }
+
+                guard (200..<300).contains(httpResponse.statusCode) else {
+                    let body = String(data: data, encoding: .utf8) ?? "Unknown error"
+                    throw HError.basicParse("Fee estimate request failed: HTTP \(httpResponse.statusCode) - \(body)")
+                }
+
+                return try FeeEstimateResponse.fromJson(data, mode: mode)
+
+            } catch let urlError as URLError where urlError.code == .timedOut {
+                // Timeout: retryable
+                lastError = urlError
+                if attempt < maxAttempts {
+                    try await Task.sleep(nanoseconds: backoffNanoseconds(attempt: attempt, client: client))
+                }
+                continue
+            } catch {
+                throw error
+            }
+        }
+
+        throw lastError
+    }
+
+    /// Perform a single HTTP request, using the appropriate URLSession API for the platform.
+    private func performHTTPRequest(_ request: URLRequest) async throws -> (Data, URLResponse) {
         #if canImport(FoundationNetworking)
             // Linux: Use callback-based API wrapped in async continuation
-            let (data, response): (Data, URLResponse) = try await withCheckedThrowingContinuation { continuation in
+            return try await withCheckedThrowingContinuation { continuation in
                 URLSession.shared.dataTask(with: request) { data, response, error in
                     if let error = error {
                         continuation.resume(throwing: error)
@@ -166,21 +221,16 @@ public final class FeeEstimateQuery: ValidateChecksums {
             }
         #else
             // macOS/iOS: Use modern async/await API
-            let (data, response) = try await URLSession.shared.data(for: request)
+            return try await URLSession.shared.data(for: request)
         #endif
+    }
 
-        // Verify response status
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw HError.basicParse("Fee estimate request failed: Invalid HTTP response")
-        }
-
-        guard (200..<300).contains(httpResponse.statusCode) else {
-            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw HError.basicParse("Fee estimate request failed: HTTP \(httpResponse.statusCode) - \(errorMessage)")
-        }
-
-        // Parse JSON response
-        return try FeeEstimateResponse.fromJson(data, mode: mode)
+    /// Compute an exponential backoff delay for a given attempt number, capped to the client's `maxBackoff`.
+    private func backoffNanoseconds(attempt: Int, client: Client) -> UInt64 {
+        let initialBackoff = client.minBackoff
+        let maxBackoff = client.maxBackoff
+        let delay = min(initialBackoff * pow(2.0, Double(attempt - 1)), maxBackoff)
+        return UInt64(delay * 1_000_000_000)
     }
 
     /// Build the URL for the fee estimate endpoint.
@@ -194,7 +244,7 @@ public final class FeeEstimateQuery: ValidateChecksums {
         }
 
         let modeString = mode == .state ? "STATE" : "INTRINSIC"
-        let endpoint = "/network/fees?mode=\(modeString)"
+        let endpoint = "/api/v1/network/fees?mode=\(modeString)"
 
         // Check if this is a local development environment
         let isLocal = mirrorNetworkAddress.contains("localhost") || mirrorNetworkAddress.contains("127.0.0.1")
@@ -287,7 +337,7 @@ public final class FeeEstimateQuery: ValidateChecksums {
     ///
     /// - Parameter responses: The fee responses from each chunk.
     /// - Returns: A single aggregated fee response.
-    private func aggregateFeeResponses(_ responses: [FeeEstimateResponse]) -> FeeEstimateResponse {
+    internal func aggregateFeeResponses(_ responses: [FeeEstimateResponse]) -> FeeEstimateResponse {
         // Handle empty responses edge case
         if responses.isEmpty {
             return FeeEstimateResponse(
@@ -301,8 +351,8 @@ public final class FeeEstimateQuery: ValidateChecksums {
         }
 
         // Aggregate results across all chunks
-        // Network multiplier should be consistent, so use the first one
-        var networkMultiplier: UInt32 = responses[0].networkFee.multiplier
+        // Network multiplier should be consistent across chunks — capture it once from the first response.
+        let networkMultiplier: UInt32 = responses[0].networkFee.multiplier
         var networkSubtotal: UInt64 = 0
         var nodeBase: UInt64 = 0
         var serviceBase: UInt64 = 0
@@ -312,7 +362,6 @@ public final class FeeEstimateQuery: ValidateChecksums {
         var total: UInt64 = 0
 
         for response in responses {
-            networkMultiplier = response.networkFee.multiplier
             networkSubtotal += response.networkFee.subtotal
             nodeBase += response.nodeFee.base
             serviceBase += response.serviceFee.base

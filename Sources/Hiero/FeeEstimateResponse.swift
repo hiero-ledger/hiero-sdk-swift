@@ -76,9 +76,9 @@ public struct FeeEstimateResponse: Sendable, Equatable, Hashable {
     /// - Note: Missing or malformed fields default to zero/empty values rather than throwing.
     ///   This is intentional to handle optional fields in the API response gracefully.
     internal static func fromJson(_ json: [String: Any], mode: FeeEstimateMode) throws -> FeeEstimateResponse {
-        let networkFee = try NetworkFee.fromJson(json["network_fee"] as? [String: Any] ?? [:])
-        let nodeFee = try FeeEstimate.fromJson(json["node_fee"] as? [String: Any] ?? [:])
-        let serviceFee = try FeeEstimate.fromJson(json["service_fee"] as? [String: Any] ?? [:])
+        let networkFee = try NetworkFee.fromJson(json["network"] as? [String: Any] ?? [:])
+        let nodeFee = try FeeEstimate.fromJson(json["node"] as? [String: Any] ?? [:])
+        let serviceFee = try FeeEstimate.fromJson(json["service"] as? [String: Any] ?? [:])
         let notes = json["notes"] as? [String] ?? []
         let total = (json["total"] as? NSNumber)?.uint64Value ?? 0
 
