@@ -58,7 +58,8 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
     private func doHbarTransfer(
         _ accountId: AccountId,
         _ amount: Int64,
-        _ approved: Bool
+        _ approved: Bool,
+        hookCall: FungibleHookCall? = nil
     ) -> Self {
         for (index, transfer) in transfers.enumerated()
         where transfer.accountId == accountId && transfer.isApproval == approved {
@@ -67,14 +68,33 @@ public final class TransferTransaction: AbstractTokenTransferTransaction {
                 transfers.remove(at: index)
             } else {
                 transfers[index].amount = newTinybars
+                if let hookCall = hookCall {
+                    transfers[index].hookCall = hookCall
+                }
             }
 
             return self
         }
 
-        transfers.append(Transfer(accountId: accountId, amount: amount, isApproval: approved))
+        transfers.append(
+            Transfer(accountId: accountId, amount: amount, isApproval: approved, hookCall: hookCall))
 
         return self
+    }
+
+    /// Adds an HBAR transfer with an account allowance hook to this transaction.
+    ///
+    /// The hook referenced by `hookCall` must be an `ACCOUNT_ALLOWANCE_HOOK` installed on
+    /// the account identified by `accountId`. The hook will be invoked as part of the
+    /// `CryptoTransfer` execution to authorize the transfer.
+    ///
+    /// - Parameters:
+    ///   - accountId: The account to transfer HBAR from/to.
+    ///   - amount: The amount of HBAR to transfer.
+    ///   - hookCall: The fungible hook call specifying the hook ID, EVM call details, and hook type.
+    @discardableResult
+    public func addHbarTransferWithHook(_ accountId: AccountId, _ amount: Hbar, _ hookCall: FungibleHookCall) -> Self {
+        doHbarTransfer(accountId, amount.toTinybars(), false, hookCall: hookCall)
     }
 
     internal override func validateChecksums(on ledgerId: LedgerId) throws {

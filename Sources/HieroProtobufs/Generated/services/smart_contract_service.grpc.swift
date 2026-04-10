@@ -82,7 +82,7 @@ public protocol Proto_SmartContractServiceClientProtocol: GRPCClient {
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse>
 
-  func lambdaSStore(
+  func hookStore(
     _ request: Proto_Transaction,
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse>
@@ -404,21 +404,21 @@ extension Proto_SmartContractServiceClientProtocol {
   }
 
   ///*
-  /// Update zero or more slots of a lambda.
+  /// Update zero or more slots of an EVM hook's storage.
   ///
   /// - Parameters:
-  ///   - request: Request to send to lambdaSStore.
+  ///   - request: Request to send to hookStore.
   ///   - callOptions: Call options.
   /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func lambdaSStore(
+  public func hookStore(
     _ request: Proto_Transaction,
     callOptions: CallOptions? = nil
   ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse> {
     return self.makeUnaryCall(
-      path: Proto_SmartContractServiceClientMetadata.Methods.lambdaSStore.path,
+      path: Proto_SmartContractServiceClientMetadata.Methods.hookStore.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makelambdaSStoreInterceptors() ?? []
+      interceptors: self.interceptors?.makehookStoreInterceptors() ?? []
     )
   }
 }
@@ -550,7 +550,7 @@ public protocol Proto_SmartContractServiceAsyncClientProtocol: GRPCClient {
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse>
 
-  func makeLambdaSstoreCall(
+  func makeHookStoreCall(
     _ request: Proto_Transaction,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse>
@@ -710,25 +710,15 @@ extension Proto_SmartContractServiceAsyncClientProtocol {
     )
   }
 
-  public func makeLambdaSstoreCall(
+  public func makeHookStoreCall(
     _ request: Proto_Transaction,
     callOptions: CallOptions? = nil
   ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse> {
     return self.makeAsyncUnaryCall(
-      path: Proto_SmartContractServiceClientMetadata.Methods.lambdaSStore.path,
+      path: Proto_SmartContractServiceClientMetadata.Methods.hookStore.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makelambdaSStoreInterceptors() ?? []
-    )
-  }
-
-  public func makeLambdaSStoreCall(
-    _ request: Proto_Transaction,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse> {
-    return self.makeLambdaSstoreCall(
-      request,
-      callOptions: callOptions
+      interceptors: self.interceptors?.makehookStoreInterceptors() ?? []
     )
   }
 }
@@ -879,15 +869,15 @@ extension Proto_SmartContractServiceAsyncClientProtocol {
     )
   }
 
-  public func lambdaSStore(
+  public func hookStore(
     _ request: Proto_Transaction,
     callOptions: CallOptions? = nil
   ) async throws -> Proto_TransactionResponse {
     return try await self.performAsyncUnaryCall(
-      path: Proto_SmartContractServiceClientMetadata.Methods.lambdaSStore.path,
+      path: Proto_SmartContractServiceClientMetadata.Methods.hookStore.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makelambdaSStoreInterceptors() ?? []
+      interceptors: self.interceptors?.makehookStoreInterceptors() ?? []
     )
   }
 }
@@ -947,8 +937,8 @@ public protocol Proto_SmartContractServiceClientInterceptorFactoryProtocol: Send
   /// - Returns: Interceptors to use when invoking 'callEthereum'.
   func makecallEthereumInterceptors() -> [ClientInterceptor<Proto_Transaction, Proto_TransactionResponse>]
 
-  /// - Returns: Interceptors to use when invoking 'lambdaSStore'.
-  func makelambdaSStoreInterceptors() -> [ClientInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+  /// - Returns: Interceptors to use when invoking 'hookStore'.
+  func makehookStoreInterceptors() -> [ClientInterceptor<Proto_Transaction, Proto_TransactionResponse>]
 }
 
 public enum Proto_SmartContractServiceClientMetadata {
@@ -968,7 +958,7 @@ public enum Proto_SmartContractServiceClientMetadata {
       Proto_SmartContractServiceClientMetadata.Methods.systemDelete,
       Proto_SmartContractServiceClientMetadata.Methods.systemUndelete,
       Proto_SmartContractServiceClientMetadata.Methods.callEthereum,
-      Proto_SmartContractServiceClientMetadata.Methods.lambdaSStore,
+      Proto_SmartContractServiceClientMetadata.Methods.hookStore,
     ]
   )
 
@@ -1045,9 +1035,9 @@ public enum Proto_SmartContractServiceClientMetadata {
       type: GRPCCallType.unary
     )
 
-    public static let lambdaSStore = GRPCMethodDescriptor(
-      name: "lambdaSStore",
-      path: "/proto.SmartContractService/lambdaSStore",
+    public static let hookStore = GRPCMethodDescriptor(
+      name: "hookStore",
+      path: "/proto.SmartContractService/hookStore",
       type: GRPCCallType.unary
     )
   }
@@ -1194,8 +1184,8 @@ public protocol Proto_SmartContractServiceProvider: CallHandlerProvider {
   func callEthereum(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
 
   ///*
-  /// Update zero or more slots of a lambda.
-  func lambdaSStore(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+  /// Update zero or more slots of an EVM hook's storage.
+  func hookStore(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
 }
 
 extension Proto_SmartContractServiceProvider {
@@ -1318,13 +1308,13 @@ extension Proto_SmartContractServiceProvider {
         userFunction: self.callEthereum(request:context:)
       )
 
-    case "lambdaSStore":
+    case "hookStore":
       return UnaryServerHandler(
         context: context,
         requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
         responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
-        interceptors: self.interceptors?.makelambdaSStoreInterceptors() ?? [],
-        userFunction: self.lambdaSStore(request:context:)
+        interceptors: self.interceptors?.makehookStoreInterceptors() ?? [],
+        userFunction: self.hookStore(request:context:)
       )
 
     default:
@@ -1512,8 +1502,8 @@ public protocol Proto_SmartContractServiceAsyncProvider: CallHandlerProvider, Se
   ) async throws -> Proto_TransactionResponse
 
   ///*
-  /// Update zero or more slots of a lambda.
-  func lambdaSStore(
+  /// Update zero or more slots of an EVM hook's storage.
+  func hookStore(
     request: Proto_Transaction,
     context: GRPCAsyncServerCallContext
   ) async throws -> Proto_TransactionResponse
@@ -1646,13 +1636,13 @@ extension Proto_SmartContractServiceAsyncProvider {
         wrapping: { try await self.callEthereum(request: $0, context: $1) }
       )
 
-    case "lambdaSStore":
+    case "hookStore":
       return GRPCAsyncServerHandler(
         context: context,
         requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
         responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
-        interceptors: self.interceptors?.makelambdaSStoreInterceptors() ?? [],
-        wrapping: { try await self.lambdaSStore(request: $0, context: $1) }
+        interceptors: self.interceptors?.makehookStoreInterceptors() ?? [],
+        wrapping: { try await self.hookStore(request: $0, context: $1) }
       )
 
     default:
@@ -1711,9 +1701,9 @@ public protocol Proto_SmartContractServiceServerInterceptorFactoryProtocol: Send
   ///   Defaults to calling `self.makeInterceptors()`.
   func makecallEthereumInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
 
-  /// - Returns: Interceptors to use when handling 'lambdaSStore'.
+  /// - Returns: Interceptors to use when handling 'hookStore'.
   ///   Defaults to calling `self.makeInterceptors()`.
-  func makelambdaSStoreInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+  func makehookStoreInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
 }
 
 public enum Proto_SmartContractServiceServerMetadata {
@@ -1733,7 +1723,7 @@ public enum Proto_SmartContractServiceServerMetadata {
       Proto_SmartContractServiceServerMetadata.Methods.systemDelete,
       Proto_SmartContractServiceServerMetadata.Methods.systemUndelete,
       Proto_SmartContractServiceServerMetadata.Methods.callEthereum,
-      Proto_SmartContractServiceServerMetadata.Methods.lambdaSStore,
+      Proto_SmartContractServiceServerMetadata.Methods.hookStore,
     ]
   )
 
@@ -1810,9 +1800,9 @@ public enum Proto_SmartContractServiceServerMetadata {
       type: GRPCCallType.unary
     )
 
-    public static let lambdaSStore = GRPCMethodDescriptor(
-      name: "lambdaSStore",
-      path: "/proto.SmartContractService/lambdaSStore",
+    public static let hookStore = GRPCMethodDescriptor(
+      name: "hookStore",
+      path: "/proto.SmartContractService/hookStore",
       type: GRPCCallType.unary
     )
   }

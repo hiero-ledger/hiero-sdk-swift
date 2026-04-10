@@ -1086,7 +1086,7 @@ public enum Status: Equatable {
     /// A HAPI client cannot set the SignedTransaction#use_serialized_tx_message_hash_algorithm field.
     case invalidSerializedTxMessageHashAlgorithm  // = 401
 
-    /// A LambdaSStore referenced a valid entity number but with the wrong entity type.
+    /// A HookStore referenced a valid entity number but with the wrong entity type.
     case wrongHookEntityType  // = 499
 
     /// An EVM hook execution was throttled due to high network gas utilization.
@@ -1104,17 +1104,17 @@ public enum Status: Equatable {
     /// A hook id was not found.
     case hookNotFound  // = 504
 
-    /// A lambda mapping slot, storage key, or storage value exceeded 32 bytes.
-    case lambdaStorageUpdateBytesTooLong  // = 505
+    /// An EVM hook mapping slot, storage key, or storage value exceeded 32 bytes.
+    case evmHookStorageUpdateBytesTooLong  // = 505
 
-    /// A lambda mapping slot, storage key, or storage value failed to use the minimal representation (i.e., no leading zeros).
-    case lambdaStorageUpdateBytesMustUseMinimalRepresentation  // = 506
+    /// An EVM hook's mapping slot, storage key, or storage value failed to use the minimal representation (i.e., no leading zeros).
+    case evmHookStorageUpdateBytesMustUseMinimalRepresentation  // = 506
 
     /// A hook id was invalid.
     case invalidHookID  // = 507
 
-    /// A lambda storage update had no contents.
-    case emptyLambdaStorageUpdate  // = 508
+    /// An EVM hook storage update had no contents.
+    case emptyEvmHookStorageUpdate  // = 508
 
     /// A user repeated the same hook id in a creation details list.
     case hookIDRepeatedInCreationDetails  // = 509
@@ -1122,19 +1122,19 @@ public enum Status: Equatable {
     /// Hooks are not not enabled on the target Hiero network.
     case hooksNotEnabled  // = 510
 
-    /// The target hook is not a lambda.
-    case hookIsNotALambda  // = 511
+    /// The target hook is not an EVM hook.
+    case hookIsNotAnEvmHook  // = 511
 
     /// A hook was deleted.
     case hookDeleted  // = 512
 
-    /// The LambdaSStore tried to update too many storage slots in a single transaction.
-    case tooManyLambdaStorageUpdates  // = 513
+    /// The HookStore tried to update too many storage slots in a single transaction.
+    case tooManyEvmHookStorageUpdates  // = 513
 
-    /// A lambda mapping slot, storage key, or storage value failed to use the minimal representation (i.e., no leading zeros).
+    /// An EVM hook mapping slot, storage key, or storage value failed to use the minimal representation (i.e., no leading zeros).
     case hookCreationBytesMustUseMinimalRepresentation  // = 514
 
-    /// A lambda mapping slot, storage key, or storage value exceeded 32 bytes.
+    /// A EVM hook mapping slot, storage key, or storage value exceeded 32 bytes.
     case hookCreationBytesTooLong  // = 515
 
     /// A hook creation spec was not found.
@@ -1169,6 +1169,12 @@ public enum Status: Equatable {
 
     /// This operation cannot be completed because the target account has a zero balance.<br/> Node accounts require a positive balance. The transaction may be resubmitted once the account has been funded.
     case nodeAccountHasZeroBalance  // = 526
+
+    /// This operation cannot be completed because the target account is a "Fee Collection Account".<br/> Any attempt to transfer to a fee collection account is not permitted.
+    case transferToFeeCollectionAccountNotAllowed  // = 527
+
+    /// The number of hook invocations exceeds the maximum allowed per transaction.
+    case tooManyHookInvocations  // = 528
 
     /// swift-format-ignore: AlwaysUseLowerCamelCase
     case unrecognized(Int32)
@@ -1543,15 +1549,15 @@ public enum Status: Equatable {
         case 502: self = .badHookRequest
         case 503: self = .rejectedByAccountAllowanceHook
         case 504: self = .hookNotFound
-        case 505: self = .lambdaStorageUpdateBytesTooLong
-        case 506: self = .lambdaStorageUpdateBytesMustUseMinimalRepresentation
+        case 505: self = .evmHookStorageUpdateBytesTooLong
+        case 506: self = .evmHookStorageUpdateBytesMustUseMinimalRepresentation
         case 507: self = .invalidHookID
-        case 508: self = .emptyLambdaStorageUpdate
+        case 508: self = .emptyEvmHookStorageUpdate
         case 509: self = .hookIDRepeatedInCreationDetails
         case 510: self = .hooksNotEnabled
-        case 511: self = .hookIsNotALambda
+        case 511: self = .hookIsNotAnEvmHook
         case 512: self = .hookDeleted
-        case 513: self = .tooManyLambdaStorageUpdates
+        case 513: self = .tooManyEvmHookStorageUpdates
         case 514: self = .hookCreationBytesMustUseMinimalRepresentation
         case 515: self = .hookCreationBytesTooLong
         case 516: self = .invalidHookCreationSpec
@@ -1565,6 +1571,8 @@ public enum Status: Equatable {
         case 524: self = .accountIsLinkedToANode
         case 525: self = .hooksExecutionsRequireTopLevelCryptoTransfer
         case 526: self = .nodeAccountHasZeroBalance
+        case 527: self = .transferToFeeCollectionAccountNotAllowed
+        case 528: self = .tooManyHookInvocations
         default: self = .unrecognized(rawValue)
         }
     }
@@ -1937,15 +1945,15 @@ public enum Status: Equatable {
         case .badHookRequest: return 502
         case .rejectedByAccountAllowanceHook: return 503
         case .hookNotFound: return 504
-        case .lambdaStorageUpdateBytesTooLong: return 505
-        case .lambdaStorageUpdateBytesMustUseMinimalRepresentation: return 506
+        case .evmHookStorageUpdateBytesTooLong: return 505
+        case .evmHookStorageUpdateBytesMustUseMinimalRepresentation: return 506
         case .invalidHookID: return 507
-        case .emptyLambdaStorageUpdate: return 508
+        case .emptyEvmHookStorageUpdate: return 508
         case .hookIDRepeatedInCreationDetails: return 509
         case .hooksNotEnabled: return 510
-        case .hookIsNotALambda: return 511
+        case .hookIsNotAnEvmHook: return 511
         case .hookDeleted: return 512
-        case .tooManyLambdaStorageUpdates: return 513
+        case .tooManyEvmHookStorageUpdates: return 513
         case .hookCreationBytesMustUseMinimalRepresentation: return 514
         case .hookCreationBytesTooLong: return 515
         case .invalidHookCreationSpec: return 516
@@ -1959,6 +1967,8 @@ public enum Status: Equatable {
         case .accountIsLinkedToANode: return 524
         case .hooksExecutionsRequireTopLevelCryptoTransfer: return 525
         case .nodeAccountHasZeroBalance: return 526
+        case .transferToFeeCollectionAccountNotAllowed: return 527
+        case .tooManyHookInvocations: return 528
         case .unrecognized(let i): return i
         }
     }
@@ -2334,15 +2344,15 @@ extension Status: CaseIterable {
         .badHookRequest,
         .rejectedByAccountAllowanceHook,
         .hookNotFound,
-        .lambdaStorageUpdateBytesTooLong,
-        .lambdaStorageUpdateBytesMustUseMinimalRepresentation,
+        .evmHookStorageUpdateBytesTooLong,
+        .evmHookStorageUpdateBytesMustUseMinimalRepresentation,
         .invalidHookID,
-        .emptyLambdaStorageUpdate,
+        .emptyEvmHookStorageUpdate,
         .hookIDRepeatedInCreationDetails,
         .hooksNotEnabled,
-        .hookIsNotALambda,
+        .hookIsNotAnEvmHook,
         .hookDeleted,
-        .tooManyLambdaStorageUpdates,
+        .tooManyEvmHookStorageUpdates,
         .hookCreationBytesMustUseMinimalRepresentation,
         .hookCreationBytesTooLong,
         .invalidHookCreationSpec,
@@ -2356,6 +2366,8 @@ extension Status: CaseIterable {
         .accountIsLinkedToANode,
         .hooksExecutionsRequireTopLevelCryptoTransfer,
         .nodeAccountHasZeroBalance,
+        .transferToFeeCollectionAccountNotAllowed,
+        .tooManyHookInvocations,
     ]
 }
 
@@ -2729,15 +2741,15 @@ extension Status {
             502: "BAD_HOOK_REQUEST",
             503: "REJECTED_BY_ACCOUNT_ALLOWANCE_HOOK",
             504: "HOOK_NOT_FOUND",
-            505: "LAMBDA_STORAGE_UPDATE_BYTES_TOO_LONG",
-            506: "LAMBDA_STORAGE_UPDATE_BYTES_MUST_USE_MINIMAL_REPRESENTATION",
+            505: "EVM_HOOK_STORAGE_UPDATE_BYTES_TOO_LONG",
+            506: "EVM_HOOK_STORAGE_UPDATE_BYTES_MUST_USE_MINIMAL_REPRESENTATION",
             507: "INVALID_HOOK_ID",
-            508: "EMPTY_LAMBDA_STORAGE_UPDATE",
+            508: "EMPTY_EVM_HOOK_STORAGE_UPDATE",
             509: "HOOK_ID_REPEATED_IN_CREATION_DETAILS",
             510: "HOOKS_NOT_ENABLED",
-            511: "HOOK_IS_NOT_A_LAMBDA",
+            511: "HOOK_IS_NOT_AN_EVM_HOOK",
             512: "HOOK_DELETED",
-            513: "TOO_MANY_LAMBDA_STORAGE_UPDATES",
+            513: "TOO_MANY_EVM_HOOK_STORAGE_UPDATES",
             514: "HOOK_CREATION_BYTES_MUST_USE_MINIMAL_REPRESENTATION",
             515: "HOOK_CREATION_BYTES_TOO_LONG",
             516: "INVALID_HOOK_CREATION_SPEC",
@@ -2751,6 +2763,8 @@ extension Status {
             524: "ACCOUNT_IS_LINKED_TO_A_NODE",
             525: "HOOKS_EXECUTIONS_REQUIRE_TOP_LEVEL_CRYPTO_TRANSFER",
             526: "NODE_ACCOUNT_HAS_ZERO_BALANCE",
+            527: "TRANSFER_TO_FEE_COLLECTION_ACCOUNT_NOT_ALLOWED",
+            528: "TOO_MANY_HOOK_INVOCATIONS",
         ]
 }
 

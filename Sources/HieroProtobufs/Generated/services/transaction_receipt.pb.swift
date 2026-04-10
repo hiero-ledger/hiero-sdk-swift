@@ -269,6 +269,18 @@ public struct Proto_TransactionReceipt: @unchecked Sendable {
     set {_uniqueStorage()._nodeID = newValue}
   }
 
+  ///*
+  /// The identifier of a newly created RegisteredNode.
+  /// <p>
+  /// This value SHALL be set following a `createRegisteredNode`
+  /// transaction.<br/>
+  /// This value SHALL NOT be set following any other transaction.<br/>
+  /// This value SHALL be unique within a given network.
+  public var registeredNodeID: UInt64 {
+    get {return _storage._registeredNodeID}
+    set {_uniqueStorage()._registeredNodeID = newValue}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -298,6 +310,7 @@ extension Proto_TransactionReceipt: SwiftProtobuf.Message, SwiftProtobuf._Messag
     13: .same(proto: "scheduledTransactionID"),
     14: .same(proto: "serialNumbers"),
     15: .standard(proto: "node_id"),
+    16: .standard(proto: "registered_node_id"),
   ]
 
   fileprivate class _StorageClass {
@@ -316,6 +329,7 @@ extension Proto_TransactionReceipt: SwiftProtobuf.Message, SwiftProtobuf._Messag
     var _scheduledTransactionID: Proto_TransactionID? = nil
     var _serialNumbers: [Int64] = []
     var _nodeID: UInt64 = 0
+    var _registeredNodeID: UInt64 = 0
 
     #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
@@ -345,6 +359,7 @@ extension Proto_TransactionReceipt: SwiftProtobuf.Message, SwiftProtobuf._Messag
       _scheduledTransactionID = source._scheduledTransactionID
       _serialNumbers = source._serialNumbers
       _nodeID = source._nodeID
+      _registeredNodeID = source._registeredNodeID
     }
   }
 
@@ -378,6 +393,7 @@ extension Proto_TransactionReceipt: SwiftProtobuf.Message, SwiftProtobuf._Messag
         case 13: try { try decoder.decodeSingularMessageField(value: &_storage._scheduledTransactionID) }()
         case 14: try { try decoder.decodeRepeatedInt64Field(value: &_storage._serialNumbers) }()
         case 15: try { try decoder.decodeSingularUInt64Field(value: &_storage._nodeID) }()
+        case 16: try { try decoder.decodeSingularUInt64Field(value: &_storage._registeredNodeID) }()
         default: break
         }
       }
@@ -435,6 +451,9 @@ extension Proto_TransactionReceipt: SwiftProtobuf.Message, SwiftProtobuf._Messag
       if _storage._nodeID != 0 {
         try visitor.visitSingularUInt64Field(value: _storage._nodeID, fieldNumber: 15)
       }
+      if _storage._registeredNodeID != 0 {
+        try visitor.visitSingularUInt64Field(value: _storage._registeredNodeID, fieldNumber: 16)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -459,6 +478,7 @@ extension Proto_TransactionReceipt: SwiftProtobuf.Message, SwiftProtobuf._Messag
         if _storage._scheduledTransactionID != rhs_storage._scheduledTransactionID {return false}
         if _storage._serialNumbers != rhs_storage._serialNumbers {return false}
         if _storage._nodeID != rhs_storage._nodeID {return false}
+        if _storage._registeredNodeID != rhs_storage._registeredNodeID {return false}
         return true
       }
       if !storagesAreEqual {return false}

@@ -72,7 +72,10 @@ public final class ContractDeleteTransaction: Transaction {
         get { obtainer?.accountId }
         set(value) {
             ensureNotFrozen()
-            obtainer = value.map(Obtainer.accountId)
+            // Only update obtainer when value is non-nil to avoid clearing transferContractId
+            if let value = value {
+                obtainer = .accountId(value)
+            }
         }
     }
 
@@ -89,7 +92,10 @@ public final class ContractDeleteTransaction: Transaction {
         get { obtainer?.contractId }
         set(value) {
             ensureNotFrozen()
-            obtainer = value.map(Obtainer.contractId)
+            // Only update obtainer when value is non-nil to avoid clearing transferAccountId
+            if let value = value {
+                obtainer = .contractId(value)
+            }
         }
     }
 
@@ -98,6 +104,23 @@ public final class ContractDeleteTransaction: Transaction {
     public func transferContractId(_ transferContractId: ContractId) -> Self {
         self.transferContractId = transferContractId
 
+        return self
+    }
+
+    /// If set to true, means this is a "synthetic" system transaction being used to
+    /// signal the network to permanently remove this contract from state.
+    ///
+    /// **IMPORTANT:** This field is reserved for internal system use only.
+    /// Setting this to `true` in a user-initiated transaction will result in
+    /// `PERMANENT_REMOVAL_REQUIRES_SYSTEM_INITIATION` error.
+    public var permanentRemoval: Bool = false {
+        willSet { ensureNotFrozen() }
+    }
+
+    /// Sets the permanent removal flag.
+    @discardableResult
+    public func permanentRemoval(_ permanentRemoval: Bool) -> Self {
+        self.permanentRemoval = permanentRemoval
         return self
     }
 
@@ -140,6 +163,7 @@ extension ContractDeleteTransaction: ToProtobuf {
             }
 
             contractId?.toProtobufInto(&proto.contractID)
+            proto.permanentRemoval = permanentRemoval
         }
     }
 }

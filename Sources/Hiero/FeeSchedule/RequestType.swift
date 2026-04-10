@@ -6,7 +6,7 @@ import HieroProtobufs
 // swiftlint:disable file_length
 
 /// The functionality provided by Hiero.
-public enum RequestType {
+public enum RequestType: CaseIterable {
     /// Transfer from one account to another.
     case cryptoTransfer
 
@@ -278,8 +278,8 @@ public enum RequestType {
     /// Atomic batch transaction
     case atomicBatch
 
-    /// Lambda SStore transaction
-    case lambdaSstore
+    /// Hook store transaction
+    case hookStore
 
     /// Hook dispatch transaction
     case hookDispatch
@@ -378,8 +378,13 @@ public enum RequestType {
         case .historyProofVote: self = .historyProofVote
         case .crsPublication: self = .crsPublication
         case .atomicBatch: self = .atomicBatch
-        case .lambdaSstore: self = .lambdaSstore
+        case .hookStore: self = .hookStore
+        case .lambdaSstore: self = .hookStore
         case .hookDispatch: self = .hookDispatch
+        case .registeredNodeCreate: return nil
+        case .registeredNodeUpdate: return nil
+        case .registeredNodeDelete: return nil
+        case .ledgerIDPublication: return nil
         case .UNRECOGNIZED(let code):
             throw HError.fromProtobuf("unrecognized RequestType: `\(code)`")
         }
@@ -477,7 +482,7 @@ public enum RequestType {
         case .historyProofVote: return .historyProofVote
         case .crsPublication: return .crsPublication
         case .atomicBatch: return .atomicBatch
-        case .lambdaSstore: return .lambdaSstore
+        case .hookStore: return .hookStore
         case .hookDispatch: return .hookDispatch
         }
     }

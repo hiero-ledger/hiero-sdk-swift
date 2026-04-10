@@ -144,7 +144,9 @@ extension TokenInfo: TryProtobufCodable {
         }
 
         let autoRenewAccount = proto.hasAutoRenewAccount ? proto.autoRenewAccount : nil
-        let autoRenewPeriod = proto.hasAutoRenewPeriod ? proto.autoRenewPeriod : nil
+        let autoRenewPeriod: Proto_Duration? =
+            proto.hasAutoRenewPeriod || proto.autoRenewPeriod.seconds != 0
+            ? proto.autoRenewPeriod : nil
         let expirationTime = proto.hasExpiry ? proto.expiry : nil
         let pauseKey = proto.hasPauseKey ? proto.pauseKey : nil
 

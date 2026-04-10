@@ -153,7 +153,7 @@ extension ContractExecuteTransaction: ToProtobuf {
     internal func toProtobuf() -> Protobuf {
         .with { proto in
             contractId?.toProtobufInto(&proto.contractID)
-            proto.gas = Int64(gas)
+            proto.gas = Int64(bitPattern: gas)
             proto.amount = payableAmount.toTinybars()
             proto.functionParameters = functionParameters ?? Data()
         }

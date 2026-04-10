@@ -64,10 +64,10 @@ internal struct CommonTransactionParams {
         tx.transactionValidDuration = self.validTransactionDuration.flatMap {
             Duration(seconds: UInt64(bitPattern: $0))
         }
-        self.memo.assign(to: &tx.transactionMemo)
+        self.memo.assignIfPresent(to: &tx.transactionMemo)
         tx.regenerateTransactionId = self.regenerateTransactionId
 
-        try self.signers.map {
+        try self.signers.ifPresent {
             try SDKClient.client.freezeTransaction(&tx)
             try $0.forEach { tx.sign(try PrivateKey.fromStringDer($0)) }
         }

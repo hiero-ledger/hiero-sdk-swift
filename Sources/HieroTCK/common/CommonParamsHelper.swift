@@ -47,6 +47,16 @@ internal enum CommonParamsParser {
         try param.flatMap { try TokenId.fromString($0) }
     }
 
+    /// Parses an optional JSON-RPC string into a `ContractId`.
+    ///
+    /// - Parameters:
+    ///   - param: A string representing a contract ID, or `nil`.
+    /// - Returns: A `ContractId` if the string is present and valid; otherwise `nil`.
+    /// - Throws: If the contract ID format is invalid.
+    static internal func getContractIdIfPresent(from param: String?) throws -> ContractId? {
+        try param.flatMap { try ContractId.fromString($0) }
+    }
+
     /// Parses an optional JSON-RPC list strings into `TokenIds`.
     ///
     /// - Parameters:
@@ -90,6 +100,48 @@ internal enum CommonParamsParser {
         using parser: (String, String, JSONRPCMethod) throws -> T
     ) rethrows -> T {
         try parser("amount", param, method)
+    }
+
+    /// Parses an optional JSON-RPC string into an `Hbar` initial balance.
+    ///
+    /// - Parameters:
+    ///   - param: A string representing the initial balance in tinybars, or `nil`.
+    ///   - method: The JSON-RPC method name, used for error context.
+    /// - Returns: An `Hbar` value if the string is present and valid; otherwise `nil`.
+    /// - Throws: `JSONError.invalidParams` if the string is non-nil but not a valid integer.
+    static internal func getInitialBalanceIfPresent(from param: String?, for method: JSONRPCMethod) throws -> Hbar? {
+        try param.flatMap { value in
+            Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "initialBalance", from: value, for: method))
+        }
+    }
+
+    /// Parses an optional JSON-RPC string into an `Hbar` query payment and applies it to a query.
+    ///
+    /// - Parameters:
+    ///   - param: A string representing the query payment in tinybars, or `nil`.
+    ///   - query: The query to apply the payment amount to.
+    ///   - method: The JSON-RPC method name, used for error context.
+    /// - Throws: `JSONError.invalidParams` if the string is non-nil but not a valid integer.
+    static internal func assignQueryPaymentIfPresent<Q: Query<R>, R>(
+        from param: String?, to query: Q, for method: JSONRPCMethod
+    ) throws {
+        try param.ifPresent { value in
+            query.paymentAmount(
+                Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "queryPayment", from: value, for: method)))
+        }
+    }
+
+    /// Parses an optional JSON-RPC string into an `Hbar` max query payment.
+    ///
+    /// - Parameters:
+    ///   - param: A string representing the max query payment in tinybars, or `nil`.
+    ///   - method: The JSON-RPC method name, used for error context.
+    /// - Returns: An `Hbar` value if the string is present and valid; otherwise `nil`.
+    /// - Throws: `JSONError.invalidParams` if the string is non-nil but not a valid integer.
+    static internal func getMaxQueryPaymentIfPresent(from param: String?, for method: JSONRPCMethod) throws -> Hbar? {
+        try param.flatMap { value in
+            Hbar.fromTinybars(try JSONRPCParam.parseInt64(name: "maxQueryPayment", from: value, for: method))
+        }
     }
 
     /// Parses a required JSON-RPC string into an `Int64` numerator.
@@ -196,6 +248,19 @@ internal enum CommonParamsParser {
     static internal func getStakedNodeIdIfPresent(from param: String?, for method: JSONRPCMethod) throws -> UInt64? {
         try param.flatMap {
             try JSONRPCParam.parseUInt64ReinterpretingSigned(name: "stakedNodeId", from: $0, for: method)
+        }
+    }
+
+    /// Parses an optional JSON-RPC string into a `UInt64` gas value.
+    ///
+    /// - Parameters:
+    ///   - param: A string representing the gas amount, or `nil`.
+    ///   - method: The JSON-RPC method name, used for error context.
+    /// - Returns: A `UInt64` if the string is present and valid; otherwise `nil`.
+    /// - Throws: `JSONError.invalidParams` if the input is malformed.
+    static internal func getGasIfPresent(from param: String?, for method: JSONRPCMethod) throws -> UInt64? {
+        try param.flatMap { value in
+            try JSONRPCParam.parseUInt64ReinterpretingSigned(name: "gas", from: value, for: method)
         }
     }
 
@@ -341,7 +406,7 @@ internal enum CommonParamsParser {
     ///   - feeCollectorsExempt: A flag indicating whether all collectors are exempt from paying the fee.
     ///   - method: The JSON-RPC method name, used for contextual error messages if parsing fails.
     /// - Returns: A fully-constructed `Hiero.FixedFee` ready for transaction execution.
-    /// - Throws: `JSONError.invalidParams` if the `amount` or `denominatingTokenID` fields are invalid or malformed.
+    /// - Throws: `JSONError.invalidParams` if the `amount` or `denominatingTokenId` fields are invalid or malformed.
     static private func getHieroFixedFee(
         _ fee: FixedFee,
         feeCollectorAccountId: AccountId,
@@ -353,9 +418,61 @@ internal enum CommonParamsParser {
                 from: fee.amount,
                 for: method,
                 using: JSONRPCParam.parseUInt64ReinterpretingSigned(name:from:for:)),
-            denominatingTokenId: try getTokenIdIfPresent(from: fee.denominatingTokenID),
+            denominatingTokenId: try getTokenIdIfPresent(from: fee.denominatingTokenId),
             feeCollectorAccountId: feeCollectorAccountId,
             allCollectorsAreExempt: feeCollectorsExempt)
+    }
+
+    // MARK: - Topic
+
+    /// Parses an optional JSON-RPC string into a `TopicId`.
+    ///
+    /// - Parameters:
+    ///   - param: A string representing a topic ID, or `nil`.
+    /// - Returns: A `TopicId` if the string is present and valid; otherwise `nil`.
+    /// - Throws: If the topic ID format is invalid.
+    static internal func getTopicIdIfPresent(from param: String?) throws -> TopicId? {
+        try param.flatMap { try TopicId.fromString($0) }
+    }
+
+    /// Converts a list of JSON-RPC `CustomFee` types into a list of Hiero `CustomFixedFee` types for topics.
+    ///
+    /// Topics only support fixed fees, so this function extracts only the fixed fee portion
+    /// of each custom fee entry. If a fee entry does not contain a fixed fee, it will throw an error.
+    ///
+    /// - Parameters:
+    ///   - param: The optional list of `CustomFee` entries from the JSON-RPC request.
+    ///   - method: The JSON-RPC method name, used for contextual error messages during parsing.
+    /// - Returns: An array of `CustomFixedFee` values suitable for topic APIs, or `nil`.
+    /// - Throws: `JSONError.invalidParams` if a fee does not contain a fixed fee or if any field cannot be parsed.
+    static internal func getHieroCustomFixedFeesIfPresent(from param: [CustomFee]?, for method: JSONRPCMethod) throws
+        -> [Hiero.CustomFixedFee]?
+    {
+        guard let customFees = param else { return nil }
+
+        var fixedFees = [Hiero.CustomFixedFee]()
+
+        for customFee in customFees {
+            let feeCollectorAccountId = try AccountId.fromString(customFee.feeCollectorAccountId)
+            let feeCollectorsExempt = customFee.feeCollectorsExempt
+
+            guard let fixed = customFee.fixedFee else {
+                throw JSONError.invalidParams(
+                    "\(method): topics only support fixed fees.")
+            }
+
+            fixedFees.append(
+                Hiero.CustomFixedFee(
+                    try getHieroFixedFee(
+                        fixed,
+                        feeCollectorAccountId: feeCollectorAccountId,
+                        feeCollectorsExempt: feeCollectorsExempt,
+                        for: method),
+                    feeCollectorAccountId,
+                    feeCollectorsExempt))
+        }
+
+        return fixedFees
     }
 
     // MARK: - Airdrop
@@ -415,5 +532,59 @@ internal enum CommonParamsParser {
     /// - Throws: `JSONError.invalidParams` if `param` is present but not valid UTF-8.
     static internal func getContentsIfPresent(from param: String?, for method: JSONRPCMethod) throws -> Data? {
         try JSONRPCParam.parseUtf8DataIfPresent(name: "contents", from: param, for: method)
+    }
+
+    // MARK: - Hex Data
+
+    /// Parses an optional JSON-RPC hex string into `Data`.
+    ///
+    /// - Parameters:
+    ///   - param: A hex-encoded string (with or without `0x` prefix), or `nil`.
+    ///   - paramName: The name of the parameter for error messages.
+    /// - Returns: The decoded `Data`, or `nil` if the input is `nil`.
+    /// - Throws: `JSONError.internalError` if the hex string is invalid.
+    static internal func parseHexToDataIfPresent(from param: String?, paramName: String) throws -> Data? {
+        try param.flatMap { value in
+            let hexString = value.hasPrefix("0x") ? String(value.dropFirst(2)) : value
+            guard let data = hexStringToData(hexString) else {
+                throw JSONError.internalError("\(paramName): invalid hex string")
+            }
+            return data
+        }
+    }
+
+    /// Parses an optional JSON-RPC hex string into `Data` for function parameters.
+    ///
+    /// - Parameters:
+    ///   - param: A hex-encoded string (with or without `0x` prefix), or `nil`.
+    /// - Returns: The decoded `Data`, or `nil` if the input is `nil`.
+    /// - Throws: `JSONError.internalError` if the hex string is invalid.
+    static internal func getFunctionParametersIfPresent(from param: String?) throws -> Data? {
+        try parseHexToDataIfPresent(from: param, paramName: "functionParameters")
+    }
+
+    /// Converts a hex string to Data.
+    private static func hexStringToData(_ hex: String) -> Data? {
+        let chars = Array(hex.utf8)
+        guard chars.count % 2 == 0 else { return nil }
+
+        var data = Data(capacity: chars.count / 2)
+        for i in stride(from: 0, to: chars.count, by: 2) {
+            guard let high = hexValue(chars[i]), let low = hexValue(chars[i + 1]) else {
+                return nil
+            }
+            data.append(high << 4 | low)
+        }
+        return data
+    }
+
+    /// Returns the numeric value of a hex character, or nil if invalid.
+    private static func hexValue(_ char: UInt8) -> UInt8? {
+        switch char {
+        case 0x30...0x39: return char - 0x30  // '0'-'9'
+        case 0x41...0x46: return char - 0x41 + 10  // 'A'-'F'
+        case 0x61...0x66: return char - 0x61 + 10  // 'a'-'f'
+        default: return nil
+        }
     }
 }

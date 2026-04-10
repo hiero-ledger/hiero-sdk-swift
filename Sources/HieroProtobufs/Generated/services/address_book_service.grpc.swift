@@ -109,6 +109,21 @@ public protocol Proto_AddressBookServiceClientProtocol: GRPCClient {
     _ request: Proto_Transaction,
     callOptions: CallOptions?
   ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse>
+
+  func createRegisteredNode(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions?
+  ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse>
+
+  func deleteRegisteredNode(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions?
+  ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse>
+
+  func updateRegisteredNode(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions?
+  ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse>
 }
 
 extension Proto_AddressBookServiceClientProtocol {
@@ -190,6 +205,79 @@ extension Proto_AddressBookServiceClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makeupdateNodeInterceptors() ?? []
+    )
+  }
+
+  ///*
+  /// A transaction to create a new registered node in the network
+  /// address book.
+  /// <p>
+  /// This transaction, once complete, SHALL add a new registered node to the
+  /// network state.<br/>
+  /// The new registered node SHALL be visible and discoverable upon
+  /// completion of this transaction.
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to createRegisteredNode.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  public func createRegisteredNode(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse> {
+    return self.makeUnaryCall(
+      path: Proto_AddressBookServiceClientMetadata.Methods.createRegisteredNode.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makecreateRegisteredNodeInterceptors() ?? []
+    )
+  }
+
+  ///*
+  /// A transaction to remove a registered node from the network address
+  /// book.
+  /// <p>
+  /// This transaction, once complete, SHALL remove the identified registered
+  /// node from the network state.<br/>
+  /// This transaction MUST be signed by the existing entry `admin_key` or
+  /// authorized by the Hiero network governance structure.
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to deleteRegisteredNode.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  public func deleteRegisteredNode(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse> {
+    return self.makeUnaryCall(
+      path: Proto_AddressBookServiceClientMetadata.Methods.deleteRegisteredNode.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makedeleteRegisteredNodeInterceptors() ?? []
+    )
+  }
+
+  ///*
+  /// A transaction to update an existing registered node in the network
+  /// address book.
+  /// <p>
+  /// This transaction, once complete, SHALL modify the identified registered
+  /// node state as requested.
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to updateRegisteredNode.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  public func updateRegisteredNode(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Proto_Transaction, Proto_TransactionResponse> {
+    return self.makeUnaryCall(
+      path: Proto_AddressBookServiceClientMetadata.Methods.updateRegisteredNode.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeupdateRegisteredNodeInterceptors() ?? []
     )
   }
 }
@@ -348,6 +436,21 @@ public protocol Proto_AddressBookServiceAsyncClientProtocol: GRPCClient {
     _ request: Proto_Transaction,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse>
+
+  func makeCreateRegisteredNodeCall(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse>
+
+  func makeDeleteRegisteredNodeCall(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse>
+
+  func makeUpdateRegisteredNodeCall(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse>
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -395,6 +498,42 @@ extension Proto_AddressBookServiceAsyncClientProtocol {
       interceptors: self.interceptors?.makeupdateNodeInterceptors() ?? []
     )
   }
+
+  public func makeCreateRegisteredNodeCall(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse> {
+    return self.makeAsyncUnaryCall(
+      path: Proto_AddressBookServiceClientMetadata.Methods.createRegisteredNode.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makecreateRegisteredNodeInterceptors() ?? []
+    )
+  }
+
+  public func makeDeleteRegisteredNodeCall(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse> {
+    return self.makeAsyncUnaryCall(
+      path: Proto_AddressBookServiceClientMetadata.Methods.deleteRegisteredNode.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makedeleteRegisteredNodeInterceptors() ?? []
+    )
+  }
+
+  public func makeUpdateRegisteredNodeCall(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Proto_Transaction, Proto_TransactionResponse> {
+    return self.makeAsyncUnaryCall(
+      path: Proto_AddressBookServiceClientMetadata.Methods.updateRegisteredNode.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeupdateRegisteredNodeInterceptors() ?? []
+    )
+  }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -434,6 +573,42 @@ extension Proto_AddressBookServiceAsyncClientProtocol {
       interceptors: self.interceptors?.makeupdateNodeInterceptors() ?? []
     )
   }
+
+  public func createRegisteredNode(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions? = nil
+  ) async throws -> Proto_TransactionResponse {
+    return try await self.performAsyncUnaryCall(
+      path: Proto_AddressBookServiceClientMetadata.Methods.createRegisteredNode.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makecreateRegisteredNodeInterceptors() ?? []
+    )
+  }
+
+  public func deleteRegisteredNode(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions? = nil
+  ) async throws -> Proto_TransactionResponse {
+    return try await self.performAsyncUnaryCall(
+      path: Proto_AddressBookServiceClientMetadata.Methods.deleteRegisteredNode.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makedeleteRegisteredNodeInterceptors() ?? []
+    )
+  }
+
+  public func updateRegisteredNode(
+    _ request: Proto_Transaction,
+    callOptions: CallOptions? = nil
+  ) async throws -> Proto_TransactionResponse {
+    return try await self.performAsyncUnaryCall(
+      path: Proto_AddressBookServiceClientMetadata.Methods.updateRegisteredNode.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeupdateRegisteredNodeInterceptors() ?? []
+    )
+  }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -463,6 +638,15 @@ public protocol Proto_AddressBookServiceClientInterceptorFactoryProtocol: Sendab
 
   /// - Returns: Interceptors to use when invoking 'updateNode'.
   func makeupdateNodeInterceptors() -> [ClientInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when invoking 'createRegisteredNode'.
+  func makecreateRegisteredNodeInterceptors() -> [ClientInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when invoking 'deleteRegisteredNode'.
+  func makedeleteRegisteredNodeInterceptors() -> [ClientInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when invoking 'updateRegisteredNode'.
+  func makeupdateRegisteredNodeInterceptors() -> [ClientInterceptor<Proto_Transaction, Proto_TransactionResponse>]
 }
 
 public enum Proto_AddressBookServiceClientMetadata {
@@ -473,6 +657,9 @@ public enum Proto_AddressBookServiceClientMetadata {
       Proto_AddressBookServiceClientMetadata.Methods.createNode,
       Proto_AddressBookServiceClientMetadata.Methods.deleteNode,
       Proto_AddressBookServiceClientMetadata.Methods.updateNode,
+      Proto_AddressBookServiceClientMetadata.Methods.createRegisteredNode,
+      Proto_AddressBookServiceClientMetadata.Methods.deleteRegisteredNode,
+      Proto_AddressBookServiceClientMetadata.Methods.updateRegisteredNode,
     ]
   )
 
@@ -492,6 +679,24 @@ public enum Proto_AddressBookServiceClientMetadata {
     public static let updateNode = GRPCMethodDescriptor(
       name: "updateNode",
       path: "/proto.AddressBookService/updateNode",
+      type: GRPCCallType.unary
+    )
+
+    public static let createRegisteredNode = GRPCMethodDescriptor(
+      name: "createRegisteredNode",
+      path: "/proto.AddressBookService/createRegisteredNode",
+      type: GRPCCallType.unary
+    )
+
+    public static let deleteRegisteredNode = GRPCMethodDescriptor(
+      name: "deleteRegisteredNode",
+      path: "/proto.AddressBookService/deleteRegisteredNode",
+      type: GRPCCallType.unary
+    )
+
+    public static let updateRegisteredNode = GRPCMethodDescriptor(
+      name: "updateRegisteredNode",
+      path: "/proto.AddressBookService/updateRegisteredNode",
       type: GRPCCallType.unary
     )
   }
@@ -611,6 +816,34 @@ public protocol Proto_AddressBookServiceProvider: CallHandlerProvider {
   /// <p>
   /// This transaction is authorized by the node operator
   func updateNode(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// A transaction to create a new registered node in the network
+  /// address book.
+  /// <p>
+  /// This transaction, once complete, SHALL add a new registered node to the
+  /// network state.<br/>
+  /// The new registered node SHALL be visible and discoverable upon
+  /// completion of this transaction.
+  func createRegisteredNode(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// A transaction to remove a registered node from the network address
+  /// book.
+  /// <p>
+  /// This transaction, once complete, SHALL remove the identified registered
+  /// node from the network state.<br/>
+  /// This transaction MUST be signed by the existing entry `admin_key` or
+  /// authorized by the Hiero network governance structure.
+  func deleteRegisteredNode(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
+
+  ///*
+  /// A transaction to update an existing registered node in the network
+  /// address book.
+  /// <p>
+  /// This transaction, once complete, SHALL modify the identified registered
+  /// node state as requested.
+  func updateRegisteredNode(request: Proto_Transaction, context: StatusOnlyCallContext) -> EventLoopFuture<Proto_TransactionResponse>
 }
 
 extension Proto_AddressBookServiceProvider {
@@ -650,6 +883,33 @@ extension Proto_AddressBookServiceProvider {
         responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
         interceptors: self.interceptors?.makeupdateNodeInterceptors() ?? [],
         userFunction: self.updateNode(request:context:)
+      )
+
+    case "createRegisteredNode":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateRegisteredNodeInterceptors() ?? [],
+        userFunction: self.createRegisteredNode(request:context:)
+      )
+
+    case "deleteRegisteredNode":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteRegisteredNodeInterceptors() ?? [],
+        userFunction: self.deleteRegisteredNode(request:context:)
+      )
+
+    case "updateRegisteredNode":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateRegisteredNodeInterceptors() ?? [],
+        userFunction: self.updateRegisteredNode(request:context:)
       )
 
     default:
@@ -783,6 +1043,43 @@ public protocol Proto_AddressBookServiceAsyncProvider: CallHandlerProvider, Send
     request: Proto_Transaction,
     context: GRPCAsyncServerCallContext
   ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// A transaction to create a new registered node in the network
+  /// address book.
+  /// <p>
+  /// This transaction, once complete, SHALL add a new registered node to the
+  /// network state.<br/>
+  /// The new registered node SHALL be visible and discoverable upon
+  /// completion of this transaction.
+  func createRegisteredNode(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// A transaction to remove a registered node from the network address
+  /// book.
+  /// <p>
+  /// This transaction, once complete, SHALL remove the identified registered
+  /// node from the network state.<br/>
+  /// This transaction MUST be signed by the existing entry `admin_key` or
+  /// authorized by the Hiero network governance structure.
+  func deleteRegisteredNode(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
+
+  ///*
+  /// A transaction to update an existing registered node in the network
+  /// address book.
+  /// <p>
+  /// This transaction, once complete, SHALL modify the identified registered
+  /// node state as requested.
+  func updateRegisteredNode(
+    request: Proto_Transaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Proto_TransactionResponse
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -831,6 +1128,33 @@ extension Proto_AddressBookServiceAsyncProvider {
         wrapping: { try await self.updateNode(request: $0, context: $1) }
       )
 
+    case "createRegisteredNode":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makecreateRegisteredNodeInterceptors() ?? [],
+        wrapping: { try await self.createRegisteredNode(request: $0, context: $1) }
+      )
+
+    case "deleteRegisteredNode":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makedeleteRegisteredNodeInterceptors() ?? [],
+        wrapping: { try await self.deleteRegisteredNode(request: $0, context: $1) }
+      )
+
+    case "updateRegisteredNode":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Proto_Transaction>(),
+        responseSerializer: ProtobufSerializer<Proto_TransactionResponse>(),
+        interceptors: self.interceptors?.makeupdateRegisteredNodeInterceptors() ?? [],
+        wrapping: { try await self.updateRegisteredNode(request: $0, context: $1) }
+      )
+
     default:
       return nil
     }
@@ -850,6 +1174,18 @@ public protocol Proto_AddressBookServiceServerInterceptorFactoryProtocol: Sendab
   /// - Returns: Interceptors to use when handling 'updateNode'.
   ///   Defaults to calling `self.makeInterceptors()`.
   func makeupdateNodeInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'createRegisteredNode'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makecreateRegisteredNodeInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'deleteRegisteredNode'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makedeleteRegisteredNodeInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
+
+  /// - Returns: Interceptors to use when handling 'updateRegisteredNode'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeupdateRegisteredNodeInterceptors() -> [ServerInterceptor<Proto_Transaction, Proto_TransactionResponse>]
 }
 
 public enum Proto_AddressBookServiceServerMetadata {
@@ -860,6 +1196,9 @@ public enum Proto_AddressBookServiceServerMetadata {
       Proto_AddressBookServiceServerMetadata.Methods.createNode,
       Proto_AddressBookServiceServerMetadata.Methods.deleteNode,
       Proto_AddressBookServiceServerMetadata.Methods.updateNode,
+      Proto_AddressBookServiceServerMetadata.Methods.createRegisteredNode,
+      Proto_AddressBookServiceServerMetadata.Methods.deleteRegisteredNode,
+      Proto_AddressBookServiceServerMetadata.Methods.updateRegisteredNode,
     ]
   )
 
@@ -879,6 +1218,24 @@ public enum Proto_AddressBookServiceServerMetadata {
     public static let updateNode = GRPCMethodDescriptor(
       name: "updateNode",
       path: "/proto.AddressBookService/updateNode",
+      type: GRPCCallType.unary
+    )
+
+    public static let createRegisteredNode = GRPCMethodDescriptor(
+      name: "createRegisteredNode",
+      path: "/proto.AddressBookService/createRegisteredNode",
+      type: GRPCCallType.unary
+    )
+
+    public static let deleteRegisteredNode = GRPCMethodDescriptor(
+      name: "deleteRegisteredNode",
+      path: "/proto.AddressBookService/deleteRegisteredNode",
+      type: GRPCCallType.unary
+    )
+
+    public static let updateRegisteredNode = GRPCMethodDescriptor(
+      name: "updateRegisteredNode",
+      path: "/proto.AddressBookService/updateRegisteredNode",
       type: GRPCCallType.unary
     )
   }

@@ -20,7 +20,7 @@ extension HieroIntegrationTestCase {
     /// Use this when you need full control over the account lifecycle or when testing
     /// scenarios where cleanup would interfere with the test.
     ///
-    /// - Parameters
+    /// - Parameters:
     ///   - transaction: Pre-configured `AccountCreateTransaction` (before execute)
     ///   - useAdminClient: Whether to use the admin client (default: false)
     /// - Returns: The created account ID
@@ -162,6 +162,87 @@ extension HieroIntegrationTestCase {
             return false
         }
         return true
+    }
+
+    // MARK: - Account Hook Helpers
+
+    /// Registers a hook on an account for cleanup before the account is deleted.
+    ///
+    /// - Parameters:
+    ///   - accountId: The account that owns the hook
+    ///   - hookId: The hook identifier
+    ///   - storageKeys: Storage slot keys that have been written to this hook
+    public func registerAccountHook(_ accountId: AccountId, hookId: Int64, storageKeys: [Data] = []) async {
+        await resourceManager.registerAccountHook(accountId, hookId: hookId, storageKeys: storageKeys)
+    }
+
+    /// Registers an additional storage key on an already-registered account hook.
+    ///
+    /// - Parameters:
+    ///   - accountId: The account that owns the hook
+    ///   - hookId: The hook identifier
+    ///   - key: The storage slot key to track
+    public func registerAccountHookStorageKey(_ accountId: AccountId, hookId: Int64, key: Data) async {
+        await resourceManager.registerAccountHookStorageKey(accountId, hookId: hookId, key: key)
+    }
+
+    /// Adds a hook to an existing account via `AccountUpdateTransaction` and registers it for cleanup.
+    ///
+    /// Constructs, freezes, signs, executes, and gets the receipt for the update transaction,
+    /// then registers the hook (including any initial storage keys) for proper teardown.
+    ///
+    /// - Parameters:
+    ///   - accountId: The account to add the hook to
+    ///   - accountKey: The account's private key for signing the update
+    ///   - hook: The hook creation details
+    public func addHookToAccount(
+        _ accountId: AccountId,
+        accountKey: PrivateKey,
+        hook: HookCreationDetails
+    ) async throws {
+        _ = try await AccountUpdateTransaction()
+            .accountId(accountId)
+            .addHookToCreate(hook)
+            .freezeWith(testEnv.client)
+            .sign(accountKey)
+            .execute(testEnv.client)
+            .getReceipt(testEnv.client)
+
+        let storageKeys = hook.evmHook?.storageUpdates.compactMap { $0.storageSlot?.key } ?? []
+        await registerAccountHook(accountId, hookId: hook.hookId, storageKeys: storageKeys)
+    }
+
+    /// Creates an account with an attached hook and registers it for cleanup.
+    ///
+    /// The hook and any initial storage keys from `hookDetails` are automatically
+    /// registered for cleanup (storage clearing, then hook deletion, then account deletion).
+    ///
+    /// - Parameters:
+    ///   - hookDetails: The hook creation details to attach
+    ///   - initialBalance: Optional initial Hbar balance
+    ///   - useAdminClient: Whether to use the admin client (default: false)
+    /// - Returns: Tuple of account ID and private key
+    public func createAccountWithHook(
+        hookDetails: HookCreationDetails,
+        initialBalance: Hbar? = nil,
+        useAdminClient: Bool = false
+    ) async throws -> (accountId: AccountId, key: PrivateKey) {
+        let key = PrivateKey.generateEd25519()
+        let tx = AccountCreateTransaction()
+            .keyWithoutAlias(.single(key.publicKey))
+            .addHook(hookDetails)
+            .maxTransactionFee(Hbar(20))
+
+        if let initialBalance = initialBalance {
+            tx.initialBalance(initialBalance)
+        }
+
+        let accountId = try await createAccount(tx, key: key, useAdminClient: useAdminClient)
+
+        let storageKeys = hookDetails.evmHook?.storageUpdates.compactMap { $0.storageSlot?.key } ?? []
+        await registerAccountHook(accountId, hookId: hookDetails.hookId, storageKeys: storageKeys)
+
+        return (accountId, key)
     }
 
     // MARK: - AccountInfo Assertions
