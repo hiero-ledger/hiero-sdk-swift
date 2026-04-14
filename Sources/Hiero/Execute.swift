@@ -495,6 +495,8 @@ private func executeOnNode<E: Execute>(
         response = try await executable.execute(channel, request, ctx.grpcDeadline)
     } catch let error as GRPCStatus {
         return try handleGrpcError(error, nodeIndex: nodeIndex, ctx: ctx)
+    } catch let error as GRPCConnectionPoolError {
+        return handleConnectionPoolError(error, nodeIndex: nodeIndex, ctx: ctx)
     }
 
     ctx.network.markNodeHealthy(at: nodeIndex)
@@ -547,6 +549,31 @@ private func handleGrpcError<Response>(
     default:
         throw hError
     }
+}
+
+/// Handles gRPC connection pool errors and determines retry strategy.
+///
+/// The gRPC connection pool throws `GRPCConnectionPoolError` (not `GRPCStatus`) when it
+/// cannot acquire an HTTP/2 stream before the call deadline — for example, when the node is
+/// temporarily unavailable or the pool has no open connections. This is always treated as a
+/// transient failure: the node is marked unhealthy and the request is retried immediately.
+///
+/// - Parameters:
+///   - error: The connection pool error
+///   - nodeIndex: Index of the node that returned the error
+///   - ctx: Execution context
+/// - Returns: Execution result for retry decision
+private func handleConnectionPoolError<Response>(
+    _ error: GRPCConnectionPoolError,
+    nodeIndex: Int,
+    ctx: ExecuteContext
+) -> ExecutionResult<Response> {
+    let hError = HError(
+        kind: .grpcStatus(status: Int32(GRPCStatus.Code.deadlineExceeded.rawValue)),
+        description: error.description
+    )
+    ctx.network.markNodeUnhealthy(at: nodeIndex)
+    return .retryImmediately(hError)
 }
 
 /// Handles Hedera pre-check status codes and determines retry strategy.
