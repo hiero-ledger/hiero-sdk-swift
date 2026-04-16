@@ -284,9 +284,6 @@ public enum RequestType: CaseIterable {
     /// Hook dispatch transaction
     case hookDispatch
 
-    /// Hook store transaction
-    case hookStore
-
     /// Ledger ID publication transaction
     case ledgerIdPublication
 
@@ -396,18 +393,11 @@ public enum RequestType: CaseIterable {
         case .hookStore: self = .hookStore
         case .lambdaSstore: self = .hookStore
         case .hookDispatch: self = .hookDispatch
-<<<<<<< HEAD
-        case .hookStore: self = .hookStore
         case .ledgerIDPublication: self = .ledgerIdPublication
         case .registeredNodeCreate: self = .registeredNodeCreate
         case .registeredNodeUpdate: self = .registeredNodeUpdate
         case .registeredNodeDelete: self = .registeredNodeDelete
-=======
-        case .registeredNodeCreate: return nil
-        case .registeredNodeUpdate: return nil
-        case .registeredNodeDelete: return nil
-        case .ledgerIDPublication: return nil
->>>>>>> main
+        case .migrationRootHashVote: return nil
         case .UNRECOGNIZED(let code):
             throw HError.fromProtobuf("unrecognized RequestType: `\(code)`")
         }
@@ -507,7 +497,6 @@ public enum RequestType: CaseIterable {
         case .atomicBatch: return .atomicBatch
         case .hookStore: return .hookStore
         case .hookDispatch: return .hookDispatch
-        case .hookStore: return .hookStore
         case .ledgerIdPublication: return .ledgerIDPublication
         case .registeredNodeCreate: return .registeredNodeCreate
         case .registeredNodeUpdate: return .registeredNodeUpdate

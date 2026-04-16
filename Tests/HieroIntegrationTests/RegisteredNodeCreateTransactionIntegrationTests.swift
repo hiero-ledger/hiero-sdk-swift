@@ -11,7 +11,7 @@ internal final class RegisteredNodeCreateTransactionIntegrationTests: HieroInteg
             address: .ipAddress(Data([1, 2, 3, 4])),
             port: 8080,
             requiresTls: true,
-            endpointApi: .subscribeStream
+            endpointApis: [.subscribeStream]
         )
     }
 

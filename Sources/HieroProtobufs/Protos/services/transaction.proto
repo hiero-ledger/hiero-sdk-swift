@@ -697,14 +697,11 @@ message TransactionBody {
          * deleted.
          */
         com.hedera.hapi.node.addressbook.RegisteredNodeDeleteTransactionBody registeredNodeDelete = 80;
-<<<<<<< HEAD
 
         /**
          * A transaction body for voting on migration wrapped record root hash state.
          */
         com.hedera.hapi.services.auxiliary.blockrecords.MigrationRootHashVoteTransactionBody migration_root_hash_vote = 81;
-=======
->>>>>>> main
     }
 
     /**

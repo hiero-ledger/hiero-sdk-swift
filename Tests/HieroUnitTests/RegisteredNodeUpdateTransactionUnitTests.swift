@@ -17,7 +17,7 @@ internal final class RegisteredNodeUpdateTransactionUnitTests: HieroUnitTestCase
             address: .ipAddress(Data([127, 0, 0, 1])),
             port: 8080,
             requiresTls: true,
-            endpointApi: .status
+            endpointApis: [.status]
         )
     }
 

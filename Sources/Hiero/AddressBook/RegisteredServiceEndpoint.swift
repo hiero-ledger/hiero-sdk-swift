@@ -16,7 +16,7 @@ import HieroProtobufs
 ///     address: .ipAddress(Data([127, 0, 0, 1])),
 ///     port: 8080,
 ///     requiresTls: true,
-///     endpointApi: .subscribeStream
+///     endpointApis: [.subscribeStream]
 /// )
 /// ```
 public enum RegisteredServiceEndpoint {
@@ -28,6 +28,10 @@ public enum RegisteredServiceEndpoint {
 
     /// An RPC relay endpoint.
     case rpcRelay(RpcRelayServiceEndpoint)
+
+    /// A general service endpoint for any network-accessible service not otherwise defined
+    /// as part of the Hiero Ledger system.
+    case generalService(GeneralServiceEndpoint)
 
     /// An IP address or fully qualified domain name (mutually exclusive).
     public enum Address {
@@ -45,11 +49,11 @@ public enum RegisteredServiceEndpoint {
         address: Address? = nil,
         port: UInt32 = 0,
         requiresTls: Bool = false,
-        endpointApi: BlockNodeApi = .other
+        endpointApis: [BlockNodeApi] = []
     ) -> RegisteredServiceEndpoint {
         .blockNode(
             BlockNodeServiceEndpoint(
-                address: address, port: port, requiresTls: requiresTls, endpointApi: endpointApi))
+                address: address, port: port, requiresTls: requiresTls, endpointApis: endpointApis))
     }
 
     /// Create a mirror node service endpoint.
@@ -69,6 +73,18 @@ public enum RegisteredServiceEndpoint {
     ) -> RegisteredServiceEndpoint {
         .rpcRelay(RpcRelayServiceEndpoint(address: address, port: port, requiresTls: requiresTls))
     }
+
+    /// Create a general service endpoint.
+    public static func generalService(
+        address: Address? = nil,
+        port: UInt32 = 0,
+        requiresTls: Bool = false,
+        description: String? = nil
+    ) -> RegisteredServiceEndpoint {
+        .generalService(
+            GeneralServiceEndpoint(
+                address: address, port: port, requiresTls: requiresTls, description: description))
+    }
 }
 
 // MARK: - Concrete endpoint types
@@ -77,7 +93,7 @@ public enum RegisteredServiceEndpoint {
 ///
 /// Block nodes store the block chain, provide content proof services, and deliver
 /// the block stream to other clients. Each endpoint declares which well-known
-/// block node API it exposes via `endpointApi`.
+/// block node APIs it exposes via `endpointApis`.
 public struct BlockNodeServiceEndpoint {
     /// The address of this endpoint (IP or FQDN).
     public var address: RegisteredServiceEndpoint.Address?
@@ -88,19 +104,19 @@ public struct BlockNodeServiceEndpoint {
     /// Whether this endpoint requires TLS.
     public var requiresTls: Bool
 
-    /// The block node API exposed by this endpoint.
-    public var endpointApi: BlockNodeApi
+    /// The block node APIs exposed by this endpoint.
+    public var endpointApis: [BlockNodeApi]
 
     public init(
         address: RegisteredServiceEndpoint.Address? = nil,
         port: UInt32 = 0,
         requiresTls: Bool = false,
-        endpointApi: BlockNodeApi = .other
+        endpointApis: [BlockNodeApi] = []
     ) {
         self.address = address
         self.port = port
         self.requiresTls = requiresTls
-        self.endpointApi = endpointApi
+        self.endpointApis = endpointApis
     }
 }
 
@@ -156,6 +172,34 @@ public struct RpcRelayServiceEndpoint {
     }
 }
 
+/// A service endpoint for any network-accessible service not otherwise defined as part of
+/// the Hiero Ledger system. Use this for custom or experimental services.
+public struct GeneralServiceEndpoint {
+    /// The address of this endpoint (IP or FQDN).
+    public var address: RegisteredServiceEndpoint.Address?
+
+    /// The network port.
+    public var port: UInt32
+
+    /// Whether this endpoint requires TLS.
+    public var requiresTls: Bool
+
+    /// Optional short description of the service (max 100 bytes UTF-8).
+    public var description: String?
+
+    public init(
+        address: RegisteredServiceEndpoint.Address? = nil,
+        port: UInt32 = 0,
+        requiresTls: Bool = false,
+        description: String? = nil
+    ) {
+        self.address = address
+        self.port = port
+        self.requiresTls = requiresTls
+        self.description = description
+    }
+}
+
 // MARK: - Protobuf
 
 extension RegisteredServiceEndpoint: TryProtobufCodable {
@@ -179,12 +223,20 @@ extension RegisteredServiceEndpoint: TryProtobufCodable {
                     address: address,
                     port: port,
                     requiresTls: requiresTls,
-                    endpointApi: try .fromProtobuf(endpoint.endpointApi)
+                    endpointApis: try endpoint.endpointApi.map { try .fromProtobuf($0) }
                 ))
         case .mirrorNode:
             self = .mirrorNode(MirrorNodeServiceEndpoint(address: address, port: port, requiresTls: requiresTls))
         case .rpcRelay:
             self = .rpcRelay(RpcRelayServiceEndpoint(address: address, port: port, requiresTls: requiresTls))
+        case .generalService(let endpoint):
+            self = .generalService(
+                GeneralServiceEndpoint(
+                    address: address,
+                    port: port,
+                    requiresTls: requiresTls,
+                    description: endpoint.description_p.isEmpty ? nil : endpoint.description_p
+                ))
         case nil:
             throw HError.fromProtobuf("RegisteredServiceEndpoint missing endpoint_type")
         }
@@ -205,7 +257,7 @@ extension RegisteredServiceEndpoint: TryProtobufCodable {
                 applyAddress(endpoint.address)
                 proto.port = endpoint.port
                 proto.requiresTls = endpoint.requiresTls
-                proto.blockNode = .with { $0.endpointApi = endpoint.endpointApi.toProtobuf() }
+                proto.blockNode = .with { $0.endpointApi = endpoint.endpointApis.map { $0.toProtobuf() } }
             case .mirrorNode(let endpoint):
                 applyAddress(endpoint.address)
                 proto.port = endpoint.port
@@ -216,6 +268,13 @@ extension RegisteredServiceEndpoint: TryProtobufCodable {
                 proto.port = endpoint.port
                 proto.requiresTls = endpoint.requiresTls
                 proto.rpcRelay = .init()
+            case .generalService(let endpoint):
+                applyAddress(endpoint.address)
+                proto.port = endpoint.port
+                proto.requiresTls = endpoint.requiresTls
+                proto.generalService = .with {
+                    if let desc = endpoint.description { $0.description_p = desc }
+                }
             }
         }
     }

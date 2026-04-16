@@ -216,7 +216,6 @@ extension Transaction {
             let value = try intoOnlyValue(value)
             return try BatchTransaction(protobuf: firstBody, value)
 
-<<<<<<< HEAD
         case .registeredNodeCreate(let value):
             let value = try intoOnlyValue(value)
             return try RegisteredNodeCreateTransaction(protobuf: firstBody, value)
@@ -228,17 +227,13 @@ extension Transaction {
         case .registeredNodeDelete(let value):
             let value = try intoOnlyValue(value)
             return try RegisteredNodeDeleteTransaction(protobuf: firstBody, value)
-=======
+
         case .hookStore(let value):
             let value = try intoOnlyValue(value)
             return try HookStoreTransaction(protobuf: firstBody, value)
->>>>>>> main
 
         case .hookDispatch(let code):
             throw HError.fromProtobuf("unrecognized: hookDispatch `\(code)`")
-
-        case .hookStore(let code):
-            throw HError.fromProtobuf("unrecognized: hookStore `\(code)`")
 
         case .ledgerIdPublication(let code):
             throw HError.fromProtobuf("unrecognized: ledgerIdPublication `\(code)`")

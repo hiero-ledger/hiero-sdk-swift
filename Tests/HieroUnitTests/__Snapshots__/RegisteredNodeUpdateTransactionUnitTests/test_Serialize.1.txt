@@ -27,7 +27,7 @@ registeredNodeUpdate {
     port: 8080
     requires_tls: true
     block_node {
-      endpoint_api: STATUS
+      endpoint_api: [STATUS]
     }
   }
 }

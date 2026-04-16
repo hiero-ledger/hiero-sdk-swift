@@ -11,7 +11,7 @@ internal final class RegisteredNodeUpdateTransactionIntegrationTests: HieroInteg
             address: .ipAddress(Data([1, 2, 3, 4])),
             port: 8080,
             requiresTls: true,
-            endpointApi: .subscribeStream
+            endpointApis: [.subscribeStream]
         )
     }
 
@@ -30,12 +30,16 @@ internal final class RegisteredNodeUpdateTransactionIntegrationTests: HieroInteg
         // Given
         let adminKey = PrivateKey.generateEd25519()
         let nodeId = try await createRegisteredNode(adminKey: adminKey)
-        defer { Task { try? await RegisteredNodeDeleteTransaction()
-            .registeredNodeId(nodeId)
-            .freezeWith(self.testEnv.adminClient)
-            .sign(adminKey)
-            .execute(self.testEnv.adminClient)
-            .getReceipt(self.testEnv.adminClient) } }
+        defer {
+            Task {
+                try? await RegisteredNodeDeleteTransaction()
+                    .registeredNodeId(nodeId)
+                    .freezeWith(self.testEnv.adminClient)
+                    .sign(adminKey)
+                    .execute(self.testEnv.adminClient)
+                    .getReceipt(self.testEnv.adminClient)
+            }
+        }
 
         // When / Then
         let receipt = try await RegisteredNodeUpdateTransaction()
@@ -53,18 +57,22 @@ internal final class RegisteredNodeUpdateTransactionIntegrationTests: HieroInteg
         // Given
         let adminKey = PrivateKey.generateEd25519()
         let nodeId = try await createRegisteredNode(adminKey: adminKey)
-        defer { Task { try? await RegisteredNodeDeleteTransaction()
-            .registeredNodeId(nodeId)
-            .freezeWith(self.testEnv.adminClient)
-            .sign(adminKey)
-            .execute(self.testEnv.adminClient)
-            .getReceipt(self.testEnv.adminClient) } }
+        defer {
+            Task {
+                try? await RegisteredNodeDeleteTransaction()
+                    .registeredNodeId(nodeId)
+                    .freezeWith(self.testEnv.adminClient)
+                    .sign(adminKey)
+                    .execute(self.testEnv.adminClient)
+                    .getReceipt(self.testEnv.adminClient)
+            }
+        }
 
         let newEndpoint = RegisteredServiceEndpoint.blockNode(
             address: .domainName("new-block-node.example.com"),
             port: 9090,
             requiresTls: true,
-            endpointApi: .status
+            endpointApis: [.status]
         )
 
         // When / Then
@@ -84,12 +92,16 @@ internal final class RegisteredNodeUpdateTransactionIntegrationTests: HieroInteg
         let oldAdminKey = PrivateKey.generateEd25519()
         let newAdminKey = PrivateKey.generateEd25519()
         let nodeId = try await createRegisteredNode(adminKey: oldAdminKey)
-        defer { Task { try? await RegisteredNodeDeleteTransaction()
-            .registeredNodeId(nodeId)
-            .freezeWith(self.testEnv.adminClient)
-            .sign(newAdminKey)
-            .execute(self.testEnv.adminClient)
-            .getReceipt(self.testEnv.adminClient) } }
+        defer {
+            Task {
+                try? await RegisteredNodeDeleteTransaction()
+                    .registeredNodeId(nodeId)
+                    .freezeWith(self.testEnv.adminClient)
+                    .sign(newAdminKey)
+                    .execute(self.testEnv.adminClient)
+                    .getReceipt(self.testEnv.adminClient)
+            }
+        }
 
         // When / Then
         let receipt = try await RegisteredNodeUpdateTransaction()
@@ -109,12 +121,16 @@ internal final class RegisteredNodeUpdateTransactionIntegrationTests: HieroInteg
         let oldAdminKey = PrivateKey.generateEd25519()
         let newAdminKey = PrivateKey.generateEd25519()
         let nodeId = try await createRegisteredNode(adminKey: oldAdminKey)
-        defer { Task { try? await RegisteredNodeDeleteTransaction()
-            .registeredNodeId(nodeId)
-            .freezeWith(self.testEnv.adminClient)
-            .sign(oldAdminKey)
-            .execute(self.testEnv.adminClient)
-            .getReceipt(self.testEnv.adminClient) } }
+        defer {
+            Task {
+                try? await RegisteredNodeDeleteTransaction()
+                    .registeredNodeId(nodeId)
+                    .freezeWith(self.testEnv.adminClient)
+                    .sign(oldAdminKey)
+                    .execute(self.testEnv.adminClient)
+                    .getReceipt(self.testEnv.adminClient)
+            }
+        }
 
         // When / Then
         await assertThrowsHErrorAsync(

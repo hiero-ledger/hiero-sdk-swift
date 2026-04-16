@@ -32,7 +32,7 @@ internal enum Program {
             address: .ipAddress(Data([1, 2, 3, 4])),
             port: 8080,
             requiresTls: true,
-            endpointApi: .subscribeStream
+            endpointApis: [.subscribeStream]
         )
         print("Step 2: Created block node endpoint (1.2.3.4:8080, SUBSCRIBE_STREAM, TLS)")
 
@@ -61,7 +61,7 @@ internal enum Program {
             address: .domainName("block-node.example.com"),
             port: 8443,
             requiresTls: true,
-            endpointApi: .status
+            endpointApis: [.status]
         )
         print("\nStep 5: Created second endpoint (block-node.example.com:8443, STATUS, TLS)")
 
