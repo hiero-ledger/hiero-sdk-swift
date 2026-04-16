@@ -132,31 +132,68 @@ internal final class RegisteredNodeUpdateTransactionIntegrationTests: HieroInteg
             }
         }
 
-        // When / Then
-        await assertThrowsHErrorAsync(
+        // When / Then: new admin key must also sign when changing admin key
+        await assertReceiptStatus(
             try await RegisteredNodeUpdateTransaction()
                 .registeredNodeId(nodeId)
                 .adminKey(.single(newAdminKey.publicKey))
                 .freezeWith(testEnv.adminClient)
                 .sign(oldAdminKey)  // new key does NOT sign
                 .execute(testEnv.adminClient)
-                .getReceipt(testEnv.adminClient)
+                .getReceipt(testEnv.adminClient),
+            .invalidSignature
         )
+    }
+
+    internal func test_CanReplaceIpEndpointWithDomainNameEndpoint() async throws {
+        // Given: node created with an IP address endpoint
+        let adminKey = PrivateKey.generateEd25519()
+        let nodeId = try await createRegisteredNode(adminKey: adminKey)
+        defer {
+            Task {
+                try? await RegisteredNodeDeleteTransaction()
+                    .registeredNodeId(nodeId)
+                    .freezeWith(self.testEnv.adminClient)
+                    .sign(adminKey)
+                    .execute(self.testEnv.adminClient)
+                    .getReceipt(self.testEnv.adminClient)
+            }
+        }
+
+        let domainEndpoint = RegisteredServiceEndpoint.blockNode(
+            address: .domainName("block-node.example.com"),
+            port: 8080,
+            requiresTls: true,
+            endpointApis: [.subscribeStream]
+        )
+
+        // When: replace the IP endpoint with a domain name endpoint
+        let receipt = try await RegisteredNodeUpdateTransaction()
+            .registeredNodeId(nodeId)
+            .addServiceEndpoint(domainEndpoint)
+            .freezeWith(testEnv.adminClient)
+            .sign(adminKey)
+            .execute(testEnv.adminClient)
+            .getReceipt(testEnv.adminClient)
+
+        // Then
+        XCTAssertEqual(receipt.status, .success)
     }
 
     internal func test_FailsToUpdateNonExistentRegisteredNode() async throws {
         // Given
         let adminKey = PrivateKey.generateEd25519()
 
-        // When / Then
-        await assertThrowsHErrorAsync(
+        // When / Then: non-existent registered node ID
+        await assertReceiptStatus(
             try await RegisteredNodeUpdateTransaction()
                 .registeredNodeId(9_999_999)
                 .description("No such node")
                 .freezeWith(testEnv.adminClient)
                 .sign(adminKey)
                 .execute(testEnv.adminClient)
-                .getReceipt(testEnv.adminClient)
+                .getReceipt(testEnv.adminClient),
+            .invalidRegisteredNodeID
         )
     }
 }

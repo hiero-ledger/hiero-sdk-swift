@@ -55,14 +55,15 @@ internal final class RegisteredNodeDeleteTransactionIntegrationTests: HieroInteg
             .execute(testEnv.adminClient)
             .getReceipt(testEnv.adminClient)
 
-        // When / Then: deleting again should fail
-        await assertThrowsHErrorAsync(
+        // When / Then: already-deleted node ID is invalid
+        await assertReceiptStatus(
             try await RegisteredNodeDeleteTransaction()
                 .registeredNodeId(nodeId)
                 .freezeWith(testEnv.adminClient)
                 .sign(adminKey)
                 .execute(testEnv.adminClient)
-                .getReceipt(testEnv.adminClient)
+                .getReceipt(testEnv.adminClient),
+            .invalidRegisteredNodeID
         )
     }
 
@@ -70,14 +71,15 @@ internal final class RegisteredNodeDeleteTransactionIntegrationTests: HieroInteg
         // Given
         let adminKey = PrivateKey.generateEd25519()
 
-        // When / Then
-        await assertThrowsHErrorAsync(
+        // When / Then: non-existent registered node ID
+        await assertReceiptStatus(
             try await RegisteredNodeDeleteTransaction()
                 .registeredNodeId(9_999_999)
                 .freezeWith(testEnv.adminClient)
                 .sign(adminKey)
                 .execute(testEnv.adminClient)
-                .getReceipt(testEnv.adminClient)
+                .getReceipt(testEnv.adminClient),
+            .invalidRegisteredNodeID
         )
     }
 
