@@ -30,12 +30,11 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
             .execute(testEnv.client)
 
         // Then — response must have valid components
-        XCTAssertEqual(response.mode, .state)
         XCTAssertGreaterThan(response.total, 0)
 
         // total == network.subtotal + node.subtotal + service.subtotal
         let computedTotal =
-            response.networkFee.subtotal + nodeSubtotal(response.nodeFee) + nodeSubtotal(response.serviceFee)
+            response.network.subtotal + nodeSubtotal(response.node) + nodeSubtotal(response.service)
         XCTAssertEqual(response.total, computedTotal)
     }
 
@@ -53,26 +52,23 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
             .execute(testEnv.client)
 
         // Then
-        XCTAssertEqual(response.mode, .intrinsic)
         XCTAssertGreaterThan(response.total, 0)
     }
 
     // MARK: - Test 3: Default mode is INTRINSIC
 
     internal func test_DefaultMode_IsIntrinsic() async throws {
-        // Given — no mode set, uses default
+        // Given — no mode set on the query
+        let query = FeeEstimateQuery()
+        // Then — default mode is INTRINSIC before execution
+        XCTAssertEqual(query.getMode(), .intrinsic)
+
         let tx = try TransferTransaction()
             .hbarTransfer(testEnv.operator.accountId, Hbar(1))
             .hbarTransfer(testEnv.operator.accountId, Hbar(-1))
             .freezeWith(testEnv.client)
-
-        // When
-        let response = try await FeeEstimateQuery()
-            .setTransaction(tx)
-            .execute(testEnv.client)
-
-        // Then
-        XCTAssertEqual(response.mode, .intrinsic)
+        let response = try await query.setTransaction(tx).execute(testEnv.client)
+        XCTAssertGreaterThan(response.total, 0)
     }
 
     // MARK: - Test 4: No transaction throws
@@ -104,7 +100,6 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
 
         // Then
         XCTAssertGreaterThan(response.total, 0)
-        XCTAssertEqual(response.mode, .state)
     }
 
     // MARK: - Test 6: TopicCreateTransaction
@@ -134,8 +129,8 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
         let response = try await tx.estimateFee().execute(testEnv.client)
 
         // Then — network.subtotal == node.subtotal * network.multiplier
-        let expectedNetworkSubtotal = nodeSubtotal(response.nodeFee) * UInt64(response.networkFee.multiplier)
-        XCTAssertEqual(response.networkFee.subtotal, expectedNetworkSubtotal)
+        let expectedNetworkSubtotal = nodeSubtotal(response.node) * UInt64(response.network.multiplier)
+        XCTAssertEqual(response.network.subtotal, expectedNetworkSubtotal)
     }
 
     internal func test_TotalInvariant() async throws {
@@ -150,7 +145,7 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
 
         // Then — total == network.subtotal + node.subtotal + service.subtotal
         let expected =
-            response.networkFee.subtotal + nodeSubtotal(response.nodeFee) + nodeSubtotal(response.serviceFee)
+            response.network.subtotal + nodeSubtotal(response.node) + nodeSubtotal(response.service)
         XCTAssertEqual(response.total, expected)
     }
 

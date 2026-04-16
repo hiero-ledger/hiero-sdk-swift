@@ -30,6 +30,10 @@ public final class FeeEstimateQuery: ValidateChecksums {
     /// The transaction to estimate fees for.
     private var transaction: Transaction?
 
+    /// High-volume throttle utilization in basis points (0–10000). Maps to the
+    /// `high_volume_throttle` query parameter. 0 means no high-volume simulation.
+    private var highVolumeThrottle: UInt16 = 0
+
     /// URLSession used for HTTP requests. Overridable in tests.
     internal var urlSession: URLSession = .shared
 
@@ -75,6 +79,22 @@ public final class FeeEstimateQuery: ValidateChecksums {
     @discardableResult
     public func setTransaction(_ transaction: Transaction) -> Self {
         self.transaction = transaction
+        return self
+    }
+
+    /// Get the current high-volume throttle utilization in basis points (0–10000).
+    public func getHighVolumeThrottle() -> UInt16 {
+        highVolumeThrottle
+    }
+
+    /// Set the high-volume throttle utilization in basis points (0–10000, where 10000 = 100%).
+    ///
+    /// Simulates high-volume pricing conditions. A value of 0 (default) sends no parameter
+    /// and the mirror node returns `highVolumeMultiplier: 1` (no high-volume pricing).
+    /// - Returns: `self` for method chaining.
+    @discardableResult
+    public func setHighVolumeThrottle(_ throttle: UInt16) -> Self {
+        self.highVolumeThrottle = throttle
         return self
     }
 
@@ -173,10 +193,13 @@ public final class FeeEstimateQuery: ValidateChecksums {
                     throw HError.basicParse("Fee estimate request failed: HTTP 400 - \(body)")
                 }
 
-                // HTTP 503: service unavailable — retryable
-                if httpResponse.statusCode == 503 {
+                // HTTP 500 or 503: service unavailable — retryable
+                // The mirror node OpenAPI spec documents service unavailability as HTTP 500;
+                // HTTP 503 is also handled for reverse-proxy scenarios.
+                if httpResponse.statusCode == 500 || httpResponse.statusCode == 503 {
                     let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-                    lastError = HError.basicParse("Fee estimate request failed: HTTP 503 - \(body)")
+                    lastError = HError.basicParse(
+                        "Fee estimate request failed: HTTP \(httpResponse.statusCode) - \(body)")
                     if attempt < maxAttempts {
                         try await Task.sleep(nanoseconds: backoffNanoseconds(attempt: attempt, client: client))
                     }
@@ -188,7 +211,7 @@ public final class FeeEstimateQuery: ValidateChecksums {
                     throw HError.basicParse("Fee estimate request failed: HTTP \(httpResponse.statusCode) - \(body)")
                 }
 
-                return try FeeEstimateResponse.fromJson(data, mode: mode)
+                return try FeeEstimateResponse.fromJson(data)
 
             } catch let urlError as URLError where urlError.code == .timedOut {
                 // Timeout: retryable
@@ -247,7 +270,10 @@ public final class FeeEstimateQuery: ValidateChecksums {
         }
 
         let modeString = mode == .state ? "STATE" : "INTRINSIC"
-        let endpoint = "/api/v1/network/fees?mode=\(modeString)"
+        var endpoint = "/api/v1/network/fees?mode=\(modeString)"
+        if highVolumeThrottle > 0 {
+            endpoint += "&high_volume_throttle=\(highVolumeThrottle)"
+        }
 
         // Check if this is a local development environment
         let isLocal = mirrorNetworkAddress.contains("localhost") || mirrorNetworkAddress.contains("127.0.0.1")
@@ -344,42 +370,40 @@ public final class FeeEstimateQuery: ValidateChecksums {
         // Handle empty responses edge case
         if responses.isEmpty {
             return FeeEstimateResponse(
-                mode: mode,
-                networkFee: NetworkFee(multiplier: 0, subtotal: 0),
-                nodeFee: FeeEstimate(base: 0, extras: []),
-                serviceFee: FeeEstimate(base: 0, extras: []),
-                notes: [],
+                network: NetworkFee(multiplier: 0, subtotal: 0),
+                node: FeeEstimate(base: 0, extras: []),
+                service: FeeEstimate(base: 0, extras: []),
                 total: 0
             )
         }
 
-        // Aggregate results across all chunks
-        // Network multiplier should be consistent across chunks — capture it once from the first response.
-        let networkMultiplier: UInt32 = responses[0].networkFee.multiplier
-        var networkSubtotal: UInt64 = 0
+        // Aggregate results across all chunks.
+        // Multiplier and highVolumeMultiplier should be consistent across chunks — capture from first response.
+        let networkMultiplier: UInt32 = responses[0].network.multiplier
+        let highVolumeMultiplier: UInt64 = responses[0].highVolumeMultiplier
         var nodeBase: UInt64 = 0
         var serviceBase: UInt64 = 0
         var allNodeExtras: [FeeExtra] = []
         var allServiceExtras: [FeeExtra] = []
-        var allNotes: [String] = []
         var total: UInt64 = 0
 
         for response in responses {
-            networkSubtotal += response.networkFee.subtotal
-            nodeBase += response.nodeFee.base
-            serviceBase += response.serviceFee.base
-            allNodeExtras.append(contentsOf: response.nodeFee.extras)
-            allServiceExtras.append(contentsOf: response.serviceFee.extras)
-            allNotes.append(contentsOf: response.notes)
+            nodeBase += response.node.base
+            serviceBase += response.service.base
+            allNodeExtras.append(contentsOf: response.node.extras)
+            allServiceExtras.append(contentsOf: response.service.extras)
             total += response.total
         }
 
+        // network.subtotal is computed from the aggregated node subtotal and network.multiplier.
+        let aggregatedNodeSubtotal = nodeBase + allNodeExtras.reduce(0) { $0 + $1.subtotal }
+        let networkSubtotal = UInt64(networkMultiplier) * aggregatedNodeSubtotal
+
         return FeeEstimateResponse(
-            mode: mode,
-            networkFee: NetworkFee(multiplier: networkMultiplier, subtotal: networkSubtotal),
-            nodeFee: FeeEstimate(base: nodeBase, extras: allNodeExtras),
-            serviceFee: FeeEstimate(base: serviceBase, extras: allServiceExtras),
-            notes: allNotes,
+            highVolumeMultiplier: highVolumeMultiplier,
+            network: NetworkFee(multiplier: networkMultiplier, subtotal: networkSubtotal),
+            node: FeeEstimate(base: nodeBase, extras: allNodeExtras),
+            service: FeeEstimate(base: serviceBase, extras: allServiceExtras),
             total: total
         )
     }

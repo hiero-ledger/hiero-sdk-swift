@@ -59,23 +59,19 @@ internal enum Program {
     }
 
     private static func printEstimate(_ r: FeeEstimateResponse) {
-        let nodeSubtotal = r.nodeFee.base + r.nodeFee.extras.reduce(0) { $0 + $1.subtotal }
-        let serviceSubtotal = r.serviceFee.base + r.serviceFee.extras.reduce(0) { $0 + $1.subtotal }
+        let nodeSubtotal = r.node.base + r.node.extras.reduce(0) { $0 + $1.subtotal }
+        let serviceSubtotal = r.service.base + r.service.extras.reduce(0) { $0 + $1.subtotal }
 
-        print("  Mode           : \(r.mode)")
-        print("  Network fee    : \(r.networkFee.subtotal) tinycents  (multiplier: \(r.networkFee.multiplier))")
-        print("  Node fee       : \(nodeSubtotal) tinycents  (base: \(r.nodeFee.base))")
-        for extra in r.nodeFee.extras {
+        print("  Network fee    : \(r.network.subtotal) tinycents  (multiplier: \(r.network.multiplier))")
+        print("  Node fee       : \(nodeSubtotal) tinycents  (base: \(r.node.base))")
+        for extra in r.node.extras {
             print("    + \(extra.name): charged=\(extra.charged) × \(extra.feePerUnit) = \(extra.subtotal)")
         }
-        print("  Service fee    : \(serviceSubtotal) tinycents  (base: \(r.serviceFee.base))")
-        for extra in r.serviceFee.extras {
+        print("  Service fee    : \(serviceSubtotal) tinycents  (base: \(r.service.base))")
+        for extra in r.service.extras {
             print("    + \(extra.name): charged=\(extra.charged) × \(extra.feePerUnit) = \(extra.subtotal)")
         }
         print("  Total          : \(r.total) tinycents")
-        if !r.notes.isEmpty {
-            print("  Notes          : \(r.notes.joined(separator: "; "))")
-        }
     }
 }
 

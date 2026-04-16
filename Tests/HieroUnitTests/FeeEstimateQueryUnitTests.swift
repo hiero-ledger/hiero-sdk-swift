@@ -39,6 +39,20 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
         XCTAssertEqual(query.getMode(), .intrinsic)
     }
 
+    // MARK: - HighVolumeThrottle getter/setter
+
+    internal func test_DefaultHighVolumeThrottle() {
+        XCTAssertEqual(FeeEstimateQuery().getHighVolumeThrottle(), 0)
+    }
+
+    internal func test_SetGetHighVolumeThrottle() {
+        let query = FeeEstimateQuery()
+        query.setHighVolumeThrottle(5000)
+        XCTAssertEqual(query.getHighVolumeThrottle(), 5000)
+        query.setHighVolumeThrottle(0)
+        XCTAssertEqual(query.getHighVolumeThrottle(), 0)
+    }
+
     // MARK: - JSON parsing: FeeExtra
 
     internal func test_JsonParsing_FeeExtra_AllFields() throws {
@@ -112,19 +126,19 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
 
     internal func test_JsonParsing_FeeEstimateResponse_TopLevelKeys() throws {
         let json: [String: Any] = [
+            "high_volume_multiplier": 3,
             "network": ["multiplier": 9, "subtotal": 900_000] as [String: Any],
             "node": ["base": 100_000, "extras": []] as [String: Any],
             "service": ["base": 499_000_000, "extras": []] as [String: Any],
             "total": 500_000_000,
         ]
-        let response = try FeeEstimateResponse.fromJson(json, mode: .state)
-        XCTAssertEqual(response.mode, .state)
-        XCTAssertEqual(response.networkFee.multiplier, 9)
-        XCTAssertEqual(response.networkFee.subtotal, 900_000)
-        XCTAssertEqual(response.nodeFee.base, 100_000)
-        XCTAssertEqual(response.serviceFee.base, 499_000_000)
+        let response = try FeeEstimateResponse.fromJson(json)
+        XCTAssertEqual(response.highVolumeMultiplier, 3)
+        XCTAssertEqual(response.network.multiplier, 9)
+        XCTAssertEqual(response.network.subtotal, 900_000)
+        XCTAssertEqual(response.node.base, 100_000)
+        XCTAssertEqual(response.service.base, 499_000_000)
         XCTAssertEqual(response.total, 500_000_000)
-        XCTAssertTrue(response.notes.isEmpty)
     }
 
     internal func test_JsonParsing_FeeEstimateResponse_MissingKeysDefaultToZero() throws {
@@ -133,10 +147,12 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
             "network_fee": ["multiplier": 99, "subtotal": 99] as [String: Any],
             "total": 42,
         ]
-        let response = try FeeEstimateResponse.fromJson(json, mode: .intrinsic)
+        let response = try FeeEstimateResponse.fromJson(json)
+        // high_volume_multiplier missing → defaults to 1 (no high-volume pricing)
+        XCTAssertEqual(response.highVolumeMultiplier, 1)
         // network_fee is not a valid key — network should default to zeros
-        XCTAssertEqual(response.networkFee.multiplier, 0)
-        XCTAssertEqual(response.networkFee.subtotal, 0)
+        XCTAssertEqual(response.network.multiplier, 0)
+        XCTAssertEqual(response.network.subtotal, 0)
         XCTAssertEqual(response.total, 42)
     }
 
@@ -145,14 +161,14 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
     internal func test_AggregateEmpty() {
         let query = FeeEstimateQuery()
         let result = query.aggregateFeeResponses([])
-        XCTAssertEqual(result.networkFee.multiplier, 0)
-        XCTAssertEqual(result.networkFee.subtotal, 0)
-        XCTAssertEqual(result.nodeFee.base, 0)
-        XCTAssertTrue(result.nodeFee.extras.isEmpty)
-        XCTAssertEqual(result.serviceFee.base, 0)
-        XCTAssertTrue(result.serviceFee.extras.isEmpty)
+        XCTAssertEqual(result.highVolumeMultiplier, 1)
+        XCTAssertEqual(result.network.multiplier, 0)
+        XCTAssertEqual(result.network.subtotal, 0)
+        XCTAssertEqual(result.node.base, 0)
+        XCTAssertTrue(result.node.extras.isEmpty)
+        XCTAssertEqual(result.service.base, 0)
+        XCTAssertTrue(result.service.extras.isEmpty)
         XCTAssertEqual(result.total, 0)
-        XCTAssertTrue(result.notes.isEmpty)
     }
 
     internal func test_AggregateTwoChunks_SumsCorrectly() {
@@ -160,19 +176,15 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
         let extra2 = FeeExtra(name: "Bytes", included: 1024, count: 600, charged: 0, feePerUnit: 10_000, subtotal: 0)
 
         let chunk1 = FeeEstimateResponse(
-            mode: .state,
-            networkFee: NetworkFee(multiplier: 9, subtotal: 900_000),
-            nodeFee: FeeEstimate(base: 100_000, extras: [extra1]),
-            serviceFee: FeeEstimate(base: 200_000, extras: []),
-            notes: ["note1"],
+            network: NetworkFee(multiplier: 9, subtotal: 900_000),
+            node: FeeEstimate(base: 100_000, extras: [extra1]),
+            service: FeeEstimate(base: 200_000, extras: []),
             total: 1_200_000
         )
         let chunk2 = FeeEstimateResponse(
-            mode: .state,
-            networkFee: NetworkFee(multiplier: 9, subtotal: 900_000),
-            nodeFee: FeeEstimate(base: 100_000, extras: [extra2]),
-            serviceFee: FeeEstimate(base: 200_000, extras: []),
-            notes: [],
+            network: NetworkFee(multiplier: 9, subtotal: 900_000),
+            node: FeeEstimate(base: 100_000, extras: [extra2]),
+            service: FeeEstimate(base: 200_000, extras: []),
             total: 1_200_000
         )
 
@@ -180,43 +192,36 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
         let result = query.aggregateFeeResponses([chunk1, chunk2])
 
         // Multiplier taken from first response
-        XCTAssertEqual(result.networkFee.multiplier, 9)
+        XCTAssertEqual(result.network.multiplier, 9)
 
-        // Network subtotals are summed
-        XCTAssertEqual(result.networkFee.subtotal, 1_800_000)
+        // Network subtotal = aggregated node subtotal × multiplier (200_000 × 9)
+        XCTAssertEqual(result.network.subtotal, 1_800_000)
 
         // Node base fees are summed
-        XCTAssertEqual(result.nodeFee.base, 200_000)
+        XCTAssertEqual(result.node.base, 200_000)
 
         // Extras are concatenated (one from each chunk)
-        XCTAssertEqual(result.nodeFee.extras.count, 2)
+        XCTAssertEqual(result.node.extras.count, 2)
 
         // Service base fees are summed
-        XCTAssertEqual(result.serviceFee.base, 400_000)
+        XCTAssertEqual(result.service.base, 400_000)
 
         // Totals are summed
         XCTAssertEqual(result.total, 2_400_000)
-
-        // Notes are concatenated
-        XCTAssertEqual(result.notes, ["note1"])
     }
 
     internal func test_AggregateTwoChunks_MultiplierTakenFromFirstChunk() {
         // Second chunk has a different multiplier — should be ignored
         let chunk1 = FeeEstimateResponse(
-            mode: .state,
-            networkFee: NetworkFee(multiplier: 9, subtotal: 900_000),
-            nodeFee: FeeEstimate(base: 100_000, extras: []),
-            serviceFee: FeeEstimate(base: 0, extras: []),
-            notes: [],
+            network: NetworkFee(multiplier: 9, subtotal: 900_000),
+            node: FeeEstimate(base: 100_000, extras: []),
+            service: FeeEstimate(base: 0, extras: []),
             total: 1_000_000
         )
         let chunk2 = FeeEstimateResponse(
-            mode: .state,
-            networkFee: NetworkFee(multiplier: 12, subtotal: 1_200_000),
-            nodeFee: FeeEstimate(base: 100_000, extras: []),
-            serviceFee: FeeEstimate(base: 0, extras: []),
-            notes: [],
+            network: NetworkFee(multiplier: 12, subtotal: 1_200_000),
+            node: FeeEstimate(base: 100_000, extras: []),
+            service: FeeEstimate(base: 0, extras: []),
             total: 1_300_000
         )
 
@@ -224,7 +229,11 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
         let result = query.aggregateFeeResponses([chunk1, chunk2])
 
         // Multiplier must come from the FIRST chunk, not the last
-        XCTAssertEqual(result.networkFee.multiplier, 9)
+        XCTAssertEqual(result.network.multiplier, 9)
+
+        // network.subtotal = aggregated node subtotal × first multiplier (200_000 × 9 = 1_800_000)
+        // NOT the sum of per-chunk network subtotals (900_000 + 1_200_000 = 2_100_000)
+        XCTAssertEqual(result.network.subtotal, 1_800_000)
     }
 
     // MARK: - HTTP error handling (tests 12, 13, 14)
@@ -282,7 +291,34 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
         }
     }
 
-    // Test 13: HTTP 503 retries up to maxAttempts then throws.
+    // Test 13a: HTTP 500 retries up to maxAttempts then throws (mirror node spec uses 500 for service unavailable).
+    internal func test_Http500_RetriesAndEventuallyThrows() async throws {
+        var callCount = 0
+        MockURLProtocol.requestHandler = { _ in
+            callCount += 1
+            let response = HTTPURLResponse(
+                url: URL(string: "https://testnet.mirrornode.hedera.com/api/v1/network/fees?mode=INTRINSIC")!,
+                statusCode: 500,
+                httpVersion: nil,
+                headerFields: nil
+            )!
+            return (response, Data("internal server error".utf8))
+        }
+        defer { MockURLProtocol.requestHandler = nil }
+
+        let (query, _) = try makeMockQuery()
+        let client = makeTestClient(maxAttempts: 2)
+
+        do {
+            _ = try await query.execute(client)
+            XCTFail("Expected error after exhausting retries")
+        } catch {
+            XCTAssertEqual(callCount, 2)
+            XCTAssertTrue(error is HError)
+        }
+    }
+
+    // Test 13b: HTTP 503 retries up to maxAttempts then throws.
     internal func test_Http503_RetriesAndEventuallyThrows() async throws {
         var callCount = 0
         MockURLProtocol.requestHandler = { _ in
@@ -328,6 +364,31 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
         } catch {
             XCTAssertEqual(callCount, 2)
         }
+    }
+
+    // Test 20: high_volume_throttle appears in the request URL when set to a non-zero value.
+    internal func test_HighVolumeThrottle_AppearsInUrl() async throws {
+        var capturedUrl: URL?
+        MockURLProtocol.requestHandler = { request in
+            capturedUrl = request.url
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 400,
+                httpVersion: nil,
+                headerFields: nil
+            )!
+            return (response, Data())
+        }
+        defer { MockURLProtocol.requestHandler = nil }
+
+        let (query, _) = try makeMockQuery()
+        query.setHighVolumeThrottle(5000)
+        let client = makeTestClient(maxAttempts: 1)
+
+        _ = try? await query.execute(client)
+
+        let urlString = try XCTUnwrap(capturedUrl).absoluteString
+        XCTAssertTrue(urlString.contains("high_volume_throttle=5000"), "URL missing high_volume_throttle: \(urlString)")
     }
 }
 
