@@ -406,6 +406,8 @@ extension ServicesTransactionDataList: TryFromProtobuf {
             throw HError.fromProtobuf("Unsupported transaction `RegisteredNodeUpdateTransaction`")
         case .registeredNodeDelete:
             throw HError.fromProtobuf("Unsupported transaction `RegisteredNodeDeleteTransaction`")
+        case .migrationRootHashVote:
+            throw HError.fromProtobuf("Unsupported transaction `MigrationRootHashVoteTransaction`")
         }
 
         for transaction in iter {

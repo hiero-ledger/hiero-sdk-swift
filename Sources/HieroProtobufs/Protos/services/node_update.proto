@@ -174,16 +174,6 @@ message NodeUpdateTransactionBody {
      * HIP-1137) that are operated by the same entity that operates this
      * consensus node.
      * <p>
-<<<<<<< HEAD
-     * This field is OPTIONAL and MAY be empty.<br/>
-     * This field MUST NOT contain more than twenty(20) entries.<br/>
-     * Every entry in this list MUST be a valid `registered_node_id` for a
-     * current registered node.
-     * <p>
-     * If set, the new list SHALL replace the existing list.
-     */
-    repeated uint64 associated_registered_node = 11;
-=======
      * This field is OPTIONAL.<br/>
      * If this field is not set, the current list SHALL NOT change.<br/>
      * If this field is set, but contains an empty list, any existing
@@ -209,5 +199,4 @@ message AssociatedRegisteredNodeList {
      * A list of registered node identifiers.
      */
     repeated uint64 associated_registered_node = 1;
->>>>>>> main
 }

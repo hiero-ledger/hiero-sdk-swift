@@ -385,6 +385,7 @@ public enum RequestType: CaseIterable {
         case .registeredNodeUpdate: return nil
         case .registeredNodeDelete: return nil
         case .ledgerIDPublication: return nil
+        case .migrationRootHashVote: return nil
         case .UNRECOGNIZED(let code):
             throw HError.fromProtobuf("unrecognized RequestType: `\(code)`")
         }
