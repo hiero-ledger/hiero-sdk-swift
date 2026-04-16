@@ -136,4 +136,24 @@ internal class TransactionIntegrationTests: HieroIntegrationTestCase {
             .insufficientTxFee
         )
     }
+
+    /// Test that the transaction record exposes the high-volume pricing multiplier.
+    internal func test_HighVolumeRecordContainsPricingMultiplier() async throws {
+        // Given
+        let accountKey = PrivateKey.generateEd25519()
+
+        // When
+        let response = try await AccountCreateTransaction()
+            .keyWithoutAlias(.single(accountKey.publicKey))
+            .initialBalance(TestConstants.testSmallHbarBalance)
+            .highVolume(true)
+            .maxTransactionFee(Hbar(5))
+            .execute(testEnv.client)
+
+        let record = try await response.getRecord(testEnv.client)
+
+        // Then
+        XCTAssertNotNil(record.highVolumePricingMultiplier)
+        XCTAssertGreaterThanOrEqual(record.highVolumePricingMultiplier ?? 0, 1000)
+    }
 }
