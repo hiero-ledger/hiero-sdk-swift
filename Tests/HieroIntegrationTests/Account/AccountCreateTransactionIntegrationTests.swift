@@ -315,4 +315,93 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
             "expected error creating account"
         )
     }
+
+    internal func test_CreateTransactionWithEvmHook() async throws {
+        // Given
+        let contractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(contractId: contractId)
+
+        // When
+        let (accountId, _) = try await createAccountWithHook(hookDetails: hookDetails)
+
+        // Then
+        XCTAssertNotNil(accountId)
+    }
+
+    internal func test_CreateTransactionWithEvmHookAndStorageUpdates() async throws {
+        // Given
+        let contractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetailsWithStorage(contractId: contractId)
+
+        // When
+        let (accountId, _) = try await createAccountWithHook(hookDetails: hookDetails)
+
+        // Then
+        XCTAssertNotNil(accountId)
+    }
+
+    internal func test_CreateTransactionWithEvmHookWithNoContractId() async throws {
+        // Given
+        let key = PrivateKey.generateEcdsa()
+
+        var evmHook = EvmHook()
+
+        var slot = EvmHookStorageSlot()
+        slot.key = Data([0x01, 0x23, 0x45])
+        slot.value = Data([0x67, 0x89, 0xAB])
+
+        var update = EvmHookStorageUpdate()
+        update.storageSlot = slot
+        evmHook.addStorageUpdate(update)
+
+        let hookDetails = HookCreationDetails(
+            hookExtensionPoint: .accountAllowanceHook,
+            hookId: 1,
+            evmHook: evmHook
+        )
+
+        // When / Then
+        await assertReceiptStatus(
+            try await AccountCreateTransaction()
+                .keyWithoutAlias(.single(key.publicKey))
+                .addHook(hookDetails)
+                .maxTransactionFee(Hbar(20))
+                .execute(testEnv.client)
+                .getReceipt(testEnv.client),
+            .invalidHookCreationSpec
+        )
+    }
+
+    internal func test_CreateTransactionWithSameEvmHookIds() async throws {
+        // Given
+        let key = PrivateKey.generateEcdsa()
+        let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
+        let hookDetails = createHookDetails(contractId: fakeContractId)
+
+        // When / Then
+        await assertPrecheckStatus(
+            try await AccountCreateTransaction()
+                .keyWithoutAlias(.single(key.publicKey))
+                .addHook(hookDetails)
+                .addHook(hookDetails)
+                .execute(testEnv.client),
+            .hookIDRepeatedInCreationDetails
+        )
+    }
+
+    internal func test_CreateTransactionWithEvmHookWithAdminKey() async throws {
+        // Given
+        let adminKey = PrivateKey.generateEcdsa()
+        let hookContractId = try await createUnmanagedEvmHookContract()
+        let hookDetails = createHookDetails(
+            contractId: hookContractId,
+            adminKey: .single(adminKey.publicKey)
+        )
+
+        // When
+        let (accountId, _) = try await createAccountWithHook(hookDetails: hookDetails)
+
+        // Then
+        XCTAssertNotNil(accountId)
+    }
 }

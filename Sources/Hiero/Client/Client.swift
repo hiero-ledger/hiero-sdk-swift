@@ -500,6 +500,13 @@ public final class Client: Sendable {
         return self
     }
 
+    /// Returns the account ID of the operator, or `nil` if no operator has been set.
+    ///
+    /// The operator account is used by default for paying transaction fees and signing transactions.
+    public func getOperatorAccountId() -> AccountId? {
+        _operator.withLockedValue { $0?.accountId }
+    }
+
     // MARK: - Network Health
 
     /// Pings a specific node to check if it's reachable.

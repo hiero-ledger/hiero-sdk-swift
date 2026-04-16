@@ -94,6 +94,7 @@ message RegisteredServiceEndpoint {
      * Hiero consensus network.
      */
     RpcRelayEndpoint rpc_relay = 7;
+<<<<<<< HEAD
 
     /**
      * A general service.<br/>
@@ -102,6 +103,8 @@ message RegisteredServiceEndpoint {
      * currently defined as part of the Hiero Ledger system.
      */
     GeneralServiceEndpoint general_service = 8;
+=======
+>>>>>>> main
   }
 
   /**
@@ -165,6 +168,7 @@ message RegisteredServiceEndpoint {
    */
   message RpcRelayEndpoint {
   }
+<<<<<<< HEAD
 
   /**
    * A message indicating this endpoint is a General Service endpoint.
@@ -178,4 +182,6 @@ message RegisteredServiceEndpoint {
      */
     string description = 1;
   }
+=======
+>>>>>>> main
 }

@@ -216,6 +216,7 @@ extension Transaction {
             let value = try intoOnlyValue(value)
             return try BatchTransaction(protobuf: firstBody, value)
 
+<<<<<<< HEAD
         case .registeredNodeCreate(let value):
             let value = try intoOnlyValue(value)
             return try RegisteredNodeCreateTransaction(protobuf: firstBody, value)
@@ -227,6 +228,11 @@ extension Transaction {
         case .registeredNodeDelete(let value):
             let value = try intoOnlyValue(value)
             return try RegisteredNodeDeleteTransaction(protobuf: firstBody, value)
+=======
+        case .hookStore(let value):
+            let value = try intoOnlyValue(value)
+            return try HookStoreTransaction(protobuf: firstBody, value)
+>>>>>>> main
 
         case .hookDispatch(let code):
             throw HError.fromProtobuf("unrecognized: hookDispatch `\(code)`")
@@ -240,26 +246,8 @@ extension Transaction {
         case .stateSignatureTransaction(let code):
             throw HError.fromProtobuf("unrecognized: stateSignatureTransaction `\(code)`")
 
-        case .hintsPreprocessingVote(let code):
-            throw HError.fromProtobuf("unrecognized: hintsPreprocessingVote `\(code)`")
-
-        case .hintsKeyPublication(let code):
-            throw HError.fromProtobuf("unrecognized: hintsKeyPublication `\(code)`")
-
-        case .hintsPartialSignature(let code):
-            throw HError.fromProtobuf("unrecognized: hintsPartialSignature `\(code)`")
-
-        case .historyProofSignature(let code):
-            throw HError.fromProtobuf("unrecognized: historyProofSignature `\(code)`")
-
-        case .historyProofKeyPublication(let code):
-            throw HError.fromProtobuf("unrecognized: historyProofKeyPublication `\(code)`")
-
-        case .historyProofVote(let code):
-            throw HError.fromProtobuf("unrecognized: historyProofVote `\(code)`")
-
-        case .crsPublication(let code):
-            throw HError.fromProtobuf("unrecognized: crsPublication `\(code)`")
+        default:
+            throw HError.fromProtobuf("unrecognized code")
         }
     }
 }

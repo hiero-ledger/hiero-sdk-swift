@@ -1873,11 +1873,14 @@ enum HederaFunctionality {
      * Delete a registered node
      */
     RegisteredNodeDelete = 115;
+<<<<<<< HEAD
 
     /**
      * Vote on wrapped record migration hash state.
      */
     MigrationRootHashVote = 116;
+=======
+>>>>>>> main
 }
 
 /**
