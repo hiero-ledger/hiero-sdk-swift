@@ -30,12 +30,15 @@ public final class FeeEstimateQuery: ValidateChecksums {
     /// The transaction to estimate fees for.
     private var transaction: Transaction?
 
+    /// URLSession used for HTTP requests. Overridable in tests.
+    internal var urlSession: URLSession = .shared
+
     /// Create a new `FeeEstimateQuery`.
     ///
     /// - Parameters:
-    ///   - mode: The estimation mode. Defaults to `.state` which uses the latest known network state.
+    ///   - mode: The estimation mode. Defaults to `.intrinsic` which estimates from the payload alone.
     ///   - transaction: The transaction to estimate fees for. Can be set later via `setTransaction`.
-    public init(mode: FeeEstimateMode = .state, transaction: Transaction? = nil) {
+    public init(mode: FeeEstimateMode = .intrinsic, transaction: Transaction? = nil) {
         self.mode = mode
         self.transaction = transaction
     }
@@ -207,7 +210,7 @@ public final class FeeEstimateQuery: ValidateChecksums {
         #if canImport(FoundationNetworking)
             // Linux: Use callback-based API wrapped in async continuation
             return try await withCheckedThrowingContinuation { continuation in
-                URLSession.shared.dataTask(with: request) { data, response, error in
+                urlSession.dataTask(with: request) { data, response, error in
                     if let error = error {
                         continuation.resume(throwing: error)
                         return
@@ -221,7 +224,7 @@ public final class FeeEstimateQuery: ValidateChecksums {
             }
         #else
             // macOS/iOS: Use modern async/await API
-            return try await URLSession.shared.data(for: request)
+            return try await urlSession.data(for: request)
         #endif
     }
 

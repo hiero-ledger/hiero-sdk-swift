@@ -57,9 +57,9 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
         XCTAssertGreaterThan(response.total, 0)
     }
 
-    // MARK: - Test 3: Default mode is STATE
+    // MARK: - Test 3: Default mode is INTRINSIC
 
-    internal func test_DefaultMode_IsState() async throws {
+    internal func test_DefaultMode_IsIntrinsic() async throws {
         // Given — no mode set, uses default
         let tx = try TransferTransaction()
             .hbarTransfer(testEnv.operator.accountId, Hbar(1))
@@ -72,7 +72,7 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
             .execute(testEnv.client)
 
         // Then
-        XCTAssertEqual(response.mode, .state)
+        XCTAssertEqual(response.mode, .intrinsic)
     }
 
     // MARK: - Test 4: No transaction throws
@@ -189,6 +189,77 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
             .topicId(topicId)
             .message(bigContents)
             .freezeWith(testEnv.client)
+
+        // When
+        let response = try await tx.estimateFee().execute(testEnv.client)
+
+        // Then
+        XCTAssertGreaterThan(response.total, 0)
+    }
+
+    // MARK: - Test 6: TokenMintTransaction
+
+    internal func test_TokenMintTransaction() async throws {
+        // Given — create a fungible token with a supply key, then estimate a mint
+        let (tokenId, _) = try await createFungibleTokenWithSupplyKey(
+            treasuryAccountId: testEnv.operator.accountId,
+            treasuryKey: testEnv.operator.privateKey
+        )
+        let tx = try TokenMintTransaction()
+            .tokenId(tokenId)
+            .amount(UInt64(TestConstants.testOperationAmount))
+            .freezeWith(testEnv.client)
+
+        // When
+        let response = try await tx.estimateFee().execute(testEnv.client)
+
+        // Then
+        XCTAssertGreaterThan(response.total, 0)
+    }
+
+    // MARK: - Test 8: ContractCreateTransaction
+
+    internal func test_ContractCreateTransaction() async throws {
+        // Given — contract with inline bytecode
+        let tx = try ContractCreateTransaction()
+            .bytecode(TestConstants.contractBytecode)
+            .gas(TestConstants.standardContractGas)
+            .freezeWith(testEnv.client)
+
+        // When
+        let response = try await tx.estimateFee().execute(testEnv.client)
+
+        // Then
+        XCTAssertGreaterThan(response.total, 0)
+    }
+
+    // MARK: - Test 9: FileCreateTransaction
+
+    internal func test_FileCreateTransaction() async throws {
+        // Given
+        let tx = try FileCreateTransaction()
+            .contents("Hello, Hiero!".data(using: .utf8)!)
+            .keys([.single(testEnv.operator.privateKey.publicKey)])
+            .freezeWith(testEnv.client)
+
+        // When
+        let response = try await tx.estimateFee().execute(testEnv.client)
+
+        // Then
+        XCTAssertGreaterThan(response.total, 0)
+    }
+
+    // MARK: - Test 18: TopicMessageSubmitTransaction single chunk
+
+    internal func test_TopicMessageSubmitTransaction_SingleChunk() async throws {
+        // Given — message smaller than chunk size (4 KB) produces exactly one chunk
+        let topicId = try await createStandardTopic()
+        let tx = try TopicMessageSubmitTransaction()
+            .topicId(topicId)
+            .message("small message".data(using: .utf8)!)
+            .freezeWith(testEnv.client)
+
+        XCTAssertEqual(tx.usedChunks, 1, "Expected a single chunk for a short message")
 
         // When
         let response = try await tx.estimateFee().execute(testEnv.client)
