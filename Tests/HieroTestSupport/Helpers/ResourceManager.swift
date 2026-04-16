@@ -24,6 +24,12 @@ public enum CleanupPriority: Int {
     case topics = 40
     case schedules = 45
     case contracts = 60
+
+    /// Clear EVM hook storage slots before hooks can be deleted.
+    case clearHookStorage = 54
+
+    /// Remove hooks from entities before entity deletion.
+    case removeHooks = 55
 }
 
 /// Manages test resources and ensures proper cleanup
@@ -79,6 +85,27 @@ public actor ResourceManager {
         }
     }
 
+    /// Register a hook on a contract for cleanup before the contract is deleted.
+    public func registerContractHook(_ contractId: ContractId, hookId: Int64, storageKeys: [Data] = []) async {
+        let hook = TestHook(hookId: hookId, storageKeys: storageKeys)
+        contracts[contractId]?.hooks.append(hook)
+
+        if cleanupPolicy.cleanupContracts {
+            await registerCleanup(priority: .clearHookStorage) {
+                try await self.clearContractHookStorage(contractId: contractId, hookId: hookId)
+            }
+            await registerCleanup(priority: .removeHooks) {
+                try await self.removeHooksFromContract(contractId)
+            }
+        }
+    }
+
+    /// Register an additional storage key on an already-registered contract hook.
+    public func registerContractHookStorageKey(_ contractId: ContractId, hookId: Int64, key: Data) {
+        guard let hookIndex = contracts[contractId]?.hooks.firstIndex(where: { $0.hookId == hookId }) else { return }
+        contracts[contractId]?.hooks[hookIndex].storageKeys.append(key)
+    }
+
     private func deleteContract(_ contract: TestContract) async throws {
         let transaction = ContractDeleteTransaction(contractId: contract.id)
             .transferAccountId(operatorAccountId)
@@ -116,6 +143,107 @@ public actor ResourceManager {
                 try await self.deleteAccount(account)
             }
         }
+    }
+
+    /// Register a hook on an account for cleanup before the account is deleted.
+    public func registerAccountHook(_ accountId: AccountId, hookId: Int64, storageKeys: [Data] = []) async {
+        let hook = TestHook(hookId: hookId, storageKeys: storageKeys)
+        accounts[accountId]?.hooks.append(hook)
+
+        if cleanupPolicy.cleanupAccounts {
+            await registerCleanup(priority: .clearHookStorage) {
+                try await self.clearAccountHookStorage(accountId: accountId, hookId: hookId)
+            }
+            await registerCleanup(priority: .removeHooks) {
+                try await self.removeHooksFromAccount(accountId)
+            }
+        }
+    }
+
+    /// Register an additional storage key on an already-registered account hook.
+    public func registerAccountHookStorageKey(_ accountId: AccountId, hookId: Int64, key: Data) {
+        guard let hookIndex = accounts[accountId]?.hooks.firstIndex(where: { $0.hookId == hookId }) else { return }
+        accounts[accountId]?.hooks[hookIndex].storageKeys.append(key)
+    }
+
+    // MARK: - Hook Cleanup
+
+    private func clearContractHookStorage(contractId: ContractId, hookId: Int64) async throws {
+        guard let contract = contracts[contractId] else { return }
+        let hookEntityId = HookEntityId(contractId: contractId)
+        try await clearMatchingHookStorage(
+            hookId: hookId, hooks: contract.hooks, entityId: hookEntityId, signingKeys: contract.adminKeys)
+        if var updated = contracts[contractId] {
+            clearStorageKeysForHook(hookId: hookId, in: &updated.hooks)
+            contracts[contractId] = updated
+        }
+    }
+
+    private func clearAccountHookStorage(accountId: AccountId, hookId: Int64) async throws {
+        guard let account = accounts[accountId] else { return }
+        let hookEntityId = HookEntityId(accountId: accountId)
+        try await clearMatchingHookStorage(
+            hookId: hookId, hooks: account.hooks, entityId: hookEntityId, signingKeys: account.keys)
+        if var updated = accounts[accountId] {
+            clearStorageKeysForHook(hookId: hookId, in: &updated.hooks)
+            accounts[accountId] = updated
+        }
+    }
+
+    private func clearMatchingHookStorage(
+        hookId: Int64, hooks: [TestHook], entityId: HookEntityId, signingKeys: [PrivateKey]
+    ) async throws {
+        for hook in hooks where !hook.storageKeys.isEmpty && hook.hookId == hookId {
+            try await clearHookStorage(entityId: entityId, hook: hook, signingKeys: signingKeys)
+        }
+    }
+
+    private func clearStorageKeysForHook(hookId: Int64, in hooks: inout [TestHook]) {
+        if let idx = hooks.firstIndex(where: { $0.hookId == hookId }) {
+            hooks[idx].storageKeys.removeAll()
+        }
+    }
+
+    private func clearHookStorage(entityId: HookEntityId, hook: TestHook, signingKeys: [PrivateKey]) async throws {
+        guard !hook.storageKeys.isEmpty else { return }
+        let hookId = HookId(entityId: entityId, hookId: hook.hookId)
+        let tx = HookStoreTransaction()
+            .hookId(hookId)
+        for storageKey in hook.storageKeys {
+            tx.addStorageUpdate(EvmHookStorageUpdate(storageSlot: EvmHookStorageSlot(key: storageKey, value: Data())))
+        }
+        for key in signingKeys {
+            tx.sign(key)
+        }
+        _ = try await tx.execute(client).getReceipt(client)
+    }
+
+    private func removeHooksFromAccount(_ accountId: AccountId) async throws {
+        guard let account = accounts[accountId], !account.hooks.isEmpty else { return }
+        let tx = AccountUpdateTransaction()
+            .accountId(account.id)
+        for hook in account.hooks {
+            tx.addHookToDelete(hook.hookId)
+        }
+        for key in account.keys {
+            tx.sign(key)
+        }
+        _ = try await tx.execute(client).getReceipt(client)
+        accounts[accountId]?.hooks.removeAll()
+    }
+
+    private func removeHooksFromContract(_ contractId: ContractId) async throws {
+        guard let contract = contracts[contractId], !contract.hooks.isEmpty else { return }
+        let tx = ContractUpdateTransaction()
+            .contractId(contract.id)
+        for hook in contract.hooks {
+            tx.addHookToDelete(hook.hookId)
+        }
+        for key in contract.adminKeys {
+            tx.sign(key)
+        }
+        _ = try await tx.execute(client).getReceipt(client)
+        contracts[contractId]?.hooks.removeAll()
     }
 
     private func deleteAccount(_ account: TestAccount) async throws {
@@ -282,7 +410,7 @@ public actor ResourceManager {
         }
 
         // Sort by priority in ASCENDING order (lower priority values run first)
-        // Cleanup order: unpauseTokens (5) → settleBalances (10) → files (30) → topics (40) → schedules (45) → tokens (50) → contracts (60) → accounts (70)
+        // Cleanup order: unpauseTokens (5) → settleBalances (10) → files (30) → topics (40) → schedules (45) → tokens (50) → clearHookStorage (54) → removeHooks (55) → contracts (60) → accounts (70)
         let sortedActions = cleanupActions.sorted { $0.priority.rawValue < $1.priority.rawValue }
 
         for action in sortedActions {
@@ -302,22 +430,29 @@ public actor ResourceManager {
 
 // MARK: - Internal Test Resource Types
 
+/// Tracks a hook attached to a test entity for cleanup.
+internal struct TestHook {
+    internal let hookId: Int64
+    internal var storageKeys: [Data]
+}
+
 /// Internal struct for tracking accounts during cleanup
-struct TestAccount {
-    let id: AccountId
-    let keys: [PrivateKey]
+internal struct TestAccount {
+    internal let id: AccountId
+    internal let keys: [PrivateKey]
+    internal var hooks: [TestHook] = []
 
     /// Single key convenience accessor (returns first key)
-    var key: PrivateKey {
+    internal var key: PrivateKey {
         keys[0]
     }
 
-    init(id: AccountId, key: PrivateKey) {
+    internal init(id: AccountId, key: PrivateKey) {
         self.id = id
         self.keys = [key]
     }
 
-    init(id: AccountId, keys: [PrivateKey]) {
+    internal init(id: AccountId, keys: [PrivateKey]) {
         precondition(!keys.isEmpty, "TestAccount requires at least one key")
         self.id = id
         self.keys = keys
@@ -325,21 +460,22 @@ struct TestAccount {
 }
 
 /// Internal struct for tracking contracts during cleanup
-struct TestContract {
-    let id: ContractId
-    let adminKeys: [PrivateKey]
+internal struct TestContract {
+    internal let id: ContractId
+    internal let adminKeys: [PrivateKey]
+    internal var hooks: [TestHook] = []
 
     /// Single key convenience accessor (returns first key)
-    var adminKey: PrivateKey {
+    internal var adminKey: PrivateKey {
         adminKeys[0]
     }
 
-    init(id: ContractId, key: PrivateKey) {
+    internal init(id: ContractId, key: PrivateKey) {
         self.id = id
         self.adminKeys = [key]
     }
 
-    init(id: ContractId, keys: [PrivateKey]) {
+    internal init(id: ContractId, keys: [PrivateKey]) {
         precondition(!keys.isEmpty, "TestContract requires at least one key")
         self.id = id
         self.adminKeys = keys

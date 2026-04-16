@@ -125,20 +125,19 @@ public struct Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: Sendable {
   public var hook: Com_Hedera_Hapi_Node_Hooks_HookCreationDetails.OneOf_Hook? = nil
 
   ///*
-  /// A hook programmed in EVM bytecode that may access state or interact with
-  /// external contracts.
-  public var lambdaEvmHook: Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook {
+  /// A general-purpose hook programmed in EVM bytecode that may access state
+  /// or interact with external contracts.
+  public var evmHook: Com_Hedera_Hapi_Node_Hooks_EvmHook {
     get {
-      if case .lambdaEvmHook(let v)? = hook {return v}
-      return Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook()
+      if case .evmHook(let v)? = hook {return v}
+      return Com_Hedera_Hapi_Node_Hooks_EvmHook()
     }
-    set {hook = .lambdaEvmHook(newValue)}
+    set {hook = .evmHook(newValue)}
   }
 
   ///*
   /// If set, a key that that can be used to remove or replace the hook; or (if
-  /// applicable, as with a lambda EVM hook) perform transactions that customize
-  /// the hook.
+  /// applicable, as with an EVM hook) do transactions that customize the hook.
   public var adminKey: Proto_Key {
     get {return _adminKey ?? Proto_Key()}
     set {_adminKey = newValue}
@@ -154,9 +153,9 @@ public struct Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: Sendable {
   /// The hook implementation.
   public enum OneOf_Hook: Equatable, Sendable {
     ///*
-    /// A hook programmed in EVM bytecode that may access state or interact with
-    /// external contracts.
-    case lambdaEvmHook(Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook)
+    /// A general-purpose hook programmed in EVM bytecode that may access state
+    /// or interact with external contracts.
+    case evmHook(Com_Hedera_Hapi_Node_Hooks_EvmHook)
 
   }
 
@@ -166,8 +165,8 @@ public struct Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: Sendable {
 }
 
 ///*
-/// Definition of a lambda EVM hook.
-public struct Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook: Sendable {
+/// Definition of a general-purpose EVM hook.
+public struct Com_Hedera_Hapi_Node_Hooks_EvmHook: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -184,8 +183,8 @@ public struct Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook: Sendable {
   public mutating func clearSpec() {self._spec = nil}
 
   ///*
-  /// Initial storage updates for the lambda, if any.
-  public var storageUpdates: [Com_Hedera_Hapi_Node_Hooks_LambdaStorageUpdate] = []
+  /// Initial storage updates for the hook, if any.
+  public var storageUpdates: [Com_Hedera_Hapi_Node_Hooks_EvmHookStorageUpdate] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -230,32 +229,32 @@ public struct Com_Hedera_Hapi_Node_Hooks_EvmHookSpec: Sendable {
 }
 
 ///*
-/// Specifies a key/value pair in the storage of a lambda, either by the explicit storage
+/// Specifies a key/value pair in the storage of an EVM hook, either by the explicit storage
 /// slot contents; or by a combination of a Solidity mapping's slot key and the key into
 /// that mapping.
-public struct Com_Hedera_Hapi_Node_Hooks_LambdaStorageUpdate: Sendable {
+public struct Com_Hedera_Hapi_Node_Hooks_EvmHookStorageUpdate: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var update: Com_Hedera_Hapi_Node_Hooks_LambdaStorageUpdate.OneOf_Update? = nil
+  public var update: Com_Hedera_Hapi_Node_Hooks_EvmHookStorageUpdate.OneOf_Update? = nil
 
   ///*
   /// An explicit storage slot update.
-  public var storageSlot: Com_Hedera_Hapi_Node_Hooks_LambdaStorageSlot {
+  public var storageSlot: Com_Hedera_Hapi_Node_Hooks_EvmHookStorageSlot {
     get {
       if case .storageSlot(let v)? = update {return v}
-      return Com_Hedera_Hapi_Node_Hooks_LambdaStorageSlot()
+      return Com_Hedera_Hapi_Node_Hooks_EvmHookStorageSlot()
     }
     set {update = .storageSlot(newValue)}
   }
 
   ///*
   /// Implicit storage slot updates specified as Solidity mapping entries.
-  public var mappingEntries: Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries {
+  public var mappingEntries: Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntries {
     get {
       if case .mappingEntries(let v)? = update {return v}
-      return Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries()
+      return Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntries()
     }
     set {update = .mappingEntries(newValue)}
   }
@@ -265,10 +264,10 @@ public struct Com_Hedera_Hapi_Node_Hooks_LambdaStorageUpdate: Sendable {
   public enum OneOf_Update: Equatable, Sendable {
     ///*
     /// An explicit storage slot update.
-    case storageSlot(Com_Hedera_Hapi_Node_Hooks_LambdaStorageSlot)
+    case storageSlot(Com_Hedera_Hapi_Node_Hooks_EvmHookStorageSlot)
     ///*
     /// Implicit storage slot updates specified as Solidity mapping entries.
-    case mappingEntries(Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries)
+    case mappingEntries(Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntries)
 
   }
 
@@ -286,7 +285,7 @@ public struct Com_Hedera_Hapi_Node_Hooks_LambdaStorageUpdate: Sendable {
 /// Solidity mapping's entries. If only raw slots could be updated, then a block
 /// stream consumer following the metaprotocol would have to invert the Keccak256
 /// hash to determine which mapping entry was being updated, which is not possible.
-public struct Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries: @unchecked Sendable {
+public struct Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntries: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -298,7 +297,7 @@ public struct Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries: @unchecked Sendab
 
   ///*
   /// The entries in the mapping at the given slot.
-  public var entries: [Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntry] = []
+  public var entries: [Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntry] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -307,19 +306,19 @@ public struct Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries: @unchecked Sendab
 
 ///*
 /// An entry in a Solidity mapping. Very helpful for protocols that apply
-/// `LambdaSStore` to manage the entries of a hook contract's mapping instead
+/// `HookStore` to manage the entries of a hook contract's mapping instead
 /// its raw storage slots.
 /// <p>
 /// This is especially attractive when the mapping value itself fits in a single
 /// word; for more complicated value storage layouts it becomes necessary to
-/// combine the mapping update with additional `LambdaStorageSlot` updates that
+/// combine the mapping update with additional `EvmHookStorageSlot` updates that
 /// specify the complete storage slots of the value type.
-public struct Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntry: @unchecked Sendable {
+public struct Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntry: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var entryKey: Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntry.OneOf_EntryKey? = nil
+  public var entryKey: Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntry.OneOf_EntryKey? = nil
 
   ///*
   /// The explicit bytes of the mapping entry. Must use a minimal byte representation;
@@ -369,8 +368,8 @@ public struct Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntry: @unchecked Sendable
 }
 
 ///*
-/// A slot in the storage of a lambda EVM hook.
-public struct Com_Hedera_Hapi_Node_Hooks_LambdaStorageSlot: @unchecked Sendable {
+/// A slot in the storage of an EVM hook.
+public struct Com_Hedera_Hapi_Node_Hooks_EvmHookStorageSlot: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -455,7 +454,7 @@ extension Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: SwiftProtobuf.Message,
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "extension_point"),
     2: .standard(proto: "hook_id"),
-    3: .standard(proto: "lambda_evm_hook"),
+    3: .standard(proto: "evm_hook"),
     4: .standard(proto: "admin_key"),
   ]
 
@@ -468,16 +467,16 @@ extension Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: SwiftProtobuf.Message,
       case 1: try { try decoder.decodeSingularEnumField(value: &self.extensionPoint) }()
       case 2: try { try decoder.decodeSingularInt64Field(value: &self.hookID) }()
       case 3: try {
-        var v: Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook?
+        var v: Com_Hedera_Hapi_Node_Hooks_EvmHook?
         var hadOneofValue = false
         if let current = self.hook {
           hadOneofValue = true
-          if case .lambdaEvmHook(let m) = current {v = m}
+          if case .evmHook(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.hook = .lambdaEvmHook(v)
+          self.hook = .evmHook(v)
         }
       }()
       case 4: try { try decoder.decodeSingularMessageField(value: &self._adminKey) }()
@@ -497,7 +496,7 @@ extension Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: SwiftProtobuf.Message,
     if self.hookID != 0 {
       try visitor.visitSingularInt64Field(value: self.hookID, fieldNumber: 2)
     }
-    try { if case .lambdaEvmHook(let v)? = self.hook {
+    try { if case .evmHook(let v)? = self.hook {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     } }()
     try { if let v = self._adminKey {
@@ -516,8 +515,8 @@ extension Com_Hedera_Hapi_Node_Hooks_HookCreationDetails: SwiftProtobuf.Message,
   }
 }
 
-extension Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".LambdaEvmHook"
+extension Com_Hedera_Hapi_Node_Hooks_EvmHook: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".EvmHook"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "spec"),
     2: .standard(proto: "storage_updates"),
@@ -550,7 +549,7 @@ extension Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook: SwiftProtobuf.Message, Swift
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook, rhs: Com_Hedera_Hapi_Node_Hooks_LambdaEvmHook) -> Bool {
+  public static func ==(lhs: Com_Hedera_Hapi_Node_Hooks_EvmHook, rhs: Com_Hedera_Hapi_Node_Hooks_EvmHook) -> Bool {
     if lhs._spec != rhs._spec {return false}
     if lhs.storageUpdates != rhs.storageUpdates {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -606,8 +605,8 @@ extension Com_Hedera_Hapi_Node_Hooks_EvmHookSpec: SwiftProtobuf.Message, SwiftPr
   }
 }
 
-extension Com_Hedera_Hapi_Node_Hooks_LambdaStorageUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".LambdaStorageUpdate"
+extension Com_Hedera_Hapi_Node_Hooks_EvmHookStorageUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".EvmHookStorageUpdate"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "storage_slot"),
     2: .standard(proto: "mapping_entries"),
@@ -620,7 +619,7 @@ extension Com_Hedera_Hapi_Node_Hooks_LambdaStorageUpdate: SwiftProtobuf.Message,
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: Com_Hedera_Hapi_Node_Hooks_LambdaStorageSlot?
+        var v: Com_Hedera_Hapi_Node_Hooks_EvmHookStorageSlot?
         var hadOneofValue = false
         if let current = self.update {
           hadOneofValue = true
@@ -633,7 +632,7 @@ extension Com_Hedera_Hapi_Node_Hooks_LambdaStorageUpdate: SwiftProtobuf.Message,
         }
       }()
       case 2: try {
-        var v: Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries?
+        var v: Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntries?
         var hadOneofValue = false
         if let current = self.update {
           hadOneofValue = true
@@ -669,15 +668,15 @@ extension Com_Hedera_Hapi_Node_Hooks_LambdaStorageUpdate: SwiftProtobuf.Message,
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Com_Hedera_Hapi_Node_Hooks_LambdaStorageUpdate, rhs: Com_Hedera_Hapi_Node_Hooks_LambdaStorageUpdate) -> Bool {
+  public static func ==(lhs: Com_Hedera_Hapi_Node_Hooks_EvmHookStorageUpdate, rhs: Com_Hedera_Hapi_Node_Hooks_EvmHookStorageUpdate) -> Bool {
     if lhs.update != rhs.update {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".LambdaMappingEntries"
+extension Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntries: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".EvmHookMappingEntries"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "mapping_slot"),
     2: .same(proto: "entries"),
@@ -706,7 +705,7 @@ extension Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries: SwiftProtobuf.Message
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries, rhs: Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries) -> Bool {
+  public static func ==(lhs: Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntries, rhs: Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntries) -> Bool {
     if lhs.mappingSlot != rhs.mappingSlot {return false}
     if lhs.entries != rhs.entries {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -714,8 +713,8 @@ extension Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntries: SwiftProtobuf.Message
   }
 }
 
-extension Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntry: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".LambdaMappingEntry"
+extension Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntry: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".EvmHookMappingEntry"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "key"),
     2: .same(proto: "preimage"),
@@ -772,7 +771,7 @@ extension Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntry: SwiftProtobuf.Message, 
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntry, rhs: Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntry) -> Bool {
+  public static func ==(lhs: Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntry, rhs: Com_Hedera_Hapi_Node_Hooks_EvmHookMappingEntry) -> Bool {
     if lhs.entryKey != rhs.entryKey {return false}
     if lhs.value != rhs.value {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -780,8 +779,8 @@ extension Com_Hedera_Hapi_Node_Hooks_LambdaMappingEntry: SwiftProtobuf.Message, 
   }
 }
 
-extension Com_Hedera_Hapi_Node_Hooks_LambdaStorageSlot: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".LambdaStorageSlot"
+extension Com_Hedera_Hapi_Node_Hooks_EvmHookStorageSlot: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".EvmHookStorageSlot"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "key"),
     2: .same(proto: "value"),
@@ -810,7 +809,7 @@ extension Com_Hedera_Hapi_Node_Hooks_LambdaStorageSlot: SwiftProtobuf.Message, S
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Com_Hedera_Hapi_Node_Hooks_LambdaStorageSlot, rhs: Com_Hedera_Hapi_Node_Hooks_LambdaStorageSlot) -> Bool {
+  public static func ==(lhs: Com_Hedera_Hapi_Node_Hooks_EvmHookStorageSlot, rhs: Com_Hedera_Hapi_Node_Hooks_EvmHookStorageSlot) -> Bool {
     if lhs.key != rhs.key {return false}
     if lhs.value != rhs.value {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}

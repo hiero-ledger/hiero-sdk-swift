@@ -40,6 +40,11 @@ public enum Com_Hedera_Hapi_Node_State_History_WrapsPhase: SwiftProtobuf.Enum, S
   ///*
   /// Nodes are aggregating all messages to produce a final signature.
   case aggregate // = 3
+
+  ///*
+  /// Nodes are doing work that must occur in a different event loop
+  /// than the one used for the above phases.
+  case postAggregation // = 4
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -52,6 +57,7 @@ public enum Com_Hedera_Hapi_Node_State_History_WrapsPhase: SwiftProtobuf.Enum, S
     case 1: self = .r2
     case 2: self = .r3
     case 3: self = .aggregate
+    case 4: self = .postAggregation
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -62,6 +68,7 @@ public enum Com_Hedera_Hapi_Node_State_History_WrapsPhase: SwiftProtobuf.Enum, S
     case .r2: return 1
     case .r3: return 2
     case .aggregate: return 3
+    case .postAggregation: return 4
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -72,6 +79,7 @@ public enum Com_Hedera_Hapi_Node_State_History_WrapsPhase: SwiftProtobuf.Enum, S
     .r2,
     .r3,
     .aggregate,
+    .postAggregation,
   ]
 
 }
@@ -188,8 +196,8 @@ public struct Com_Hedera_Hapi_Node_State_History_HistoryProof: @unchecked Sendab
   /// The proof of chain of trust from the ledger id to the target
   /// history's metadata. May be switched from AggregatedNodeSignatures
   /// to a recursive proof when one becomes available.
-  public var chainOfTrustProof: Com_Hedera_Hapi_Block_Stream_ChainOfTrustProof {
-    get {return _chainOfTrustProof ?? Com_Hedera_Hapi_Block_Stream_ChainOfTrustProof()}
+  public var chainOfTrustProof: Com_Hedera_Hapi_Node_State_History_ChainOfTrustProof {
+    get {return _chainOfTrustProof ?? Com_Hedera_Hapi_Node_State_History_ChainOfTrustProof()}
     set {_chainOfTrustProof = newValue}
   }
   /// Returns true if `chainOfTrustProof` has been explicitly set.
@@ -208,7 +216,7 @@ public struct Com_Hedera_Hapi_Node_State_History_HistoryProof: @unchecked Sendab
   public init() {}
 
   fileprivate var _targetHistory: Com_Hedera_Hapi_Node_State_History_History? = nil
-  fileprivate var _chainOfTrustProof: Com_Hedera_Hapi_Block_Stream_ChainOfTrustProof? = nil
+  fileprivate var _chainOfTrustProof: Com_Hedera_Hapi_Node_State_History_ChainOfTrustProof? = nil
 }
 
 ///*
@@ -295,6 +303,10 @@ public struct Com_Hedera_Hapi_Node_State_History_HistoryProofConstruction: @unch
     set {proofState = .wrapsSigningState(newValue)}
   }
 
+  ///*
+  /// The number of times the network has had to restart this construction.
+  public var wrapsRetryCount: UInt32 = 0
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_ProofState: Equatable, Sendable {
@@ -342,8 +354,6 @@ public struct Com_Hedera_Hapi_Node_State_History_WrapsSigningState: Sendable {
   /// If the network is still gathering WRAPS messages for the R2 or R3
   /// protocol phase, the next time at which nodes should stop waiting
   /// for tardy messages from R1 participants and start over.
-  /// soon as it has WRAPS messages from nodes with >2/3 weight in the
-  /// target roster.
   public var gracePeriodEndTime: Proto_Timestamp {
     get {return _gracePeriodEndTime ?? Proto_Timestamp()}
     set {_gracePeriodEndTime = newValue}
@@ -543,6 +553,84 @@ public struct Com_Hedera_Hapi_Node_State_History_WrapsMessageHistory: Sendable {
   public init() {}
 }
 
+public struct Com_Hedera_Hapi_Node_State_History_ChainOfTrustProof: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var proof: Com_Hedera_Hapi_Node_State_History_ChainOfTrustProof.OneOf_Proof? = nil
+
+  ///*
+  /// If there is not yet a SNARK proving the chain of trust from ledger id to
+  /// the hinTS verification key, an aggregation of Schnorr signatures on
+  /// the concatenation of the ledger id and genesis hinTS verification key
+  /// that serve as witnesses for the SNARK prover algorithm.
+  public var aggregatedNodeSignatures: Com_Hedera_Hapi_Node_State_History_AggregatedNodeSignatures {
+    get {
+      if case .aggregatedNodeSignatures(let v)? = proof {return v}
+      return Com_Hedera_Hapi_Node_State_History_AggregatedNodeSignatures()
+    }
+    set {proof = .aggregatedNodeSignatures(newValue)}
+  }
+
+  ///*
+  /// If known, a ZK-compressed SNARK proof proving the chain of trust from
+  /// the ledger id to this hinTS verification key.
+  public var wrapsProof: Data {
+    get {
+      if case .wrapsProof(let v)? = proof {return v}
+      return Data()
+    }
+    set {proof = .wrapsProof(newValue)}
+  }
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public enum OneOf_Proof: Equatable, @unchecked Sendable {
+    ///*
+    /// If there is not yet a SNARK proving the chain of trust from ledger id to
+    /// the hinTS verification key, an aggregation of Schnorr signatures on
+    /// the concatenation of the ledger id and genesis hinTS verification key
+    /// that serve as witnesses for the SNARK prover algorithm.
+    case aggregatedNodeSignatures(Com_Hedera_Hapi_Node_State_History_AggregatedNodeSignatures)
+    ///*
+    /// If known, a ZK-compressed SNARK proof proving the chain of trust from
+    /// the ledger id to this hinTS verification key.
+    case wrapsProof(Data)
+
+  }
+
+  public init() {}
+}
+
+///*
+/// An aggregation of node signatures on some data.
+/// <p>
+/// Can be used to prove the genesis hinTS verification key in a block proof; but
+/// not succinct and not recursive; hence in normal operations with TSS, used only
+/// until the first recursive proof is available.
+public struct Com_Hedera_Hapi_Node_State_History_AggregatedNodeSignatures: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  ///*
+  /// The aggregated signature.
+  public var aggregatedSignature: Data = Data()
+
+  ///*
+  /// In ascending order, the ids of the nodes that contributed signatures.
+  public var signingNodeIds: [UInt64] = []
+
+  ///*
+  /// The hinTS key that this signature witnesses.
+  public var verificationKey: Data = Data()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "com.hedera.hapi.node.state.history"
@@ -553,6 +641,7 @@ extension Com_Hedera_Hapi_Node_State_History_WrapsPhase: SwiftProtobuf._ProtoNam
     1: .same(proto: "R2"),
     2: .same(proto: "R3"),
     3: .same(proto: "AGGREGATE"),
+    4: .same(proto: "POST_AGGREGATION"),
   ]
 }
 
@@ -745,6 +834,7 @@ extension Com_Hedera_Hapi_Node_State_History_HistoryProofConstruction: SwiftProt
     7: .standard(proto: "target_proof"),
     8: .standard(proto: "failure_reason"),
     9: .standard(proto: "wraps_signing_state"),
+    10: .standard(proto: "wraps_retry_count"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -816,6 +906,7 @@ extension Com_Hedera_Hapi_Node_State_History_HistoryProofConstruction: SwiftProt
           self.proofState = .wrapsSigningState(v)
         }
       }()
+      case 10: try { try decoder.decodeSingularUInt32Field(value: &self.wrapsRetryCount) }()
       default: break
       }
     }
@@ -858,6 +949,9 @@ extension Com_Hedera_Hapi_Node_State_History_HistoryProofConstruction: SwiftProt
     }()
     case nil: break
     }
+    if self.wrapsRetryCount != 0 {
+      try visitor.visitSingularUInt32Field(value: self.wrapsRetryCount, fieldNumber: 10)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -866,6 +960,7 @@ extension Com_Hedera_Hapi_Node_State_History_HistoryProofConstruction: SwiftProt
     if lhs.sourceRosterHash != rhs.sourceRosterHash {return false}
     if lhs.targetRosterHash != rhs.targetRosterHash {return false}
     if lhs.proofState != rhs.proofState {return false}
+    if lhs.wrapsRetryCount != rhs.wrapsRetryCount {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -1175,6 +1270,115 @@ extension Com_Hedera_Hapi_Node_State_History_WrapsMessageHistory: SwiftProtobuf.
 
   public static func ==(lhs: Com_Hedera_Hapi_Node_State_History_WrapsMessageHistory, rhs: Com_Hedera_Hapi_Node_State_History_WrapsMessageHistory) -> Bool {
     if lhs.messages != rhs.messages {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Com_Hedera_Hapi_Node_State_History_ChainOfTrustProof: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ChainOfTrustProof"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "aggregated_node_signatures"),
+    2: .standard(proto: "wraps_proof"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: Com_Hedera_Hapi_Node_State_History_AggregatedNodeSignatures?
+        var hadOneofValue = false
+        if let current = self.proof {
+          hadOneofValue = true
+          if case .aggregatedNodeSignatures(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.proof = .aggregatedNodeSignatures(v)
+        }
+      }()
+      case 2: try {
+        var v: Data?
+        try decoder.decodeSingularBytesField(value: &v)
+        if let v = v {
+          if self.proof != nil {try decoder.handleConflictingOneOf()}
+          self.proof = .wrapsProof(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    switch self.proof {
+    case .aggregatedNodeSignatures?: try {
+      guard case .aggregatedNodeSignatures(let v)? = self.proof else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .wrapsProof?: try {
+      guard case .wrapsProof(let v)? = self.proof else { preconditionFailure() }
+      try visitor.visitSingularBytesField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Com_Hedera_Hapi_Node_State_History_ChainOfTrustProof, rhs: Com_Hedera_Hapi_Node_State_History_ChainOfTrustProof) -> Bool {
+    if lhs.proof != rhs.proof {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Com_Hedera_Hapi_Node_State_History_AggregatedNodeSignatures: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".AggregatedNodeSignatures"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "aggregated_signature"),
+    2: .standard(proto: "signing_node_ids"),
+    3: .standard(proto: "verification_key"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.aggregatedSignature) }()
+      case 2: try { try decoder.decodeRepeatedUInt64Field(value: &self.signingNodeIds) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.verificationKey) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.aggregatedSignature.isEmpty {
+      try visitor.visitSingularBytesField(value: self.aggregatedSignature, fieldNumber: 1)
+    }
+    if !self.signingNodeIds.isEmpty {
+      try visitor.visitPackedUInt64Field(value: self.signingNodeIds, fieldNumber: 2)
+    }
+    if !self.verificationKey.isEmpty {
+      try visitor.visitSingularBytesField(value: self.verificationKey, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Com_Hedera_Hapi_Node_State_History_AggregatedNodeSignatures, rhs: Com_Hedera_Hapi_Node_State_History_AggregatedNodeSignatures) -> Bool {
+    if lhs.aggregatedSignature != rhs.aggregatedSignature {return false}
+    if lhs.signingNodeIds != rhs.signingNodeIds {return false}
+    if lhs.verificationKey != rhs.verificationKey {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
