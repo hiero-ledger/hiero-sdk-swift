@@ -8,13 +8,13 @@ public struct FeeExtra: Sendable, Equatable, Hashable {
     public let name: String
 
     /// The count of this "extra" that is included for free.
-    public let included: UInt32
+    public let included: UInt64
 
     /// The actual count of items received.
-    public let count: UInt32
+    public let count: UInt64
 
     /// The charged count of items as calculated by max(0, count - included).
-    public let charged: UInt32
+    public let charged: UInt64
 
     /// The fee price per unit in tinycents.
     public let feePerUnit: UInt64
@@ -34,9 +34,9 @@ public struct FeeExtra: Sendable, Equatable, Hashable {
     ///   - subtotal: The subtotal in tinycents for this extra fee.
     public init(
         name: String,
-        included: UInt32,
-        count: UInt32,
-        charged: UInt32,
+        included: UInt64,
+        count: UInt64,
+        charged: UInt64,
         feePerUnit: UInt64,
         subtotal: UInt64
     ) {
@@ -57,9 +57,9 @@ public struct FeeExtra: Sendable, Equatable, Hashable {
     ///   The `fee_per_unit` JSON key maps to the `feePerUnit` property.
     internal static func fromJson(_ json: [String: Any]) throws -> FeeExtra {
         let name = json["name"] as? String ?? ""
-        let included = (json["included"] as? NSNumber)?.uint32Value ?? 0
-        let count = (json["count"] as? NSNumber)?.uint32Value ?? 0
-        let charged = (json["charged"] as? NSNumber)?.uint32Value ?? 0
+        let included = (json["included"] as? NSNumber)?.uint64Value ?? 0
+        let count = (json["count"] as? NSNumber)?.uint64Value ?? 0
+        let charged = (json["charged"] as? NSNumber)?.uint64Value ?? 0
         let feePerUnit = (json["fee_per_unit"] as? NSNumber)?.uint64Value ?? 0
         let subtotal = (json["subtotal"] as? NSNumber)?.uint64Value ?? 0
 
