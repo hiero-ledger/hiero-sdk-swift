@@ -93,10 +93,19 @@ public final class ScheduleCreateTransaction: Transaction {
         return self
     }
 
+    private var scheduledTransactionClientMaxTransactionFee: Hbar?
+
     private var scheduledTransactionInner: AnySchedulableTransaction? {
         willSet {
             ensureNotFrozen()
         }
+    }
+
+    @discardableResult
+    public override func freezeWith(_ client: Client?) throws -> Self {
+        scheduledTransactionClientMaxTransactionFee = client?.maxTransactionFee
+
+        return try super.freezeWith(client)
     }
 
     /// The scheduled transaction.
@@ -179,9 +188,9 @@ extension ScheduleCreateTransaction: ToProtobuf {
 
                 let transactionFee =
                     scheduledTransaction.transaction.maxTransactionFee
+                    ?? self.scheduledTransactionClientMaxTransactionFee
                     ?? scheduledTransaction.transaction.defaultMaxTransactionFee
 
-                // FIXME: does not use the client to default the max transaction fee
                 proto.transactionFee = UInt64(transactionFee.toTinybars())
             }
         }

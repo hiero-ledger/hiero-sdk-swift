@@ -500,6 +500,14 @@ public final class Client: Sendable {
         return self
     }
 
+    /// Sets the maximum transaction fee used when freezing transactions.
+    @discardableResult
+    internal func setMaxTransactionFee(_ maxTransactionFee: Hbar) -> Self {
+        _maxTransactionFee.store(maxTransactionFee.toTinybars(), ordering: .relaxed)
+
+        return self
+    }
+
     /// Returns the account ID of the operator, or `nil` if no operator has been set.
     ///
     /// The operator account is used by default for paying transaction fees and signing transactions.

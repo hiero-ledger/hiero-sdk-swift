@@ -61,6 +61,29 @@ internal final class ScheduleCreateTransactionUnitTests: HieroUnitTestCase, Tran
         XCTAssertEqual(tx.isWaitForExpiry, true)
     }
 
+    internal func test_ScheduledTransactionBodyUsesClientDefaultMaxFee() throws {
+        let client = Client.forTestnet()
+        client.setMaxTransactionFee(Hbar(5))
+        client.setOperator(AccountId(num: 0), PrivateKey.generateEd25519())
+
+        let innerTx = try TransferTransaction()
+            .hbarTransfer(AccountId.fromString("0.0.1001"), Hbar(-1))
+            .hbarTransfer(AccountId.fromString("0.0.1002"), Hbar(1))
+
+        let scheduleTx = ScheduleCreateTransaction()
+            .scheduledTransaction(innerTx)
+
+        try scheduleTx.freezeWith(client)
+
+        let proto = scheduleTx.toProtobuf()
+
+        XCTAssertEqual(
+            proto.scheduledTransactionBody.transactionFee,
+            UInt64(Hbar(5).toTinybars()),
+            "Inner transaction should use client's defaultMaxTransactionFee"
+        )
+    }
+
     internal func test_GetSetPayerAccountId() throws {
         let tx = ScheduleCreateTransaction()
         tx.payerAccountId(TestConstants.accountId)
