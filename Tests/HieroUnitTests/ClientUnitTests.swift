@@ -183,4 +183,32 @@ internal final class ClientUnitTests: HieroUnitTestCase {
 
         XCTAssertEqual(client.grpcDeadline, 300.0)
     }
+
+    // MARK: - Operator Tests
+
+    internal func test_GetOperatorAccountIdReturnsNilWhenNotSet() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        XCTAssertNil(client.getOperatorAccountId())
+    }
+
+    internal func test_GetOperatorAccountIdReturnsAccountIdWhenSet() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+        let operatorId = try AccountId(shard: 0, realm: 0, num: 3)
+        let privateKey = PrivateKey.generateEd25519()
+
+        client.setOperator(operatorId, privateKey)
+
+        XCTAssertEqual(client.getOperatorAccountId(), operatorId)
+    }
+
+    internal func test_SetOperatorReturnsClientForFluentInterface() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+        let operatorId = try AccountId(shard: 0, realm: 0, num: 3)
+        let privateKey = PrivateKey.generateEd25519()
+
+        let returnedClient = client.setOperator(operatorId, privateKey)
+
+        XCTAssertTrue(client === returnedClient)
+    }
 }
