@@ -221,6 +221,25 @@ internal final class ClientUnitTests: HieroUnitTestCase {
         let client = try Client.forNetwork([String: AccountId]())
 
         XCTAssertThrowsError(try client.setDefaultMaxTransactionFee(.fromTinybars(-1))) { error in
+        let client = try Client.forNetwork([String: AccountId]())
+
+        XCTAssertEqual(client.getDefaultMaxQueryPayment(), Hbar.fromTinybars(100_000_000))
+    }
+
+    internal func test_SetDefaultMaxQueryPaymentRoundTripsCorrectly() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+        let newMax = Hbar.fromTinybars(50_000_000)
+
+        try client.setDefaultMaxQueryPayment(newMax)
+
+        XCTAssertEqual(client.getDefaultMaxQueryPayment(), newMax)
+    }
+
+    internal func test_SetDefaultMaxQueryPaymentThrowsForNegativeValue() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+        let negativePayment = Hbar.fromTinybars(-1)
+
+        XCTAssertThrowsError(try client.setDefaultMaxQueryPayment(negativePayment)) { error in
             guard let hError = error as? HError else {
                 XCTFail("Expected HError, got \(type(of: error))")
                 return
@@ -229,6 +248,18 @@ internal final class ClientUnitTests: HieroUnitTestCase {
             XCTAssertEqual(hError.kind, .illegalState)
             XCTAssertTrue(hError.description.contains("non-negative"))
         }
+    }
+
+            XCTAssertTrue(hError.description.contains("defaultMaxQueryPayment must be non-negative"))
+        }
+    }
+
+    internal func test_SetDefaultMaxQueryPaymentZeroReturnsNil() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        try client.setDefaultMaxQueryPayment(Hbar.fromTinybars(0))
+
+        XCTAssertNil(client.getDefaultMaxQueryPayment())
     }
 
     // MARK: - Operator Tests
@@ -261,6 +292,7 @@ internal final class ClientUnitTests: HieroUnitTestCase {
 }
 
 internal final class ClientOperatorUnitTests: HieroUnitTestCase {
+
     internal func test_SetOperatorWithUsesCustomSignerAndPublicKey() throws {
         let client = try Client.forNetwork([String: AccountId]())
         let operatorId = AccountId(shard: 0, realm: 0, num: 3)
