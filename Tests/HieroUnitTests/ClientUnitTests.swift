@@ -195,7 +195,7 @@ internal final class ClientUnitTests: HieroUnitTestCase {
 
     internal func test_GetOperatorAccountIdReturnsAccountIdWhenSet() throws {
         let client = try Client.forNetwork([String: AccountId]())
-        let operatorId = try AccountId(shard: 0, realm: 0, num: 3)
+        let operatorId = AccountId(shard: 0, realm: 0, num: 3)
         let privateKey = PrivateKey.generateEd25519()
 
         client.setOperator(operatorId, privateKey)
@@ -205,7 +205,7 @@ internal final class ClientUnitTests: HieroUnitTestCase {
 
     internal func test_SetOperatorReturnsClientForFluentInterface() throws {
         let client = try Client.forNetwork([String: AccountId]())
-        let operatorId = try AccountId(shard: 0, realm: 0, num: 3)
+        let operatorId = AccountId(shard: 0, realm: 0, num: 3)
         let privateKey = PrivateKey.generateEd25519()
 
         let returnedClient = client.setOperator(operatorId, privateKey)
