@@ -500,6 +500,29 @@ public final class Client: Sendable {
         return self
     }
 
+    /// Sets the operator using a custom signer.
+    ///
+    /// This allows integration with HSMs, remote signing services, or other
+    /// systems that don't expose raw private keys.
+    ///
+    /// - Parameters:
+    ///   - accountId: Account ID to use as operator
+    ///   - publicKey: Public key corresponding to the signing key
+    ///   - signer: A closure that signs message data and returns the signature
+    /// - Returns: Self for method chaining
+    @discardableResult
+    public func setOperatorWith(
+        _ accountId: AccountId,
+        _ publicKey: PublicKey,
+        _ signer: @Sendable @escaping (Data) -> Data
+    ) -> Self {
+        _operator.withLockedValue {
+            $0 = Operator(accountId: accountId, signer: Signer(publicKey, signer))
+        }
+
+        return self
+    }
+
     /// Sets the maximum transaction fee used when freezing transactions.
     @discardableResult
     internal func setMaxTransactionFee(_ maxTransactionFee: Hbar) -> Self {
