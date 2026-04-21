@@ -214,7 +214,7 @@ internal final class ClientUnitTests: HieroUnitTestCase {
     }
 }
 
-internal final class ClientOperatorUnitTests: XCTestCase {
+internal final class ClientOperatorUnitTests: HieroUnitTestCase {
     internal func test_SetOperatorWithUsesCustomSignerAndPublicKey() throws {
         let client = try Client.forNetwork([String: AccountId]())
         let operatorId = AccountId(shard: 0, realm: 0, num: 3)
