@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import Atomics
 import HieroTestSupport
 import XCTest
 
@@ -194,7 +195,7 @@ internal final class ClientUnitTests: HieroUnitTestCase {
 
     internal func test_GetOperatorAccountIdReturnsAccountIdWhenSet() throws {
         let client = try Client.forNetwork([String: AccountId]())
-        let operatorId = try AccountId(shard: 0, realm: 0, num: 3)
+        let operatorId = AccountId(shard: 0, realm: 0, num: 3)
         let privateKey = PrivateKey.generateEd25519()
 
         client.setOperator(operatorId, privateKey)
@@ -204,11 +205,38 @@ internal final class ClientUnitTests: HieroUnitTestCase {
 
     internal func test_SetOperatorReturnsClientForFluentInterface() throws {
         let client = try Client.forNetwork([String: AccountId]())
-        let operatorId = try AccountId(shard: 0, realm: 0, num: 3)
+        let operatorId = AccountId(shard: 0, realm: 0, num: 3)
         let privateKey = PrivateKey.generateEd25519()
 
         let returnedClient = client.setOperator(operatorId, privateKey)
 
         XCTAssertTrue(client === returnedClient)
+    }
+}
+
+internal final class ClientOperatorUnitTests: HieroUnitTestCase {
+    internal func test_SetOperatorWithUsesCustomSignerAndPublicKey() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+        let operatorId = AccountId(shard: 0, realm: 0, num: 3)
+        let privateKey = PrivateKey.generateEd25519()
+        let publicKey = privateKey.publicKey
+
+        let signerCalled = ManagedAtomic<Bool>(false)
+        let signer: @Sendable (Data) -> Data = { data in
+            signerCalled.store(true, ordering: .relaxed)
+            return privateKey.sign(data)
+        }
+
+        client.setOperatorWith(operatorId, publicKey, signer)
+
+        XCTAssertEqual(client.`operator`?.signer.publicKey, publicKey)
+
+        let transaction = FreezeTransaction()
+            .nodeAccountIds([operatorId])
+
+        try transaction.signWithOperator(client)
+        _ = try transaction.getSignatures()
+
+        XCTAssertTrue(signerCalled.load(ordering: .relaxed))
     }
 }
