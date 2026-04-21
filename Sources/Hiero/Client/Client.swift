@@ -516,9 +516,9 @@ public final class Client: Sendable {
         _ publicKey: PublicKey,
         _ signer: @Sendable @escaping (Data) -> Data
     ) -> Self {
-        _operator.withLockedValue {
-            $0 = Operator(accountId: accountId, signer: Signer(publicKey, signer))
-        }
+        _operator.withLockedValue { op in
+            op = Operator(accountId: accountId, signer: Signer(publicKey, signer))
+       }
 
         return self
     }
