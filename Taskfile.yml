@@ -11,7 +11,7 @@ tasks:
                 /// Contains SDK version information.
                 public enum VersionInfo {
                     /// The current version of the Hiero SDK.
-                    public static let version = \"$(git describe --tags $(git rev-list --tags --max-count=1))-dev\"
+                    public static let version = \"$(git describe --tags $(git rev-list --tags --max-count=1) | sed 's/^v//')-dev\"
                 }" > Sources/Hiero/Version.swift
             - swift build
 
@@ -51,7 +51,7 @@ tasks:
                 /// Contains SDK version information.
                 public enum VersionInfo {
                     /// The current version of the Hiero SDK.
-                    public static let version = \"$(git describe --tags)\"
+                    public static let version = \"$(git describe --tags | sed 's/^v//')\"
                 }" > Sources/Hiero/Version.swift
             - swift build -c release
 
