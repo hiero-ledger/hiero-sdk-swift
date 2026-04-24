@@ -179,6 +179,32 @@ public final class Client: Sendable {
         return _realm
     }
 
+    /// Returns the default maximum transaction fee, or nil if unlimited.
+    ///
+    /// When set, this fee is used as the default for all transactions unless
+    /// explicitly overridden on the transaction itself.
+    public func getDefaultMaxTransactionFee() -> Hbar? {
+        maxTransactionFee
+    }
+
+    /// Sets the default maximum transaction fee for all transactions.
+    ///
+    /// - Parameter fee: The maximum fee in Hbar. Must be non-negative.
+    /// - Returns: Self for method chaining
+    /// - Throws: `HError.illegalState` if `fee` is negative.
+    @discardableResult
+    public func setDefaultMaxTransactionFee(_ fee: Hbar) throws -> Self {
+        let tinybars = fee.toTinybars()
+
+        guard tinybars >= 0 else {
+            throw HError.illegalState("defaultMaxTransactionFee must be non-negative")
+        }
+
+        _maxTransactionFee.store(tinybars, ordering: .relaxed)
+
+        return self
+    }
+
     // MARK: - Retry Configuration
 
     /// Maximum timeout for a single gRPC request before it's considered failed.
