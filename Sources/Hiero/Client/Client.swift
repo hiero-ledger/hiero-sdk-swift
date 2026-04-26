@@ -190,6 +190,8 @@ public final class Client: Sendable {
     /// Sets the default maximum transaction fee for all transactions.
     ///
     /// - Parameter fee: The maximum fee in Hbar. Must be non-negative.
+    ///   A value of zero clears the default fee limit, equivalent to not having set one
+    ///   (i.e., `getDefaultMaxTransactionFee()` will return `nil`).
     /// - Returns: Self for method chaining
     /// - Throws: `HError.illegalState` if `fee` is negative.
     @discardableResult
