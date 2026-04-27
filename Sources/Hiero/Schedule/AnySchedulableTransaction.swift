@@ -41,6 +41,9 @@ internal enum AnySchedulableTransaction {
     case freeze(FreezeTransaction)
     case scheduleDelete(ScheduleDeleteTransaction)
     case prng(PrngTransaction)
+    case registeredNodeCreate(RegisteredNodeCreateTransaction)
+    case registeredNodeUpdate(RegisteredNodeUpdateTransaction)
+    case registeredNodeDelete(RegisteredNodeDeleteTransaction)
 
     internal init(upcasting transaction: Transaction) {
         switch transaction {
@@ -82,6 +85,9 @@ internal enum AnySchedulableTransaction {
         case let transaction as SystemUndeleteTransaction: self = .systemUndelete(transaction)
         case let transaction as FreezeTransaction: self = .freeze(transaction)
         case let transaction as ScheduleDeleteTransaction: self = .scheduleDelete(transaction)
+        case let transaction as RegisteredNodeCreateTransaction: self = .registeredNodeCreate(transaction)
+        case let transaction as RegisteredNodeUpdateTransaction: self = .registeredNodeUpdate(transaction)
+        case let transaction as RegisteredNodeDeleteTransaction: self = .registeredNodeDelete(transaction)
         case is ScheduleCreateTransaction, is ScheduleSignTransaction, is EthereumTransaction:
             fatalError("Cannot schedule `\(type(of: transaction))`")
         default: fatalError("Unrecognized transaction type: \(type(of: transaction))")
@@ -168,6 +174,12 @@ extension AnySchedulableTransaction {
             return transaction
         case .prng(let transaction):
             return transaction
+        case .registeredNodeCreate(let transaction):
+            return transaction
+        case .registeredNodeUpdate(let transaction):
+            return transaction
+        case .registeredNodeDelete(let transaction):
+            return transaction
         }
     }
 }
@@ -213,6 +225,9 @@ extension AnySchedulableTransaction {
         case .freeze(let transaction): return transaction.toSchedulableTransactionData()
         case .scheduleDelete(let transaction): return transaction.toSchedulableTransactionData()
         case .prng(let transaction): return transaction.toSchedulableTransactionData()
+        case .registeredNodeCreate(let transaction): return transaction.toSchedulableTransactionData()
+        case .registeredNodeUpdate(let transaction): return transaction.toSchedulableTransactionData()
+        case .registeredNodeDelete(let transaction): return transaction.toSchedulableTransactionData()
         }
     }
 

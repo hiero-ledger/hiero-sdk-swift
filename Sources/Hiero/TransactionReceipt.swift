@@ -23,7 +23,8 @@ public struct TransactionReceipt {
         serials: [UInt64]? = nil,
         duplicates: [TransactionReceipt],
         children: [TransactionReceipt],
-        nodeId: UInt64 = 0
+        nodeId: UInt64 = 0,
+        registeredNodeId: UInt64? = nil
     ) {
         self.transactionId = transactionId
         self.status = status
@@ -43,6 +44,7 @@ public struct TransactionReceipt {
         self.duplicates = duplicates
         self.children = children
         self.nodeId = nodeId
+        self.registeredNodeId = registeredNodeId
     }
 
     /// The ID of the transaction that this is a receipt for.
@@ -121,6 +123,9 @@ public struct TransactionReceipt {
     /// An affected node identifier.
     public let nodeId: UInt64
 
+    /// In the receipt of a RegisteredNodeCreate, the id of the newly created registered node.
+    public let registeredNodeId: UInt64?
+
     internal init(
         protobuf proto: Proto_TransactionReceipt,
         duplicates: [TransactionReceipt],
@@ -152,7 +157,9 @@ public struct TransactionReceipt {
             scheduledTransactionId: try .fromProtobuf(scheduledTransactionId),
             serials: serials?.map(UInt64.init),
             duplicates: duplicates,
-            children: children
+            children: children,
+            nodeId: proto.nodeID,
+            registeredNodeId: proto.registeredNodeID != 0 ? proto.registeredNodeID : nil
         )
     }
 
@@ -209,6 +216,7 @@ extension TransactionReceipt: TryProtobufCodable {
             scheduledTransactionId?.toProtobufInto(&proto.scheduledTransactionID)
             proto.serialNumbers = serials?.map(Int64.init) ?? []
             proto.nodeID = nodeId
+            proto.registeredNodeID = registeredNodeId ?? 0
         }
     }
 }

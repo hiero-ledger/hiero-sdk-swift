@@ -62,9 +62,13 @@ internal enum ServicesTransactionDataList {
     case hintsKeyPublication([Com_Hedera_Hapi_Services_Auxiliary_Hints_HintsKeyPublicationTransactionBody])
     case hintsPartialSignature([Com_Hedera_Hapi_Services_Auxiliary_Hints_HintsPartialSignatureTransactionBody])
     case crsPublication([Com_Hedera_Hapi_Services_Auxiliary_Hints_CrsPublicationTransactionBody])
+    case registeredNodeCreate([Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeCreateTransactionBody])
+    case registeredNodeUpdate([Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeUpdateTransactionBody])
+    case registeredNodeDelete([Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeDeleteTransactionBody])
     case atomicBatch([Proto_AtomicBatchTransactionBody])
-    case hookStore([Com_Hedera_Hapi_Node_Hooks_HookStoreTransactionBody])
     case hookDispatch([Com_Hedera_Hapi_Node_Hooks_HookDispatchTransactionBody])
+    case hookStore([Com_Hedera_Hapi_Node_Hooks_HookStoreTransactionBody])
+    case ledgerIdPublication([Com_Hedera_Hapi_Node_Tss_LedgerIdPublicationTransactionBody])
 
     internal mutating func append(_ transaction: Proto_TransactionBody.OneOf_Data) throws {
         switch (self, transaction) {
@@ -296,17 +300,33 @@ internal enum ServicesTransactionDataList {
             array.append(data)
             self = .crsPublication(array)
 
+        case (.registeredNodeCreate(var array), .registeredNodeCreate(let data)):
+            array.append(data)
+            self = .registeredNodeCreate(array)
+
+        case (.registeredNodeUpdate(var array), .registeredNodeUpdate(let data)):
+            array.append(data)
+            self = .registeredNodeUpdate(array)
+
+        case (.registeredNodeDelete(var array), .registeredNodeDelete(let data)):
+            array.append(data)
+            self = .registeredNodeDelete(array)
+
         case (.atomicBatch(var array), .atomicBatch(let data)):
             array.append(data)
             self = .atomicBatch(array)
+
+        case (.hookDispatch(var array), .hookDispatch(let data)):
+            array.append(data)
+            self = .hookDispatch(array)
 
         case (.hookStore(var array), .hookStore(let data)):
             array.append(data)
             self = .hookStore(array)
 
-        case (.hookDispatch(var array), .hookDispatch(let data)):
+        case (.ledgerIdPublication(var array), .ledgerIDPublication(let data)):
             array.append(data)
-            self = .hookDispatch(array)
+            self = .ledgerIdPublication(array)
 
         default:
             throw HError.fromProtobuf("mismatched transaction types")
@@ -379,9 +399,13 @@ extension ServicesTransactionDataList: TryFromProtobuf {
         case .tokenAirdrop(let data): value = .tokenAirdrop([data])
         case .tokenCancelAirdrop(let data): value = .tokenCancelAirdrop([data])
         case .tokenClaimAirdrop(let data): value = .tokenClaimAirdrop([data])
+        case .registeredNodeCreate(let data): value = .registeredNodeCreate([data])
+        case .registeredNodeUpdate(let data): value = .registeredNodeUpdate([data])
+        case .registeredNodeDelete(let data): value = .registeredNodeDelete([data])
         case .atomicBatch(let data): value = .atomicBatch([data])
-        case .hookStore(let data): value = .hookStore([data])
         case .hookDispatch(let data): value = .hookDispatch([data])
+        case .hookStore(let data): value = .hookStore([data])
+        case .ledgerIDPublication(let data): value = .ledgerIdPublication([data])
         case .stateSignatureTransaction:
             throw HError.fromProtobuf("Unsupported transaction `StateSignatureTransaction`")
         case .hintsPreprocessingVote:
@@ -398,14 +422,8 @@ extension ServicesTransactionDataList: TryFromProtobuf {
             throw HError.fromProtobuf("Unsupported transaction `HistoryProofVoteTransaction`")
         case .crsPublication:
             throw HError.fromProtobuf("Unsupported transaction `CrsPublicationTransaction`")
-        case .ledgerIDPublication:
-            throw HError.fromProtobuf("Unsupported transaction `LedgerIdPublicationTransaction`")
-        case .registeredNodeCreate:
-            throw HError.fromProtobuf("Unsupported transaction `RegisteredNodeCreateTransaction`")
-        case .registeredNodeUpdate:
-            throw HError.fromProtobuf("Unsupported transaction `RegisteredNodeUpdateTransaction`")
-        case .registeredNodeDelete:
-            throw HError.fromProtobuf("Unsupported transaction `RegisteredNodeDeleteTransaction`")
+        case .migrationRootHashVote:
+            throw HError.fromProtobuf("Unsupported transaction `MigrationRootHashVoteTransaction`")
         }
 
         for transaction in iter {
