@@ -185,6 +185,52 @@ internal final class ClientUnitTests: HieroUnitTestCase {
         XCTAssertEqual(client.grpcDeadline, 300.0)
     }
 
+    // MARK: - Default Max Transaction Fee Tests
+
+    internal func test_GetDefaultMaxTransactionFeeReturnsNilByDefault() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        XCTAssertNil(client.getDefaultMaxTransactionFee())
+    }
+
+    internal func test_SetDefaultMaxTransactionFeeStoresValue() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+        let fee = Hbar.fromTinybars(100_000)
+
+        try client.setDefaultMaxTransactionFee(fee)
+
+        XCTAssertEqual(client.getDefaultMaxTransactionFee(), fee)
+    }
+
+    internal func test_SetDefaultMaxTransactionFeeReturnsClientForFluentInterface() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+        let returnedClient = try client.setDefaultMaxTransactionFee(.fromTinybars(100_000))
+
+        XCTAssertTrue(client === returnedClient)
+    }
+
+    internal func test_SetDefaultMaxTransactionFeeZeroReturnsNilWhenRead() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        try client.setDefaultMaxTransactionFee(.fromTinybars(0))
+
+        XCTAssertNil(client.getDefaultMaxTransactionFee())
+    }
+
+    internal func test_SetDefaultMaxTransactionFeeThrowsWhenNegative() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        XCTAssertThrowsError(try client.setDefaultMaxTransactionFee(.fromTinybars(-1))) { error in
+            guard let hError = error as? HError else {
+                XCTFail("Expected HError, got \(type(of: error))")
+                return
+            }
+
+            XCTAssertEqual(hError.kind, .illegalState)
+            XCTAssertTrue(hError.description.contains("non-negative"))
+        }
+    }
+
     // MARK: - Operator Tests
 
     internal func test_GetOperatorAccountIdReturnsNilWhenNotSet() throws {
