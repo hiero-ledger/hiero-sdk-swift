@@ -221,9 +221,14 @@ internal final class ClientUnitTests: HieroUnitTestCase {
         let client = try Client.forNetwork([String: AccountId]())
 
         XCTAssertThrowsError(try client.setDefaultMaxTransactionFee(.fromTinybars(-1))) { error in
-        let client = try Client.forNetwork([String: AccountId]())
+            guard let hError = error as? HError else {
+                XCTFail("Expected HError, got \(type(of: error))")
+                return
+            }
 
-        XCTAssertEqual(client.getDefaultMaxQueryPayment(), Hbar.fromTinybars(100_000_000))
+            XCTAssertEqual(hError.kind, .illegalState)
+            XCTAssertTrue(hError.description.contains("non-negative"))
+        }
     }
 
     internal func test_SetDefaultMaxQueryPaymentRoundTripsCorrectly() throws {
@@ -247,10 +252,6 @@ internal final class ClientUnitTests: HieroUnitTestCase {
 
             XCTAssertEqual(hError.kind, .illegalState)
             XCTAssertTrue(hError.description.contains("non-negative"))
-        }
-    }
-
-            XCTAssertTrue(hError.description.contains("defaultMaxQueryPayment must be non-negative"))
         }
     }
 
