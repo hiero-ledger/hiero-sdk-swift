@@ -15,8 +15,7 @@ open class HieroIntegrationTestCase: HieroTestCase {
     open override func setUp() async throws {
         try await super.setUp()
 
-        // Integration tests require .env configuration and operator credentials.
-        DotenvLoader.ensureLoaded()
+        // Integration tests require operator credentials.
         do {
             try TestEnvironmentConfig.ensureLoaded()
         } catch {

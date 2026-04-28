@@ -8,5 +8,6 @@ import XCTest
 open class HieroTestCase: XCTestCase {
     open override func setUp() async throws {
         try await super.setUp()
+        DotenvLoader.ensureLoaded()
     }
 }
