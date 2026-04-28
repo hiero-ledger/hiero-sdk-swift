@@ -224,7 +224,7 @@ internal final class ClientUnitTests: HieroUnitTestCase {
             guard let hError = error as? HError else {
                 XCTFail("Expected HError, got \(type(of: error))")
                 return
-            }
+         }
 
             XCTAssertEqual(hError.kind, .illegalState)
             XCTAssertTrue(hError.description.contains("non-negative"))
