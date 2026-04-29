@@ -498,6 +498,14 @@ public final class Client: Sendable {
         return client
     }
 
+    /// Returns the public key operator, or `nil` if no operator has been set.
+    /// 
+    /// The operator's public key is derived from the private key or custom signer used to sign transactions.
+    public func getOperatorPublicKey() -> PublicKey? {
+        _operator.withLockedValue { $0?.signer.publicKey }
+        
+    }
+
     /// Creates a client by network name (mainnet, testnet, previewnet, or localhost).
     ///
     /// - Parameter name: Network name ("mainnet", "testnet", "previewnet", or "localhost")
