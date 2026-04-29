@@ -54,6 +54,9 @@ public final class Client: Sendable {
     /// Maximum transaction fee in tinybars (0 = no limit)
     private let _maxTransactionFee: ManagedAtomic<Int64>
 
+    /// Maximum query payment in tinybars (0 = no limit)
+    private let _maxQueryPayment: ManagedAtomic<Int64>
+
     /// Network update period in nanoseconds
     private let _networkUpdatePeriod: NIOLockedValueBox<UInt64?>
 
@@ -102,6 +105,7 @@ public final class Client: Sendable {
         self._autoValidateChecksums = .init(false)  // Checksums disabled by default for performance
         self._regenerateTransactionId = .init(true)  // Auto-regenerate expired transaction IDs by default
         self._maxTransactionFee = .init(0)  // 0 = no fee limit (use network defaults)
+        self._maxQueryPayment = .init(100_000_000)  // Default: 1 Hbar
         self.networkUpdateTask = NetworkUpdateTask(
             eventLoop: eventLoop,
             consensusNetwork: _consensusNetwork,
@@ -145,6 +149,11 @@ public final class Client: Sendable {
         }
 
         return .fromTinybars(value)
+    }
+
+    /// Maximum query payment, or nil if unlimited
+    internal var defaultMaxQueryPayment: Hbar? {
+        getDefaultMaxQueryPayment()  // delegate, don't duplicate
     }
 
     /// Whether this client should use only plaintext endpoints.
@@ -489,6 +498,13 @@ public final class Client: Sendable {
         return client
     }
 
+    /// Returns the public key operator, or `nil` if no operator has been set.
+    ///
+    /// The operator's public key is derived from the private key or custom signer used to sign transactions.
+    public func getOperatorPublicKey() -> PublicKey? {
+        _operator.withLockedValue { $0?.signer.publicKey }
+    }
+
     /// Creates a client by network name (mainnet, testnet, previewnet, or localhost).
     ///
     /// - Parameter name: Network name ("mainnet", "testnet", "previewnet", or "localhost")
@@ -556,6 +572,26 @@ public final class Client: Sendable {
     internal func setMaxTransactionFee(_ maxTransactionFee: Hbar) -> Self {
         _maxTransactionFee.store(maxTransactionFee.toTinybars(), ordering: .relaxed)
 
+        return self
+    }
+
+    /// Returns the default maximum query payment, or `nil` if unlimited.
+    /// Defaults to 1 Hbar.
+    public func getDefaultMaxQueryPayment() -> Hbar? {
+        let value = _maxQueryPayment.load(ordering: .relaxed)
+        guard value != 0 else { return nil }
+        return .fromTinybars(value)
+    }
+
+    /// Sets the default maximum query payment for all queries.
+    /// - Parameter payment: Must be non-negative.
+    /// - Throws: `HError` with `.invalidArgument` if payment is negative.
+    @discardableResult
+    public func setDefaultMaxQueryPayment(_ payment: Hbar) throws -> Self {
+        guard payment.toTinybars() >= 0 else {
+            throw HError(kind: .invalidArgument, description: "defaultMaxQueryPayment must be non-negative")
+        }
+        _maxQueryPayment.store(payment.toTinybars(), ordering: .relaxed)
         return self
     }
 

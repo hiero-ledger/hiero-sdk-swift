@@ -17,6 +17,7 @@ public struct HError: Error, CustomStringConvertible {
         case keyParse
         case keyDerive
         case noPayerAccountOrTransactionId
+        case invalidArgument
         case maxQueryPaymentExceeded(queryCost: Hbar, maxQueryPayment: Hbar)
         case nodeAccountUnknown
         case responseStatusUnrecognized
