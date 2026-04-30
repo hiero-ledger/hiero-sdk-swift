@@ -34,7 +34,7 @@ jobs:
             libcurl4-openssl-dev libssl-dev
 
       - name: Setup Swift (toolchain)
-        uses: SwiftyLab/setup-swift@4bbb093f8c68d1dee1caa8b67c681a3f8fe70a91 # v1.12.0
+        uses: SwiftyLab/setup-swift@38f54a76b70d989321de9dc7c840618c08cf56e9 # v1.14.0
         with:
           swift-version: '6.0'
 
@@ -66,7 +66,7 @@ jobs:
           egress-policy: audit
 
       - name: Setup Swift
-        uses: SwiftyLab/setup-swift@4bbb093f8c68d1dee1caa8b67c681a3f8fe70a91 # v1.12.0
+        uses: SwiftyLab/setup-swift@38f54a76b70d989321de9dc7c840618c08cf56e9 # v1.14.0
         with:
           swift-version: ${{ matrix.swift }}
 
