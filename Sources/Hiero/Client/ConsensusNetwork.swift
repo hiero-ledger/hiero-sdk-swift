@@ -428,8 +428,8 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
         let minReadmitTime = minNodeReadmitTime.withLockedValue { $0 }
         let maxReadmitTime = maxNodeReadmitTime.withLockedValue { $0 }
 
-        nodeHealthStates[index].withLockedValue {
-            $0.markUnhealthy(at: .now, minNodeReadmitTime: minReadmitTime, maxNodeReadmitTime: maxReadmitTime)
+        nodeHealthStates[index].withLockedValue { health in
+            health.markUnhealthy(at: .now, minNodeReadmitTime: minReadmitTime, maxNodeReadmitTime: maxReadmitTime)
         }
     }
 
