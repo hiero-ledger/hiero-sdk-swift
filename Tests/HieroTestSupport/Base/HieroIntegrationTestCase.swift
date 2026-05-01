@@ -15,6 +15,13 @@ open class HieroIntegrationTestCase: HieroTestCase {
     open override func setUp() async throws {
         try await super.setUp()
 
+        // Integration tests require operator credentials.
+        do {
+            try TestEnvironmentConfig.ensureLoaded()
+        } catch {
+            throw XCTSkip("Failed to load test environment configuration: \(error)")
+        }
+
         // Create test environment (validates config and operator)
         testEnv = try await IntegrationTestEnvironment.create()
 
