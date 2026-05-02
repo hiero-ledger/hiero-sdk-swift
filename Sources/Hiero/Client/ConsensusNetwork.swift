@@ -22,6 +22,12 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
         NodeConnection.consensusPlaintextPort: 1,
     ]
 
+    /// Default minimum time (in seconds) before retrying a failed node
+    internal static let defaultMinNodeReadmitTime: TimeInterval = 0.25
+
+    /// Default maximum time (in seconds) before forcing retry of a failed node
+    internal static let defaultMaxNodeReadmitTime: TimeInterval = 5 * 60
+
     // MARK: - Properties
 
     /// Maps account IDs to their index in the nodes array
@@ -75,8 +81,8 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
             nodes: config.nodes,
             health: health,
             connections: connections,
-            minNodeReadmitTime: .init(0.25),
-            maxNodeReadmitTime: .init(5 * 60)
+            minNodeReadmitTime: .init(Self.defaultMinNodeReadmitTime),
+            maxNodeReadmitTime: .init(Self.defaultMaxNodeReadmitTime)
         )
     }
 
@@ -92,8 +98,8 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
                 nodes: [],
                 health: [],
                 connections: [],
-                minNodeReadmitTime: .init(0.25),
-                maxNodeReadmitTime: .init(5 * 60)
+                minNodeReadmitTime: .init(Self.defaultMinNodeReadmitTime),
+                maxNodeReadmitTime: .init(Self.defaultMaxNodeReadmitTime)
             ),
             addresses: addresses,
             eventLoop: eventLoop

@@ -314,10 +314,7 @@ public final class Client: Sendable {
             )
         }
 
-        _ = _consensusNetwork.readCopyUpdate { current in
-            current.setMinNodeReadmitTime(time)
-            return current
-        }
+        consensus.setMinNodeReadmitTime(time)
 
         return self
     }
@@ -348,10 +345,7 @@ public final class Client: Sendable {
             )
         }
 
-        _ = _consensusNetwork.readCopyUpdate { current in
-            current.setMaxNodeReadmitTime(time)
-            return current
-        }
+        consensus.setMaxNodeReadmitTime(time)
 
         return self
     }

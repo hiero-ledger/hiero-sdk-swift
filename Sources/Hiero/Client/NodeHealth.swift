@@ -15,8 +15,9 @@ import Foundation
 /// ## Circuit Breaker Pattern
 /// The circuit breaker prevents wasted retries on nodes that are consistently failing
 /// by transitioning to `circuitOpen` after multiple consecutive failures (5 by default).
-/// After a recovery period (5 minutes), the circuit transitions to half-open (unhealthy
-/// with minimal backoff) to test if the node has recovered.
+/// After the configured recovery period (default: 5 minutes, see `Client.setMaxNodeReadmitTime`),
+/// the circuit transitions to half-open (unhealthy with minimal backoff) to test if the node
+/// has recovered.
 ///
 /// ## State Diagram
 /// ```
