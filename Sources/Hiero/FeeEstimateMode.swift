@@ -7,8 +7,8 @@ public enum FeeEstimateMode: Sendable, Equatable, Hashable {
     /// Estimate based on the transaction's properties plus the latest known network state.
     ///
     /// This mode checks current state such as whether accounts exist, token associations,
-    /// and other state-dependent factors. This is the default mode and provides the most
-    /// accurate estimate for transactions that will be submitted immediately.
+    /// and other state-dependent factors. This provides the most accurate estimate for
+    /// transactions that will be submitted immediately.
     case state
 
     /// Estimate based solely on the transaction's inherent properties.

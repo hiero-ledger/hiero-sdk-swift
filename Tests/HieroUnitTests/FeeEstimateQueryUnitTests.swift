@@ -366,6 +366,48 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
         }
     }
 
+    // Test 2: An unfrozen transaction is automatically frozen by execute().
+    internal func test_UnfrozenTransaction_AutoFreezes() async throws {
+        let minimalResponseJson = """
+            {
+              "high_volume_multiplier": 1,
+              "network": {"multiplier": 9, "subtotal": 900000},
+              "node": {"base": 100000, "extras": []},
+              "service": {"base": 200000, "extras": []},
+              "total": 1200000
+            }
+            """
+        MockURLProtocol.requestHandler = { _ in
+            let response = HTTPURLResponse(
+                url: URL(string: "https://testnet.mirrornode.hedera.com/api/v1/network/fees?mode=INTRINSIC")!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: nil
+            )!
+            return (response, Data(minimalResponseJson.utf8))
+        }
+        defer { MockURLProtocol.requestHandler = nil }
+
+        // Create an intentionally unfrozen transaction.
+        // Pre-set nodeAccountIds and transactionId so freezeWith() doesn't do a
+        // network lookup (which would cancel in a unit-test context).
+        let tx = try TransferTransaction()
+            .hbarTransfer(AccountId(num: 2), Hbar(1))
+            .hbarTransfer(AccountId(num: 3), Hbar(-1))
+            .nodeAccountIds(TestConstants.nodeAccountIds)
+            .transactionId(TestConstants.transactionId)
+        XCTAssertFalse(tx.isFrozen, "Transaction should be unfrozen before execute()")
+
+        let (query, _) = try makeMockQuery()
+        query.setTransaction(tx)
+        let client = makeTestClient(maxAttempts: 1)
+
+        // execute() should auto-freeze the transaction and succeed
+        let result = try await query.execute(client)
+        XCTAssertTrue(tx.isFrozen, "Transaction should be frozen after execute()")
+        XCTAssertGreaterThan(result.total, 0)
+    }
+
     // Test 20: high_volume_throttle appears in the request URL when set to a non-zero value.
     internal func test_HighVolumeThrottle_AppearsInUrl() async throws {
         var capturedUrl: URL?

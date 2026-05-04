@@ -30,11 +30,14 @@ internal enum Program {
 
         print("Transaction frozen.")
 
-        // ─── Step 2: Estimate fees with STATE mode (default) ───────────────────────
+        // ─── Step 2: Estimate fees with STATE mode ─────────────────────────────────
         // STATE mode uses the mirror node's latest known network state, giving the
         // most realistic preview of what the network will actually charge.
         print("\n--- STATE mode estimate ---")
-        let stateEstimate = try await tx.estimateFee().execute(client)
+        let stateEstimate = try await FeeEstimateQuery()
+            .setMode(.state)
+            .setTransaction(tx)
+            .execute(client)
         printEstimate(stateEstimate)
 
         // ─── Step 3: Estimate fees with INTRINSIC mode ─────────────────────────────

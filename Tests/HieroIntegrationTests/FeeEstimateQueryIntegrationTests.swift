@@ -263,6 +263,29 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
         XCTAssertGreaterThan(response.total, 0)
     }
 
+    // MARK: - Test 20: High-volume throttle
+
+    internal func test_HighVolumeThrottle_MultiplierIsValid() async throws {
+        // Given — simulate 100% throttle utilization
+        let tx = try TransferTransaction()
+            .hbarTransfer(testEnv.operator.accountId, Hbar(1))
+            .hbarTransfer(testEnv.operator.accountId, Hbar(-1))
+            .freezeWith(testEnv.client)
+
+        // When
+        let response = try await FeeEstimateQuery()
+            .setHighVolumeThrottle(10000)
+            .setTransaction(tx)
+            .execute(testEnv.client)
+
+        guard response.total > 0 else {
+            throw XCTSkip("Mirror node returned zero estimate — requires mirror node v0.150.0+")
+        }
+
+        // Then — multiplier must be at least 1 (no negative or zero multipliers)
+        XCTAssertGreaterThanOrEqual(response.highVolumeMultiplier, 1)
+    }
+
     // MARK: - Test 11: Estimate vs actual within reasonable range
 
     internal func test_EstimateVsActual_WithinReasonableRange() async throws {
