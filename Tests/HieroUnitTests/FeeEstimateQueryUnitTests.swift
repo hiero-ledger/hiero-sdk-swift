@@ -3,11 +3,11 @@
 import HieroTestSupport
 import XCTest
 
+@testable import Hiero
+
 #if canImport(FoundationNetworking)
     import FoundationNetworking
 #endif
-
-@testable import Hiero
 
 internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
 
