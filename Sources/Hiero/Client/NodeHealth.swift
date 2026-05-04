@@ -15,8 +15,9 @@ import Foundation
 /// ## Circuit Breaker Pattern
 /// The circuit breaker prevents wasted retries on nodes that are consistently failing
 /// by transitioning to `circuitOpen` after multiple consecutive failures (5 by default).
-/// After a recovery period (5 minutes), the circuit transitions to half-open (unhealthy
-/// with minimal backoff) to test if the node has recovered.
+/// After the configured recovery period (default: 5 minutes, see `Client.setMaxNodeReadmitTime`),
+/// the circuit transitions to half-open (unhealthy with minimal backoff) to test if the node
+/// has recovered.
 ///
 /// ## State Diagram
 /// ```
@@ -53,12 +54,6 @@ internal enum NodeHealth: Sendable {
     /// Maximum consecutive failures before opening the circuit (5 failures)
     private static let maxConsecutiveFailures = 5
 
-    /// Duration to keep circuit open before testing recovery (5 minutes)
-    private static let circuitOpenDurationNanos: UInt64 = TimeInterval(5 * 60).nanoseconds
-
-    /// Initial backoff interval for first failure (250 milliseconds)
-    private static let initialBackoffInterval: TimeInterval = 0.25
-
     /// Maximum backoff interval before circuit opens (30 minutes)
     private static let maxBackoffInterval: TimeInterval = 30 * 60
 
@@ -70,9 +65,9 @@ internal enum NodeHealth: Sendable {
     /// The exponential backoff configuration for this node.
     ///
     /// Backoff intervals range from 250ms to 30 minutes, with no maximum elapsed time.
-    internal var backoff: ExponentialBackoff {
+    internal func backoff(minNodeReadmitTime: TimeInterval) -> ExponentialBackoff {
         var backoff = ExponentialBackoff(
-            initialInterval: Self.initialBackoffInterval,
+            initialInterval: minNodeReadmitTime,
             maxInterval: Self.maxBackoffInterval,
             maxElapsedTime: .unlimited
         )
@@ -94,7 +89,11 @@ internal enum NodeHealth: Sendable {
     /// - Otherwise, applies exponential backoff
     ///
     /// - Parameter now: Current timestamp
-    internal mutating func markUnhealthy(at now: Timestamp) {
+    internal mutating func markUnhealthy(
+        at now: Timestamp,
+        minNodeReadmitTime: TimeInterval,
+        maxNodeReadmitTime: TimeInterval
+    ) {
         let consecutiveFailures: Int
 
         switch self {
@@ -109,13 +108,13 @@ internal enum NodeHealth: Sendable {
 
         // Open circuit after too many consecutive failures
         if consecutiveFailures >= Self.maxConsecutiveFailures {
-            let reopenAt = now.adding(nanos: Self.circuitOpenDurationNanos)
+            let reopenAt = now.adding(nanos: maxNodeReadmitTime.nanoseconds)
             self = .circuitOpen(reopenAt: reopenAt)
             return
         }
 
         // Apply exponential backoff
-        var backoff = self.backoff
+        var backoff = self.backoff(minNodeReadmitTime: minNodeReadmitTime)
         let backoffInterval = backoff.next()!  // Safe: backoff has unlimited max elapses time (never returns nil)
         let healthyAt = now.adding(nanos: backoffInterval.nanoseconds)
 
