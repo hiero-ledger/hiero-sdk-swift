@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import Atomics
 import HieroTestSupport
 import XCTest
 
@@ -13,6 +14,116 @@ internal final class ClientUnitTests: HieroUnitTestCase {
 
         XCTAssertEqual(client.getShard(), shard)
         XCTAssertEqual(client.getRealm(), realm)
+    }
+
+    // MARK: - Node Readmit Time Tests
+
+    internal func test_NodeReadmitTimesDefaultValues() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        XCTAssertEqual(client.getMinNodeReadmitTime(), 0.25)
+        XCTAssertEqual(client.getMaxNodeReadmitTime(), 300.0)
+    }
+
+    internal func test_SetMinNodeReadmitTimeStoresValue() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        try client.setMinNodeReadmitTime(1.5)
+
+        XCTAssertEqual(client.getMinNodeReadmitTime(), 1.5)
+    }
+
+    internal func test_SetMaxNodeReadmitTimeStoresValue() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        try client.setMaxNodeReadmitTime(600.0)
+
+        XCTAssertEqual(client.getMaxNodeReadmitTime(), 600.0)
+    }
+
+    internal func test_SetMinNodeReadmitTimeReturnsClientForFluentInterface() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        let returnedClient = try client.setMinNodeReadmitTime(1.0)
+
+        XCTAssertTrue(client === returnedClient)
+    }
+
+    internal func test_SetMaxNodeReadmitTimeReturnsClientForFluentInterface() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        let returnedClient = try client.setMaxNodeReadmitTime(600.0)
+
+        XCTAssertTrue(client === returnedClient)
+    }
+
+    internal func test_SetMinNodeReadmitTimeThrowsWhenNegative() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        XCTAssertThrowsError(try client.setMinNodeReadmitTime(-0.1)) { error in
+            guard let hError = error as? HError else {
+                XCTFail("Expected HError, got \(type(of: error))")
+                return
+            }
+
+            XCTAssertEqual(hError.kind, .illegalState)
+            XCTAssertTrue(hError.description.contains("minNodeReadmitTime"))
+        }
+    }
+
+    internal func test_SetMaxNodeReadmitTimeThrowsWhenNegative() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        XCTAssertThrowsError(try client.setMaxNodeReadmitTime(-1.0)) { error in
+            guard let hError = error as? HError else {
+                XCTFail("Expected HError, got \(type(of: error))")
+                return
+            }
+
+            XCTAssertEqual(hError.kind, .illegalState)
+            XCTAssertTrue(hError.description.contains("maxNodeReadmitTime"))
+        }
+    }
+
+    internal func test_SetMinNodeReadmitTimeThrowsWhenGreaterThanMax() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        XCTAssertThrowsError(try client.setMinNodeReadmitTime(301.0)) { error in
+            guard let hError = error as? HError else {
+                XCTFail("Expected HError, got \(type(of: error))")
+                return
+            }
+
+            XCTAssertEqual(hError.kind, .illegalState)
+            XCTAssertTrue(hError.description.contains("<= maxNodeReadmitTime"))
+        }
+    }
+
+    internal func test_SetMaxNodeReadmitTimeThrowsWhenLessThanMin() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+        try client.setMinNodeReadmitTime(10.0)
+
+        XCTAssertThrowsError(try client.setMaxNodeReadmitTime(9.0)) { error in
+            guard let hError = error as? HError else {
+                XCTFail("Expected HError, got \(type(of: error))")
+                return
+            }
+
+            XCTAssertEqual(hError.kind, .illegalState)
+            XCTAssertTrue(hError.description.contains(">= minNodeReadmitTime"))
+        }
+    }
+
+    internal func test_NodeReadmitTimesPersistAfterNetworkReplacement() throws {
+        let client = try Client.forNetwork(["127.0.0.1:50211": AccountId(shard: 0, realm: 0, num: 3)])
+
+        try client.setMinNodeReadmitTime(2.0)
+        try client.setMaxNodeReadmitTime(20.0)
+
+        try client.setNetwork(["127.0.0.1:50212": AccountId(shard: 0, realm: 0, num: 4)])
+
+        XCTAssertEqual(client.getMinNodeReadmitTime(), 2.0)
+        XCTAssertEqual(client.getMaxNodeReadmitTime(), 20.0)
     }
 
     // MARK: - gRPC Deadline Tests
@@ -184,6 +295,52 @@ internal final class ClientUnitTests: HieroUnitTestCase {
         XCTAssertEqual(client.grpcDeadline, 300.0)
     }
 
+    // MARK: - Default Max Transaction Fee Tests
+
+    internal func test_GetDefaultMaxTransactionFeeReturnsNilByDefault() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        XCTAssertNil(client.getDefaultMaxTransactionFee())
+    }
+
+    internal func test_SetDefaultMaxTransactionFeeStoresValue() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+        let fee = Hbar.fromTinybars(100_000)
+
+        try client.setDefaultMaxTransactionFee(fee)
+
+        XCTAssertEqual(client.getDefaultMaxTransactionFee(), fee)
+    }
+
+    internal func test_SetDefaultMaxTransactionFeeReturnsClientForFluentInterface() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+        let returnedClient = try client.setDefaultMaxTransactionFee(.fromTinybars(100_000))
+
+        XCTAssertTrue(client === returnedClient)
+    }
+
+    internal func test_SetDefaultMaxTransactionFeeZeroReturnsNilWhenRead() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        try client.setDefaultMaxTransactionFee(.fromTinybars(0))
+
+        XCTAssertNil(client.getDefaultMaxTransactionFee())
+    }
+
+    internal func test_SetDefaultMaxTransactionFeeThrowsWhenNegative() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        XCTAssertThrowsError(try client.setDefaultMaxTransactionFee(.fromTinybars(-1))) { error in
+            guard let hError = error as? HError else {
+                XCTFail("Expected HError, got \(type(of: error))")
+                return
+            }
+
+            XCTAssertEqual(hError.kind, .illegalState)
+            XCTAssertTrue(hError.description.contains("non-negative"))
+        }
+    }
+
     // MARK: - Operator Tests
 
     internal func test_GetOperatorAccountIdReturnsNilWhenNotSet() throws {
@@ -194,7 +351,7 @@ internal final class ClientUnitTests: HieroUnitTestCase {
 
     internal func test_GetOperatorAccountIdReturnsAccountIdWhenSet() throws {
         let client = try Client.forNetwork([String: AccountId]())
-        let operatorId = try AccountId(shard: 0, realm: 0, num: 3)
+        let operatorId = AccountId(shard: 0, realm: 0, num: 3)
         let privateKey = PrivateKey.generateEd25519()
 
         client.setOperator(operatorId, privateKey)
@@ -204,11 +361,38 @@ internal final class ClientUnitTests: HieroUnitTestCase {
 
     internal func test_SetOperatorReturnsClientForFluentInterface() throws {
         let client = try Client.forNetwork([String: AccountId]())
-        let operatorId = try AccountId(shard: 0, realm: 0, num: 3)
+        let operatorId = AccountId(shard: 0, realm: 0, num: 3)
         let privateKey = PrivateKey.generateEd25519()
 
         let returnedClient = client.setOperator(operatorId, privateKey)
 
         XCTAssertTrue(client === returnedClient)
+    }
+}
+
+internal final class ClientOperatorUnitTests: HieroUnitTestCase {
+    internal func test_SetOperatorWithUsesCustomSignerAndPublicKey() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+        let operatorId = AccountId(shard: 0, realm: 0, num: 3)
+        let privateKey = PrivateKey.generateEd25519()
+        let publicKey = privateKey.publicKey
+
+        let signerCalled = ManagedAtomic<Bool>(false)
+        let signer: @Sendable (Data) -> Data = { data in
+            signerCalled.store(true, ordering: .relaxed)
+            return privateKey.sign(data)
+        }
+
+        client.setOperatorWith(operatorId, publicKey, signer)
+
+        XCTAssertEqual(client.`operator`?.signer.publicKey, publicKey)
+
+        let transaction = FreezeTransaction()
+            .nodeAccountIds([operatorId])
+
+        try transaction.signWithOperator(client)
+        _ = try transaction.getSignatures()
+
+        XCTAssertTrue(signerCalled.load(ordering: .relaxed))
     }
 }

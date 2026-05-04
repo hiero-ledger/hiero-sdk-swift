@@ -179,6 +179,34 @@ public final class Client: Sendable {
         return _realm
     }
 
+    /// Returns the default maximum transaction fee, or nil if unlimited.
+    ///
+    /// When set, this fee is used as the default for all transactions unless
+    /// explicitly overridden on the transaction itself.
+    public func getDefaultMaxTransactionFee() -> Hbar? {
+        maxTransactionFee
+    }
+
+    /// Sets the default maximum transaction fee for all transactions.
+    ///
+    /// - Parameter fee: The maximum fee in Hbar. Must be non-negative.
+    ///   A value of zero clears the default fee limit, equivalent to not having set one
+    ///   (i.e., `getDefaultMaxTransactionFee()` will return `nil`).
+    /// - Returns: Self for method chaining
+    /// - Throws: `HError.illegalState` if `fee` is negative.
+    @discardableResult
+    public func setDefaultMaxTransactionFee(_ fee: Hbar) throws -> Self {
+        let tinybars = fee.toTinybars()
+
+        guard tinybars >= 0 else {
+            throw HError.illegalState("defaultMaxTransactionFee must be non-negative")
+        }
+
+        _maxTransactionFee.store(tinybars, ordering: .relaxed)
+
+        return self
+    }
+
     // MARK: - Retry Configuration
 
     /// Maximum timeout for a single gRPC request before it's considered failed.
@@ -258,6 +286,68 @@ public final class Client: Sendable {
     public var maxBackoff: TimeInterval {
         get { backoff.maxBackoff }
         set(value) { _backoff.withLockedValue { $0.maxBackoff = value } }
+    }
+
+    /// Gets the minimum time before a failed node can be retried.
+    ///
+    /// This maps to the initial node health backoff interval.
+    public func getMinNodeReadmitTime() -> TimeInterval {
+        consensus.getMinNodeReadmitTime()
+    }
+
+    /// Sets the minimum time before a failed node can be retried.
+    ///
+    /// - Parameter time: Time in seconds. Must be non-negative and less than or equal to maxNodeReadmitTime.
+    /// - Returns: Self for method chaining
+    /// - Throws: `HError.illegalState` if `time` is invalid.
+    @discardableResult
+    public func setMinNodeReadmitTime(_ time: TimeInterval) throws -> Self {
+        guard time >= 0 else {
+            throw HError.illegalState("minNodeReadmitTime must be non-negative")
+        }
+
+        let maxReadmitTime = getMaxNodeReadmitTime()
+
+        guard time <= maxReadmitTime else {
+            throw HError.illegalState(
+                "minNodeReadmitTime (\(time)s) must be <= maxNodeReadmitTime (\(maxReadmitTime)s)"
+            )
+        }
+
+        consensus.setMinNodeReadmitTime(time)
+
+        return self
+    }
+
+    /// Gets the maximum time a failed node remains excluded before retry.
+    ///
+    /// This maps to the circuit-open recovery duration.
+    public func getMaxNodeReadmitTime() -> TimeInterval {
+        consensus.getMaxNodeReadmitTime()
+    }
+
+    /// Sets the maximum time a failed node remains excluded before retry.
+    ///
+    /// - Parameter time: Time in seconds. Must be non-negative and greater than or equal to minNodeReadmitTime.
+    /// - Returns: Self for method chaining
+    /// - Throws: `HError.illegalState` if `time` is invalid.
+    @discardableResult
+    public func setMaxNodeReadmitTime(_ time: TimeInterval) throws -> Self {
+        guard time >= 0 else {
+            throw HError.illegalState("maxNodeReadmitTime must be non-negative")
+        }
+
+        let minReadmitTime = getMinNodeReadmitTime()
+
+        guard time >= minReadmitTime else {
+            throw HError.illegalState(
+                "maxNodeReadmitTime (\(time)s) must be >= minNodeReadmitTime (\(minReadmitTime)s)"
+            )
+        }
+
+        consensus.setMaxNodeReadmitTime(time)
+
+        return self
     }
 
     /// Current backoff configuration
@@ -496,6 +586,37 @@ public final class Client: Sendable {
     @discardableResult
     public func setOperator(_ accountId: AccountId, _ privateKey: PrivateKey) -> Self {
         _operator.withLockedValue { $0 = .init(accountId: accountId, signer: .privateKey(privateKey)) }
+
+        return self
+    }
+
+    /// Sets the operator using a custom signer.
+    ///
+    /// This allows integration with HSMs, remote signing services, or other
+    /// systems that don't expose raw private keys.
+    ///
+    /// - Parameters:
+    ///   - accountId: Account ID to use as operator
+    ///   - publicKey: Public key corresponding to the signing key
+    ///   - signer: A closure that signs message data and returns the signature
+    /// - Returns: Self for method chaining
+    @discardableResult
+    public func setOperatorWith(
+        _ accountId: AccountId,
+        _ publicKey: PublicKey,
+        _ signer: @Sendable @escaping (Data) -> Data
+    ) -> Self {
+        _operator.withLockedValue { op in
+            op = Operator(accountId: accountId, signer: Signer(publicKey, signer))
+        }
+
+        return self
+    }
+
+    /// Sets the maximum transaction fee used when freezing transactions.
+    @discardableResult
+    internal func setMaxTransactionFee(_ maxTransactionFee: Hbar) -> Self {
+        _maxTransactionFee.store(maxTransactionFee.toTinybars(), ordering: .relaxed)
 
         return self
     }
