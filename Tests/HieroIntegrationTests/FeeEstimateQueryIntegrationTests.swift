@@ -25,8 +25,8 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
 
         // When
         let response = try await FeeEstimateQuery()
-            .setMode(.state)
-            .setTransaction(tx)
+            .mode(.state)
+            .transaction(tx)
             .execute(testEnv.client)
 
         // Then — response must have valid components
@@ -47,8 +47,8 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
 
         // When
         let response = try await FeeEstimateQuery()
-            .setMode(.intrinsic)
-            .setTransaction(tx)
+            .mode(.intrinsic)
+            .transaction(tx)
             .execute(testEnv.client)
 
         // Then
@@ -61,13 +61,13 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
         // Given — no mode set on the query
         let query = FeeEstimateQuery()
         // Then — default mode is INTRINSIC before execution
-        XCTAssertEqual(query.getMode(), .intrinsic)
+        XCTAssertEqual(query.mode, .intrinsic)
 
         let tx = try TransferTransaction()
             .hbarTransfer(testEnv.operator.accountId, Hbar(1))
             .hbarTransfer(testEnv.operator.accountId, Hbar(-1))
             .freezeWith(testEnv.client)
-        let response = try await query.setTransaction(tx).execute(testEnv.client)
+        let response = try await query.transaction(tx).execute(testEnv.client)
         XCTAssertGreaterThan(response.total, 0)
     }
 
@@ -274,8 +274,8 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
 
         // When
         let response = try await FeeEstimateQuery()
-            .setHighVolumeThrottle(10000)
-            .setTransaction(tx)
+            .highVolumeThrottle(10000)
+            .transaction(tx)
             .execute(testEnv.client)
 
         guard response.total > 0 else {

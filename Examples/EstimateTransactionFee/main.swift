@@ -35,8 +35,8 @@ internal enum Program {
         // most realistic preview of what the network will actually charge.
         print("\n--- STATE mode estimate ---")
         let stateEstimate = try await FeeEstimateQuery()
-            .setMode(.state)
-            .setTransaction(tx)
+            .mode(.state)
+            .transaction(tx)
             .execute(client)
         printEstimate(stateEstimate)
 
@@ -46,8 +46,8 @@ internal enum Program {
         // and declared keys — giving a deterministic lower-bound estimate.
         print("\n--- INTRINSIC mode estimate ---")
         let intrinsicEstimate = try await FeeEstimateQuery()
-            .setMode(.intrinsic)
-            .setTransaction(tx)
+            .mode(.intrinsic)
+            .transaction(tx)
             .execute(client)
         printEstimate(intrinsicEstimate)
 

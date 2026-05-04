@@ -17,22 +17,22 @@ import HieroProtobufs
 /// ## Example Usage
 /// ```swift
 /// let query = FeeEstimateQuery()
-///     .setTransaction(myTransaction)
-///     .setMode(.state)
+///     .transaction(myTransaction)
+///     .mode(.state)
 ///
 /// let response = try await query.execute(client)
 /// print("Estimated fee: \(response.total) tinycents")
 /// ```
 public final class FeeEstimateQuery: ValidateChecksums {
-    /// The fee estimation mode.
-    private var mode: FeeEstimateMode
+    /// The fee estimation mode. Defaults to `.intrinsic`.
+    public var mode: FeeEstimateMode = .intrinsic
 
     /// The transaction to estimate fees for.
-    private var transaction: Transaction?
+    public var transaction: Transaction?
 
     /// High-volume throttle utilization in basis points (0–10000). Maps to the
     /// `high_volume_throttle` query parameter. 0 means no high-volume simulation.
-    private var highVolumeThrottle: UInt16 = 0
+    public var highVolumeThrottle: UInt16 = 0
 
     /// URLSession used for HTTP requests. Overridable in tests.
     internal var urlSession: URLSession = .shared
@@ -41,59 +41,39 @@ public final class FeeEstimateQuery: ValidateChecksums {
     ///
     /// - Parameters:
     ///   - mode: The estimation mode. Defaults to `.intrinsic` which estimates from the payload alone.
-    ///   - transaction: The transaction to estimate fees for. Can be set later via `setTransaction`.
+    ///   - transaction: The transaction to estimate fees for. Can be set later via `transaction(_:)`.
     public init(mode: FeeEstimateMode = .intrinsic, transaction: Transaction? = nil) {
         self.mode = mode
         self.transaction = transaction
     }
 
-    /// Get the current estimation mode.
+    /// Sets the estimation mode.
     ///
-    /// - Returns: The current `FeeEstimateMode`.
-    public func getMode() -> FeeEstimateMode {
-        mode
-    }
-
-    /// Set the estimation mode.
-    ///
-    /// - Parameter mode: The estimation mode. `.state` uses latest network state,
-    ///   `.intrinsic` ignores state-dependent factors.
+    /// - Parameter mode: `.state` uses latest network state; `.intrinsic` ignores state-dependent factors.
     /// - Returns: `self` for method chaining.
     @discardableResult
-    public func setMode(_ mode: FeeEstimateMode) -> Self {
+    public func mode(_ mode: FeeEstimateMode) -> Self {
         self.mode = mode
         return self
     }
 
-    /// Get the current transaction.
-    ///
-    /// - Returns: The transaction to estimate fees for, or `nil` if not set.
-    public func getTransaction() -> Transaction? {
-        transaction
-    }
-
-    /// Set the transaction to estimate fees for.
+    /// Sets the transaction to estimate fees for.
     ///
     /// - Parameter transaction: The transaction to estimate. Must be set before calling `execute`.
     /// - Returns: `self` for method chaining.
     @discardableResult
-    public func setTransaction(_ transaction: Transaction) -> Self {
+    public func transaction(_ transaction: Transaction) -> Self {
         self.transaction = transaction
         return self
     }
 
-    /// Get the current high-volume throttle utilization in basis points (0–10000).
-    public func getHighVolumeThrottle() -> UInt16 {
-        highVolumeThrottle
-    }
-
-    /// Set the high-volume throttle utilization in basis points (0–10000, where 10000 = 100%).
+    /// Sets the high-volume throttle utilization in basis points (0–10000, where 10000 = 100%).
     ///
     /// Simulates high-volume pricing conditions. A value of 0 (default) sends no parameter
     /// and the mirror node returns `highVolumeMultiplier: 1` (no high-volume pricing).
     /// - Returns: `self` for method chaining.
     @discardableResult
-    public func setHighVolumeThrottle(_ throttle: UInt16) -> Self {
+    public func highVolumeThrottle(_ throttle: UInt16) -> Self {
         self.highVolumeThrottle = throttle
         return self
     }

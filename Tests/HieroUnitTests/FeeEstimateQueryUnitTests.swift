@@ -3,6 +3,10 @@
 import HieroTestSupport
 import XCTest
 
+#if canImport(FoundationNetworking)
+    import FoundationNetworking
+#endif
+
 @testable import Hiero
 
 internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
@@ -11,15 +15,15 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
 
     internal func test_DefaultMode() {
         let query = FeeEstimateQuery()
-        XCTAssertEqual(query.getMode(), .intrinsic)
+        XCTAssertEqual(query.mode, .intrinsic)
     }
 
     internal func test_SetMode() {
         let query = FeeEstimateQuery()
-        query.setMode(.intrinsic)
-        XCTAssertEqual(query.getMode(), .intrinsic)
-        query.setMode(.state)
-        XCTAssertEqual(query.getMode(), .state)
+        query.mode(.intrinsic)
+        XCTAssertEqual(query.mode, .intrinsic)
+        query.mode(.state)
+        XCTAssertEqual(query.mode, .state)
     }
 
     // MARK: - Transaction getter/setter
@@ -27,30 +31,30 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
     internal func test_SetGetTransaction() throws {
         let tx = TransferTransaction()
         let query = FeeEstimateQuery()
-        XCTAssertNil(query.getTransaction())
-        query.setTransaction(tx)
-        XCTAssertTrue(query.getTransaction() === tx)
+        XCTAssertNil(query.transaction)
+        query.transaction(tx)
+        XCTAssertTrue(query.transaction === tx)
     }
 
     internal func test_EstimateFeeExtension() throws {
         let tx = TransferTransaction()
         let query = tx.estimateFee()
-        XCTAssertTrue(query.getTransaction() === tx)
-        XCTAssertEqual(query.getMode(), .intrinsic)
+        XCTAssertTrue(query.transaction === tx)
+        XCTAssertEqual(query.mode, .intrinsic)
     }
 
     // MARK: - HighVolumeThrottle getter/setter
 
     internal func test_DefaultHighVolumeThrottle() {
-        XCTAssertEqual(FeeEstimateQuery().getHighVolumeThrottle(), 0)
+        XCTAssertEqual(FeeEstimateQuery().highVolumeThrottle, 0)
     }
 
     internal func test_SetGetHighVolumeThrottle() {
         let query = FeeEstimateQuery()
-        query.setHighVolumeThrottle(5000)
-        XCTAssertEqual(query.getHighVolumeThrottle(), 5000)
-        query.setHighVolumeThrottle(0)
-        XCTAssertEqual(query.getHighVolumeThrottle(), 0)
+        query.highVolumeThrottle(5000)
+        XCTAssertEqual(query.highVolumeThrottle, 5000)
+        query.highVolumeThrottle(0)
+        XCTAssertEqual(query.highVolumeThrottle, 0)
     }
 
     // MARK: - JSON parsing: FeeExtra
@@ -248,8 +252,8 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
             .transactionId(TestConstants.transactionId)
             .freeze()
         let query = FeeEstimateQuery()
-            .setMode(.intrinsic)
-            .setTransaction(tx)
+            .mode(.intrinsic)
+            .transaction(tx)
         query.urlSession = session
         return (query, session)
     }
@@ -399,7 +403,7 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
         XCTAssertFalse(tx.isFrozen, "Transaction should be unfrozen before execute()")
 
         let (query, _) = try makeMockQuery()
-        query.setTransaction(tx)
+        query.transaction(tx)
         let client = makeTestClient(maxAttempts: 1)
 
         // execute() should auto-freeze the transaction and succeed
@@ -424,7 +428,7 @@ internal final class FeeEstimateQueryUnitTests: HieroUnitTestCase {
         defer { MockURLProtocol.requestHandler = nil }
 
         let (query, _) = try makeMockQuery()
-        query.setHighVolumeThrottle(5000)
+        query.highVolumeThrottle(5000)
         let client = makeTestClient(maxAttempts: 1)
 
         _ = try? await query.execute(client)
