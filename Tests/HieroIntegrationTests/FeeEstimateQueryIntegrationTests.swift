@@ -154,7 +154,7 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
     internal func test_FileAppendTransaction_Chunked() async throws {
         // Given — create a file to append to
         let fileReceipt = try await FileCreateTransaction()
-            .contents("initial".data(using: .utf8)!)
+            .contents(Data("initial".utf8))
             .keys([.single(testEnv.operator.privateKey.publicKey)])
             .execute(testEnv.client)
             .getReceipt(testEnv.client)
@@ -233,7 +233,7 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
     internal func test_FileCreateTransaction() async throws {
         // Given
         let tx = try FileCreateTransaction()
-            .contents("Hello, Hiero!".data(using: .utf8)!)
+            .contents(Data("Hello, Hiero!".utf8))
             .keys([.single(testEnv.operator.privateKey.publicKey)])
             .freezeWith(testEnv.client)
 
@@ -251,7 +251,7 @@ internal class FeeEstimateQueryIntegrationTests: HieroIntegrationTestCase {
         let topicId = try await createStandardTopic()
         let tx = try TopicMessageSubmitTransaction()
             .topicId(topicId)
-            .message("small message".data(using: .utf8)!)
+            .message(Data("small message".utf8))
             .freezeWith(testEnv.client)
 
         XCTAssertEqual(tx.usedChunks, 1, "Expected a single chunk for a short message")

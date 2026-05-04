@@ -121,39 +121,21 @@ public final class FeeEstimateQuery: ValidateChecksums {
 
     // MARK: - Private Implementation
 
+    /// Wraps a retryable HTTP error so the retry loop can distinguish it from fatal errors.
+    private struct RetryableHTTPError: Error {
+        let underlying: HError
+    }
+
     /// Send a fee estimate request for a transaction to the mirror node REST API.
     ///
-    /// Retries on HTTP 503 (service unavailable) and request timeout errors, up to the
-    /// client's configured `maxAttempts`. Does not retry on HTTP 400 (malformed transaction).
-    ///
-    /// - Parameters:
-    ///   - client: The client providing mirror node configuration.
-    ///   - transaction: The protobuf-encoded transaction to estimate.
-    ///   - timeout: Optional request timeout.
-    /// - Returns: The parsed fee estimate response.
-    /// - Throws: Network or parsing errors.
+    /// Retries on HTTP 500/503 and request timeout errors up to `client.maxAttempts`.
+    /// Does not retry on HTTP 400 (malformed transaction).
     private func requestFeeEstimate(
         client: Client,
         transaction: Proto_Transaction,
         timeout: TimeInterval?
     ) async throws -> FeeEstimateResponse {
-        // Serialize the transaction to protobuf bytes for the request body
-        let transactionBytes = try transaction.serializedData()
-
-        // Construct the mirror node URL
-        let url = try buildFeeEstimateUrl(client: client)
-
-        // Build the HTTP request
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/protobuf", forHTTPHeaderField: "Content-Type")
-        request.httpBody = transactionBytes
-
-        // Apply timeout if provided
-        if let timeout = timeout {
-            request.timeoutInterval = timeout
-        }
-
+        let request = try buildURLRequest(client: client, transaction: transaction, timeout: timeout)
         let maxAttempts = client.maxAttempts
         var attempt = 0
         var lastError: Error = HError.basicParse("Fee estimate request failed: No attempts made")
@@ -162,50 +144,61 @@ public final class FeeEstimateQuery: ValidateChecksums {
             attempt += 1
             do {
                 let (data, response) = try await performHTTPRequest(request)
-
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    throw HError.basicParse("Fee estimate request failed: Invalid HTTP response")
-                }
-
-                // HTTP 400: malformed transaction — do not retry
-                if httpResponse.statusCode == 400 {
-                    let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-                    throw HError.basicParse("Fee estimate request failed: HTTP 400 - \(body)")
-                }
-
-                // HTTP 500 or 503: service unavailable — retryable
-                // The mirror node OpenAPI spec documents service unavailability as HTTP 500;
-                // HTTP 503 is also handled for reverse-proxy scenarios.
-                if httpResponse.statusCode == 500 || httpResponse.statusCode == 503 {
-                    let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-                    lastError = HError.basicParse(
-                        "Fee estimate request failed: HTTP \(httpResponse.statusCode) - \(body)")
-                    if attempt < maxAttempts {
-                        try await Task.sleep(nanoseconds: backoffNanoseconds(attempt: attempt, client: client))
-                    }
-                    continue
-                }
-
-                guard (200..<300).contains(httpResponse.statusCode) else {
-                    let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-                    throw HError.basicParse("Fee estimate request failed: HTTP \(httpResponse.statusCode) - \(body)")
-                }
-
-                return try FeeEstimateResponse.fromJson(data)
-
+                return try handleHTTPResponse(response, data: data)
+            } catch let retryable as RetryableHTTPError {
+                lastError = retryable.underlying
             } catch let urlError as URLError where urlError.code == .timedOut {
-                // Timeout: retryable
                 lastError = urlError
-                if attempt < maxAttempts {
-                    try await Task.sleep(nanoseconds: backoffNanoseconds(attempt: attempt, client: client))
-                }
-                continue
-            } catch {
-                throw error
+            }
+            if attempt < maxAttempts {
+                try await Task.sleep(nanoseconds: backoffNanoseconds(attempt: attempt, client: client))
             }
         }
 
         throw lastError
+    }
+
+    /// Build the URLRequest for a fee estimate POST.
+    private func buildURLRequest(
+        client: Client,
+        transaction: Proto_Transaction,
+        timeout: TimeInterval?
+    ) throws -> URLRequest {
+        let transactionBytes = try transaction.serializedData()
+        let url = try buildFeeEstimateUrl(client: client)
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/protobuf", forHTTPHeaderField: "Content-Type")
+        request.httpBody = transactionBytes
+        if let timeout = timeout {
+            request.timeoutInterval = timeout
+        }
+        return request
+    }
+
+    /// Validate an HTTP response and parse it into a `FeeEstimateResponse`.
+    ///
+    /// Throws `RetryableHTTPError` for HTTP 500/503 so the caller can retry.
+    /// Throws `HError` directly for HTTP 400 and other non-2xx codes.
+    private func handleHTTPResponse(_ response: URLResponse, data: Data) throws -> FeeEstimateResponse {
+        guard let http = response as? HTTPURLResponse else {
+            throw HError.basicParse("Fee estimate request failed: Invalid HTTP response")
+        }
+        let body = String(data: data, encoding: .utf8) ?? "Unknown error"
+        if http.statusCode == 400 {
+            throw HError.basicParse("Fee estimate request failed: HTTP 400 - \(body)")
+        }
+        // HTTP 500 or 503: retryable — mirror node spec uses 500 for service unavailability;
+        // 503 covers reverse-proxy scenarios.
+        if http.statusCode == 500 || http.statusCode == 503 {
+            throw RetryableHTTPError(
+                underlying: HError.basicParse(
+                    "Fee estimate request failed: HTTP \(http.statusCode) - \(body)"))
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            throw HError.basicParse("Fee estimate request failed: HTTP \(http.statusCode) - \(body)")
+        }
+        return try FeeEstimateResponse.fromJson(data)
     }
 
     /// Perform a single HTTP request, using the appropriate URLSession API for the platform.
