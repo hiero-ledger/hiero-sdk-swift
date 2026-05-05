@@ -47,6 +47,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     }
 
     internal func test_CanAddHookToContract() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let contractId = try await createStandardContract()
         let hookContractId = try await createUnmanagedEvmHookContract()
@@ -61,6 +62,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     }
 
     internal func test_CannotAddDuplicateHooksToContract() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let contractId = try await createStandardContract()
         let hookContractId = try await createUnmanagedEvmHookContract()
@@ -78,6 +80,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     }
 
     internal func test_CannotAddHookToContractThatAlreadyExists() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let contractId = try await createStandardContract()
         let hookContractId = try await createUnmanagedEvmHookContract()
@@ -98,6 +101,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     }
 
     internal func test_CanAddHookToContractWithStorageUpdates() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let contractId = try await createStandardContract()
         let hookContractId = try await createUnmanagedEvmHookContract()
@@ -112,6 +116,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     }
 
     internal func test_CanDeleteHookFromContract() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let contractId = try await createStandardContract()
         let hookContractId = try await createUnmanagedEvmHookContract()
@@ -138,6 +143,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     }
 
     internal func test_CannotDeleteNonExistentHookFromContract() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let contractId = try await createStandardContract()
         let hookContractId = try await createUnmanagedEvmHookContract()
@@ -158,6 +164,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     }
 
     internal func test_CannotAddAndDeleteSameHookFromContract() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let contractId = try await createStandardContract()
         let hookContractId = try await createUnmanagedEvmHookContract()
@@ -177,6 +184,7 @@ internal final class ContractUpdateTransactionIntegrationTests: HieroIntegration
     }
 
     internal func test_CannotDeleteAlreadyDeletedHookFromContract() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let contractId = try await createStandardContract()
         let hookContractId = try await createUnmanagedEvmHookContract()

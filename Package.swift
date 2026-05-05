@@ -23,6 +23,7 @@ let exampleTargets = [
     "CreateStatefulContract",
     "CreateTopic",
     "CreateTopicWithRevenue",
+    "EstimateTransactionFee",
     "CreateUpdateDeleteNode",
     "DeleteAccount",
     "DeleteFile",
