@@ -65,8 +65,10 @@ public final class RegisteredNodeAddressBookQuery {
                 "Received non-200 response from mirror node: \(statusCode), details: \(body)")
         }
 
-        let decoded = try JSONDecoder().decode(MirrorRegisteredNodesResponse.self, from: data)
-        let nodes = try decoded.registered_nodes.map { try RegisteredNode(mirror: $0) }
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let decoded = try decoder.decode(MirrorRegisteredNodesResponse.self, from: data)
+        let nodes = try decoded.registeredNodes.map { try RegisteredNode(mirror: $0) }
         return RegisteredNodeAddressBook(registeredNodes: nodes)
     }
 }
@@ -74,14 +76,14 @@ public final class RegisteredNodeAddressBookQuery {
 // MARK: - Private mirror node JSON types
 
 private struct MirrorRegisteredNodesResponse: Decodable {
-    let registered_nodes: [MirrorRegisteredNode]
+    let registeredNodes: [MirrorRegisteredNode]
 }
 
 private struct MirrorRegisteredNode: Decodable {
-    let registered_node_id: UInt64
-    let admin_key: MirrorKey
+    let registeredNodeId: UInt64
+    let adminKey: MirrorKey
     let description: String?
-    let service_endpoints: [MirrorServiceEndpoint]
+    let serviceEndpoints: [MirrorServiceEndpoint]
 }
 
 private struct MirrorKey: Decodable {
@@ -89,12 +91,12 @@ private struct MirrorKey: Decodable {
 }
 
 private struct MirrorServiceEndpoint: Decodable {
-    let ip_address: String?
-    let domain_name: String?
+    let ipAddress: String?
+    let domainName: String?
     let port: UInt32
-    let requires_tls: Bool
+    let requiresTls: Bool
     let type: String
-    let general_service: MirrorGeneralService?
+    let generalService: MirrorGeneralService?
 }
 
 private struct MirrorGeneralService: Decodable {
@@ -105,14 +107,14 @@ private struct MirrorGeneralService: Decodable {
 
 extension RegisteredNode {
     fileprivate init(mirror node: MirrorRegisteredNode) throws {
-        guard let keyBytes = Data(hexEncoded: node.admin_key.key) else {
-            throw HError.basicParse("Invalid hex in admin_key: \(node.admin_key.key)")
+        guard let keyBytes = Data(hexEncoded: node.adminKey.key) else {
+            throw HError.basicParse("Invalid hex in adminKey: \(node.adminKey.key)")
         }
         let protoKey = try Proto_Key(serializedBytes: keyBytes)
         let adminKey = try Key.fromProtobuf(protoKey)
-        let endpoints = try node.service_endpoints.map { try RegisteredServiceEndpoint(mirror: $0) }
+        let endpoints = try node.serviceEndpoints.map { try RegisteredServiceEndpoint(mirror: $0) }
         self.init(
-            registeredNodeId: node.registered_node_id,
+            registeredNodeId: node.registeredNodeId,
             adminKey: adminKey,
             description: node.description,
             serviceEndpoints: endpoints
@@ -125,12 +127,12 @@ extension RegisteredNode {
 extension RegisteredServiceEndpoint {
     fileprivate init(mirror endpoint: MirrorServiceEndpoint) throws {
         let address: Address?
-        if let ip = endpoint.ip_address, !ip.isEmpty {
+        if let ip = endpoint.ipAddress, !ip.isEmpty {
             guard let ipData = Self.parseIpv4(ip) else {
                 throw HError.basicParse("Invalid IP address in registered service endpoint: \(ip)")
             }
             address = .ipAddress(ipData)
-        } else if let domain = endpoint.domain_name, !domain.isEmpty {
+        } else if let domain = endpoint.domainName, !domain.isEmpty {
             address = .domainName(domain)
         } else {
             address = nil
@@ -141,21 +143,21 @@ extension RegisteredServiceEndpoint {
             // endpoint_apis is not yet returned by the mirror node REST API
             self = .blockNode(
                 BlockNodeServiceEndpoint(
-                    address: address, port: endpoint.port, requiresTls: endpoint.requires_tls,
+                    address: address, port: endpoint.port, requiresTls: endpoint.requiresTls,
                     endpointApis: []))
         case "MIRROR_NODE":
             self = .mirrorNode(
                 MirrorNodeServiceEndpoint(
-                    address: address, port: endpoint.port, requiresTls: endpoint.requires_tls))
+                    address: address, port: endpoint.port, requiresTls: endpoint.requiresTls))
         case "RPC_RELAY":
             self = .rpcRelay(
                 RpcRelayServiceEndpoint(
-                    address: address, port: endpoint.port, requiresTls: endpoint.requires_tls))
+                    address: address, port: endpoint.port, requiresTls: endpoint.requiresTls))
         case "GENERAL_SERVICE":
             self = .generalService(
                 GeneralServiceEndpoint(
-                    address: address, port: endpoint.port, requiresTls: endpoint.requires_tls,
-                    description: endpoint.general_service?.description))
+                    address: address, port: endpoint.port, requiresTls: endpoint.requiresTls,
+                    description: endpoint.generalService?.description))
         default:
             throw HError.basicParse("Unknown service endpoint type: \(endpoint.type)")
         }
