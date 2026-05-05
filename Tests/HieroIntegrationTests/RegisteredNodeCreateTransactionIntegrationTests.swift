@@ -16,6 +16,8 @@ internal final class RegisteredNodeCreateIntegrationTests: HieroIntegrationTestC
     }
 
     private func findNode(_ id: UInt64) async throws -> RegisteredNode {
+        // Wait for mirror node propagation before querying
+        try await Task.sleep(nanoseconds: 5_000_000_000)
         let book = try await RegisteredNodeAddressBookQuery().execute(testEnv.adminClient)
         return try XCTUnwrap(book.registeredNodes.first { $0.registeredNodeId == id })
     }
