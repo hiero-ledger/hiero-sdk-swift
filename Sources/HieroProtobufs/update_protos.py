@@ -292,6 +292,7 @@ if __name__ == "__main__":
         "sdk/transaction_list.proto",
 
         # Auxiliary files
+        "services/auxiliary/blockrecords/migration_root_hash_vote.proto",
         "services/auxiliary/history/history_proof_signature.proto",
         "services/auxiliary/history/history_proof_key_publication.proto",
         "services/auxiliary/history/history_proof_vote.proto",
