@@ -172,13 +172,16 @@ internal final class RegisteredNodeCreateIntegrationTests: HieroIntegrationTestC
             .adminKey(.single(adminKey.publicKey))
             .addServiceEndpoint(makeBlockNodeEndpoint())
             .addServiceEndpoint(
-                .mirrorNode(address: .domainName("mirror.example.com"), port: 5551, requiresTls: true))
+                .mirrorNode(address: .domainName("mirror.example.com"), port: 5551, requiresTls: true)
+            )
             .addServiceEndpoint(
-                .rpcRelay(address: .domainName("relay.example.com"), port: 7546, requiresTls: true))
+                .rpcRelay(address: .domainName("relay.example.com"), port: 7546, requiresTls: true)
+            )
             .addServiceEndpoint(
                 .generalService(
                     address: .domainName("custom.example.com"), port: 9000, requiresTls: false,
-                    description: "Custom service"))
+                    description: "Custom service")
+            )
             .freezeWith(testEnv.adminClient)
             .sign(adminKey)
             .execute(testEnv.adminClient)
