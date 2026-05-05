@@ -73,7 +73,39 @@ internal final class TransactionRecordUnitTests: HieroUnitTestCase {
                     pendingAirdropId: PendingAirdropId.init(
                         senderId: AccountId("0.2.3"), receiverId: AccountId("0.2.3"), tokenId: TokenId("0.0.2009")),
                     amount: 3)
-            ])
+            ],
+            highVolumePricingMultiplier: nil)
+    }
+
+    internal func test_HighVolumePricingMultiplier_NilWhenNotSet() throws {
+        let record = try createRecord(nil, nil)
+
+        XCTAssertNil(record.highVolumePricingMultiplier)
+    }
+
+    private func makeMinimalProto() -> Proto_TransactionRecord {
+        var proto = Proto_TransactionRecord()
+        proto.receipt.status = .ok
+        proto.transactionID.accountID.accountNum = 3
+        return proto
+    }
+
+    internal func test_HighVolumePricingMultiplier_ExposedFromProtobuf() throws {
+        var proto = makeMinimalProto()
+        proto.highVolumePricingMultiplier = 2500
+
+        let record = try TransactionRecord.fromProtobuf(proto)
+
+        XCTAssertEqual(record.highVolumePricingMultiplier, 2500)
+    }
+
+    internal func test_HighVolumePricingMultiplier_ZeroBecomesNil() throws {
+        var proto = makeMinimalProto()
+        proto.highVolumePricingMultiplier = 0
+
+        let record = try TransactionRecord.fromProtobuf(proto)
+
+        XCTAssertNil(record.highVolumePricingMultiplier)
     }
 
     internal func test_Serialize() throws {

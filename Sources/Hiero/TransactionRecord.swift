@@ -82,6 +82,12 @@ public struct TransactionRecord {
 
     /// A list of pending airdrop records.
     public let pendingAirdropRecords: [PendingAirdropRecord]
+
+    /// The multiplier applied to transaction fees when the high-volume flag was set.
+    ///
+    /// Value is divided by 1000 to get the actual multiplier (e.g. 1000 = 1.000x).
+    /// `nil` when the transaction did not use high-volume throttles.
+    public let highVolumePricingMultiplier: UInt64?
 }
 
 extension TransactionRecord {
@@ -170,7 +176,10 @@ extension TransactionRecord {
             evmAddress: evmAddress,
             prngBytes: prngBytes,
             prngNumber: prngNumber,
-            pendingAirdropRecords: pendingAirdropRecords
+            pendingAirdropRecords: pendingAirdropRecords,
+            highVolumePricingMultiplier: proto.highVolumePricingMultiplier == 0
+                ? nil
+                : proto.highVolumePricingMultiplier
         )
     }
 }
