@@ -6,11 +6,11 @@ import XCTest
 @testable import Hiero
 
 internal final class RegisteredNodeDeleteTransactionUnitTests: HieroUnitTestCase, TransactionTestable {
-    typealias TransactionType = RegisteredNodeDeleteTransaction
+    internal typealias TransactionType = RegisteredNodeDeleteTransaction
 
     internal static let testRegisteredNodeId: UInt64 = 42
 
-    static func makeTransaction() throws -> RegisteredNodeDeleteTransaction {
+    internal static func makeTransaction() throws -> RegisteredNodeDeleteTransaction {
         try RegisteredNodeDeleteTransaction()
             .nodeAccountIds([AccountId("0.0.5005"), AccountId("0.0.5006")])
             .transactionId(

@@ -4,10 +4,19 @@ import HieroProtobufs
 
 /// An enumeration of well-known block node endpoint APIs.
 public enum BlockNodeApi {
+    /// An unrecognized or custom block node API not covered by other cases.
     case other
+
+    /// The block node status API.
     case status
+
+    /// The block node publish API for submitting blocks.
     case publish
+
+    /// The block node subscribe-stream API for streaming block data.
     case subscribeStream
+
+    /// The block node state-proof API.
     case stateProof
 }
 

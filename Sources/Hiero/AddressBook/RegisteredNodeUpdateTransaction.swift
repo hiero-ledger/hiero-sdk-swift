@@ -108,10 +108,6 @@ public final class RegisteredNodeUpdateTransaction: Transaction {
         return self
     }
 
-    internal override func validateChecksums(on ledgerId: LedgerId) throws {
-        try super.validateChecksums(on: ledgerId)
-    }
-
     internal override func transactionExecute(
         _ channel: GRPCChannel, _ request: Proto_Transaction, _ deadline: TimeInterval
     ) async throws

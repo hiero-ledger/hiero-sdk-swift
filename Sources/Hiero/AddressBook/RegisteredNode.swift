@@ -18,6 +18,7 @@ public struct RegisteredNode {
     /// The list of service endpoints published by this registered node.
     public let serviceEndpoints: [RegisteredServiceEndpoint]
 
+    /// Creates a new registered node value.
     public init(
         registeredNodeId: UInt64,
         adminKey: Key,

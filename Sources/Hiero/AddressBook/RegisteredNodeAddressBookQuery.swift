@@ -14,6 +14,7 @@ import SwiftProtobuf
 /// Follows the same REST-over-HTTP pattern as ``MirrorNodeContractQuery``.
 public final class RegisteredNodeAddressBookQuery {
 
+    /// Creates a new query instance.
     public init() {}
 
     /// Execute this query and return all registered nodes from the mirror node.
@@ -38,8 +39,7 @@ public final class RegisteredNodeAddressBookQuery {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         #if canImport(FoundationNetworking)
-            let (data, response): (Data, URLResponse) = try await withCheckedThrowingContinuation {
-                continuation in
+            let (data, response): (Data, URLResponse) = try await withCheckedThrowingContinuation { continuation in
                 URLSession.shared.dataTask(with: request) { data, response, error in
                     if let error = error {
                         continuation.resume(throwing: error)

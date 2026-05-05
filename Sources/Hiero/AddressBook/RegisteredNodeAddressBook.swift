@@ -8,6 +8,7 @@ public struct RegisteredNodeAddressBook {
     /// The list of registered nodes in this address book.
     public let registeredNodes: [RegisteredNode]
 
+    /// Creates an address book with the given list of registered nodes.
     public init(registeredNodes: [RegisteredNode] = []) {
         self.registeredNodes = registeredNodes
     }

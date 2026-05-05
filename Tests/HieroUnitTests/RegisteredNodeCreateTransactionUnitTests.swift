@@ -6,7 +6,7 @@ import XCTest
 @testable import Hiero
 
 internal final class RegisteredNodeCreateTransactionUnitTests: HieroUnitTestCase, TransactionTestable {
-    typealias TransactionType = RegisteredNodeCreateTransaction
+    internal typealias TransactionType = RegisteredNodeCreateTransaction
 
     internal static let testDescription = "test block node"
 
@@ -19,7 +19,7 @@ internal final class RegisteredNodeCreateTransactionUnitTests: HieroUnitTestCase
         )
     }
 
-    static func makeTransaction() throws -> RegisteredNodeCreateTransaction {
+    internal static func makeTransaction() throws -> RegisteredNodeCreateTransaction {
         try RegisteredNodeCreateTransaction()
             .nodeAccountIds([AccountId("0.0.5005"), AccountId("0.0.5006")])
             .transactionId(

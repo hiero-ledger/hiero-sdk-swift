@@ -23,11 +23,9 @@ internal enum Program {
 
         print("=== HIP-1137 Registered Node Lifecycle ===\n")
 
-        // Step 1: Generate admin key
         let adminKey = PrivateKey.generateEd25519()
         print("Step 1: Generated admin key: \(adminKey.publicKey)")
 
-        // Step 2: Create a block node endpoint (IP address, SUBSCRIBE_STREAM, TLS)
         let blockEndpoint = RegisteredServiceEndpoint.blockNode(
             address: .ipAddress(Data([1, 2, 3, 4])),
             port: 8080,
@@ -36,27 +34,9 @@ internal enum Program {
         )
         print("Step 2: Created block node endpoint (1.2.3.4:8080, SUBSCRIBE_STREAM, TLS)")
 
-        // Step 3: Create the registered node
-        print("\nStep 3: Executing RegisteredNodeCreateTransaction...")
-        let createReceipt = try await RegisteredNodeCreateTransaction()
-            .adminKey(.single(adminKey.publicKey))
-            .description("My Block Node")
-            .addServiceEndpoint(blockEndpoint)
-            .freezeWith(client)
-            .sign(adminKey)
-            .execute(client)
-            .getReceipt(client)
-
-        print("  Status: \(createReceipt.status)")
-
-        // Step 4: Verify the registeredNodeId
-        guard let registeredNodeId = createReceipt.registeredNodeId, registeredNodeId != 0 else {
-            print("ERROR: Expected a non-zero registeredNodeId in the receipt.")
-            return
-        }
+        let registeredNodeId = try await createNode(client: client, adminKey: adminKey, endpoint: blockEndpoint)
         print("\nStep 4: registeredNodeId = \(registeredNodeId)")
 
-        // Step 5: Create a second endpoint (domain name, STATUS api)
         let statusEndpoint = RegisteredServiceEndpoint.blockNode(
             address: .domainName("block-node.example.com"),
             port: 8443,
@@ -65,40 +45,57 @@ internal enum Program {
         )
         print("\nStep 5: Created second endpoint (block-node.example.com:8443, STATUS, TLS)")
 
-        // Step 6: Update the registered node
-        print("\nStep 6: Executing RegisteredNodeUpdateTransaction...")
-        let updateReceipt = try await RegisteredNodeUpdateTransaction()
-            .registeredNodeId(registeredNodeId)
-            .description("My Updated Block Node")
-            .addServiceEndpoint(blockEndpoint)
-            .addServiceEndpoint(statusEndpoint)
+        try await updateNode(
+            client: client, registeredNodeId: registeredNodeId, adminKey: adminKey,
+            endpoints: [blockEndpoint, statusEndpoint])
+        try await deleteNode(client: client, registeredNodeId: registeredNodeId, adminKey: adminKey)
+        print("\n=== Lifecycle complete ===")
+    }
+
+    private static func createNode(
+        client: Client, adminKey: PrivateKey, endpoint: RegisteredServiceEndpoint
+    ) async throws -> UInt64 {
+        print("\nStep 3: Executing RegisteredNodeCreateTransaction...")
+        let receipt = try await RegisteredNodeCreateTransaction()
+            .adminKey(.single(adminKey.publicKey))
+            .description("My Block Node")
+            .addServiceEndpoint(endpoint)
             .freezeWith(client)
             .sign(adminKey)
             .execute(client)
             .getReceipt(client)
+        print("  Status: \(receipt.status)")
+        guard let nodeId = receipt.registeredNodeId, nodeId != 0 else {
+            preconditionFailure("Expected a non-zero registeredNodeId in the receipt.")
+        }
+        return nodeId
+    }
 
-        print("  Status: \(updateReceipt.status)")
+    private static func updateNode(
+        client: Client, registeredNodeId: UInt64, adminKey: PrivateKey,
+        endpoints: [RegisteredServiceEndpoint]
+    ) async throws {
+        print("\nStep 6: Executing RegisteredNodeUpdateTransaction...")
+        var tx = RegisteredNodeUpdateTransaction()
+            .registeredNodeId(registeredNodeId)
+            .description("My Updated Block Node")
+        for endpoint in endpoints { tx = tx.addServiceEndpoint(endpoint) }
+        let receipt = try await tx.freezeWith(client).sign(adminKey).execute(client).getReceipt(client)
+        print("  Status: \(receipt.status)")
+    }
 
+    private static func deleteNode(client: Client, registeredNodeId: UInt64, adminKey: PrivateKey) async throws {
         // Steps 12-14 of the design doc lifecycle: associate the registered node with
         // an existing consensus node via NodeUpdateTransaction. This requires privileged
         // access (the consensus node's admin key) and is intentionally omitted here.
-        // let nodeUpdateReceipt = try await NodeUpdateTransaction()
-        //     .nodeId(3)
-        //     .addAssociatedRegisteredNode(registeredNodeId)
-        //     .execute(client)
-        //     .getReceipt(client)
-
-        // Step 7: Delete the registered node
         print("\nStep 7: Executing RegisteredNodeDeleteTransaction...")
-        let deleteReceipt = try await RegisteredNodeDeleteTransaction()
+        let receipt = try await RegisteredNodeDeleteTransaction()
             .registeredNodeId(registeredNodeId)
             .freezeWith(client)
             .sign(adminKey)
             .execute(client)
             .getReceipt(client)
-
-        print("  Status: \(deleteReceipt.status)")
-        print("\n=== Lifecycle complete ===")
+        print("  Status: \(receipt.status)")
     }
 }
 

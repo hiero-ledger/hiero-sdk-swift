@@ -107,6 +107,7 @@ public struct BlockNodeServiceEndpoint {
     /// The block node APIs exposed by this endpoint.
     public var endpointApis: [BlockNodeApi]
 
+    /// Creates a block node service endpoint with the given parameters.
     public init(
         address: RegisteredServiceEndpoint.Address? = nil,
         port: UInt32 = 0,
@@ -205,14 +206,16 @@ public struct GeneralServiceEndpoint {
 extension RegisteredServiceEndpoint: TryProtobufCodable {
     internal typealias Protobuf = Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint
 
-    internal init(protobuf proto: Protobuf) throws {
-        let address: Address?
+    private static func parseAddress(from proto: Protobuf) -> Address? {
         switch proto.address {
-        case .ipAddress(let data): address = .ipAddress(data)
-        case .domainName(let name): address = .domainName(name)
-        case nil: address = nil
+        case .ipAddress(let data): return .ipAddress(data)
+        case .domainName(let name): return .domainName(name)
+        case nil: return nil
         }
+    }
 
+    internal init(protobuf proto: Protobuf) throws {
+        let address = Self.parseAddress(from: proto)
         let port = proto.port
         let requiresTls = proto.requiresTls
 
@@ -272,8 +275,8 @@ extension RegisteredServiceEndpoint: TryProtobufCodable {
                 applyAddress(endpoint.address)
                 proto.port = endpoint.port
                 proto.requiresTls = endpoint.requiresTls
-                proto.generalService = .with {
-                    if let desc = endpoint.description { $0.description_p = desc }
+                proto.generalService = .with { gs in
+                    if let desc = endpoint.description { gs.description_p = desc }
                 }
             }
         }

@@ -4,7 +4,7 @@ import Hiero
 import HieroTestSupport
 import XCTest
 
-internal final class RegisteredNodeDeleteTransactionIntegrationTests: HieroIntegrationTestCase {
+internal final class RegisteredNodeDeleteIntegrationTests: HieroIntegrationTestCase {
 
     private func makeBlockNodeEndpoint() -> RegisteredServiceEndpoint {
         .blockNode(

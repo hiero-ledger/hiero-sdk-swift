@@ -328,8 +328,8 @@ extension NodeUpdateTransaction: ToProtobuf {
             }
 
             if let associatedRegisteredNodes = associatedRegisteredNodes {
-                proto.associatedRegisteredNodeList = .with {
-                    $0.associatedRegisteredNode = associatedRegisteredNodes
+                proto.associatedRegisteredNodeList = .with { list in
+                    list.associatedRegisteredNode = associatedRegisteredNodes
                 }
             }
         }
