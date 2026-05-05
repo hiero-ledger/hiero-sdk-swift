@@ -7,8 +7,6 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// SPDX-License-Identifier: Apache-2.0
-
 import Foundation
 import SwiftProtobuf
 
@@ -29,6 +27,7 @@ public struct Com_Hedera_Mirror_Api_Proto_AddressBookQuery: Sendable {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  ///*
   /// The ID of the address book file on the network. Can be either 0.0.101 or 0.0.102.
   public var fileID: Proto_FileID {
     get {return _fileID ?? Proto_FileID()}
@@ -39,6 +38,7 @@ public struct Com_Hedera_Mirror_Api_Proto_AddressBookQuery: Sendable {
   /// Clears the value of `fileID`. Subsequent reads from it will return its default value.
   public mutating func clearFileID() {self._fileID = nil}
 
+  ///*
   /// The maximum number of node addresses to receive before stopping. If not set or set to zero it will return all node addresses in the database.
   public var limit: Int32 = 0
 

@@ -41,7 +41,10 @@ internal final class RegisteredNodeCreateTransactionIntegrationTests: HieroInteg
 
         let node = try await findNode(registeredNodeId)
         XCTAssertTrue(
-            node.serviceEndpoints.contains { if case .blockNode = $0 { return true }; return false },
+            node.serviceEndpoints.contains {
+                if case .blockNode = $0 { return true }
+                return false
+            },
             "Expected a block node endpoint"
         )
 
@@ -75,7 +78,10 @@ internal final class RegisteredNodeCreateTransactionIntegrationTests: HieroInteg
 
         let node = try await findNode(registeredNodeId)
         XCTAssertTrue(
-            node.serviceEndpoints.contains { if case .mirrorNode = $0 { return true }; return false },
+            node.serviceEndpoints.contains {
+                if case .mirrorNode = $0 { return true }
+                return false
+            },
             "Expected a mirror node endpoint"
         )
 
@@ -109,7 +115,10 @@ internal final class RegisteredNodeCreateTransactionIntegrationTests: HieroInteg
 
         let node = try await findNode(registeredNodeId)
         XCTAssertTrue(
-            node.serviceEndpoints.contains { if case .rpcRelay = $0 { return true }; return false },
+            node.serviceEndpoints.contains {
+                if case .rpcRelay = $0 { return true }
+                return false
+            },
             "Expected an RPC relay endpoint"
         )
 
@@ -145,7 +154,8 @@ internal final class RegisteredNodeCreateTransactionIntegrationTests: HieroInteg
 
         let node = try await findNode(registeredNodeId)
         let generalEndpoint = node.serviceEndpoints.compactMap {
-            if case .generalService(let ep) = $0 { return ep } else { return nil }
+            guard case .generalService(let ep) = $0 else { return nil }
+            return ep
         }.first
         XCTAssertNotNil(generalEndpoint, "Expected a general service endpoint")
         XCTAssertEqual(generalEndpoint?.description, "Custom service")
@@ -190,19 +200,31 @@ internal final class RegisteredNodeCreateTransactionIntegrationTests: HieroInteg
         let node = try await findNode(registeredNodeId)
         let endpoints = node.serviceEndpoints
         XCTAssertTrue(
-            endpoints.contains { if case .blockNode = $0 { return true }; return false },
+            endpoints.contains {
+                if case .blockNode = $0 { return true }
+                return false
+            },
             "Expected a block node endpoint"
         )
         XCTAssertTrue(
-            endpoints.contains { if case .mirrorNode = $0 { return true }; return false },
+            endpoints.contains {
+                if case .mirrorNode = $0 { return true }
+                return false
+            },
             "Expected a mirror node endpoint"
         )
         XCTAssertTrue(
-            endpoints.contains { if case .rpcRelay = $0 { return true }; return false },
+            endpoints.contains {
+                if case .rpcRelay = $0 { return true }
+                return false
+            },
             "Expected an RPC relay endpoint"
         )
         XCTAssertTrue(
-            endpoints.contains { if case .generalService = $0 { return true }; return false },
+            endpoints.contains {
+                if case .generalService = $0 { return true }
+                return false
+            },
             "Expected a general service endpoint"
         )
 

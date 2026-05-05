@@ -422,6 +422,8 @@ extension ServicesTransactionDataList: TryFromProtobuf {
             throw HError.fromProtobuf("Unsupported transaction `HistoryProofVoteTransaction`")
         case .crsPublication:
             throw HError.fromProtobuf("Unsupported transaction `CrsPublicationTransaction`")
+        case .migrationRootHashVote:
+            throw HError.fromProtobuf("Unsupported transaction `MigrationRootHashVoteTransaction`")
         }
 
         for transaction in iter {

@@ -24,7 +24,8 @@ public final class RegisteredNodeAddressBookQuery {
         let hostPart = String(mirrorNetworkAddress.split(separator: ":")[0])
         let isLocal = hostPart == "localhost" || hostPart == "127.0.0.1"
 
-        let urlString = isLocal
+        let urlString =
+            isLocal
             ? "http://\(mirrorNetworkAddress)\(endpoint)"
             : "https://\(mirrorNetworkAddress)\(endpoint)"
 
