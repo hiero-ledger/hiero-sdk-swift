@@ -317,6 +317,7 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CreateTransactionWithEvmHook() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let contractId = try await createUnmanagedEvmHookContract()
         let hookDetails = createHookDetails(contractId: contractId)
@@ -329,6 +330,7 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CreateTransactionWithEvmHookAndStorageUpdates() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let contractId = try await createUnmanagedEvmHookContract()
         let hookDetails = createHookDetailsWithStorage(contractId: contractId)
@@ -341,6 +343,7 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CreateTransactionWithEvmHookWithNoContractId() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let key = PrivateKey.generateEcdsa()
 
@@ -373,6 +376,7 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CreateTransactionWithSameEvmHookIds() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let key = PrivateKey.generateEcdsa()
         let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
@@ -390,6 +394,7 @@ internal final class AccountCreateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CreateTransactionWithEvmHookWithAdminKey() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let adminKey = PrivateKey.generateEcdsa()
         let hookContractId = try await createUnmanagedEvmHookContract()

@@ -369,6 +369,23 @@ public class Transaction: ValidateChecksums {
         self.signers.append(signer)
     }
 
+    /// Create a ``FeeEstimateQuery`` for this transaction.
+    ///
+    /// Convenience shorthand for:
+    /// ```swift
+    /// FeeEstimateQuery(transaction: self)
+    /// ```
+    ///
+    /// ## Example
+    /// ```swift
+    /// let estimate = try await myTransaction
+    ///     .estimateFee()
+    ///     .execute(client)
+    /// ```
+    public func estimateFee() -> FeeEstimateQuery {
+        FeeEstimateQuery(transaction: self)
+    }
+
     @discardableResult
     public final func freeze() throws -> Self {
         try freezeWith(nil)
