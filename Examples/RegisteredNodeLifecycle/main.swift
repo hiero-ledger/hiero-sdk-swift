@@ -11,9 +11,10 @@ import SwiftDotenv
 /// 2. Create a BlockNodeServiceEndpoint (IP, SUBSCRIBE_STREAM, TLS enabled).
 /// 3. Execute RegisteredNodeCreateTransaction and capture the registeredNodeId from the receipt.
 /// 4. Verify the registeredNodeId is non-zero.
-/// 5. Create a second endpoint (domain name, STATUS).
-/// 6. Execute RegisteredNodeUpdateTransaction with a new description and both endpoints.
-/// 7. Execute RegisteredNodeDeleteTransaction to remove the registered node.
+/// 5. Execute RegisteredNodeAddressBookQuery and verify the node appears in the address book.
+/// 6. Create a second endpoint (domain name, STATUS).
+/// 7. Execute RegisteredNodeUpdateTransaction with a new description and both endpoints.
+/// 8. Execute RegisteredNodeDeleteTransaction to remove the registered node.
 @main
 internal enum Program {
     internal static func main() async throws {
@@ -37,18 +38,23 @@ internal enum Program {
         let registeredNodeId = try await createNode(client: client, adminKey: adminKey, endpoint: blockEndpoint)
         print("\nStep 4: registeredNodeId = \(registeredNodeId)")
 
+        let addressBook = try await RegisteredNodeAddressBookQuery().execute(client)
+        let found = addressBook.registeredNodes.contains { $0.registeredNodeId == registeredNodeId }
+        print("\nStep 5: Node found in address book: \(found)")
+
         let statusEndpoint = RegisteredServiceEndpoint.blockNode(
             address: .domainName("block-node.example.com"),
             port: 8443,
             requiresTls: true,
             endpointApis: [.status]
         )
-        print("\nStep 5: Created second endpoint (block-node.example.com:8443, STATUS, TLS)")
+        print("\nStep 6: Created second endpoint (block-node.example.com:8443, STATUS, TLS)")
 
         try await updateNode(
             client: client, registeredNodeId: registeredNodeId, adminKey: adminKey,
             endpoints: [blockEndpoint, statusEndpoint])
         try await deleteNode(client: client, registeredNodeId: registeredNodeId, adminKey: adminKey)
+
         print("\n=== Lifecycle complete ===")
     }
 
@@ -75,7 +81,7 @@ internal enum Program {
         client: Client, registeredNodeId: UInt64, adminKey: PrivateKey,
         endpoints: [RegisteredServiceEndpoint]
     ) async throws {
-        print("\nStep 6: Executing RegisteredNodeUpdateTransaction...")
+        print("\nStep 7: Executing RegisteredNodeUpdateTransaction...")
         var tx = RegisteredNodeUpdateTransaction()
             .registeredNodeId(registeredNodeId)
             .description("My Updated Block Node")
@@ -88,7 +94,7 @@ internal enum Program {
         // Steps 12-14 of the design doc lifecycle: associate the registered node with
         // an existing consensus node via NodeUpdateTransaction. This requires privileged
         // access (the consensus node's admin key) and is intentionally omitted here.
-        print("\nStep 7: Executing RegisteredNodeDeleteTransaction...")
+        print("\nStep 8: Executing RegisteredNodeDeleteTransaction...")
         let receipt = try await RegisteredNodeDeleteTransaction()
             .registeredNodeId(registeredNodeId)
             .freezeWith(client)

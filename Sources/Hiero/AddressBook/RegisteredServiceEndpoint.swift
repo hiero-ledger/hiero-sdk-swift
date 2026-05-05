@@ -136,6 +136,7 @@ public struct MirrorNodeServiceEndpoint {
     /// Whether this endpoint requires TLS.
     public var requiresTls: Bool
 
+    /// Creates a mirror node service endpoint with the given parameters.
     public init(
         address: RegisteredServiceEndpoint.Address? = nil,
         port: UInt32 = 0,
@@ -162,6 +163,7 @@ public struct RpcRelayServiceEndpoint {
     /// Whether this endpoint requires TLS.
     public var requiresTls: Bool
 
+    /// Creates an RPC relay service endpoint with the given parameters.
     public init(
         address: RegisteredServiceEndpoint.Address? = nil,
         port: UInt32 = 0,
@@ -188,6 +190,7 @@ public struct GeneralServiceEndpoint {
     /// Optional short description of the service (max 100 bytes UTF-8).
     public var description: String?
 
+    /// Creates a general service endpoint with the given parameters.
     public init(
         address: RegisteredServiceEndpoint.Address? = nil,
         port: UInt32 = 0,
