@@ -221,8 +221,8 @@ internal final class RegisteredNodeCreateIntegrationTests: HieroIntegrationTestC
         // Given
         let adminKey = PrivateKey.generateEd25519()
 
-        // When / Then: serviceEndpoints list is empty — service endpoints must be non-empty
-        await assertReceiptStatus(
+        // When / Then: serviceEndpoints list is empty — fails precheck because endpoints are required
+        await assertPrecheckStatus(
             try await RegisteredNodeCreateTransaction()
                 .adminKey(.single(adminKey.publicKey))
                 .freezeWith(testEnv.adminClient)

@@ -25,9 +25,10 @@ public final class RegisteredNodeAddressBookQuery {
         let hostPart = String(mirrorNetworkAddress.split(separator: ":")[0])
         let isLocal = hostPart == "localhost" || hostPart == "127.0.0.1"
 
+        // For local environments, the mirror node REST API runs on port 5551 (not the gRPC port 5600).
         let urlString =
             isLocal
-            ? "http://\(mirrorNetworkAddress)\(endpoint)"
+            ? "http://\(hostPart):5551\(endpoint)"
             : "https://\(mirrorNetworkAddress)\(endpoint)"
 
         guard let url = URL(string: urlString) else {
