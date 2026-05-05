@@ -15,6 +15,25 @@ internal final class RegisteredNodeCreateIntegrationTests: HieroIntegrationTestC
         )
     }
 
+    private func findNode(_ id: UInt64) async throws -> RegisteredNode {
+        // Wait for mirror node propagation before querying
+        try await Task.sleep(nanoseconds: 5_000_000_000)
+        let book = try await RegisteredNodeAddressBookQuery().execute(testEnv.adminClient)
+        return try XCTUnwrap(book.registeredNodes.first { $0.registeredNodeId == id })
+    }
+
+    private func assertHasEndpointType(_ type: String, in endpoints: [RegisteredServiceEndpoint]) {
+        let names = endpoints.map { endpoint -> String in
+            switch endpoint {
+            case .blockNode: return "blockNode"
+            case .mirrorNode: return "mirrorNode"
+            case .rpcRelay: return "rpcRelay"
+            case .generalService: return "generalService"
+            }
+        }
+        XCTAssertTrue(names.contains(type), "Expected a \(type) endpoint")
+    }
+
     internal func test_CanCreateRegisteredNodeWithBlockNodeEndpoint() async throws {
         // Given
         let adminKey = PrivateKey.generateEd25519()
@@ -33,6 +52,9 @@ internal final class RegisteredNodeCreateIntegrationTests: HieroIntegrationTestC
         XCTAssertEqual(receipt.status, .success)
         let registeredNodeId = try XCTUnwrap(receipt.registeredNodeId)
         XCTAssertGreaterThan(registeredNodeId, 0)
+
+        let node = try await findNode(registeredNodeId)
+        assertHasEndpointType("blockNode", in: node.serviceEndpoints)
 
         // Cleanup
         _ = try await RegisteredNodeDeleteTransaction()
@@ -61,7 +83,9 @@ internal final class RegisteredNodeCreateIntegrationTests: HieroIntegrationTestC
         // Then
         XCTAssertEqual(receipt.status, .success)
         let registeredNodeId = try XCTUnwrap(receipt.registeredNodeId)
-        XCTAssertGreaterThan(registeredNodeId, 0)
+
+        let node = try await findNode(registeredNodeId)
+        assertHasEndpointType("mirrorNode", in: node.serviceEndpoints)
 
         // Cleanup
         _ = try await RegisteredNodeDeleteTransaction()
@@ -90,7 +114,9 @@ internal final class RegisteredNodeCreateIntegrationTests: HieroIntegrationTestC
         // Then
         XCTAssertEqual(receipt.status, .success)
         let registeredNodeId = try XCTUnwrap(receipt.registeredNodeId)
-        XCTAssertGreaterThan(registeredNodeId, 0)
+
+        let node = try await findNode(registeredNodeId)
+        assertHasEndpointType("rpcRelay", in: node.serviceEndpoints)
 
         // Cleanup
         _ = try await RegisteredNodeDeleteTransaction()
@@ -121,7 +147,14 @@ internal final class RegisteredNodeCreateIntegrationTests: HieroIntegrationTestC
         // Then
         XCTAssertEqual(receipt.status, .success)
         let registeredNodeId = try XCTUnwrap(receipt.registeredNodeId)
-        XCTAssertGreaterThan(registeredNodeId, 0)
+
+        let node = try await findNode(registeredNodeId)
+        let generalEndpoint = node.serviceEndpoints.compactMap { endpoint -> GeneralServiceEndpoint? in
+            guard case .generalService(let ep) = endpoint else { return nil }
+            return ep
+        }.first
+        XCTAssertNotNil(generalEndpoint, "Expected a general service endpoint")
+        XCTAssertEqual(generalEndpoint?.description, "Custom service")
 
         // Cleanup
         _ = try await RegisteredNodeDeleteTransaction()
@@ -159,7 +192,11 @@ internal final class RegisteredNodeCreateIntegrationTests: HieroIntegrationTestC
         // Then
         XCTAssertEqual(receipt.status, .success)
         let registeredNodeId = try XCTUnwrap(receipt.registeredNodeId)
-        XCTAssertGreaterThan(registeredNodeId, 0)
+        let node = try await findNode(registeredNodeId)
+        assertHasEndpointType("blockNode", in: node.serviceEndpoints)
+        assertHasEndpointType("mirrorNode", in: node.serviceEndpoints)
+        assertHasEndpointType("rpcRelay", in: node.serviceEndpoints)
+        assertHasEndpointType("generalService", in: node.serviceEndpoints)
 
         // Cleanup
         _ = try await RegisteredNodeDeleteTransaction()
@@ -215,7 +252,9 @@ internal final class RegisteredNodeCreateIntegrationTests: HieroIntegrationTestC
         // Then
         XCTAssertEqual(receipt.status, .success)
         let registeredNodeId = try XCTUnwrap(receipt.registeredNodeId)
-        XCTAssertGreaterThan(registeredNodeId, 0)
+
+        let node = try await findNode(registeredNodeId)
+        XCTAssertEqual(node.description, "My Block Node Description")
 
         // Cleanup
         _ = try await RegisteredNodeDeleteTransaction()
