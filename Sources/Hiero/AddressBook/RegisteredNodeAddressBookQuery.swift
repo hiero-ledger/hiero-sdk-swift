@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Foundation
-import HieroProtobufs
-import SwiftProtobuf
 
 #if canImport(FoundationNetworking)
     import FoundationNetworking
@@ -112,8 +110,10 @@ extension RegisteredNode {
         guard let keyBytes = Data(hexEncoded: node.adminKey.key) else {
             throw HError.basicParse("Invalid hex in adminKey: \(node.adminKey.key)")
         }
-        let protoKey = try Proto_Key(serializedBytes: keyBytes)
-        let adminKey = try Key.fromProtobuf(protoKey)
+        // The mirror node REST API returns raw key bytes (not protobuf-encoded).
+        // Use fromBytes which auto-detects ED25519 (32 bytes) or ECDSA (33 bytes).
+        let publicKey = try PublicKey.fromBytes(keyBytes)
+        let adminKey = Key.single(publicKey)
         let endpoints = try node.serviceEndpoints.map { try RegisteredServiceEndpoint(mirror: $0) }
         self.init(
             registeredNodeId: node.registeredNodeId,
