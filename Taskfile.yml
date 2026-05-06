@@ -19,6 +19,7 @@ tasks:
         deps: [swift-format:install]
         cmds:
             - .build/swift-format/swift-format --configuration .swift-format.json --recursive --in-place --parallel Sources/ Tests/ Examples/ Package.swift
+            - .build/swift-format/swift-format lint --strict --configuration .swift-format.json --recursive --parallel Sources/ Tests/ Examples/ Package.swift
 
     lint:
         deps: [swift-format:install]
