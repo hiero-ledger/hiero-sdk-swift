@@ -1035,6 +1035,16 @@ public struct Proto_TransactionBody: @unchecked Sendable {
   }
 
   ///*
+  /// A transaction body for voting on migration wrapped record root hash state.
+  public var migrationRootHashVote: Com_Hedera_Hapi_Services_Auxiliary_Blockrecords_MigrationRootHashVoteTransactionBody {
+    get {
+      if case .migrationRootHashVote(let v)? = _storage._data {return v}
+      return Com_Hedera_Hapi_Services_Auxiliary_Blockrecords_MigrationRootHashVoteTransactionBody()
+    }
+    set {_uniqueStorage()._data = .migrationRootHashVote(newValue)}
+  }
+
+  ///*
   /// A list of maximum custom fees that the users are willing to pay.
   /// <p>
   /// This field is OPTIONAL.<br/>
@@ -1370,6 +1380,9 @@ public struct Proto_TransactionBody: @unchecked Sendable {
     /// This transaction SHALL mark an existing registered node record as
     /// deleted.
     case registeredNodeDelete(Com_Hedera_Hapi_Node_Addressbook_RegisteredNodeDeleteTransactionBody)
+    ///*
+    /// A transaction body for voting on migration wrapped record root hash state.
+    case migrationRootHashVote(Com_Hedera_Hapi_Services_Auxiliary_Blockrecords_MigrationRootHashVoteTransactionBody)
 
   }
 
@@ -1536,6 +1549,7 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     78: .same(proto: "registeredNodeCreate"),
     79: .same(proto: "registeredNodeUpdate"),
     80: .same(proto: "registeredNodeDelete"),
+    81: .standard(proto: "migration_root_hash_vote"),
     1001: .standard(proto: "max_custom_fees"),
     1002: .standard(proto: "high_volume"),
   ]
@@ -2484,6 +2498,19 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
             _storage._data = .registeredNodeDelete(v)
           }
         }()
+        case 81: try {
+          var v: Com_Hedera_Hapi_Services_Auxiliary_Blockrecords_MigrationRootHashVoteTransactionBody?
+          var hadOneofValue = false
+          if let current = _storage._data {
+            hadOneofValue = true
+            if case .migrationRootHashVote(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._data = .migrationRootHashVote(v)
+          }
+        }()
         case 1001: try { try decoder.decodeRepeatedMessageField(value: &_storage._maxCustomFees) }()
         case 1002: try { try decoder.decodeSingularBoolField(value: &_storage._highVolume) }()
         default: break
@@ -2794,6 +2821,10 @@ extension Proto_TransactionBody: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
       case .registeredNodeDelete?: try {
         guard case .registeredNodeDelete(let v)? = _storage._data else { preconditionFailure() }
         try visitor.visitSingularMessageField(value: v, fieldNumber: 80)
+      }()
+      case .migrationRootHashVote?: try {
+        guard case .migrationRootHashVote(let v)? = _storage._data else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 81)
       }()
       default: break
       }

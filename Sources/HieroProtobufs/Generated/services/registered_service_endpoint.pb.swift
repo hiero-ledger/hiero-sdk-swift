@@ -133,6 +133,19 @@ public struct Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint: @unche
     set {endpointType = .rpcRelay(newValue)}
   }
 
+  ///*
+  /// A general service.<br/>
+  /// A general service endpoint represents any network accessible service
+  /// that is provided by a registered node but that is not a service
+  /// currently defined as part of the Hiero Ledger system.
+  public var generalService: Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.GeneralServiceEndpoint {
+    get {
+      if case .generalService(let v)? = endpointType {return v}
+      return Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.GeneralServiceEndpoint()
+    }
+    set {endpointType = .generalService(newValue)}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   ///*
@@ -182,6 +195,12 @@ public struct Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint: @unche
     /// A RPC Relay is a proxy and translator between EVM tooling and a
     /// Hiero consensus network.
     case rpcRelay(Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.RpcRelayEndpoint)
+    ///*
+    /// A general service.<br/>
+    /// A general service endpoint represents any network accessible service
+    /// that is provided by a registered node but that is not a service
+    /// currently defined as part of the Hiero Ledger system.
+    case generalService(Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.GeneralServiceEndpoint)
 
   }
 
@@ -199,7 +218,7 @@ public struct Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint: @unche
     /// An indicator of what API this endpoint supports.
     /// <p>
     /// This field is REQUIRED.
-    public var endpointApi: Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.BlockNodeEndpoint.BlockNodeApi = .other
+    public var endpointApi: [Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.BlockNodeEndpoint.BlockNodeApi] = []
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -298,6 +317,25 @@ public struct Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint: @unche
     public init() {}
   }
 
+  ///*
+  /// A message indicating this endpoint is a General Service endpoint.
+  public struct GeneralServiceEndpoint: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    ///*
+    /// A short description of the service provided.
+    /// <p>
+    /// This value, if set, MUST NOT exceed 100 bytes when encoded as UTF-8.<br/>
+    /// This field is OPTIONAL.
+    public var description_p: String = String()
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+  }
+
   public init() {}
 }
 
@@ -315,6 +353,7 @@ extension Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint: SwiftProto
     5: .standard(proto: "block_node"),
     6: .standard(proto: "mirror_node"),
     7: .standard(proto: "rpc_relay"),
+    8: .standard(proto: "general_service"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -380,6 +419,19 @@ extension Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint: SwiftProto
           self.endpointType = .rpcRelay(v)
         }
       }()
+      case 8: try {
+        var v: Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.GeneralServiceEndpoint?
+        var hadOneofValue = false
+        if let current = self.endpointType {
+          hadOneofValue = true
+          if case .generalService(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.endpointType = .generalService(v)
+        }
+      }()
       default: break
       }
     }
@@ -420,6 +472,10 @@ extension Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint: SwiftProto
       guard case .rpcRelay(let v)? = self.endpointType else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
     }()
+    case .generalService?: try {
+      guard case .generalService(let v)? = self.endpointType else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
+    }()
     case nil: break
     }
     try unknownFields.traverse(visitor: &visitor)
@@ -447,15 +503,15 @@ extension Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.BlockNodeEn
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularEnumField(value: &self.endpointApi) }()
+      case 1: try { try decoder.decodeRepeatedEnumField(value: &self.endpointApi) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.endpointApi != .other {
-      try visitor.visitSingularEnumField(value: self.endpointApi, fieldNumber: 1)
+    if !self.endpointApi.isEmpty {
+      try visitor.visitPackedEnumField(value: self.endpointApi, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -510,6 +566,38 @@ extension Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.RpcRelayEnd
   }
 
   public static func ==(lhs: Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.RpcRelayEndpoint, rhs: Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.RpcRelayEndpoint) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.GeneralServiceEndpoint: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.protoMessageName + ".GeneralServiceEndpoint"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "description"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.description_p) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.description_p.isEmpty {
+      try visitor.visitSingularStringField(value: self.description_p, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.GeneralServiceEndpoint, rhs: Com_Hedera_Hapi_Node_Addressbook_RegisteredServiceEndpoint.GeneralServiceEndpoint) -> Bool {
+    if lhs.description_p != rhs.description_p {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

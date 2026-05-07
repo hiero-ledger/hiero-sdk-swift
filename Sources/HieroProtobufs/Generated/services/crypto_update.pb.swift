@@ -349,6 +349,23 @@ public struct Proto_CryptoUpdateTransactionBody: @unchecked Sendable {
     set {_uniqueStorage()._hookCreationDetails = newValue}
   }
 
+  ///*
+  /// The delegated contract address to set for the account.
+  /// <p>
+  /// If this field is unset (empty), no change is made to account's `delegation_address`.
+  /// If set, the value MUST be 20 bytes long (EVM address).
+  /// Submitting a value of `0x0000000000000000000000000000000000000000` will clear
+  /// account's current `delegation_address`.
+  ///
+  /// If this field is set on the account, anytime a call is made to the account's address
+  /// (either an EVM call within HSCS or a child call dispatched by CryptoTransfer)
+  /// the EVM code of the contract referenced by `delegation_address` will be
+  /// executed in the context of the account.
+  public var delegationAddress: Data {
+    get {return _storage._delegationAddress}
+    set {_uniqueStorage()._delegationAddress = newValue}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// This entire oneOf is deprecated, and the concept is not implemented.
@@ -463,6 +480,7 @@ extension Proto_CryptoUpdateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
     18: .standard(proto: "decline_reward"),
     19: .standard(proto: "hook_ids_to_delete"),
     20: .standard(proto: "hook_creation_details"),
+    21: .standard(proto: "delegation_address"),
   ]
 
   fileprivate class _StorageClass {
@@ -481,6 +499,7 @@ extension Proto_CryptoUpdateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
     var _declineReward: SwiftProtobuf.Google_Protobuf_BoolValue? = nil
     var _hookIdsToDelete: [Int64] = []
     var _hookCreationDetails: [Com_Hedera_Hapi_Node_Hooks_HookCreationDetails] = []
+    var _delegationAddress: Data = Data()
 
     #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
@@ -510,6 +529,7 @@ extension Proto_CryptoUpdateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
       _declineReward = source._declineReward
       _hookIdsToDelete = source._hookIdsToDelete
       _hookCreationDetails = source._hookCreationDetails
+      _delegationAddress = source._delegationAddress
     }
   }
 
@@ -623,6 +643,7 @@ extension Proto_CryptoUpdateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
         case 18: try { try decoder.decodeSingularMessageField(value: &_storage._declineReward) }()
         case 19: try { try decoder.decodeRepeatedInt64Field(value: &_storage._hookIdsToDelete) }()
         case 20: try { try decoder.decodeRepeatedMessageField(value: &_storage._hookCreationDetails) }()
+        case 21: try { try decoder.decodeSingularBytesField(value: &_storage._delegationAddress) }()
         default: break
         }
       }
@@ -697,6 +718,9 @@ extension Proto_CryptoUpdateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
       if !_storage._hookCreationDetails.isEmpty {
         try visitor.visitRepeatedMessageField(value: _storage._hookCreationDetails, fieldNumber: 20)
       }
+      if !_storage._delegationAddress.isEmpty {
+        try visitor.visitSingularBytesField(value: _storage._delegationAddress, fieldNumber: 21)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -721,6 +745,7 @@ extension Proto_CryptoUpdateTransactionBody: SwiftProtobuf.Message, SwiftProtobu
         if _storage._declineReward != rhs_storage._declineReward {return false}
         if _storage._hookIdsToDelete != rhs_storage._hookIdsToDelete {return false}
         if _storage._hookCreationDetails != rhs_storage._hookCreationDetails {return false}
+        if _storage._delegationAddress != rhs_storage._delegationAddress {return false}
         return true
       }
       if !storagesAreEqual {return false}

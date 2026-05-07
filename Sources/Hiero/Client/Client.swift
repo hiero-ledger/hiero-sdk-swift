@@ -288,6 +288,68 @@ public final class Client: Sendable {
         set(value) { _backoff.withLockedValue { $0.maxBackoff = value } }
     }
 
+    /// Gets the minimum time before a failed node can be retried.
+    ///
+    /// This maps to the initial node health backoff interval.
+    public func getMinNodeReadmitTime() -> TimeInterval {
+        consensus.getMinNodeReadmitTime()
+    }
+
+    /// Sets the minimum time before a failed node can be retried.
+    ///
+    /// - Parameter time: Time in seconds. Must be non-negative and less than or equal to maxNodeReadmitTime.
+    /// - Returns: Self for method chaining
+    /// - Throws: `HError.illegalState` if `time` is invalid.
+    @discardableResult
+    public func setMinNodeReadmitTime(_ time: TimeInterval) throws -> Self {
+        guard time >= 0 else {
+            throw HError.illegalState("minNodeReadmitTime must be non-negative")
+        }
+
+        let maxReadmitTime = getMaxNodeReadmitTime()
+
+        guard time <= maxReadmitTime else {
+            throw HError.illegalState(
+                "minNodeReadmitTime (\(time)s) must be <= maxNodeReadmitTime (\(maxReadmitTime)s)"
+            )
+        }
+
+        consensus.setMinNodeReadmitTime(time)
+
+        return self
+    }
+
+    /// Gets the maximum time a failed node remains excluded before retry.
+    ///
+    /// This maps to the circuit-open recovery duration.
+    public func getMaxNodeReadmitTime() -> TimeInterval {
+        consensus.getMaxNodeReadmitTime()
+    }
+
+    /// Sets the maximum time a failed node remains excluded before retry.
+    ///
+    /// - Parameter time: Time in seconds. Must be non-negative and greater than or equal to minNodeReadmitTime.
+    /// - Returns: Self for method chaining
+    /// - Throws: `HError.illegalState` if `time` is invalid.
+    @discardableResult
+    public func setMaxNodeReadmitTime(_ time: TimeInterval) throws -> Self {
+        guard time >= 0 else {
+            throw HError.illegalState("maxNodeReadmitTime must be non-negative")
+        }
+
+        let minReadmitTime = getMinNodeReadmitTime()
+
+        guard time >= minReadmitTime else {
+            throw HError.illegalState(
+                "maxNodeReadmitTime (\(time)s) must be >= minNodeReadmitTime (\(minReadmitTime)s)"
+            )
+        }
+
+        consensus.setMaxNodeReadmitTime(time)
+
+        return self
+    }
+
     /// Current backoff configuration
     internal var backoff: Backoff {
         self._backoff.withLockedValue { $0 }

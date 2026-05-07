@@ -7,6 +7,7 @@ import XCTest
 internal final class HookStoreTransactionIntegrationTests: HieroIntegrationTestCase {
 
     internal func test_CanUpdateStorageSlotsWithValidSignatures() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let hookContractId = try await createEvmHookContract()
         let hookDetails = createHookDetails(contractId: hookContractId)
@@ -41,6 +42,7 @@ internal final class HookStoreTransactionIntegrationTests: HieroIntegrationTestC
     }
 
     internal func test_CannotUpdateStorageWithoutProperSignatures() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let hookContractId = try await createEvmHookContract()
         let hookDetails = createHookDetails(contractId: hookContractId)
@@ -71,6 +73,7 @@ internal final class HookStoreTransactionIntegrationTests: HieroIntegrationTestC
     }
 
     internal func test_CannotUpdateStorageWithNonExistentHookId() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let (accountId, accountKey) = try await createTestAccount(initialBalance: Hbar(1))
 

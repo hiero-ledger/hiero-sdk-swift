@@ -7,6 +7,7 @@ import XCTest
 internal final class TransferTransactionHooks: HieroIntegrationTestCase {
 
     internal func test_HbarTransferWithPreTxHook() async throws {
+        throw XCTSkip("Hooks are not enabled")
         let hookContractId = try await createEvmHookContract()
         let hookDetails = createHookDetails(contractId: hookContractId, hookId: 2)
         let (accountId, _) = try await createAccountWithHook(
@@ -30,6 +31,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
     }
 
     internal func test_HbarTransferWithPrePostTxHook() async throws {
+        throw XCTSkip("Hooks are not enabled")
         let hookContractId = try await createEvmHookContract()
         let hookDetails = createHookDetails(contractId: hookContractId, hookId: 2)
         let (accountId, _) = try await createAccountWithHook(
@@ -53,6 +55,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
     }
 
     internal func test_TokenTransferWithPreTxHook() async throws {
+        throw XCTSkip("Hooks are not enabled")
         let hookContractId = try await createEvmHookContract()
         let hookDetails = createHookDetails(contractId: hookContractId, hookId: 2)
         let (accountId, accountKey) = try await createAccountWithHook(
@@ -87,6 +90,7 @@ internal final class TransferTransactionHooks: HieroIntegrationTestCase {
     }
 
     internal func test_NftTransferWithSenderAndReceiverHooks() async throws {
+        throw XCTSkip("Hooks are not enabled")
         let hookContractId = try await createEvmHookContract()
 
         let senderHookDetails = createHookDetails(contractId: hookContractId, hookId: 1)

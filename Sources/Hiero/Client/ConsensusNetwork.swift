@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Atomics
+import Foundation
 import GRPC
 import NIOConcurrencyHelpers
 import NIOCore
@@ -21,6 +22,12 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
         NodeConnection.consensusPlaintextPort: 1,
     ]
 
+    /// Default minimum time (in seconds) before retrying a failed node
+    internal static let defaultMinNodeReadmitTime: TimeInterval = 0.25
+
+    /// Default maximum time (in seconds) before forcing retry of a failed node
+    internal static let defaultMaxNodeReadmitTime: TimeInterval = 5 * 60
+
     // MARK: - Properties
 
     /// Maps account IDs to their index in the nodes array
@@ -35,6 +42,12 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
     /// GRPC connections to each node
     private let nodeConnections: [NodeConnection]
 
+    /// Minimum time before retrying a failed node
+    private let minNodeReadmitTime: NIOLockedValueBox<TimeInterval>
+
+    /// Maximum time before forcing retry of a failed node
+    private let maxNodeReadmitTime: NIOLockedValueBox<TimeInterval>
+
     // MARK: - Initialization
 
     /// Internal initializer for creating a consensus network.
@@ -42,12 +55,16 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
         map: [AccountId: Int],
         nodes: [AccountId],
         health: [NIOLockedValueBox<NodeHealth>],
-        connections: [NodeConnection]
+        connections: [NodeConnection],
+        minNodeReadmitTime: NIOLockedValueBox<TimeInterval>,
+        maxNodeReadmitTime: NIOLockedValueBox<TimeInterval>
     ) {
         self.nodeIndexMap = map
         self.nodes = nodes
         self.nodeHealthStates = health
         self.nodeConnections = connections
+        self.minNodeReadmitTime = minNodeReadmitTime
+        self.maxNodeReadmitTime = maxNodeReadmitTime
     }
 
     /// Creates a consensus network from configuration.
@@ -63,7 +80,9 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
             map: config.nodeIndexMap,
             nodes: config.nodes,
             health: health,
-            connections: connections
+            connections: connections,
+            minNodeReadmitTime: .init(Self.defaultMinNodeReadmitTime),
+            maxNodeReadmitTime: .init(Self.defaultMaxNodeReadmitTime)
         )
     }
 
@@ -74,9 +93,25 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
     ///   - eventLoop: Event loop for managing connections
     internal convenience init(addresses: [String: AccountId], eventLoop: EventLoop) throws {
         let tmp = try Self.withAddresses(
-            Self(map: [:], nodes: [], health: [], connections: []), addresses: addresses, eventLoop: eventLoop)
+            Self(
+                map: [:],
+                nodes: [],
+                health: [],
+                connections: [],
+                minNodeReadmitTime: .init(Self.defaultMinNodeReadmitTime),
+                maxNodeReadmitTime: .init(Self.defaultMaxNodeReadmitTime)
+            ),
+            addresses: addresses,
+            eventLoop: eventLoop
+        )
         self.init(
-            map: tmp.nodeIndexMap, nodes: tmp.nodes, health: tmp.nodeHealthStates, connections: tmp.nodeConnections)
+            map: tmp.nodeIndexMap,
+            nodes: tmp.nodes,
+            health: tmp.nodeHealthStates,
+            connections: tmp.nodeConnections,
+            minNodeReadmitTime: tmp.minNodeReadmitTime,
+            maxNodeReadmitTime: tmp.maxNodeReadmitTime
+        )
     }
 
     // MARK: - Computed Properties
@@ -233,7 +268,9 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
             map: map,
             nodes: nodeIds,
             health: health,
-            connections: connections
+            connections: connections,
+            minNodeReadmitTime: old.minNodeReadmitTime,
+            maxNodeReadmitTime: old.maxNodeReadmitTime
         )
     }
 
@@ -294,8 +331,28 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
             map: map,
             nodes: nodeIds,
             health: health,
-            connections: connections
+            connections: connections,
+            minNodeReadmitTime: old.minNodeReadmitTime,
+            maxNodeReadmitTime: old.maxNodeReadmitTime
         )
+    }
+
+    // MARK: - Node Readmit Configuration
+
+    internal func getMinNodeReadmitTime() -> TimeInterval {
+        minNodeReadmitTime.withLockedValue { $0 }
+    }
+
+    internal func setMinNodeReadmitTime(_ time: TimeInterval) {
+        minNodeReadmitTime.withLockedValue { $0 = time }
+    }
+
+    internal func getMaxNodeReadmitTime() -> TimeInterval {
+        maxNodeReadmitTime.withLockedValue { $0 }
+    }
+
+    internal func setMaxNodeReadmitTime(_ time: TimeInterval) {
+        maxNodeReadmitTime.withLockedValue { $0 = time }
     }
 
     // MARK: - Channel Access
@@ -374,7 +431,12 @@ internal final class ConsensusNetwork: Sendable, AtomicReference {
     ///
     /// - Parameter index: Index of the node to mark unhealthy
     internal func markNodeUnhealthy(at index: Int) {
-        nodeHealthStates[index].withLockedValue { $0.markUnhealthy(at: .now) }
+        let minReadmitTime = minNodeReadmitTime.withLockedValue { $0 }
+        let maxReadmitTime = maxNodeReadmitTime.withLockedValue { $0 }
+
+        nodeHealthStates[index].withLockedValue { health in
+            health.markUnhealthy(at: .now, minNodeReadmitTime: minReadmitTime, maxNodeReadmitTime: maxReadmitTime)
+        }
     }
 
     /// Marks a node as healthy and resets its backoff timer.

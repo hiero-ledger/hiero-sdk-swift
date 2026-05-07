@@ -71,6 +71,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CanAddHookToCreateToAccount() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let (accountId, key) = try await createTestAccount()
         let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
@@ -85,6 +86,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CannotUpdateWithMultipleOfSameHook() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let (accountId, key) = try await createTestAccount()
         let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
@@ -104,6 +106,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CannotUpdateWithHookAlreadyInUse() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let (accountId, key) = try await createTestAccount()
         let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
@@ -126,6 +129,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CanAddHookToCreateToAccountWithStorageUpdates() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let (accountId, key) = try await createTestAccount()
         let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
@@ -140,6 +144,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CanDeleteHook() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let (accountId, key) = try await createTestAccount()
         let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
@@ -169,6 +174,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CannotDeleteNonExistentHook() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let (accountId, key) = try await createTestAccount()
         let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
@@ -191,6 +197,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CannotAddAndDeleteSameHook() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let (accountId, key) = try await createTestAccount()
         let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)
@@ -212,6 +219,7 @@ internal final class AccountUpdateTransactionIntegrationTests: HieroIntegrationT
     }
 
     internal func test_CannotDeleteAlreadyDeletedHook() async throws {
+        throw XCTSkip("Hooks are not enabled")
         // Given
         let (accountId, key) = try await createTestAccount()
         let fakeContractId = ContractId(shard: 1, realm: 2, num: 3)

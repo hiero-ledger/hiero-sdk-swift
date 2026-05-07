@@ -397,6 +397,18 @@ public struct Proto_CryptoGetInfoResponse: Sendable {
     /// Clears the value of `stakingInfo`. Subsequent reads from it will return its default value.
     public mutating func clearStakingInfo() {_uniqueStorage()._stakingInfo = nil}
 
+    ///*
+    /// The delegated contract address set for this account.
+    /// <p>
+    /// If this field is set on the account, anytime a call is made to the account's address
+    /// (either an EVM call within HSCS or a child call dispatched by CryptoTransfer)
+    /// the EVM code of the contract referenced by `delegation_address` will be
+    /// executed in the context of the account.
+    public var delegationAddress: Data {
+      get {return _storage._delegationAddress}
+      set {_uniqueStorage()._delegationAddress = newValue}
+    }
+
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public init() {}
@@ -522,6 +534,7 @@ extension Proto_CryptoGetInfoResponse.AccountInfo: SwiftProtobuf.Message, SwiftP
     20: .standard(proto: "ledger_id"),
     21: .standard(proto: "ethereum_nonce"),
     22: .standard(proto: "staking_info"),
+    23: .standard(proto: "delegation_address"),
   ]
 
   fileprivate class _StorageClass {
@@ -546,6 +559,7 @@ extension Proto_CryptoGetInfoResponse.AccountInfo: SwiftProtobuf.Message, SwiftP
     var _ledgerID: Data = Data()
     var _ethereumNonce: Int64 = 0
     var _stakingInfo: Proto_StakingInfo? = nil
+    var _delegationAddress: Data = Data()
 
     #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
@@ -581,6 +595,7 @@ extension Proto_CryptoGetInfoResponse.AccountInfo: SwiftProtobuf.Message, SwiftP
       _ledgerID = source._ledgerID
       _ethereumNonce = source._ethereumNonce
       _stakingInfo = source._stakingInfo
+      _delegationAddress = source._delegationAddress
     }
   }
 
@@ -620,6 +635,7 @@ extension Proto_CryptoGetInfoResponse.AccountInfo: SwiftProtobuf.Message, SwiftP
         case 20: try { try decoder.decodeSingularBytesField(value: &_storage._ledgerID) }()
         case 21: try { try decoder.decodeSingularInt64Field(value: &_storage._ethereumNonce) }()
         case 22: try { try decoder.decodeSingularMessageField(value: &_storage._stakingInfo) }()
+        case 23: try { try decoder.decodeSingularBytesField(value: &_storage._delegationAddress) }()
         default: break
         }
       }
@@ -695,6 +711,9 @@ extension Proto_CryptoGetInfoResponse.AccountInfo: SwiftProtobuf.Message, SwiftP
       try { if let v = _storage._stakingInfo {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 22)
       } }()
+      if !_storage._delegationAddress.isEmpty {
+        try visitor.visitSingularBytesField(value: _storage._delegationAddress, fieldNumber: 23)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -725,6 +744,7 @@ extension Proto_CryptoGetInfoResponse.AccountInfo: SwiftProtobuf.Message, SwiftP
         if _storage._ledgerID != rhs_storage._ledgerID {return false}
         if _storage._ethereumNonce != rhs_storage._ethereumNonce {return false}
         if _storage._stakingInfo != rhs_storage._stakingInfo {return false}
+        if _storage._delegationAddress != rhs_storage._delegationAddress {return false}
         return true
       }
       if !storagesAreEqual {return false}

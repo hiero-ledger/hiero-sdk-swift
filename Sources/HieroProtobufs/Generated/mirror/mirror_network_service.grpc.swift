@@ -19,6 +19,11 @@ public protocol Com_Hedera_Mirror_Api_Proto_NetworkServiceClientProtocol: GRPCCl
   var serviceName: String { get }
   var interceptors: Com_Hedera_Mirror_Api_Proto_NetworkServiceClientInterceptorFactoryProtocol? { get }
 
+  func getFeeEstimate(
+    _ request: Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery,
+    callOptions: CallOptions?
+  ) -> UnaryCall<Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery, Com_Hedera_Mirror_Api_Proto_FeeEstimateResponse>
+
   func getNodes(
     _ request: Com_Hedera_Mirror_Api_Proto_AddressBookQuery,
     callOptions: CallOptions?,
@@ -31,7 +36,26 @@ extension Com_Hedera_Mirror_Api_Proto_NetworkServiceClientProtocol {
     return "com.hedera.mirror.api.proto.NetworkService"
   }
 
+  ///*
+  /// Query to estimate the fees when submitting a transaction to the network.
   ///
+  /// - Parameters:
+  ///   - request: Request to send to getFeeEstimate.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  public func getFeeEstimate(
+    _ request: Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery, Com_Hedera_Mirror_Api_Proto_FeeEstimateResponse> {
+    return self.makeUnaryCall(
+      path: Com_Hedera_Mirror_Api_Proto_NetworkServiceClientMetadata.Methods.getFeeEstimate.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makegetFeeEstimateInterceptors() ?? []
+    )
+  }
+
+  ///*
   /// Query for an address book and return its nodes. The nodes are returned in ascending order by node ID. The
   /// response is not guaranteed to be a byte-for-byte equivalent to the NodeAddress in the Hedera file on
   /// the network since it is reconstructed from a normalized database table.
@@ -120,6 +144,11 @@ public protocol Com_Hedera_Mirror_Api_Proto_NetworkServiceAsyncClientProtocol: G
   static var serviceDescriptor: GRPCServiceDescriptor { get }
   var interceptors: Com_Hedera_Mirror_Api_Proto_NetworkServiceClientInterceptorFactoryProtocol? { get }
 
+  func makeGetFeeEstimateCall(
+    _ request: Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery, Com_Hedera_Mirror_Api_Proto_FeeEstimateResponse>
+
   func makeGetNodesCall(
     _ request: Com_Hedera_Mirror_Api_Proto_AddressBookQuery,
     callOptions: CallOptions?
@@ -134,6 +163,18 @@ extension Com_Hedera_Mirror_Api_Proto_NetworkServiceAsyncClientProtocol {
 
   public var interceptors: Com_Hedera_Mirror_Api_Proto_NetworkServiceClientInterceptorFactoryProtocol? {
     return nil
+  }
+
+  public func makeGetFeeEstimateCall(
+    _ request: Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery, Com_Hedera_Mirror_Api_Proto_FeeEstimateResponse> {
+    return self.makeAsyncUnaryCall(
+      path: Com_Hedera_Mirror_Api_Proto_NetworkServiceClientMetadata.Methods.getFeeEstimate.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makegetFeeEstimateInterceptors() ?? []
+    )
   }
 
   public func makeGetNodesCall(
@@ -151,6 +192,18 @@ extension Com_Hedera_Mirror_Api_Proto_NetworkServiceAsyncClientProtocol {
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension Com_Hedera_Mirror_Api_Proto_NetworkServiceAsyncClientProtocol {
+  public func getFeeEstimate(
+    _ request: Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery,
+    callOptions: CallOptions? = nil
+  ) async throws -> Com_Hedera_Mirror_Api_Proto_FeeEstimateResponse {
+    return try await self.performAsyncUnaryCall(
+      path: Com_Hedera_Mirror_Api_Proto_NetworkServiceClientMetadata.Methods.getFeeEstimate.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makegetFeeEstimateInterceptors() ?? []
+    )
+  }
+
   public func getNodes(
     _ request: Com_Hedera_Mirror_Api_Proto_AddressBookQuery,
     callOptions: CallOptions? = nil
@@ -183,6 +236,9 @@ public struct Com_Hedera_Mirror_Api_Proto_NetworkServiceAsyncClient: Com_Hedera_
 
 public protocol Com_Hedera_Mirror_Api_Proto_NetworkServiceClientInterceptorFactoryProtocol: Sendable {
 
+  /// - Returns: Interceptors to use when invoking 'getFeeEstimate'.
+  func makegetFeeEstimateInterceptors() -> [ClientInterceptor<Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery, Com_Hedera_Mirror_Api_Proto_FeeEstimateResponse>]
+
   /// - Returns: Interceptors to use when invoking 'getNodes'.
   func makegetNodesInterceptors() -> [ClientInterceptor<Com_Hedera_Mirror_Api_Proto_AddressBookQuery, Proto_NodeAddress>]
 }
@@ -192,11 +248,18 @@ public enum Com_Hedera_Mirror_Api_Proto_NetworkServiceClientMetadata {
     name: "NetworkService",
     fullName: "com.hedera.mirror.api.proto.NetworkService",
     methods: [
+      Com_Hedera_Mirror_Api_Proto_NetworkServiceClientMetadata.Methods.getFeeEstimate,
       Com_Hedera_Mirror_Api_Proto_NetworkServiceClientMetadata.Methods.getNodes,
     ]
   )
 
   public enum Methods {
+    public static let getFeeEstimate = GRPCMethodDescriptor(
+      name: "getFeeEstimate",
+      path: "/com.hedera.mirror.api.proto.NetworkService/getFeeEstimate",
+      type: GRPCCallType.unary
+    )
+
     public static let getNodes = GRPCMethodDescriptor(
       name: "getNodes",
       path: "/com.hedera.mirror.api.proto.NetworkService/getNodes",
@@ -212,7 +275,11 @@ public enum Com_Hedera_Mirror_Api_Proto_NetworkServiceClientMetadata {
 public protocol Com_Hedera_Mirror_Api_Proto_NetworkServiceProvider: CallHandlerProvider {
   var interceptors: Com_Hedera_Mirror_Api_Proto_NetworkServiceServerInterceptorFactoryProtocol? { get }
 
-  ///
+  ///*
+  /// Query to estimate the fees when submitting a transaction to the network.
+  func getFeeEstimate(request: Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery, context: StatusOnlyCallContext) -> EventLoopFuture<Com_Hedera_Mirror_Api_Proto_FeeEstimateResponse>
+
+  ///*
   /// Query for an address book and return its nodes. The nodes are returned in ascending order by node ID. The
   /// response is not guaranteed to be a byte-for-byte equivalent to the NodeAddress in the Hedera file on
   /// the network since it is reconstructed from a normalized database table.
@@ -231,6 +298,15 @@ extension Com_Hedera_Mirror_Api_Proto_NetworkServiceProvider {
     context: CallHandlerContext
   ) -> GRPCServerHandlerProtocol? {
     switch name {
+    case "getFeeEstimate":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery>(),
+        responseSerializer: ProtobufSerializer<Com_Hedera_Mirror_Api_Proto_FeeEstimateResponse>(),
+        interceptors: self.interceptors?.makegetFeeEstimateInterceptors() ?? [],
+        userFunction: self.getFeeEstimate(request:context:)
+      )
+
     case "getNodes":
       return ServerStreamingServerHandler(
         context: context,
@@ -255,7 +331,14 @@ public protocol Com_Hedera_Mirror_Api_Proto_NetworkServiceAsyncProvider: CallHan
   static var serviceDescriptor: GRPCServiceDescriptor { get }
   var interceptors: Com_Hedera_Mirror_Api_Proto_NetworkServiceServerInterceptorFactoryProtocol? { get }
 
-  ///
+  ///*
+  /// Query to estimate the fees when submitting a transaction to the network.
+  func getFeeEstimate(
+    request: Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Com_Hedera_Mirror_Api_Proto_FeeEstimateResponse
+
+  ///*
   /// Query for an address book and return its nodes. The nodes are returned in ascending order by node ID. The
   /// response is not guaranteed to be a byte-for-byte equivalent to the NodeAddress in the Hedera file on
   /// the network since it is reconstructed from a normalized database table.
@@ -285,6 +368,15 @@ extension Com_Hedera_Mirror_Api_Proto_NetworkServiceAsyncProvider {
     context: CallHandlerContext
   ) -> GRPCServerHandlerProtocol? {
     switch name {
+    case "getFeeEstimate":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery>(),
+        responseSerializer: ProtobufSerializer<Com_Hedera_Mirror_Api_Proto_FeeEstimateResponse>(),
+        interceptors: self.interceptors?.makegetFeeEstimateInterceptors() ?? [],
+        wrapping: { try await self.getFeeEstimate(request: $0, context: $1) }
+      )
+
     case "getNodes":
       return GRPCAsyncServerHandler(
         context: context,
@@ -302,6 +394,10 @@ extension Com_Hedera_Mirror_Api_Proto_NetworkServiceAsyncProvider {
 
 public protocol Com_Hedera_Mirror_Api_Proto_NetworkServiceServerInterceptorFactoryProtocol: Sendable {
 
+  /// - Returns: Interceptors to use when handling 'getFeeEstimate'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makegetFeeEstimateInterceptors() -> [ServerInterceptor<Com_Hedera_Mirror_Api_Proto_FeeEstimateQuery, Com_Hedera_Mirror_Api_Proto_FeeEstimateResponse>]
+
   /// - Returns: Interceptors to use when handling 'getNodes'.
   ///   Defaults to calling `self.makeInterceptors()`.
   func makegetNodesInterceptors() -> [ServerInterceptor<Com_Hedera_Mirror_Api_Proto_AddressBookQuery, Proto_NodeAddress>]
@@ -312,11 +408,18 @@ public enum Com_Hedera_Mirror_Api_Proto_NetworkServiceServerMetadata {
     name: "NetworkService",
     fullName: "com.hedera.mirror.api.proto.NetworkService",
     methods: [
+      Com_Hedera_Mirror_Api_Proto_NetworkServiceServerMetadata.Methods.getFeeEstimate,
       Com_Hedera_Mirror_Api_Proto_NetworkServiceServerMetadata.Methods.getNodes,
     ]
   )
 
   public enum Methods {
+    public static let getFeeEstimate = GRPCMethodDescriptor(
+      name: "getFeeEstimate",
+      path: "/com.hedera.mirror.api.proto.NetworkService/getFeeEstimate",
+      type: GRPCCallType.unary
+    )
+
     public static let getNodes = GRPCMethodDescriptor(
       name: "getNodes",
       path: "/com.hedera.mirror.api.proto.NetworkService/getNodes",

@@ -1008,6 +1008,10 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
   ///*
   /// Delete a registered node
   case registeredNodeDelete // = 115
+
+  ///*
+  /// Vote on wrapped record migration hash state.
+  case migrationRootHashVote // = 116
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -1114,6 +1118,7 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 113: self = .registeredNodeCreate
     case 114: self = .registeredNodeUpdate
     case 115: self = .registeredNodeDelete
+    case 116: self = .migrationRootHashVote
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -1218,6 +1223,7 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .registeredNodeCreate: return 113
     case .registeredNodeUpdate: return 114
     case .registeredNodeDelete: return 115
+    case .migrationRootHashVote: return 116
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -1322,6 +1328,7 @@ public enum Proto_HederaFunctionality: SwiftProtobuf.Enum, Swift.CaseIterable {
     .registeredNodeCreate,
     .registeredNodeUpdate,
     .registeredNodeDelete,
+    .migrationRootHashVote,
   ]
 
 }
@@ -4159,6 +4166,7 @@ extension Proto_HederaFunctionality: SwiftProtobuf._ProtoNameProviding {
     113: .same(proto: "RegisteredNodeCreate"),
     114: .same(proto: "RegisteredNodeUpdate"),
     115: .same(proto: "RegisteredNodeDelete"),
+    116: .same(proto: "MigrationRootHashVote"),
   ]
 }
 

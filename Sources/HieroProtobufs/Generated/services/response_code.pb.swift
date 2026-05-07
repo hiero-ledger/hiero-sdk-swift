@@ -1689,6 +1689,39 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
   ///*
   /// The number of hook invocations exceeds the maximum allowed per transaction.
   case tooManyHookInvocations // = 528
+
+  ///*
+  /// A registered node ID is invalid or does not exist.
+  case invalidRegisteredNodeID // = 529
+
+  ///*
+  /// A registered service endpoint is invalid.<br/>
+  /// The port is out of range, or the address field is not set.
+  case invalidRegisteredEndpoint // = 530
+
+  ///*
+  /// The number of registered service endpoints exceeds the configured limit.
+  case registeredEndpointsExceededLimit // = 531
+
+  ///*
+  /// A registered service endpoint has an invalid address.<br/>
+  /// The IP address length is not 4 (IPv4) or 16 (IPv6), or the
+  /// domain name is not a valid ASCII FQDN.
+  case invalidRegisteredEndpointAddress // = 532
+
+  ///*
+  /// A registered service endpoint does not specify an endpoint type.<br/>
+  /// Exactly one of block_node, mirror_node, or rpc_relay MUST be set.
+  case invalidRegisteredEndpointType // = 533
+
+  ///*
+  /// A registered node cannot be deleted because it is still associated
+  /// with a consensus node via their associated registered node list.
+  case registeredNodeStillAssociated // = 534
+
+  ///*
+  /// The number of associated registered nodes exceeds the maximum allowed limit.
+  case maxRegisteredNodesExceeded // = 535
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -2087,6 +2120,13 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 526: self = .nodeAccountHasZeroBalance
     case 527: self = .transferToFeeCollectionAccountNotAllowed
     case 528: self = .tooManyHookInvocations
+    case 529: self = .invalidRegisteredNodeID
+    case 530: self = .invalidRegisteredEndpoint
+    case 531: self = .registeredEndpointsExceededLimit
+    case 532: self = .invalidRegisteredEndpointAddress
+    case 533: self = .invalidRegisteredEndpointType
+    case 534: self = .registeredNodeStillAssociated
+    case 535: self = .maxRegisteredNodesExceeded
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -2483,6 +2523,13 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .nodeAccountHasZeroBalance: return 526
     case .transferToFeeCollectionAccountNotAllowed: return 527
     case .tooManyHookInvocations: return 528
+    case .invalidRegisteredNodeID: return 529
+    case .invalidRegisteredEndpoint: return 530
+    case .registeredEndpointsExceededLimit: return 531
+    case .invalidRegisteredEndpointAddress: return 532
+    case .invalidRegisteredEndpointType: return 533
+    case .registeredNodeStillAssociated: return 534
+    case .maxRegisteredNodesExceeded: return 535
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -2879,6 +2926,13 @@ public enum Proto_ResponseCodeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     .nodeAccountHasZeroBalance,
     .transferToFeeCollectionAccountNotAllowed,
     .tooManyHookInvocations,
+    .invalidRegisteredNodeID,
+    .invalidRegisteredEndpoint,
+    .registeredEndpointsExceededLimit,
+    .invalidRegisteredEndpointAddress,
+    .invalidRegisteredEndpointType,
+    .registeredNodeStillAssociated,
+    .maxRegisteredNodesExceeded,
   ]
 
 }
@@ -3277,5 +3331,12 @@ extension Proto_ResponseCodeEnum: SwiftProtobuf._ProtoNameProviding {
     526: .same(proto: "NODE_ACCOUNT_HAS_ZERO_BALANCE"),
     527: .same(proto: "TRANSFER_TO_FEE_COLLECTION_ACCOUNT_NOT_ALLOWED"),
     528: .same(proto: "TOO_MANY_HOOK_INVOCATIONS"),
+    529: .same(proto: "INVALID_REGISTERED_NODE_ID"),
+    530: .same(proto: "INVALID_REGISTERED_ENDPOINT"),
+    531: .same(proto: "REGISTERED_ENDPOINTS_EXCEEDED_LIMIT"),
+    532: .same(proto: "INVALID_REGISTERED_ENDPOINT_ADDRESS"),
+    533: .same(proto: "INVALID_REGISTERED_ENDPOINT_TYPE"),
+    534: .same(proto: "REGISTERED_NODE_STILL_ASSOCIATED"),
+    535: .same(proto: "MAX_REGISTERED_NODES_EXCEEDED"),
   ]
 }
