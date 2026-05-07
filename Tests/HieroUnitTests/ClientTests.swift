@@ -18,7 +18,7 @@ internal final class ClientTests: XCTestCase {
         XCTAssertEqual(publicKey, privateKey.publicKey)
     }
 
-    internal func test_getOperatorPublicKey_returnsNilWhenNoOPeratorSet() throws {
+    internal func test_getOperatorPublicKey_returnsNilWhenNoOperatorSet() throws {
         let client = Client.forTestnet()
 
         XCTAssertNil(client.getOperatorPublicKey())
