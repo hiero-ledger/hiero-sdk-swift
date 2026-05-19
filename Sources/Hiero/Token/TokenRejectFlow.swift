@@ -153,13 +153,13 @@ public final class TokenRejectFlow {
         let rejectResponse = try await makeTokenRejectTransaction(nodeAccountIds, tokenRejectData: tokenRejectData)
             .execute(client, timeoutPerTransaction)
 
-        _ = try await rejectResponse.getReceiptQuery().execute(client, timeoutPerTransaction)
+        _ = try await rejectResponse.getReceiptQuery(client).execute(client, timeoutPerTransaction)
 
         let dissociateResponse = try await makeTokenDissociateTransaction(
             nodeAccountIds, tokenRejectData: tokenRejectData
         ).execute(client, timeoutPerTransaction)
 
-        _ = try await dissociateResponse.getReceiptQuery().execute(client, timeoutPerTransaction)
+        _ = try await dissociateResponse.getReceiptQuery(client).execute(client, timeoutPerTransaction)
 
         return rejectResponse
     }

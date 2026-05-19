@@ -160,7 +160,13 @@ public class Query<Response>: ValidateChecksums {
         if self.requiresPayment {
             // hack: this is a TransactionRecordQuery, which means we need to run the receipt first.
             if let relatedTransactionId = self.relatedTransactionId {
-                _ = try? await TransactionReceiptQuery().transactionId(relatedTransactionId).execute(client, timeout)
+                let receiptQuery = TransactionReceiptQuery().transactionId(relatedTransactionId)
+
+                if let nodeAccountIds = self.nodeAccountIds {
+                    receiptQuery.nodeAccountIds(nodeAccountIds)
+                }
+
+                _ = try? await receiptQuery.execute(client, timeout)
             }
 
             if self.payment.amount == nil {
