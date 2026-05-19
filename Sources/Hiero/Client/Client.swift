@@ -51,6 +51,9 @@ public final class Client: Sendable {
     /// Whether to regenerate transaction IDs on expiry
     private let _regenerateTransactionId: ManagedAtomic<Bool>
 
+    /// Whether receipt and record queries may fail over from the submitting node
+    private let _allowReceiptNodeFailover: ManagedAtomic<Bool>
+
     /// Maximum transaction fee in tinybars (0 = no limit)
     private let _maxTransactionFee: ManagedAtomic<Int64>
 
@@ -101,6 +104,7 @@ public final class Client: Sendable {
         self._ledgerId = .init(ledgerId)
         self._autoValidateChecksums = .init(false)  // Checksums disabled by default for performance
         self._regenerateTransactionId = .init(true)  // Auto-regenerate expired transaction IDs by default
+        self._allowReceiptNodeFailover = .init(false)
         self._maxTransactionFee = .init(0)  // 0 = no fee limit (use network defaults)
         self.networkUpdateTask = NetworkUpdateTask(
             eventLoop: eventLoop,
@@ -548,6 +552,8 @@ public final class Client: Sendable {
             client._operator.withLockedValue { $0 = `operator` }
         }
 
+        client.allowReceiptNodeFailover = configData.allowReceiptNodeFailover
+
         return client
     }
 
@@ -755,6 +761,29 @@ public final class Client: Sendable {
         self.defaultRegenerateTransactionId = defaultRegenerateTransactionId
 
         return self
+    }
+
+    /// Whether receipt and record queries may advance from the submitting node to other nodes.
+    ///
+    /// The default is `false`, which keeps receipt and record queries pinned to the submitting
+    /// node. Enabling this is intended for high-throughput clients that accept the availability
+    /// tradeoff of trying other nodes when the submitting node is unavailable.
+    public var allowReceiptNodeFailover: Bool {
+        get { self._allowReceiptNodeFailover.load(ordering: .relaxed) }
+        set(value) { self._allowReceiptNodeFailover.store(value, ordering: .relaxed) }
+    }
+
+    /// Sets whether receipt and record queries may fail over from the submitting node.
+    @discardableResult
+    public func setAllowReceiptNodeFailover(_ allowReceiptNodeFailover: Bool) -> Self {
+        self.allowReceiptNodeFailover = allowReceiptNodeFailover
+
+        return self
+    }
+
+    /// Returns whether receipt and record query failover is enabled.
+    public func getAllowReceiptNodeFailover() -> Bool {
+        allowReceiptNodeFailover
     }
 
     // MARK: - Internal Helpers

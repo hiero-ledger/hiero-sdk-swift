@@ -55,6 +55,9 @@ internal struct ClientConfig: Decodable {
     /// Realm number (default: 0)
     internal let realm: UInt64
 
+    /// Whether receipt and record queries may fail over from the submitting node
+    internal let allowReceiptNodeFailover: Bool
+
     // MARK: - Coding Keys
 
     private enum CodingKeys: CodingKey {
@@ -63,6 +66,7 @@ internal struct ClientConfig: Decodable {
         case mirrorNetwork
         case shard
         case realm
+        case allowReceiptNodeFailover
     }
 
     private enum OperatorKeys: CodingKey {
@@ -135,5 +139,7 @@ internal struct ClientConfig: Decodable {
         // Decode shard and realm (with defaults)
         shard = try container.decodeIfPresent(UInt64.self, forKey: .shard) ?? 0
         realm = try container.decodeIfPresent(UInt64.self, forKey: .realm) ?? 0
+        allowReceiptNodeFailover =
+            try container.decodeIfPresent(Bool.self, forKey: .allowReceiptNodeFailover) ?? false
     }
 }
