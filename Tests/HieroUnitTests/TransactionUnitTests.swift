@@ -33,6 +33,7 @@ internal final class TransactionUnitTests: HieroUnitTestCase {
         let rhs2 = tx2.nodeAccountIds
 
         XCTAssertEqual(lhs1, rhs2)
+        
         XCTAssertEqual(tx.transactionId, tx2.transactionId)
         XCTAssertEqual(tx.transactionMemo, tx2.transactionMemo)
         XCTAssertEqual(tx.transactionValidDuration, tx2.transactionValidDuration)
