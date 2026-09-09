@@ -1,0 +1,9 @@
+HieroProtobufs.Proto_Query:
+cryptoGetInfo {
+  header {
+    responseType: COST_ANSWER
+  }
+  accountID {
+    accountNum: 2
+  }
+}
