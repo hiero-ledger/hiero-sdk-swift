@@ -115,7 +115,37 @@ jobs:
           mirrorNodeVersion: v0.153.0
           hieroVersion: v0.73.0
           dualMode: true
-      
+
+      - name: Wait for mirror node fee estimation
+        run: |
+          set -euo pipefail
+          # The mirror node's Java REST loads the simple fee schedule (file 0.0.113) once at startup and
+          # then only every 10 minutes. On a fresh Solo network the importer has not ingested that file
+          # yet when rest-java starts, so POST /api/v1/network/fees answers "400 Unknown transaction type"
+          # for the first ~10 minutes and FeeEstimateQueryIntegrationTests fail. Shorten the refresh
+          # interval (which restarts the pod), re-open the port-forward and wait for the first estimate.
+          kubectl -n solo set env deployment/mirror-1-restjava HIERO_MIRROR_REST_JAVA_FEE_REFRESH_INTERVAL=PT5S
+          kubectl -n solo rollout status deployment/mirror-1-restjava --timeout=5m
+          pkill -f 'port-forward svc/mirror-1-restjava' || true
+          sleep 2
+          kubectl -n solo port-forward svc/mirror-1-restjava 8084:80 > /tmp/restjava-port-forward.log 2>&1 &
+          sleep 3
+          # A minimal CryptoTransfer (Transaction > SignedTransaction > TransactionBody), no signatures.
+          echo 'Ki0KKwoICgIIARICGAISAhgDGIDC1y8iAgh4chIKEAoGCgIYAhABCgYKAhgDEAI=' | base64 -d > /tmp/fee-probe.bin
+          for _ in $(seq 1 120); do
+            code=$(curl -s -o /tmp/fee-probe.out -w '%{http_code}' -X POST \
+              -H 'Content-Type: application/protobuf' --data-binary @/tmp/fee-probe.bin \
+              'http://127.0.0.1:8084/api/v1/network/fees?mode=INTRINSIC' || true)
+            if [ "$code" = "200" ]; then
+              echo "fee estimation ready: $(cat /tmp/fee-probe.out)"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "fee estimation still unavailable: HTTP ${code} $(cat /tmp/fee-probe.out 2>/dev/null)"
+          kubectl -n solo logs deployment/mirror-1-restjava --tail=50 || true
+          exit 1
+
       - name: Run integration tests (HieroIntegrationTests)
         env:
           HIERO_PROFILE: ciIntegration
