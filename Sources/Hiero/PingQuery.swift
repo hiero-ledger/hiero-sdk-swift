@@ -4,6 +4,12 @@ import Foundation
 import GRPC
 import HieroProtobufs
 
+/// Liveness probe used by `Client.ping()` / `Client.pingAll()` and by the node health check in `Execute`.
+///
+/// Sends a `CryptoService/getAccountInfo` query for account `<shard>.<realm>.2` with
+/// `ResponseType = COST_ANSWER`: the node answers with the query fee without executing it,
+/// so nothing is charged and no operator is required. A cost response is success; a gRPC
+/// failure or a non-OK precheck is failure.
 internal struct PingQuery {
     internal init(nodeAccountId: AccountId) {
         self.nodeAccountId = nodeAccountId
@@ -56,17 +62,16 @@ extension PingQuery: Execute {
     }
 
     internal func makeRequest(_ transactionId: TransactionId?, _ nodeAccountId: AccountId) throws -> (Proto_Query, ()) {
-        let header = Proto_QueryHeader.with { $0.responseType = .answerOnly }
-
         assert(nodeAccountId == self.nodeAccountId)
 
+        // Account 2 in the node's shard/realm (`0.0.2` on every current network), as in the other SDKs.
+        let probeAccountId = AccountId(shard: nodeAccountId.shard, realm: nodeAccountId.realm, num: 2)
+
         let query = Proto_Query.with { proto in
-            proto.query = .cryptogetAccountBalance(
-                .with { proto in
-                    proto.accountID = nodeAccountId.toProtobuf()
-                    proto.header = header
-                }
-            )
+            proto.cryptoGetInfo = .with { proto in
+                proto.header = .with { $0.responseType = .costAnswer }
+                proto.accountID = probeAccountId.toProtobuf()
+            }
         }
 
         return (query, ())
@@ -75,13 +80,18 @@ extension PingQuery: Execute {
     internal func execute(_ channel: GRPC.GRPCChannel, _ request: Proto_Query, _ deadline: TimeInterval) async throws
         -> Proto_Response
     {
-        try await Proto_CryptoServiceAsyncClient(channel: channel).cryptoGetBalance(
+        try await Proto_CryptoServiceAsyncClient(channel: channel).getAccountInfo(
             request, callOptions: applyGrpcHeader(deadline: deadline))
     }
 
     internal func makeResponse(
         _ response: Proto_Response, _ context: (), _ nodeAccountId: AccountId, _ transactionId: TransactionId?
-    ) throws {}
+    ) throws {
+        guard case .cryptoGetInfo = response.response else {
+            throw HError.fromProtobuf(
+                "unexpected \(String(describing: response.response)) received, expected `cryptoGetInfo`")
+        }
+    }
 
     internal func makeErrorPrecheck(_ status: Status, _ transactionId: TransactionId?) -> HError {
         HError(
