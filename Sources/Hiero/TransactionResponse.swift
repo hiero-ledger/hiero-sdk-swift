@@ -24,8 +24,23 @@ public struct TransactionResponse: Sendable {
     /// This can be used to lookup the transaction in an explorer.
     public let transactionHash: TransactionHash
 
+    /// Transaction-specific node account IDs, when explicitly configured on the transaction.
+    internal let transactionNodeAccountIds: [AccountId]?
+
     /// Whether the receipt/record status should be validated.
     public var validateStatus: Bool = true
+
+    internal init(
+        nodeAccountId: AccountId,
+        transactionId: TransactionId,
+        transactionHash: TransactionHash,
+        transactionNodeAccountIds: [AccountId]? = nil
+    ) {
+        self.nodeAccountId = nodeAccountId
+        self.transactionId = transactionId
+        self.transactionHash = transactionHash
+        self.transactionNodeAccountIds = transactionNodeAccountIds
+    }
 
     /// Whether the receipt/record status should be validated.
     @discardableResult
@@ -41,14 +56,14 @@ public struct TransactionResponse: Sendable {
     ///
     /// - Throws: an error of type ``HError``.
     public func getReceipt(_ client: Client, _ timeout: TimeInterval? = nil) async throws -> TransactionReceipt {
-        try await getReceiptQuery().execute(client, timeout)
+        try await getReceiptQuery(client).execute(client, timeout)
     }
 
     /// Returns a query that when executed, returns the receipt for the associated transaction.
-    public func getReceiptQuery() -> TransactionReceiptQuery {
+    public func getReceiptQuery(_ client: Client? = nil) -> TransactionReceiptQuery {
         TransactionReceiptQuery()
             .transactionId(transactionId)
-            .nodeAccountIds([nodeAccountId])
+            .nodeAccountIds(receiptNodeAccountIds(client))
             .validateStatus(validateStatus)
     }
 
@@ -58,14 +73,37 @@ public struct TransactionResponse: Sendable {
     ///
     /// - Throws: an error of type ``HError``.
     public func getRecord(_ client: Client, _ timeout: TimeInterval? = nil) async throws -> TransactionRecord {
-        try await getRecordQuery().execute(client, timeout)
+        try await getRecordQuery(client).execute(client, timeout)
     }
 
     /// Returns a query that when executed, returns the record for the associated transaction.
-    public func getRecordQuery() -> TransactionRecordQuery {
+    public func getRecordQuery(_ client: Client? = nil) -> TransactionRecordQuery {
         TransactionRecordQuery()
             .transactionId(transactionId)
-            .nodeAccountIds([nodeAccountId])
+            .nodeAccountIds(receiptNodeAccountIds(client))
             .validateStatus(validateStatus)
+    }
+
+    private func receiptNodeAccountIds(_ client: Client?) -> [AccountId] {
+        guard client?.allowReceiptNodeFailover == true else {
+            return [nodeAccountId]
+        }
+
+        let fallbackNodeAccountIds = transactionNodeAccountIds ?? client?.consensus.nodes ?? []
+        return [nodeAccountId].appendingUnique(fallbackNodeAccountIds)
+    }
+}
+
+extension Array where Element == AccountId {
+    fileprivate func appendingUnique(_ accountIds: [AccountId]) -> [AccountId] {
+        var seen = Set(self)
+        var result = self
+        result.reserveCapacity(self.count + accountIds.count)
+
+        for accountId in accountIds where seen.insert(accountId).inserted {
+            result.append(accountId)
+        }
+
+        return result
     }
 }

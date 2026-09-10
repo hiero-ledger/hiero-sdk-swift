@@ -437,10 +437,15 @@ extension SourceTransactionExecuteView: Execute {
     }
 
     internal func makeResponse(
-        _ response: GrpcResponse, _ context: TransactionHash, _ nodeAccountId: AccountId,
+        _: GrpcResponse, _ context: TransactionHash, _ nodeAccountId: AccountId,
         _ transactionId: TransactionId?
     ) -> Response {
-        inner.makeResponse(response, context, nodeAccountId, transactionId)
+        TransactionResponse(
+            nodeAccountId: nodeAccountId,
+            transactionId: transactionId!,
+            transactionHash: context,
+            transactionNodeAccountIds: chunk.nodeIds
+        )
     }
 
     internal func makeErrorPrecheck(_ status: Status, _ transactionId: TransactionId?) -> HError {

@@ -80,7 +80,7 @@ public final class EthereumFlow {
         let fileId = try await FileCreateTransaction()
             .contents(data.fileCreate)
             .execute(client, timeoutPerTansaction)
-            .getReceiptQuery()
+            .getReceiptQuery(client)
             .execute(client, timeoutPerTansaction)
             .fileId!
 

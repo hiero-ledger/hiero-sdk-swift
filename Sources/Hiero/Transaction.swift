@@ -29,6 +29,9 @@ public class Transaction: ValidateChecksums {
         2
     }
 
+    internal private(set) final var nodeAccountIdsExplicit: Bool = false
+    private final var settingAutomaticNodeAccountIds: Bool = false
+
     internal static let dummyAccountId = AccountId(0)
     internal static let dummyId = TransactionId.withValidStart(
         dummyAccountId, Timestamp(fromUnixTimestampNanos: 0))
@@ -46,6 +49,14 @@ public class Transaction: ValidateChecksums {
     public final var nodeAccountIds: [AccountId]? {
         willSet {
             ensureNotFrozen(fieldName: "nodeAccountIds")
+        }
+
+        didSet {
+            guard !settingAutomaticNodeAccountIds else {
+                return
+            }
+
+            nodeAccountIdsExplicit = nodeAccountIds != nil
         }
     }
 
@@ -467,6 +478,8 @@ public class Transaction: ValidateChecksums {
             }
 
             self.`operator` = client.operator
+            self.settingAutomaticNodeAccountIds = true
+            defer { self.settingAutomaticNodeAccountIds = false }
             self.nodeAccountIds = client.consensus.selectHealthyNodeSample()
         }
 
@@ -688,7 +701,11 @@ extension Transaction {
         _ transactionId: TransactionId?
     ) -> Response {
         return TransactionResponse(
-            nodeAccountId: nodeAccountId, transactionId: transactionId!, transactionHash: context)
+            nodeAccountId: nodeAccountId,
+            transactionId: transactionId!,
+            transactionHash: context,
+            transactionNodeAccountIds: nodeAccountIdsExplicit ? nodeAccountIds : nil
+        )
     }
 
     internal final func makeErrorPrecheck(_ status: Status, _ transactionId: TransactionId?) -> HError {

@@ -341,6 +341,39 @@ internal final class ClientUnitTests: HieroUnitTestCase {
         }
     }
 
+    // MARK: - Receipt Node Failover Tests
+
+    internal func test_AllowReceiptNodeFailoverDefaultsToFalse() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        XCTAssertFalse(client.allowReceiptNodeFailover)
+        XCTAssertFalse(client.getAllowReceiptNodeFailover())
+    }
+
+    internal func test_SetAllowReceiptNodeFailoverStoresValue() throws {
+        let client = try Client.forNetwork([String: AccountId]())
+
+        let returnedClient = client.setAllowReceiptNodeFailover(true)
+
+        XCTAssertTrue(client.allowReceiptNodeFailover)
+        XCTAssertTrue(client.getAllowReceiptNodeFailover())
+        XCTAssertTrue(client === returnedClient)
+    }
+
+    internal func test_AllowReceiptNodeFailoverCanBeSetFromConfig() throws {
+        let client = try Client.fromConfig(
+            """
+            {
+                "network": "localhost",
+                "mirrorNetwork": "localhost",
+                "allowReceiptNodeFailover": true
+            }
+            """
+        )
+
+        XCTAssertTrue(client.allowReceiptNodeFailover)
+    }
+
     // MARK: - Operator Tests
 
     internal func test_GetOperatorAccountIdReturnsNilWhenNotSet() throws {
